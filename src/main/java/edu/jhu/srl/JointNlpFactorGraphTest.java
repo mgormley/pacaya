@@ -24,6 +24,7 @@ import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -299,6 +300,7 @@ public class JointNlpFactorGraphTest {
             if (f instanceof ClampFactor) {
                 f.updateFromModel(null, true);
             }
+            f.updateFromModel(new FgModel(1000), true);
         }
         
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();

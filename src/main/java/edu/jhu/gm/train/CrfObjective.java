@@ -124,10 +124,10 @@ public class CrfObjective implements ExampleObjective {
      */      
     public double getValue(LFgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
         // Inference computes Z(y,x) by summing over the latent variables w.
-        double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
+        double numerator = infLat.getLogPartition();
         
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
-        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());        
+        double denominator = infLatPred.getLogPartition();
 
         // "Multiply" in all the fully clamped factors to the numerator and denominator. 
         int numFullyClamped = 0;

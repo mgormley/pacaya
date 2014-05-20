@@ -44,12 +44,13 @@ public class DepParseDecoderTest {
                     f.setValue(LinkVar.TRUE, FastMath.log(0.3));
                     f.setValue(LinkVar.FALSE, FastMath.log(0.7));
                 }
+                if (logDomain) { f.convertLogToReal(); }
                 margs.add(f);
                 vars.add(v);
             }
         }
         
-        int[] parents = DepParseDecoder.getParents(margs, vars, n, logDomain);
+        int[] parents = DepParseDecoder.getParents(margs, vars, n);
         System.out.println(Arrays.toString(parents));
         Assert.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
@@ -73,13 +74,14 @@ public class DepParseDecoderTest {
                     f.setValue(LinkVar.TRUE, FastMath.log(0.3));
                     f.setValue(LinkVar.FALSE, FastMath.log(0.7));
                 }
+                if (logDomain) { f.convertLogToReal(); }
                 margs.add(f);
                 vars.add(v);
             }
         }
 
         double propMaxMarg = 0.1;
-        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, logDomain);
+        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg);
         System.out.println(mask);
         assertEquals(n*n, mask.getCount());
         for (int p=-1; p<n; p++) {
@@ -91,7 +93,7 @@ public class DepParseDecoderTest {
         }
         
         propMaxMarg = 0.5;
-        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, logDomain);
+        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg);
         System.out.println(mask);
         assertEquals(3, mask.getCount());
         for (int p=-1; p<n; p++) {

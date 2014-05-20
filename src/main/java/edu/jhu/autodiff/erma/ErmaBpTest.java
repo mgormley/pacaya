@@ -136,10 +136,10 @@ public class ErmaBpTest {
         bp.run();
         assertEqualMarginals(fg, bf, bp);
         
-    	DenseFactor x0_marg = bp.getMarginals(x0);
+    	DenseFactor x0_marg = bp.getLogMarginals(x0);
         assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
         assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
-        DenseFactor x1_marg = bp.getMarginals(x1);
+        DenseFactor x1_marg = bp.getLogMarginals(x1);
         assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
         assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
 				

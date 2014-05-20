@@ -607,15 +607,24 @@ public class ErmaBp implements FgInferencer {
         }
         return logRatio.getInfNorm();
     }
-
-    protected DenseFactor getMarginals(Var var, FgNode node) {
+    
+    protected DenseFactor getVarBeliefs(int varId) {
+        return getVarBeliefs(fg.getVar(varId));
+    }
+    
+    protected DenseFactor getFactorBeliefs(int facId) {
+        return getFactorBeliefs(fg.getFactor(facId));
+    }
+    
+    protected DenseFactor getVarBeliefs(Var var) {
         DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
+        FgNode node = fg.getVarNode(var.getId());
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
 
-    protected DenseFactor getMarginals(Factor factor, FgNode node) {
+    protected DenseFactor getFactorBeliefs(Factor factor) {
         if (factor instanceof GlobalFactor) {
             log.warn("Getting marginals of a global factor is not supported."
                     + " This will require exponential space to store the resulting factor."
@@ -624,45 +633,12 @@ public class ErmaBp implements FgInferencer {
         
         DenseFactor prod = new DenseFactor(BruteForceInferencer.safeGetDenseFactor(factor));
         // Compute the product of all messages sent to this factor.
+        FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
     
-    /** @inheritDoc
-     * Note this method is slow compared to querying by id, and requires an extra hashmap lookup.  
-     */
-    @Override
-    public DenseFactor getMarginals(Var var) {
-        FgNode node = fg.getNode(var);
-        return getMarginals(var, node);
-    }
-    
-    /** @inheritDoc
-     * Note this method is slow compared to querying by id, and requires an extra hashmap lookup.  
-     */
-    @Override
-    public DenseFactor getMarginals(Factor factor) {
-        FgNode node = fg.getNode(factor);
-        return getMarginals(factor, node);
-    }
-        
-    /** @inheritDoc */
-    @Override
-    public DenseFactor getMarginalsForVarId(int varId) {
-        FgNode node = fg.getVarNode(varId);
-        return getMarginals(node.getVar(), node);
-    }
-
-    /** @inheritDoc */
-    @Override
-    public DenseFactor getMarginalsForFactorId(int factorId) {
-        FgNode node = fg.getFactorNode(factorId);
-        return getMarginals(node.getFactor(), node);
-    }
-
-    /** @inheritDoc */
-    @Override
-    public double getPartition() {        
+    public double getPartitionBelief() {
         if (prm.schedule == BpScheduleType.TREE_LIKE && prm.normalizeMessages == false) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 
             // no renormalization of messages.
@@ -726,7 +702,7 @@ public class ErmaBp implements FgInferencer {
             Factor f = fg.getFactors().get(a);
             if (!(f instanceof GlobalFactor)) {
                 int numConfigs = f.getVars().calcNumConfigs();
-                DenseFactor beliefs = getMarginalsForFactorId(a);
+                DenseFactor beliefs = getFactorBeliefs(a);
                 for (int c=0; c<numConfigs; c++) {                
                     double chi_c = f.getUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
@@ -745,7 +721,7 @@ public class ErmaBp implements FgInferencer {
         for (int i=0; i<fg.getVars().size(); i++) {
             Var v = fg.getVars().get(i);
             int numNeighbors = fg.getVarNode(i).getOutEdges().size();
-            DenseFactor beliefs = getMarginalsForVarId(i);
+            DenseFactor beliefs = getVarBeliefs(i);
             double sum = 0.0;
             for (int c=0; c<v.getNumStates(); c++) {
                 if (beliefs.getValue(c) != semiringZero) { 
@@ -787,6 +763,96 @@ public class ErmaBp implements FgInferencer {
         } else {
             return prod.getSum();
         }
+    }
+    
+    /* ------------------------- FgInferencer Methods -------------------- */
+    
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getMarginals(Var var) {
+        DenseFactor marg = getVarBeliefs(var);
+        if (prm.logDomain) {
+            marg.convertLogToReal();
+        }
+        return marg;
+    }
+    
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getMarginals(Factor factor) {
+        DenseFactor marg = getFactorBeliefs(factor);
+        if (prm.logDomain) {
+            marg.convertLogToReal();
+        }
+        return marg;
+    }
+        
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getMarginalsForVarId(int varId) {
+        return getMarginals(fg.getVar(varId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getMarginalsForFactorId(int factorId) {
+        return getMarginals(fg.getFactor(factorId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public double getPartition() {
+        double pb = getPartitionBelief();
+        if (prm.logDomain) {
+            pb = FastMath.exp(pb);
+        }
+        return pb; 
+    }    
+
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getLogMarginals(Var var) {
+        DenseFactor marg = getVarBeliefs(var);
+        if (!prm.logDomain) {
+            marg.convertRealToLog();
+        }
+        return marg;
+    }
+    
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getLogMarginals(Factor factor) {
+        DenseFactor marg = getFactorBeliefs(factor);
+        if (!prm.logDomain) {
+            marg.convertRealToLog();
+        }
+        return marg;
+    }
+        
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getLogMarginalsForVarId(int varId) {
+        return getLogMarginals(fg.getVar(varId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getLogMarginalsForFactorId(int factorId) {
+        return getLogMarginals(fg.getFactor(factorId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public double getLogPartition() {
+        double pb = getPartitionBelief();
+        if (!prm.logDomain) {
+            pb = FastMath.log(pb);
+        }
+        return pb; 
     }
         
     @Override

@@ -138,8 +138,8 @@ public class CrfObjectiveTest {
     	
     @Test
     public void testSrlLogLikelihood() throws Exception {
-        srlLogLikelihoodCorrect(true);
         srlLogLikelihoodCorrect(false);
+        srlLogLikelihoodCorrect(true);
     }
     
     public void srlLogLikelihoodCorrect(boolean logDomain) {
@@ -182,7 +182,7 @@ public class CrfObjectiveTest {
         assertEquals(2, infLat.getPartition(), 2);
         // Check that the partition function is computed identically for each variable.
         for (Var v : fgLat.getVars()) {
-            double partition = ((BeliefPropagation)infLat).getPartitionFunctionAtVarNode(fgLat.getNode(v));
+            double partition = ((BeliefPropagation)infLat).getPartitionBeliefAtVarNode(fgLat.getNode(v));
             //TODO: assertEquals(2, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         
@@ -192,7 +192,7 @@ public class CrfObjectiveTest {
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();        
         // 2 trees, and 3 different roles (including argUNK)
-        assertEquals(2*3, logDomain ? FastMath.exp(infLatPred.getPartition()) : infLatPred.getPartition(), 1e-3);         
+        assertEquals(2*3, infLatPred.getPartition(), 1e-3);         
 
         // Print schedule:
         BfsBpSchedule schedule = new BfsBpSchedule(fgLatPred);        
@@ -207,7 +207,7 @@ public class CrfObjectiveTest {
         }
         // Check that the partition function is computed identically for each variable.
         for (Var v : fgLatPred.getVars()) {
-            double partition = ((BeliefPropagation)infLatPred).getPartitionFunctionAtVarNode(fgLatPred.getNode(v));
+            double partition = ((BeliefPropagation)infLatPred).getPartitionBeliefAtVarNode(fgLatPred.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
             assertEquals(2*3, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }

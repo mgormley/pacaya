@@ -142,11 +142,7 @@ public class ErmaProjDepTreeFactorTest {
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
-        if (logDomain) {
-            return Math.exp(bf.getPartition());
-        } else {
-            return bf.getPartition();
-        }
+        return bf.getPartition();
     }    
 
     private double getNumberOfTreesByBp(int n, boolean logDomain) {
@@ -163,11 +159,7 @@ public class ErmaProjDepTreeFactorTest {
         prm.normalizeMessages = false;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
-        if (logDomain) {
-            return Math.exp(bp.getPartition());
-        } else {
-            return bp.getPartition();
-        }
+        return bp.getPartition();
     }
     
 
@@ -185,11 +177,7 @@ public class ErmaProjDepTreeFactorTest {
         prm.normalizeMessages = true;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
-        if (logDomain) {
-            return Math.exp(bp.getPartition());
-        } else {
-            return bp.getPartition();
-        }
+        return bp.getPartition();
     }
     
     @Test
@@ -270,20 +258,20 @@ public class ErmaProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    System.out.format("%d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, logDomain, i, j));
+                    System.out.format("%d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, i, j));
                 }
             }
         }
 
         // Check expected counts.
         double Z = 45+28+20+84+162+216+96;
-        assertEquals((28+84)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 2), 1e-3);
-        assertEquals((45+162+216)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 2, 1), 1e-3);
-        assertEquals((28+20+96)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 0, 1), 1e-3);
-        assertEquals((96+216)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 2, 0), 1e-3);  
+        assertEquals((28+84)/Z, getExpectedCount(bp, rootVars, childVars, 1, 2), 1e-3);
+        assertEquals((45+162+216)/Z, getExpectedCount(bp, rootVars, childVars, 2, 1), 1e-3);
+        assertEquals((28+20+96)/Z, getExpectedCount(bp, rootVars, childVars, 0, 1), 1e-3);
+        assertEquals((96+216)/Z, getExpectedCount(bp, rootVars, childVars, 2, 0), 1e-3);  
         
-        assertEquals((45+28+20)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-13);
-        assertEquals((162+216+96)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 2), 1e-3);
+        assertEquals((45+28+20)/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-13);
+        assertEquals((162+216+96)/Z, getExpectedCount(bp, rootVars, childVars, -1, 2), 1e-3);
 
         // Check partition function.
         double[] trees = new double[] {45, 28, 20, 84, 162, 216, 96};
@@ -292,7 +280,7 @@ public class ErmaProjDepTreeFactorTest {
             expectedRbar += trees[t] * FastMath.log(trees[t]);
         }
         System.out.println("expectedRbar: " + expectedRbar);
-        assertEquals(45+28+20+84+162+216+96, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(45+28+20+84+162+216+96, bp.getPartition(), 1e-3);
         
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -381,7 +369,7 @@ public class ErmaProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    System.out.format("%d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, logDomain, i, j));
+                    System.out.format("%d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, i, j));
                 }
             }
         }
@@ -389,10 +377,10 @@ public class ErmaProjDepTreeFactorTest {
         double Z = 3*3 + 3*7 + 8*2 + 8*5;
 
         // Check partition function.
-        assertEquals(Z, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(Z, bp.getPartition(), 1e-3);
         // Check expected counts.
-        assertEquals((3*3 + 3*7)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-3);
-        assertEquals((8*2 + 8*5)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 0), 1e-3);
+        assertEquals((3*3 + 3*7)/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
+        assertEquals((8*2 + 8*5)/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -474,7 +462,7 @@ public class ErmaProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    System.out.format("%d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, logDomain, i, j));
+                    System.out.format("%d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, i, j));
                 }
             }
         }
@@ -494,16 +482,16 @@ public class ErmaProjDepTreeFactorTest {
         
         double Z = 4;
         // Check partition function.
-        assertEquals(Z, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(Z, bp.getPartition(), 1e-3);
         for (Var v : fg.getVars()) {
             double partition = bp.getPartitionFunctionAtVarNode(fg.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
             assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         // Check expected counts.
-        System.out.println(getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0));
-        assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-3);
-        assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 0), 1e-3);
+        System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
+        assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
+        assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -566,7 +554,7 @@ public class ErmaProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    System.out.format("VarMarg: %d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, logDomain, i, j));
+                    System.out.format("VarMarg: %d %d: %.2f\n", i, j, getExpectedCount(bp, rootVars, childVars, i, j));
                 }
             }
         }
@@ -580,7 +568,7 @@ public class ErmaProjDepTreeFactorTest {
         
         double Z = 2;
         // Check partition function.
-        assertEquals(Z, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(Z, bp.getPartition(), 1e-3);
         if (prm.normalizeMessages == false) {
             for (Var v : fg.getVars()) {
                 double partition = bp.getPartitionFunctionAtVarNode(fg.getNode(v));
@@ -589,9 +577,9 @@ public class ErmaProjDepTreeFactorTest {
             }
         }
         // Check expected counts.
-        System.out.println(getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0));
-        assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-3);
-        assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 0), 1e-3);
+        System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
+        assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
+        assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -650,7 +638,7 @@ public class ErmaProjDepTreeFactorTest {
         }
         System.out.println("Partition: " + bpExpl.getPartition());
         System.out.println("Partition: " + bpDp.getPartition());
-        assertEquals(bpExpl.getPartition(), bpDp.getPartition(), 1e-10);
+        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
     }
 
     private void printMessages(FactorGraph fg, ErmaBp bp) {
@@ -711,7 +699,7 @@ public class ErmaProjDepTreeFactorTest {
         bf.run();
         printBeliefs(fg, bf);
 
-        assertEquals(bf.getPartition(), bp.getPartition(), 1e-1);
+        assertEquals(bf.getLogPartition(), bp.getLogPartition(), 1e-1);
         //ErmaBpTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
     
@@ -851,14 +839,14 @@ public class ErmaProjDepTreeFactorTest {
         System.out.println("Partition: " + bp.getPartition());
     }
     
-    private double getExpectedCount(ErmaBp bp, LinkVar[] rootVars, LinkVar[][] childVars, boolean logDomain, int i, int j) {
+    private double getExpectedCount(ErmaBp bp, LinkVar[] rootVars, LinkVar[][] childVars, int i, int j) {
         DenseFactor marg;
         if (i == -1) {
             marg = bp.getMarginals(rootVars[j]);
         } else {
             marg = bp.getMarginals(childVars[i][j]);
         }        
-        return logDomain ? FastMath.exp(marg.getValue(LinkVar.TRUE)) : marg.getValue(LinkVar.TRUE);
+        return marg.getValue(LinkVar.TRUE);
     }
     
 }

@@ -7,6 +7,7 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.math.FastMath;
 
 /**
  * Inference by brute force summation.
@@ -86,8 +87,7 @@ public class BruteForceInferencer implements FgInferencer {
         return joint;
     }
     
-    @Override
-    public DenseFactor getMarginals(Var var) {
+    protected DenseFactor getVarBeliefs(Var var) {
         if (logDomain) {
             return joint.getLogMarginal(new VarSet(var), true);
         } else {
@@ -95,8 +95,7 @@ public class BruteForceInferencer implements FgInferencer {
         }
     }
 
-    @Override
-    public DenseFactor getMarginals(Factor factor) {
+    protected DenseFactor getFactorBeliefs(Factor factor) {
         if (logDomain) {
             return joint.getLogMarginal(factor.getVars(), true);
         } else {
@@ -104,18 +103,7 @@ public class BruteForceInferencer implements FgInferencer {
         }        
     }
 
-    @Override
-    public DenseFactor getMarginalsForVarId(int varId) {
-        return getMarginals(fg.getVar(varId));
-    }
-
-    @Override
-    public DenseFactor getMarginalsForFactorId(int factorId) {
-        return getMarginals(fg.getFactor(factorId));
-    }
-
-    @Override
-    public double getPartition() {
+    public double getPartitionBelief() {
         if (joint.getVars().size() == 0) {
             return logDomain ? 0.0 : 1.0;
         }
@@ -124,6 +112,96 @@ public class BruteForceInferencer implements FgInferencer {
         } else {
             return joint.getSum();
         }
+    }
+    
+    /* ------------------------- FgInferencer Methods -------------------- */
+    
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getMarginals(Var var) {
+        DenseFactor marg = getVarBeliefs(var);
+        if (logDomain) {
+            marg.convertLogToReal();
+        }
+        return marg;
+    }
+    
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getMarginals(Factor factor) {
+        DenseFactor marg = getFactorBeliefs(factor);
+        if (logDomain) {
+            marg.convertLogToReal();
+        }
+        return marg;
+    }
+        
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getMarginalsForVarId(int varId) {
+        return getMarginals(fg.getVar(varId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getMarginalsForFactorId(int factorId) {
+        return getMarginals(fg.getFactor(factorId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public double getPartition() {
+        double pb = getPartitionBelief();
+        if (logDomain) {
+            pb = FastMath.exp(pb);
+        }
+        return pb; 
+    }    
+
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getLogMarginals(Var var) {
+        DenseFactor marg = getVarBeliefs(var);
+        if (!logDomain) {
+            marg.convertRealToLog();
+        }
+        return marg;
+    }
+    
+    /** @inheritDoc
+     */
+    @Override
+    public DenseFactor getLogMarginals(Factor factor) {
+        DenseFactor marg = getFactorBeliefs(factor);
+        if (!logDomain) {
+            marg.convertRealToLog();
+        }
+        return marg;
+    }
+        
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getLogMarginalsForVarId(int varId) {
+        return getLogMarginals(fg.getVar(varId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public DenseFactor getLogMarginalsForFactorId(int factorId) {
+        return getLogMarginals(fg.getFactor(factorId));
+    }
+
+    /** @inheritDoc */
+    @Override
+    public double getLogPartition() {
+        double pb = getPartitionBelief();
+        if (!logDomain) {
+            pb = FastMath.log(pb);
+        }
+        return pb; 
     }
 
     @Override

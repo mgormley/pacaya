@@ -14,32 +14,20 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
-import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
-import edu.jhu.util.semiring.Algebra;
+import edu.jhu.prim.util.math.FastMath;
 
 public class DepParseDecoder {
 
     private static final Logger log = Logger.getLogger(DepParseDecoder.class);
 
-    public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n, boolean logDomain) {        
+    public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n) {        
         // Build up the beliefs about the link variables (if present),
         // and compute the MBR dependency parse.
-        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false, logDomain);
+        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();
         
         if (linkVarCount > 0) {
-            // Convert from probs or log-probs to actual probabilities.
-            final Algebra s = logDomain ? new LogSemiring() : new RealAlgebra();
-            scores.apply(new LambdaUnaryOpDouble() {
-                @Override
-                public double call(double v) {
-                    return s.toReal(v);
-                }
-            });
-
             // Get MBR parse, by finding the argmax tree where we treat the
             // score of a tree as the sum of the edge scores.
             int[] parents = new int[n];
@@ -51,8 +39,7 @@ public class DepParseDecoder {
         }
     }
 
-    private static Pair<EdgeScores, Integer> getEdgeScores(List<DenseFactor> margs, List<Var> vars, int n, boolean logOdds, boolean logDomain) {
-        Algebra s = logDomain ? new LogSemiring() : new RealAlgebra();
+    private static Pair<EdgeScores, Integer> getEdgeScores(List<DenseFactor> margs, List<Var> vars, int n, boolean logOdds) {
         int linkVarCount = 0;
         EdgeScores scores = new EdgeScores(n, Double.NEGATIVE_INFINITY);
         for (int varId = 0; varId < vars.size(); varId++) {
@@ -68,7 +55,7 @@ public class DepParseDecoder {
                     // TODO: Using logOdds is the method of MBR decoding
                     // prescribed in Smith & Eisner (2008). However, this breaks the parser
                     // when the log-odds are positive infinity.
-                    belief = s.divide(marg.getValue(LinkVar.TRUE), marg.getValue(LinkVar.FALSE));
+                    belief = FastMath.log(marg.getValue(LinkVar.TRUE) / marg.getValue(LinkVar.FALSE));
                 } else {
                     belief = marg.getValue(LinkVar.TRUE);
                 }
@@ -83,10 +70,8 @@ public class DepParseDecoder {
         return new Pair<EdgeScores, Integer>(scores, linkVarCount);
     }
 
-    public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg, boolean logDomain) {
-        Algebra s = logDomain ? new LogSemiring() : new RealAlgebra();
-
-        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false, logDomain);
+    public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg) {
+        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();
         if (linkVarCount > 0) {
@@ -105,7 +90,6 @@ public class DepParseDecoder {
             // For each token, prune any heads for which the marginal
             // probability is less than propMaxMarg (e.g. 0.0001) times the
             // maximum head marginal for that token.
-            double logPropMaxMarg = s.fromReal(propMaxMarg);
             DepEdgeMask mask = new DepEdgeMask(n, false);
             for (int p=-1; p<n; p++) {
                 for (int c=0; c<n; c++) {
@@ -113,9 +97,9 @@ public class DepParseDecoder {
                     double marg = scores.getScore(p, c);
                     // In probability domain: marg < propMaxMarg * maxMargForTok[c];
                     if (log.isTraceEnabled()) {
-                        log.trace(String.format("p=%d c=%d marg=%f maxMarg=%f thresh=%f", p, c, marg, maxMargForTok[c], logPropMaxMarg + maxMargForTok[c]));
+                        log.trace(String.format("p=%d c=%d marg=%f maxMarg=%f thresh=%f", p, c, marg, maxMargForTok[c], propMaxMarg * maxMargForTok[c]));
                     }
-                    if (marg < s.times(logPropMaxMarg, maxMargForTok[c])) {
+                    if (marg < propMaxMarg * maxMargForTok[c]) {
                         mask.setIsKept(p, c, false);
                     } else {
                         mask.setIsKept(p, c, true);

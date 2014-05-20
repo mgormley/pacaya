@@ -113,9 +113,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
             for (int c=0; c<numConfigs; c++) {       
                 // Get the probability of the c'th configuration for this factor.
                 double prob = factorMarginal.getValue(c);
-                if (inferencer.isLogDomain()) {
-                    prob = FastMath.exp(prob);
-                }
+                
                 // The configuration of all the latent/predicted variables,
                 // where the predicted variables (might) have been clamped.
                 int config = (iter != null) ? iter.next() : c;

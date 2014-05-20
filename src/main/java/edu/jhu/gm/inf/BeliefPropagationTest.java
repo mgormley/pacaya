@@ -131,10 +131,10 @@ public class BeliefPropagationTest {
         bp.run();
         assertEqualMarginals(fg, bf, bp);
         
-    	DenseFactor x0_marg = bp.getMarginals(x0);
+    	DenseFactor x0_marg = bp.getLogMarginals(x0);
         assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
         assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
-        DenseFactor x1_marg = bp.getMarginals(x1);
+        DenseFactor x1_marg = bp.getLogMarginals(x1);
         assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
         assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
 				
@@ -421,20 +421,39 @@ public class BeliefPropagationTest {
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             BeliefPropagation bp, double tolerance) {
         for (Var var : fg.getVars()) {
-            DenseFactor bfm = bf.getMarginals(var);
-            DenseFactor bpm = bp.getMarginals(var);
-            if (!bfm.equals(bpm, tolerance)) {
-                assertEquals(bfm, bpm);
+            {
+                DenseFactor bfm = bf.getMarginals(var);
+                DenseFactor bpm = bp.getMarginals(var);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
+            }
+            {
+                DenseFactor bfm = bf.getLogMarginals(var);
+                DenseFactor bpm = bp.getLogMarginals(var);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
             }
         }
         for (Factor f : fg.getFactors()) {
-            DenseFactor bfm = bf.getMarginals(f);
-            DenseFactor bpm = bp.getMarginals(f);
-            if (!bfm.equals(bpm, tolerance)) {
-                assertEquals(bfm, bpm);
+            {
+                DenseFactor bfm = bf.getMarginals(f);
+                DenseFactor bpm = bp.getMarginals(f);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
+            }
+            {
+                DenseFactor bfm = bf.getLogMarginals(f);
+                DenseFactor bpm = bp.getLogMarginals(f);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
             }
         }
         assertEquals(bf.getPartition(), bp.getPartition(), tolerance);
+        assertEquals(bf.getLogPartition(), bp.getLogPartition(), tolerance);
     }
     
 }

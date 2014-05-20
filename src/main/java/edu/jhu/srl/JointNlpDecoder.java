@@ -60,7 +60,7 @@ public class JointNlpDecoder {
         // Get the SRL graph.
         srlGraph = SrlDecoder.getSrlGraphFromVarConfig(mbrVarConfig, n);
         // Get the dependency tree.
-        parents = DepParseDecoder.getParents(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, logDomain);
+        parents = DepParseDecoder.getParents(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n);
         if (parents != null) {
             // Update predictions with parse.
             for (int p=-1; p<n; p++) {
@@ -72,7 +72,7 @@ public class JointNlpDecoder {
                 }
             }
         }
-        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, prm.pruneMargProp, logDomain);
+        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, prm.pruneMargProp);
     }
 
     public int[] getParents() {

@@ -151,7 +151,8 @@ public class CrfTrainerTest {
         
         model = train(model, maxent.getData(data));
         
-        JUnitUtils.assertArrayEquals(new double[]{1.093, 0.693}, FgModelTest.getParams(model), 1e-3);
+        // Note: this used to be 1.093.
+        JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, FgModelTest.getParams(model), 1e-3);
     }
     
     @Test
