@@ -22,4 +22,9 @@ public class ClampFactor extends ExplicitFactor implements Factor {
         this.setValue(state, s.one());
     }
 
+    @Override
+    public ClampFactor getClamped(VarConfig clmpVarConfig) {
+        throw new IllegalStateException("Clamp factors shouldn't be clamped.");
+    }
+        
 }
