@@ -154,7 +154,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
         
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages) {
+    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
         // Note on logDomain: all internal computation is done in the logDomain
         // since (for example) pi the product of all incoming false messages
         // would overflow.
@@ -220,7 +220,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
             outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
             
-            setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, span, outMsgTrue, outMsgFalse);
+            setOutMsgs(msgs, logDomain, outEdge, span, outMsgTrue, outMsgFalse);
         }
     }
     
@@ -299,24 +299,14 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     /** Sets the outgoing messages. */
-    private void setOutMsgs(Messages[] msgs, boolean logDomain, boolean normalizeMessages, FgEdge outEdge,
-            SpanVar span, double outMsgTrue, double outMsgFalse) {
+    private void setOutMsgs(Messages[] msgs, boolean logDomain, FgEdge outEdge, SpanVar span,
+            double outMsgTrue, double outMsgFalse) {
         
         // Set the outgoing messages.
         DenseFactor outMsg = msgs[outEdge.getId()].newMessage;
         outMsg.setValue(SpanVar.FALSE, outMsgFalse);
         outMsg.setValue(SpanVar.TRUE, outMsgTrue);
-        
-        if (log.isTraceEnabled()) {
-            log.trace(String.format("outMsgTrue (prenorm): %s = %.2f", span.getName(), outMsg.getValue(LinkVar.TRUE)));
-            log.trace(String.format("outMsgFalse (prenorm): %s = %.2f", span.getName(), outMsg.getValue(LinkVar.FALSE)));
-        }
-        
-        if (normalizeMessages) {
-            outMsg.logNormalize();
-            // TODO: Do we want this? boundToSafeValues(outMsg.getValues());
-        }
-        
+                
         if (log.isTraceEnabled()) {
             log.trace(String.format("outMsgTrue: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.TRUE)));
             log.trace(String.format("outMsgFalse: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.FALSE)));

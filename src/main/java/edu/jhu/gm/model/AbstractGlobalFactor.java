@@ -16,11 +16,13 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
     }
         
     @Override
-    public void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter) {
+    public boolean createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter) {
         if (iterAtLastCreateMessagesCall < iter) {
-            createMessages(parent, msgs, logDomain, normalizeMessages);            
+            createMessages(parent, msgs, logDomain);            
             iterAtLastCreateMessagesCall = iter;
+            return true;
         }
+        return false;
     }
 
     @Override
@@ -48,6 +50,6 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
         this.id = id;
     }
     
-    protected abstract void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages);
+    protected abstract void createMessages(FgNode parent, Messages[] msgs, boolean logDomain);
 
 }

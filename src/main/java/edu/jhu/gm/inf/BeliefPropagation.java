@@ -132,7 +132,6 @@ public class BeliefPropagation implements FgInferencer {
         this.factorBeliefCache = new DenseFactor[fg.getNumFactors()];
         
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-            // Cache the order if this is a sequential update.
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
                 sched = new BfsBpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
@@ -140,7 +139,6 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
-            order = sched.getOrder();
         }
     }
     
@@ -191,11 +189,16 @@ public class BeliefPropagation implements FgInferencer {
         
         
         // Message passing.
+        List<FgEdge> order = (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) ?
+            order = sched.getOrder() : null;
         for (int iter=0; iter < prm.maxIterations; iter++) {
             if (timer.totSec() > prm.timeoutSeconds) {
                 break;
             }
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
+                if (prm.schedule == BpScheduleType.RANDOM) {
+                    order = sched.getOrder();
+                }
                 for (FgEdge edge : order) {
                     createMessage(edge, iter);
                     sendMessage(edge);
@@ -252,7 +255,12 @@ public class BeliefPropagation implements FgInferencer {
             // create all the messages from this factor to its variables, but only 
             // once per iteration.
             GlobalFactor globalFac = (GlobalFactor) factor;
-            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, prm.normalizeMessages, iter);
+            boolean created = globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, false, iter);
+            if (created && prm.normalizeMessages) {
+               for (FgEdge e2 : edge.getParent().getOutEdges()) {
+                   normalize(msgs[e2.getId()].newMessage);
+               }
+            }
             // The messages have been set, so just return.
             return;
         } else {
@@ -310,18 +318,23 @@ public class BeliefPropagation implements FgInferencer {
             
             assert (msg.getVars().equals(new VarSet(var)));
             
-            if (prm.normalizeMessages) {
-                if (prm.logDomain) { 
-                    msg.logNormalize();
-                } else {
-                    msg.normalize();
-                }
-            }
-            // normalize and logNormalize already check for NaN
-            else assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;
+            normalize(msg);
             
             // Set the final message in case we created a new object.
             msgs[edgeId].newMessage = msg;
+        }
+    }
+
+    private void normalize(DenseFactor msg) {
+        if (prm.normalizeMessages) {
+            if (prm.logDomain) { 
+                msg.logNormalize();
+            } else {
+                msg.normalize();
+            }
+        } else { 
+            // normalize and logNormalize already check for NaN
+            assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;
         }
     }
 

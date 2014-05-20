@@ -145,7 +145,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
         
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages) {
+    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
         // Note on logDomain: all internal computation is done in the logDomain
         // since (for example) pi the product of all incoming false messages
         // would overflow.        
@@ -221,7 +221,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 outMsgFalse = inMsgFalse;
             }
             
-            setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, link, outMsgTrue, outMsgFalse);
+            setOutMsgs(msgs, logDomain, outEdge, link, outMsgTrue, outMsgFalse);
         }
     }
         
@@ -276,7 +276,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         // Don't divide out.
         double outMsgTrue = beliefTrue;
         double outMsgFalse = beliefFalse;        
-        setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, link, outMsgTrue, outMsgFalse);
+        setOutMsgs(msgs, logDomain, outEdge, link, outMsgTrue, outMsgFalse);
     }
     
     private double safeLogSubtract(double partition, double beliefTrue) {
@@ -371,28 +371,19 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
 
     /** Sets the outgoing messages. */
-    private void setOutMsgs(Messages[] msgs, boolean logDomain, boolean normalizeMessages, FgEdge outEdge,
-            LinkVar link, double outMsgTrue, double outMsgFalse) {
+    private void setOutMsgs(Messages[] msgs, boolean logDomain, FgEdge outEdge, LinkVar link,
+            double outMsgTrue, double outMsgFalse) {
         
         // Set the outgoing messages.
         DenseFactor outMsg = msgs[outEdge.getId()].newMessage;
         outMsg.setValue(LinkVar.FALSE, outMsgFalse);
         outMsg.setValue(LinkVar.TRUE, outMsgTrue);
-        
-        if (log.isTraceEnabled()) {
-            log.trace(String.format("outMsgTrue (prenorm): %s = %.2f", link.getName(), outMsg.getValue(LinkVar.TRUE)));
-            log.trace(String.format("outMsgFalse (prenorm): %s = %.2f", link.getName(), outMsg.getValue(LinkVar.FALSE)));
-        }
-        
-        if (normalizeMessages) {
-            outMsg.logNormalize();
-        }
-        
+                
         if (log.isTraceEnabled()) {
             log.trace(String.format("outMsgTrue: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.TRUE)));
             log.trace(String.format("outMsgFalse: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.FALSE)));
         }
-                
+        
         // Convert log messages to messages for output.
         if (!logDomain) {
             outMsg.convertLogToReal();

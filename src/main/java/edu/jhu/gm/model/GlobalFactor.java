@@ -15,7 +15,8 @@ public interface GlobalFactor extends Factor {
     /**
      * Creates all the messages from this global factor to all its variables.
      * The global factor is responsible for ensuring that it does not do
-     * execessive computation for each iteration of BP.
+     * excessive computation for each iteration of BP, so the factor may choose for 
+     * this to be a "no-op" as indicated by its return value.
      * 
      * @param parent The node for this global factor.
      * @param msgs The message containers.
@@ -23,8 +24,9 @@ public interface GlobalFactor extends Factor {
      *            the log-domain.
      * @param normalizeMessages TODO
      * @param iter The current belief propagation iteration.
+     * @return Whether the messages were created.
      */
-    void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter);
+    boolean createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter);
 
     /**
      * Resets this global factor for a new run of belief propagation.
