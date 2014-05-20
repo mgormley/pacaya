@@ -6,8 +6,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealSemiring;
-import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.Algebra;
 
 public class MseMarginalEvaluator {
 
@@ -21,7 +21,7 @@ public class MseMarginalEvaluator {
      * @return The UNORMALIZED mean squared error.
      */
     public double evaluate(VarConfig goldConfig, FgInferencer inf) {
-        SemiringExt s = (inf.isLogDomain()) ? new LogSemiring() : new RealSemiring();
+        Algebra s = (inf.isLogDomain()) ? new LogSemiring() : new RealAlgebra();
         double sum = s.zero();
 
         for (Var v : goldConfig.getVars()) {

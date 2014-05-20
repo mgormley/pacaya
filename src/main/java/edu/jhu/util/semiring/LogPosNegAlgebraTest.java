@@ -9,19 +9,19 @@ import org.junit.Test;
 
 import edu.jhu.util.dist.Gaussian;
 
-public class LogPosNegSemiringTest {
+public class LogPosNegAlgebraTest {
 
     private interface BinOp {
-        double call(double x, double y, SemiringExt s);
+        double call(double x, double y, Algebra s);
     }
 
     private interface UnaryOp {
-        double call(double x, SemiringExt s);
+        double call(double x, Algebra s);
     }
 
     private static final int NUM_RANDS = 100;
-    private LogPosNegSemiring sLog = new LogPosNegSemiring();
-    private RealSemiring sReal = new RealSemiring();
+    private LogPosNegAlgebra sLog = new LogPosNegAlgebra();
+    private RealAlgebra sReal = new RealAlgebra();
             
     @Test
     public void testToFromReal() {
@@ -45,7 +45,7 @@ public class LogPosNegSemiringTest {
     public void testTimes() {
         testBinaryOperation(new BinOp() {            
             @Override
-            public double call(double x, double y, SemiringExt s) {
+            public double call(double x, double y, Algebra s) {
                 return s.times(x, y);
             }
         });
@@ -55,7 +55,7 @@ public class LogPosNegSemiringTest {
     public void testDivide() {
         testBinaryOperation(new BinOp() {            
             @Override
-            public double call(double x, double y, SemiringExt s) {
+            public double call(double x, double y, Algebra s) {
                 return s.divide(x, y);
             }
         });
@@ -65,7 +65,7 @@ public class LogPosNegSemiringTest {
     public void testPlus() {
         testBinaryOperation(new BinOp() {            
             @Override
-            public double call(double x, double y, SemiringExt s) {
+            public double call(double x, double y, Algebra s) {
                 return s.plus(x, y);
             }
         });
@@ -75,7 +75,7 @@ public class LogPosNegSemiringTest {
     public void testMinus() {
         testBinaryOperation(new BinOp() {            
             @Override
-            public double call(double x, double y, SemiringExt s) {
+            public double call(double x, double y, Algebra s) {
                 return s.minus(x, y);
             }
         });
@@ -191,7 +191,7 @@ public class LogPosNegSemiringTest {
         }
     }
         
-    private static double compute(BinOp lambda, double x, double y, SemiringExt s) {
+    private static double compute(BinOp lambda, double x, double y, Algebra s) {
         double compacted = lambda.call(s.fromReal(x), s.fromReal(y), s);
         System.out.printf("%0#16x\n", Double.doubleToRawLongBits(compacted));
         return s.toReal(compacted);
@@ -261,7 +261,7 @@ public class LogPosNegSemiringTest {
     public void testExp() {
         testUnaryOperation(false, new UnaryOp() {
             @Override
-            public double call(double x, SemiringExt s) {
+            public double call(double x, Algebra s) {
                 return s.exp(x);
             }
         });
@@ -271,7 +271,7 @@ public class LogPosNegSemiringTest {
     public void testLog() {
         testUnaryOperation(true, new UnaryOp() {
             @Override
-            public double call(double x, SemiringExt s) {
+            public double call(double x, Algebra s) {
                 return s.log(x);
             }
         });
@@ -332,7 +332,7 @@ public class LogPosNegSemiringTest {
         }
     }
         
-    private static double compute(UnaryOp lambda, double x, SemiringExt s) {
+    private static double compute(UnaryOp lambda, double x, Algebra s) {
         double compacted = lambda.call(s.fromReal(x), s);
         System.out.printf("%0#16x %f\n", Double.doubleToRawLongBits(compacted), s.toReal(compacted));
         return s.toReal(compacted);

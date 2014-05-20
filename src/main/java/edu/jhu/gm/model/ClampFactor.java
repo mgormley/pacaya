@@ -1,7 +1,7 @@
 package edu.jhu.gm.model;
 
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
 
 public class ClampFactor extends ExplicitFactor implements Factor {
@@ -17,7 +17,7 @@ public class ClampFactor extends ExplicitFactor implements Factor {
     }
 
     public void updateFromModel(FgModel model, boolean logDomain) {
-        Semiring s = logDomain ? new LogSemiring() : new RealSemiring();
+        Semiring s = logDomain ? new LogSemiring() : new RealAlgebra();
         this.set(s.zero());
         this.setValue(state, s.one());
     }

@@ -11,11 +11,11 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseType;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.semiring.LogPosNegSemiring;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.SemiringExt;
-import edu.jhu.util.semiring.Semirings;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 public class HyperDepParser {
 
@@ -38,7 +38,7 @@ public class HyperDepParser {
         }
 
         @Override
-        public double getScoreFoe(Hyperedge e, SemiringExt s) {
+        public double getScoreFoe(Hyperedge e, Algebra s) {
             double p_e = w.getScore(e, s);
             if (p_e == s.zero()) {
                 return p_e;
@@ -106,14 +106,14 @@ public class HyperDepParser {
      * @return The parse chart.
      */
     public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot, double[][] fracChild) {
-        final SemiringExt semiring = new LogPosNegSemiring();         
+        final Algebra semiring = new LogPosNegAlgebra();         
         return insideAlgorithmEntropyFoe(fracRoot, fracChild, semiring);
     }
 
     public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot,
-            double[][] fracChild, final SemiringExt semiring) {
-        Semirings.fromLogProb(fracRoot, semiring);
-        Semirings.fromLogProb(fracChild, semiring);
+            double[][] fracChild, final Algebra semiring) {
+        Algebras.fromLogProb(fracRoot, semiring);
+        Algebras.fromLogProb(fracChild, semiring);
         
         FirstOrderDepParseHypergraph graph = new FirstOrderDepParseHypergraph(fracRoot, fracChild, semiring);
         Scores scores = new Scores();

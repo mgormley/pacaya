@@ -14,19 +14,19 @@ import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.dist.Dirichlet;
-import edu.jhu.util.semiring.LogPosNegSemiring;
-import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.SemiringExt;
-import edu.jhu.util.semiring.Semirings;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 public class HyperalgoTest {
 
     private Hyperpotential w = new Hyperpotential() {        
         @Override
         public double getScore(Hyperedge e, Semiring s) {
-            if (s instanceof SemiringExt) { 
-                return ((SemiringExt) s).fromReal(1);
+            if (s instanceof Algebra) { 
+                return ((Algebra) s).fromReal(1);
             } else {
                 throw new RuntimeException();
             }
@@ -74,8 +74,8 @@ public class HyperalgoTest {
         expected.betaAdj = null;
         expected.weightAdj = null;
         
-        expected = forwardBackwardCheck(graph, expected, new RealSemiring(), null);
-        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), null);
+        expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
+        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
     } 
        
     private static MemHypergraph getSimpleGraph() {
@@ -123,18 +123,18 @@ public class HyperalgoTest {
         expected.betaAdj = new double[]{0, 0, 0, -0.6666666666666667, -0.6666666666666667, -1.0};
         expected.weightAdj = new double[]{0, 0, 0, 0, 0, 0, 0, 0};
         
-        forwardBackwardCheck(graph, expected, new RealSemiring(), null);
-        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), null);
+        forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
+        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
     }
     
-    private Scores forwardBackwardCheck(MemHypergraph graph, Scores expected, SemiringExt s, double[] marginalAdj) {
+    private Scores forwardBackwardCheck(MemHypergraph graph, Scores expected, Algebra s, double[] marginalAdj) {
         Scores scores = new Scores();
         Hyperalgo.forward(graph, w, s, scores);
         scores.marginalAdj = new double[graph.getNodes().size()];
         if (marginalAdj == null) {
             DoubleArrays.fill(scores.marginalAdj, s.fromReal(1));
         } else {
-            scores.marginalAdj = Semirings.getFromReal(marginalAdj, s);
+            scores.marginalAdj = Algebras.getFromReal(marginalAdj, s);
         }
         Hyperalgo.backward(graph, w, s, scores);
         
@@ -149,8 +149,8 @@ public class HyperalgoTest {
         return scores;
     }
 
-    private void printAndCheck(String name, double[] expectedReals, double[] actual, SemiringExt s) {
-        double[] actualReals = Semirings.getToReal(actual, s);
+    private void printAndCheck(String name, double[] expectedReals, double[] actual, Algebra s) {
+        double[] actualReals = Algebras.getToReal(actual, s);
         System.out.println(name + ": " + Arrays.toString(actualReals));
         if (expectedReals == null) {
             System.out.println("WARN: skipping check of " + name);
@@ -204,16 +204,16 @@ public class HyperalgoTest {
         expected.betaAdj = null;
         expected.weightAdj = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         
-        expected = forwardBackwardCheck(graph, expected, new RealSemiring(), null);
-        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), null);
+        expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
+        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
         
         // Check that both semirings get the same answers when using random marginal adjoints.
         expected = new Scores();
         double[] marginalAdj = new double[graph.getNodes().size()];
         Arrays.fill(marginalAdj, 1.0);
         marginalAdj = Dirichlet.staticDraw(marginalAdj);
-        expected = forwardBackwardCheck(graph, expected, new RealSemiring(), marginalAdj);
-        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), marginalAdj);
+        expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), marginalAdj);
+        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), marginalAdj);
     }
             
     private static MemHypergraph getCkyGraph() {

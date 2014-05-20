@@ -16,8 +16,8 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealSemiring;
-import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.Algebra;
 
 public class DepParseDecoder {
 
@@ -32,7 +32,7 @@ public class DepParseDecoder {
         
         if (linkVarCount > 0) {
             // Convert from probs or log-probs to actual probabilities.
-            final SemiringExt s = logDomain ? new LogSemiring() : new RealSemiring();
+            final Algebra s = logDomain ? new LogSemiring() : new RealAlgebra();
             scores.apply(new LambdaUnaryOpDouble() {
                 @Override
                 public double call(double v) {
@@ -52,7 +52,7 @@ public class DepParseDecoder {
     }
 
     private static Pair<EdgeScores, Integer> getEdgeScores(List<DenseFactor> margs, List<Var> vars, int n, boolean logOdds, boolean logDomain) {
-        SemiringExt s = logDomain ? new LogSemiring() : new RealSemiring();
+        Algebra s = logDomain ? new LogSemiring() : new RealAlgebra();
         int linkVarCount = 0;
         EdgeScores scores = new EdgeScores(n, Double.NEGATIVE_INFINITY);
         for (int varId = 0; varId < vars.size(); varId++) {
@@ -84,7 +84,7 @@ public class DepParseDecoder {
     }
 
     public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg, boolean logDomain) {
-        SemiringExt s = logDomain ? new LogSemiring() : new RealSemiring();
+        Algebra s = logDomain ? new LogSemiring() : new RealAlgebra();
 
         Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false, logDomain);
         EdgeScores scores = pair.get1();

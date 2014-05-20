@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.hypergraph.Hypergraph.HyperedgeFn;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.Algebra;
 
 public class Hyperalgo {
 
@@ -18,14 +18,14 @@ public class Hyperalgo {
         // Private constructor.
     }
     
-    public static void forward(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void forward(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         insideAlgorithm(graph, w, s, scores);
         outsideAlgorithm(graph, w, s, scores);
         marginals(graph, w, s, scores);
     }
     
-    public static void backward(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void backward(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         if (scores.marginalAdj == null) {
             throw new IllegalStateException("scores.marginalAdj must be non-null.");
@@ -118,7 +118,7 @@ public class Hyperalgo {
      *         score for the i'th node in the Hypergraph, graph.getNodes().get(i).
      */
     public static void insideAlgorithmFirstOrderExpect(final Hypergraph graph, final HyperpotentialFoe w,
-            final SemiringExt s, final Scores scores) {
+            final Algebra s, final Scores scores) {
         final int n = graph.getNodes().size();
         final double[] beta = new double[n];
         final double[] betaFoe = new double[n];
@@ -205,7 +205,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void marginals(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void marginals(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         final int n = graph.getNodes().size();
         final double[] alpha = scores.alpha;
@@ -244,7 +244,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void outsideAdjoint(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void outsideAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         final int n = graph.getNodes().size();
         final double[] marginalAdj = scores.marginalAdj;
@@ -290,7 +290,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void insideAdjoint(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void insideAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         final int n = graph.getNodes().size();
         final double[] alpha = scores.alpha;
@@ -368,7 +368,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         final double[] alpha = scores.alpha;
         final double[] beta = scores.beta;

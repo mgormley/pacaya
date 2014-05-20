@@ -25,7 +25,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
 
 /**
@@ -372,7 +372,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
 
     @Override
     public double getUnormalizedScore(VarConfig vc) {
-        Semiring s = logDomain ? new LogSemiring() : new RealSemiring(); 
+        Semiring s = logDomain ? new LogSemiring() : new RealAlgebra(); 
         boolean[][] chart = getChart(n, vc);
         if (chart == null || !isTree(n, chart)) {
             log.warn("Tree is not a valid constituency tree.");

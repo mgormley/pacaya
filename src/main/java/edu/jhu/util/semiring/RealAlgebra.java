@@ -2,7 +2,7 @@ package edu.jhu.util.semiring;
 
 import edu.jhu.prim.util.math.FastMath;
 
-public class RealSemiring implements Semiring, SemiringExt {
+public class RealAlgebra implements Semiring, Algebra {
 
     @Override
     public double plus(double x, double y) {

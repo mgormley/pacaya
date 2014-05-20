@@ -11,10 +11,10 @@ import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
-import edu.jhu.util.semiring.LogPosNegSemiring;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealSemiring;
-import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.Algebra;
 
 public class HyperDepParserTest {
 
@@ -149,12 +149,12 @@ public class HyperDepParserTest {
 
     @Test
     public void testInsideFirstOrderExpect1() {
-        helpTestInsideFirstOrderExpect(new RealSemiring());
+        helpTestInsideFirstOrderExpect(new RealAlgebra());
         helpTestInsideFirstOrderExpect(new LogSemiring());
-        helpTestInsideFirstOrderExpect(new LogPosNegSemiring());
+        helpTestInsideFirstOrderExpect(new LogPosNegAlgebra());
     }
 
-    private void helpTestInsideFirstOrderExpect(SemiringExt s) {
+    private void helpTestInsideFirstOrderExpect(Algebra s) {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
         

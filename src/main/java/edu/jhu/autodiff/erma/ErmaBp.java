@@ -30,8 +30,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.semiring.RealSemiring;
-import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.Algebra;
 
 /**
  * Loopy belief propagation inference algorithm with support for empirical risk
@@ -296,7 +296,7 @@ public class ErmaBp implements FgInferencer {
     }
 
     // TODO:
-    SemiringExt s = new RealSemiring();
+    Algebra s = new RealAlgebra();
 
     public void backward(DenseFactor[] varBeliefsAdj, DenseFactor[] facBeliefsAdj) {
         // TODO:

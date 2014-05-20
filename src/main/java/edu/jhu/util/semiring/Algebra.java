@@ -1,7 +1,12 @@
 package edu.jhu.util.semiring;
 
 
-public interface SemiringExt extends Semiring {
+/** 
+ * An abstract algebra.
+ * 
+ * @author mgormley
+ */
+public interface Algebra extends Semiring {
 
     double minus(double x, double y);
     double divide(double x, double y);

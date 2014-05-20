@@ -23,11 +23,11 @@ import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.LogPosNegSemiring;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.Algebra;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -404,7 +404,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         getLogOddsRatios(parent, msgs, logDomain, root, child);
         double logPi = getProductOfAllFalseMessages(parent, msgs, logDomain);
 
-        SemiringExt s = new LogPosNegSemiring();
+        Algebra s = new LogPosNegAlgebra();
         Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
@@ -467,7 +467,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
     @Override
     public double getUnormalizedScore(VarConfig vc) {
-        Semiring s = logDomain ? new LogSemiring() : new RealSemiring();  
+        Semiring s = logDomain ? new LogSemiring() : new RealAlgebra();  
         if (!hasOneParentPerToken(n, vc)) {
             log.warn("Tree has more than one arc to root.");
             return s.zero();
