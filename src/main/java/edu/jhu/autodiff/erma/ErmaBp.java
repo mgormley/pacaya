@@ -350,6 +350,7 @@ public class ErmaBp implements FgInferencer {
             // Process each tape entry in reverse order.
             for (int t = tape.size() - 1; t >= 0; t--) {
                 backwardSendMessage(t);
+                backwardNormalize(t);
                 backwardCreateMessage(t);            
             }
         } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
@@ -363,6 +364,7 @@ public class ErmaBp implements FgInferencer {
                         break;
                     }
                     backwardSendMessage(t);
+                    backwardNormalize(t);
                 }
                 // Create the adjoints of the messages that were just
                 // "sent backwards" above.
@@ -392,6 +394,18 @@ public class ErmaBp implements FgInferencer {
         msgsAdj[i].message.set(s.zero());            // The adjoint at time (t)
     }
 
+    private void backwardNormalize(int t) {
+        // Dequeue from tape.
+        FgEdge edge = tape.edges.get(t);
+        double msgSum = tape.msgSums.get(t);
+        int i = edge.getId();
+
+        if (prm.normalizeMessages) {
+            // Convert the adjoint of the message to the adjoint of the unnormalized message.
+            unormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
+        }
+    }
+    
     /**
      * Creates the adjoint of the unnormalized message for the edge at time t
      * and stores it in msgsAdj[i].message.
@@ -399,14 +413,8 @@ public class ErmaBp implements FgInferencer {
     private void backwardCreateMessage(int t) {
         // Dequeue from tape.
         FgEdge edge = tape.edges.get(t);
-        double msgSum = tape.msgSums.get(t);
         boolean created = tape.createFlags.get(t);            
         int i = edge.getId();
-
-        if (prm.normalizeMessages) {
-            // Convert the adjoint of the message to the adjoint of the unnormalized message.
-            unormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
-        }
         
         if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
             // TODO: The schedule should be over edge sets, not individual edges, so we don't need the "created" flag.
@@ -451,25 +459,42 @@ public class ErmaBp implements FgInferencer {
         getProductOfMessages(fg.getFactorNode(a), potentialsAdj[a], null);
     }
 
-    private void backwardVarToFactor(FgEdge edge, int i) {
-        for (FgEdge edge2 : fg.getVarNode(edge.getVar().getId()).getInEdges()) {
-            if (edge2 != edge.getOpposing()) {
-                // Update each adjoint.
-                DenseFactor prod = new DenseFactor(msgsAdj[i].message);
+    private void backwardVarToFactor(FgEdge edgeIA, int i) {
+        // Increment the adjoint for each factor to variable message.
+        for (FgEdge edgeBI : fg.getVarNode(edgeIA.getVar().getId()).getInEdges()) {
+            if (edgeBI != edgeIA.getOpposing()) {
+                DenseFactor prod = new DenseFactor(msgsAdj[i].newMessage);
                 // Get the product with all the incoming messages into the variable, excluding the factor from edge and edge2.
-                getProductOfMessages(edge.getParent(), prod, edge.getChild(), edge2.getParent());
-                msgsAdj[edge2.getId()].message.add(prod); // TODO: semiring
+                getProductOfMessages(edgeIA.getParent(), prod, edgeIA.getChild(), edgeBI.getParent());
+                msgsAdj[edgeBI.getId()].message.add(prod); // TODO: semiring
+                // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
             }
         }
     }
 
-    private void backwardFactorToVar(FgEdge edge, int i) {
-        int facId = edge.getFactor().getId();
-        DenseFactor prod = new DenseFactor(msgsAdj[i].message);
-        getProductOfMessages(edge.getParent(), prod, edge.getChild());
-        VarSet varsMinusI = new VarSet(prod.getVars());
-        varsMinusI.remove(edge.getVar());
-        potentialsAdj[facId].add(prod.getMarginal(varsMinusI, false)); // TODO: semiring
+    private void backwardFactorToVar(FgEdge edgeAI, int i) {
+        int facId = edgeAI.getFactor().getId();
+        
+        // Increment the adjoint for the potentials.
+        {
+            DenseFactor prod = new DenseFactor(msgsAdj[i].newMessage);
+            getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild());
+            VarSet varsMinusI = new VarSet(prod.getVars());
+            varsMinusI.remove(edgeAI.getVar());
+            potentialsAdj[facId].add(prod.getMarginal(varsMinusI, false)); // TODO: semiring
+        }
+        
+        // Increment the adjoint for each variable to factor message.
+        for (FgEdge edgeJA : fg.getFactorNode(facId).getInEdges()) {
+            if (edgeJA != edgeAI.getOpposing()) {
+                DenseFactor prod = new DenseFactor(potentialsAdj[facId]);
+                getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
+                prod.prod(msgsAdj[i].newMessage); // TODO: semiring
+                VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
+                msgsAdj[edgeJA.getId()].message.add(prod.getMarginal(varJ, false)); // TODO: semiring
+                // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
+            }
+        }
     }
     
     public void clear() {
