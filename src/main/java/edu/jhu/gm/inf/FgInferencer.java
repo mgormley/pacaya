@@ -30,15 +30,6 @@ public interface FgInferencer {
 
     /**
      * Gets the approximate (log-)probabilities for the marginal distribution of
-     * a set of variables.
-     * 
-     * @return The marginal distribution as log-probabilities if isLogDomain()
-     *         == true, and probabilities otherwise.
-     */
-    DenseFactor getMarginals(VarSet varSet);
-
-    /**
-     * Gets the approximate (log-)probabilities for the marginal distribution of
      * a single factor.
      * 
      * @return The marginal distribution as log-probabilities if isLogDomain()

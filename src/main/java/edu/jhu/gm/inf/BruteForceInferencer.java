@@ -96,12 +96,6 @@ public class BruteForceInferencer implements FgInferencer {
     }
 
     @Override
-    public DenseFactor getMarginals(VarSet varSet) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public DenseFactor getMarginals(Factor factor) {
         if (logDomain) {
             return joint.getLogMarginal(factor.getVars(), true);

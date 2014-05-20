@@ -194,9 +194,6 @@ public class ObsFeatureConjoiner implements Serializable {
         public DenseFactor getMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginals(VarSet varSet) { throw new RuntimeException("This method should never be called."); }
-        
-        @Override
         public DenseFactor getMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
             
     }

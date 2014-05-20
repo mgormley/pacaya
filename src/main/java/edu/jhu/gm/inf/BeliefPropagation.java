@@ -454,15 +454,6 @@ public class BeliefPropagation implements FgInferencer {
         return logRatio.getInfNorm();
     }
 
-    /** @inheritDoc */
-    @Override
-    public DenseFactor getMarginals(VarSet varSet) {
-        // We could implement this method, but it will be slow since we'll have
-        // to find a factor that contains all of these variables.
-        // For now we just throw an exception.
-        throw new RuntimeException("not implemented");
-    }
-
     protected DenseFactor getMarginals(Var var, FgNode node) {
         DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
