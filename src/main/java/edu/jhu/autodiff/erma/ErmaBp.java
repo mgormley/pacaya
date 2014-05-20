@@ -3,6 +3,7 @@ package edu.jhu.autodiff.erma;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,27 +28,32 @@ import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Timer;
+import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.SemiringExt;
 
 /**
- * Loopy belief propagation inference algorithm.
+ * Loopy belief propagation inference algorithm with support for empirical risk
+ * minimization under approximations (ERMA) (Stoyanov, Ropson, & Eisner, 2011)
  * 
  * @author mgormley
- *
  */
 public class ErmaBp implements FgInferencer {
     
     private static final Logger log = Logger.getLogger(ErmaBp.class);
+    private static final FgEdge END_OF_EDGE_CREATION = null;
     
     public static class ErmaBpPrm implements FgInferencerFactory {
-        public BpScheduleType schedule = BpScheduleType.RANDOM;
+        public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
-        public BpUpdateOrder updateOrder = BpUpdateOrder.SEQUENTIAL;
+        public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
         //public final FactorGraph fg;
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;
+        /** The maximum message residual for convergence testing. */
+        public double convergenceThreshold = 0;
         
         public ErmaBpPrm() {
         }
@@ -62,9 +68,14 @@ public class ErmaBp implements FgInferencer {
     private static class Tape {
         public List<DenseFactor> msgs = new ArrayList<DenseFactor>();
         public List<FgEdge> edges = new ArrayList<FgEdge>();
-        public void add(FgEdge edge, DenseFactor msg) {
+        public DoubleArrayList msgSums = new DoubleArrayList();
+        public BitSet createFlags = new BitSet();
+        public void add(FgEdge edge, DenseFactor msg, double msgSum, boolean created) {
+            int t = msgs.size();
             msgs.add(msg);
             edges.add(edge);
+            msgSums.add(msgSum);
+            createFlags.set(t, created);
         }
         public int size() {
             return edges.size();
@@ -74,14 +85,20 @@ public class ErmaBp implements FgInferencer {
     private final ErmaBpPrm prm;
     private final FactorGraph fg;
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
-    private final Messages[] msgs;
+    private Messages[] msgs;
     private BpSchedule sched;
+    // The number of messages that have converged.
+    private int numConverged = 0;
+    // --- Variables used in the backward pass ---
     private Tape tape;
+    /** A container of message adjoints each edge in the factor graph. Indexed by edge id. */
+    private Messages[] msgsAdj;
+    /** The adjoints for the potential tables (i.e. factors). One per factor. */
+    private DenseFactor[] potentialsAdj;
     
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
         this.prm = prm;
         this.fg = fg;
-        this.msgs = new Messages[fg.getNumEdges()];
         
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
@@ -91,8 +108,6 @@ public class ErmaBp implements FgInferencer {
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
-        } else {
-            throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
         }
     }
     
@@ -112,6 +127,7 @@ public class ErmaBp implements FgInferencer {
     public void forward() {
         // Initialization.
         tape = new Tape();
+        this.msgs = new Messages[fg.getNumEdges()];        
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
             msgs[i] = new Messages(fg.getEdge(i), prm.logDomain, prm.normalizeMessages);
@@ -124,28 +140,78 @@ public class ErmaBp implements FgInferencer {
         }
         
         // Message passing.
-        List<FgEdge> order = sched.getOrder();
+        List<FgEdge> order = (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) ?
+            order = sched.getOrder() : null;
         for (int iter=0; iter < prm.maxIterations; iter++) {
-            if (prm.schedule == BpScheduleType.RANDOM) {
-                order = sched.getOrder();
+            if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
+                if (prm.schedule == BpScheduleType.RANDOM) {
+                    order = sched.getOrder();
+                }
+                for (FgEdge edge : order) {
+                    forwardCreateMessage(edge, iter);
+                    forwardSendMessage(edge);
+                    if (isConverged()) {
+                        // Stop on convergence: Break out of inner loop.
+                        break;
+                    }
+                }
+            } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
+                for (FgEdge edge : fg.getEdges()) {
+                    forwardCreateMessage(edge, iter);
+                }
+                // Mark the end of the message creation on the tape with a special tape entry.
+                tape.add(END_OF_EDGE_CREATION, null, 0, false);
+                for (FgEdge edge : fg.getEdges()) {
+                    forwardSendMessage(edge);
+                }
+            } else {
+                throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
             }
-            for (FgEdge edge : order) {
-                if (edge.isVarToFactor()) {
-                    forwardVarToFactor(edge);
-                } else if (!(edge.getFactor() instanceof GlobalFactor)) {
-                    forwardFactorToVar(edge);
-                } else {
-                    forwardGlobalFactorToVar(edge, iter);
-                }
-                if (prm.normalizeMessages) {
-                    forwardNormalize(edge);
-                }
-                sendMessage(edge);
-                tape.add(edge, new DenseFactor(msgs[edge.getId()].message));
+            if (isConverged()) {
+                // Stop on convergence.
+                log.trace("Stopping on convergence. Iterations = " + (iter+1));
+                break;
             }
         }
     }
 
+    private void forwardCreateMessage(FgEdge edge, int iter) {
+        if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
+            boolean created = forwardGlobalFactorToVar(edge, iter);
+            if (created) {
+                // Add all the outgoing messages from the global factor to the tape.
+                normalizeAndAddToTape(edge, true); // only mark the first edge as "created"
+                for (FgEdge e2 : edge.getParent().getOutEdges()) {
+                    if (e2 != edge) {
+                        // Include each created edge so that we can reverse normalization.
+                        normalizeAndAddToTape(e2, false);
+                    }
+                }
+            }
+        } else {
+            if (edge.isVarToFactor()) {
+                forwardVarToFactor(edge);
+            } else {
+                forwardFactorToVar(edge);
+            }
+            normalizeAndAddToTape(edge, true);
+        }
+    }
+
+    private void normalizeAndAddToTape(FgEdge edge, boolean created) {
+        double msgSum = 0;
+        if (prm.normalizeMessages) {
+            msgSum = forwardNormalize(edge);
+        }
+        // The tape stores the old message, the normalization constant of the new message, and the edge.
+        DenseFactor oldMsg = new DenseFactor(msgs[edge.getId()].message);
+        tape.add(edge, oldMsg, msgSum, created);
+    }
+
+    public boolean isConverged() {
+        return numConverged == msgs.length;
+    }
+    
     private void forwardVarToFactor(FgEdge edge) {
         // Since this is not a global factor, we send messages in the normal way, which
         // in the case of a factor to variable message requires enumerating all possible
@@ -163,7 +229,7 @@ public class ErmaBp implements FgInferencer {
 
         // Set the final message in case we created a new object.
         msgs[edge.getId()].newMessage = msg;
-    }    
+    }
 
     private void forwardFactorToVar(FgEdge edge) {
         Var var = edge.getVar();
@@ -201,39 +267,77 @@ public class ErmaBp implements FgInferencer {
         msgs[edge.getId()].newMessage = msg;
     }
 
-    private void forwardGlobalFactorToVar(FgEdge edge, int iter) {
+    private boolean forwardGlobalFactorToVar(FgEdge edge, int iter) {
         log.trace("Creating messages for global factor.");
         // Since this is a global factor, we pass the incoming messages to it, 
         // and efficiently marginalize over the variables. The current setup is
         // create all the messages from this factor to its variables, but only 
         // once per iteration.
         GlobalFactor globalFac = (GlobalFactor) edge.getFactor();
-        globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, prm.normalizeMessages, iter);
-        // The messages have been set, so just return.        
+        return globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, false, iter);
     }
 
-    private void forwardNormalize(FgEdge edge) {
+    private double forwardNormalize(FgEdge edge) {
         DenseFactor msg = msgs[edge.getId()].newMessage;
         assert (msg.getVars().equals(new VarSet(edge.getVar())));
-        
+        double sum = Double.NaN;
         if (prm.normalizeMessages) {
             if (prm.logDomain) { 
-                msg.logNormalize();
+                sum = msg.logNormalize();
             } else {
-                msg.normalize();
+                sum = msg.normalize();
             }
+        } else {
+            // normalize and logNormalize already check for NaN
+            assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;        
         }
-        // normalize and logNormalize already check for NaN
-        else assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;        
         msgs[edge.getId()].newMessage = msg;
+        return sum;
     }
 
-    public void backward() {
-        // Initialization.
-        for (int i=0; i<msgs.length; i++) {
-            // TODO: consider alternate initializations.
-            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain, prm.normalizeMessages);
+    // TODO:
+    SemiringExt s = new RealSemiring();
+
+    public void backward(DenseFactor[] varBeliefsAdj, DenseFactor[] facBeliefsAdj) {
+        // TODO:
+        DenseFactor[] varBeliefs = null;
+        DenseFactor[] facBeliefs = null;
+        double[] varBeliefsUnSum = null; 
+        double[] facBeliefsUnSum = null; 
+        
+        // Initialize the adjoints.
+
+        // We are given the adjoints of the unnormalized beleifs. Compute
+        // the adjoints of the unnormalized beliefs and store them in the original
+        // adjoint arrays.
+        for (int v=0; v<varBeliefsAdj.length; v++) {
+            unormalizeAdjInPlace(varBeliefs[v], varBeliefsAdj[v], varBeliefsUnSum[v]);
         }
+        for (int a=0; a<facBeliefsAdj.length; a++) {
+            unormalizeAdjInPlace(facBeliefs[a], facBeliefsAdj[a], facBeliefsUnSum[a]);
+        }
+
+        // Compute the adjoints of the normalized messages.
+        this.msgsAdj = new Messages[fg.getNumEdges()];
+        for (int i=0; i<msgs.length; i++) {
+            FgEdge edge = fg.getEdge(i);
+            int varId = edge.getVar().getId();
+            int facId = edge.getFactor().getId();
+            msgsAdj[i] = new Messages(edge, prm.logDomain, prm.normalizeMessages);
+            if (edge.isVarToFactor()) {
+                initVarToFactorAdj(i, facBeliefsAdj, varId, facId, edge);
+            } else if (!(edge.getFactor() instanceof GlobalFactor)) {                
+                initFactorToVarAdj(i, varBeliefsAdj, varId, facId);
+            } else {
+                // Do nothing.
+                msgsAdj[i] = null; // TODO: Should this be zero?
+            }
+        }
+        this.potentialsAdj = new DenseFactor[fg.getNumFactors()];
+        for (int a=0; a<fg.getNumFactors(); a++) {
+            initPotentialsAdj(a, facBeliefsAdj);
+        }
+        
         // Reset the global factors.
         for (Factor factor : fg.getFactors()) {
             if (factor instanceof GlobalFactor) {
@@ -241,46 +345,140 @@ public class ErmaBp implements FgInferencer {
             }
         }
         
-        // Message passing.
-        for (int i=0; i<tape.size(); i++) {
-            FgEdge edge = tape.edges.get(i);
-            DenseFactor msg = tape.msgs.get(i);
-            if (edge.isVarToFactor()) {
-                backwardVarToFactor(edge, msg);
-            } else if (!(edge.getFactor() instanceof GlobalFactor)) {
-                backwardFactorToVar(edge, msg);
-            } else {
-                // TODO: The schedule must be over edge sets, not individual edges.
-                backwardGlobalFactorToVar(edge, msg);
+        // Compute the message adjoints by running BP in reverse.
+        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
+            // Process each tape entry in reverse order.
+            for (int t = tape.size() - 1; t >= 0; t--) {
+                backwardSendMessage(t);
+                backwardCreateMessage(t);            
             }
-            if (prm.normalizeMessages) {
-                backwardNormalize(edge, msg);
+        } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
+            int t = tape.size();
+            while (t >= 0) {
+                // Send the messages backwards from each tape entry until an
+                // END_OF_EDGE_CREATION marker is reached.
+                int tTop = t;
+                for (; t >= 0; t--) {                
+                    if (tape.edges.get(t) == END_OF_EDGE_CREATION) {
+                        break;
+                    }
+                    backwardSendMessage(t);
+                }
+                // Create the adjoints of the messages that were just
+                // "sent backwards" above.
+                t = tTop;
+                for (; t >= 0; t--) {
+                    if (tape.edges.get(t) == END_OF_EDGE_CREATION) {
+                        break;
+                    }
+                    backwardCreateMessage(t);
+                }
+            }
+        } else {
+            throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
+        }
+    }
+
+    private void backwardSendMessage(int t) {
+        // Dequeue from tape.
+        FgEdge edge = tape.edges.get(t);
+        DenseFactor oldMsg = tape.msgs.get(t);
+        int i = edge.getId();
+        
+        // Send messages and adjoints in reverse.
+        msgs[i].newMessage = msgs[i].message;        // The message at time (t+1)
+        msgs[i].message = oldMsg;                    // The message at time (t)
+        msgsAdj[i].newMessage = msgsAdj[i].message;  // The adjoint at time (t+1)
+        msgsAdj[i].message.set(s.zero());            // The adjoint at time (t)
+    }
+
+    /**
+     * Creates the adjoint of the unnormalized message for the edge at time t
+     * and stores it in msgsAdj[i].message.
+     */
+    private void backwardCreateMessage(int t) {
+        // Dequeue from tape.
+        FgEdge edge = tape.edges.get(t);
+        double msgSum = tape.msgSums.get(t);
+        boolean created = tape.createFlags.get(t);            
+        int i = edge.getId();
+
+        if (prm.normalizeMessages) {
+            // Convert the adjoint of the message to the adjoint of the unnormalized message.
+            unormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
+        }
+        
+        if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
+            // TODO: The schedule should be over edge sets, not individual edges, so we don't need the "created" flag.
+            GlobalFactor factor = (GlobalFactor) edge.getFactor();
+            if (created) {
+                factor.backwardCreateMessages(edge.getParent(), msgs, msgsAdj, prm.logDomain);
+            }
+        } else {            
+            if (edge.isVarToFactor()) {
+                backwardVarToFactor(edge, i);
+            } else {
+                backwardFactorToVar(edge, i);
+            }
+        }        
+    }
+
+    private void unormalizeAdjInPlace(DenseFactor dist, DenseFactor distAdj, double unormSum) {
+        // TODO: use a semiring
+        DenseFactor unormAdj = distAdj;
+        double dotProd = dist.dotProduct(distAdj);       
+        unormAdj.add(- dotProd);
+        unormAdj.scale(1.0 / unormSum);
+    }
+
+    private void initVarToFactorAdj(int i, DenseFactor[] facBeliefsAdj, int varId, int facId, FgEdge edge) {
+        DenseFactor prod = new DenseFactor(facBeliefsAdj[facId]);
+        getProductOfMessages(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
+        if (prm.logDomain) { 
+            msgsAdj[i].message = prod.getLogMarginal(new VarSet(edge.getVar()), false);
+        } else {
+            msgsAdj[i].message = prod.getMarginal(new VarSet(edge.getVar()), false);
+        }
+    }
+
+    private void initFactorToVarAdj(int i, DenseFactor[] varBeliefsAdj, int varId, int facId) {
+        msgsAdj[i].message = new DenseFactor(varBeliefsAdj[varId]);
+        getProductOfMessages(fg.getVarNode(varId), msgsAdj[i].message, fg.getFactorNode(facId));
+    }
+
+    private void initPotentialsAdj(int a, DenseFactor[] facBeliefsAdj) {
+        potentialsAdj[a] = new DenseFactor(facBeliefsAdj[a]);
+        getProductOfMessages(fg.getFactorNode(a), potentialsAdj[a], null);
+    }
+
+    private void backwardVarToFactor(FgEdge edge, int i) {
+        for (FgEdge edge2 : fg.getVarNode(edge.getVar().getId()).getInEdges()) {
+            if (edge2 != edge.getOpposing()) {
+                // Update each adjoint.
+                DenseFactor prod = new DenseFactor(msgsAdj[i].message);
+                // Get the product with all the incoming messages into the variable, excluding the factor from edge and edge2.
+                getProductOfMessages(edge.getParent(), prod, edge.getChild(), edge2.getParent());
+                msgsAdj[edge2.getId()].message.add(prod); // TODO: semiring
             }
         }
     }
+
+    private void backwardFactorToVar(FgEdge edge, int i) {
+        int facId = edge.getFactor().getId();
+        DenseFactor prod = new DenseFactor(msgsAdj[i].message);
+        getProductOfMessages(edge.getParent(), prod, edge.getChild());
+        VarSet varsMinusI = new VarSet(prod.getVars());
+        varsMinusI.remove(edge.getVar());
+        potentialsAdj[facId].add(prod.getMarginal(varsMinusI, false)); // TODO: semiring
+    }
     
-    private void backwardVarToFactor(FgEdge edge, DenseFactor msg) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void backwardFactorToVar(FgEdge edge, DenseFactor msg) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    private void backwardGlobalFactorToVar(FgEdge edge, DenseFactor msg) {
-        // TODO: The schedule must be over edge sets, not individual edges.       
-    }
-
-    private void backwardNormalize(FgEdge edge, DenseFactor msg) {
-        // TODO Auto-generated method stub
-        
-    }
-
     public void clear() {
         Arrays.fill(msgs, null);
         tape = null;
+    }
+    
+    protected void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode) {
+        getProductOfMessages(node, prod, exclNode, null);
     }
     
     /**
@@ -301,9 +499,9 @@ public class ErmaBp implements FgInferencer {
      *            non-null, any message sent from exclNode to node will be
      *            excluded from the product.
      */
-    protected void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode) {
+    protected void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode1, FgNode exclNode2) {
         for (FgEdge nbEdge : node.getInEdges()) {
-            if (nbEdge.getParent() == exclNode) {
+            if (nbEdge.getParent() == exclNode1 || nbEdge.getParent() == exclNode2) {
                 // Don't include the receiving variable.
                 continue;
             }
@@ -338,11 +536,23 @@ public class ErmaBp implements FgInferencer {
      * 
      * @param edge The edge over which the message should be sent.
      */
-    protected void sendMessage(FgEdge edge) {
+    protected void forwardSendMessage(FgEdge edge) {
         int edgeId = edge.getId();
        
         Messages ec = msgs[edgeId];
-        // Just swap the pointers to the current message and the new message, so
+        // Update the residual
+        double oldResidual = ec.residual;
+        ec.residual = getResidual(ec.message, ec.newMessage);
+        if (oldResidual > prm.convergenceThreshold && ec.residual <= prm.convergenceThreshold) {
+            // This message has (newly) converged.
+            numConverged ++;
+        }
+        if (oldResidual <= prm.convergenceThreshold && ec.residual > prm.convergenceThreshold) {
+            // This message was marked as converged, but is no longer converged.
+            numConverged--;
+        }
+        
+        // Send message: Just swap the pointers to the current message and the new message, so
         // that we don't have to create a new factor object.
         DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
@@ -352,6 +562,25 @@ public class ErmaBp implements FgInferencer {
         if (log.isTraceEnabled()) {
             log.trace("Message sent: " + ec.message);
         }
+    }
+
+    /**
+     * Gets the residual for a new message, as the maximum error over all
+     * assignments.
+     * 
+     * Following the definition of Sutton & McCallum (2007), we compute the
+     * residual as the infinity norm of the difference of the log of the message
+     * vectors.
+     */
+    private double getResidual(DenseFactor message, DenseFactor newMessage) {
+        DenseFactor logRatio = new DenseFactor(newMessage);
+        if (prm.logDomain) {
+            logRatio.subBP(message);
+        } else {
+            logRatio.divBP(message);
+            logRatio.convertRealToLog();
+        }
+        return logRatio.getInfNorm();
     }
 
     /** @inheritDoc */
@@ -479,11 +708,11 @@ public class ErmaBp implements FgInferencer {
         Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
         for (int a=0; a<fg.getFactors().size(); a++) {
             Factor f = fg.getFactors().get(a);
-            if (f instanceof ExplicitFactor) {
+            if (!(f instanceof GlobalFactor)) {
                 int numConfigs = f.getVars().calcNumConfigs();
                 DenseFactor beliefs = getMarginalsForFactorId(a);
                 for (int c=0; c<numConfigs; c++) {                
-                    double chi_c = ((ExplicitFactor) f).getValue(c);
+                    double chi_c = f.getUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
                     if (beliefs.getValue(c) != semiringZero) { 
                         if (prm.logDomain) {
@@ -494,7 +723,7 @@ public class ErmaBp implements FgInferencer {
                     }
                 }
             } else {
-                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getNode(a), msgs, prm.logDomain);
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getFactorNode(a), msgs, prm.logDomain);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {

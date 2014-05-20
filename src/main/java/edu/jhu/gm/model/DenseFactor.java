@@ -166,13 +166,13 @@ public class DenseFactor implements Serializable {
     }
     
     /** Normalizes the values. */
-    public void normalize() {
-        Multinomials.normalizeProps(values);
+    public double normalize() {
+        return Multinomials.normalizeProps(values);
     }
 
     /** Normalizes the values. */
-    public void logNormalize() {
-        Multinomials.normalizeLogProps(values);
+    public double logNormalize() {
+        return Multinomials.normalizeLogProps(values);
     }
     
     /** Takes the log of each value. */
@@ -400,6 +400,18 @@ public class DenseFactor implements Serializable {
             }
         }
         return maxAbs;
+    }
+
+    /** Computes the sum of the entries of the pointwise product of two tensors with identical domains. */
+    public double dotProduct(DenseFactor other) {
+        if (!this.vars.equals(other.vars)) {
+            throw new IllegalArgumentException("Tensors must have identical domains");
+        }
+        double sum = 0;
+        for (int c=0; c<this.values.length; c++) {
+            sum += this.values[c] * other.values[c];
+        }
+        return sum;
     }
     
 }

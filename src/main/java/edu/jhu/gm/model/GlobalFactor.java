@@ -41,5 +41,7 @@ public interface GlobalFactor extends Factor {
      * E[ln(b(x_a) / \chi(x_a)) ] = \sum_{x_a} b(x_a) ln (b(x_a) / \chi(x_a))
      */
     double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain);
+    
+    void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean logDomain);
 
 }

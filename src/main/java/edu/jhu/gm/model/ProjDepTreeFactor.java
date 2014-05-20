@@ -530,4 +530,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return parents;
     }
 
+    @Override
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean logDomain) {
+        
+    }
+
 }

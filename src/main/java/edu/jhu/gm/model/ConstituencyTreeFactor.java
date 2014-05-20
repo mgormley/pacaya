@@ -437,4 +437,10 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         return true;
     }
 
+    @Override
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean logDomain) {
+        // TODO:
+        throw new RuntimeException("not yet implemented");        
+    }
+
 }
