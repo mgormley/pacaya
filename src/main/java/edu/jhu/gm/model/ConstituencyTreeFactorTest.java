@@ -15,7 +15,7 @@ import edu.jhu.gm.model.Var.VarType;
 public class ConstituencyTreeFactorTest {
     
     @Test
-    public void bpVsBruteForce() {
+    public void testBpVsBruteForce() {
         
         for(int n : Arrays.asList(2, 3, 4)) {
             for(boolean logDomain : Arrays.asList(false, true)) {
@@ -47,7 +47,7 @@ public class ConstituencyTreeFactorTest {
     }
     
     @Test
-    public void byHand() {
+    public void testByHand() {
         // "John loves Mary"
         ConstituencyTreeFactor ctFact = new ConstituencyTreeFactor(3, VarType.PREDICTED);
         FactorGraph fg = new FactorGraph();
