@@ -350,6 +350,10 @@ public class ErmaBp implements FgInferencer {
             int varId = edge.getVar().getId();
             int facId = edge.getFactor().getId();
             msgsAdj[i] = new Messages(edge, prm.logDomain, prm.normalizeMessages);
+            msgsAdj[i].message.scale(s.zero());
+            // Instead of setting newMessage to null, we just zero it and then
+            // swap these back and forth during backwardSendMessage.
+            msgsAdj[i].newMessage.scale(s.zero()); 
             if (edge.isVarToFactor()) {
                 initVarToFactorAdj(i, facBeliefsAdj, varId, facId, edge);
             } else if (!(edge.getFactor() instanceof GlobalFactor)) {                
@@ -415,19 +419,21 @@ public class ErmaBp implements FgInferencer {
         int i = edge.getId();
         
         // Send messages and adjoints in reverse.
-        msgs[i].newMessage = msgs[i].message;        // The message at time (t+1)
-        msgs[i].message = oldMsg;                    // The message at time (t)
-        msgsAdj[i].newMessage = msgsAdj[i].message;  // The adjoint at time (t+1)
-        msgsAdj[i].message.set(s.zero());            // The adjoint at time (t)
+        msgs[i].newMessage = msgs[i].message;       // The message at time (t+1)
+        msgs[i].message = oldMsg;                   // The message at time (t)
+        // Swap the adjoint messages and zero the one for time (t).
+        DenseFactor tmp = msgsAdj[i].newMessage;
+        tmp.scale(0);
+        msgsAdj[i].newMessage = msgsAdj[i].message; // The adjoint at time (t+1)
+        msgsAdj[i].message = tmp;                   // The adjoint at time (t)
     }
 
     private void backwardNormalize(int t) {
-        // Dequeue from tape.
-        FgEdge edge = tape.edges.get(t);
-        double msgSum = tape.msgSums.get(t);
-        int i = edge.getId();
-
         if (prm.normalizeMessages) {
+            // Dequeue from tape.
+            FgEdge edge = tape.edges.get(t);
+            double msgSum = tape.msgSums.get(t);
+            int i = edge.getId();
             // Convert the adjoint of the message to the adjoint of the unnormalized message.
             unnormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
         }
