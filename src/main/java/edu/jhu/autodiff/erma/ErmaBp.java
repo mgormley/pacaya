@@ -380,7 +380,7 @@ public class ErmaBp implements FgInferencer {
                 backwardCreateMessage(t);            
             }
         } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-            int t = tape.size();
+            int t = tape.size() - 1;
             while (t >= 0) {
                 // Send the messages backwards from each tape entry until an
                 // END_OF_EDGE_CREATION marker is reached.
@@ -397,6 +397,7 @@ public class ErmaBp implements FgInferencer {
                 t = tTop;
                 for (; t >= 0; t--) {
                     if (tape.edges.get(t) == END_OF_EDGE_CREATION) {
+                        t--;
                         break;
                     }
                     backwardCreateMessage(t);
