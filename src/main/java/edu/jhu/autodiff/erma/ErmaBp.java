@@ -499,21 +499,20 @@ public class ErmaBp implements FgInferencer {
     }
 
     private void backwardFactorToVar(FgEdge edgeAI, int i) {
-        int facId = edgeAI.getFactor().getId();
+        Factor factor = edgeAI.getFactor();
+        int facId = factor.getId();
         
         // Increment the adjoint for the potentials.
         {
             DenseFactor prod = new DenseFactor(msgsAdj[i].newMessage);
             getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild());
-            VarSet varsMinusI = new VarSet(prod.getVars());
-            varsMinusI.remove(edgeAI.getVar());
-            potentialsAdj[facId].add(prod.getMarginal(varsMinusI, false)); // TODO: semiring
+            potentialsAdj[facId].add(prod); // TODO: semiring
         }
         
         // Increment the adjoint for each variable to factor message.
         for (FgEdge edgeJA : fg.getFactorNode(facId).getInEdges()) {
             if (edgeJA != edgeAI.getOpposing()) {
-                DenseFactor prod = new DenseFactor(potentialsAdj[facId]);
+                DenseFactor prod = new DenseFactor(BruteForceInferencer.safeGetDenseFactor(factor));
                 getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
                 prod.prod(msgsAdj[i].newMessage); // TODO: semiring
                 VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
