@@ -285,7 +285,7 @@ public class ErmaProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
-        ErmaBpTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
@@ -385,7 +385,7 @@ public class ErmaProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
-        ErmaBpTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
@@ -496,7 +496,7 @@ public class ErmaProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
-        ErmaBpTest.assertEqualMarginals(fg, bf, bp);
+        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
     }
     
 
@@ -584,7 +584,7 @@ public class ErmaProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
-        ErmaBpTest.assertEqualMarginals(fg, bf, bp);
+        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
     }
 
     // This test fails because of a known floating point precision limitation of the ProjDepTreeFactor.

@@ -84,16 +84,24 @@ public class ErmaBp implements FgInferencer {
         
     private final ErmaBpPrm prm;
     private final FactorGraph fg;
-    /** A container of messages each edge in the factor graph. Indexed by edge id. */
-    private Messages[] msgs;
     private BpSchedule sched;
+    // Messages for each edge in the factor graph. Indexed by edge id. 
+    private Messages[] msgs;
     // The number of messages that have converged.
     private int numConverged = 0;
-    // --- Variables used in the backward pass ---
+    // The variable and factor beliefs - the output of a forward() call.
+    DenseFactor[] varBeliefs; // Indexed by variable id.
+    DenseFactor[] facBeliefs; // Indexed by factor id.
+    
+    // The tape, which records each message passed in the forward() call.
     private Tape tape;
-    /** A container of message adjoints each edge in the factor graph. Indexed by edge id. */
+    // The tape for the normalization of the variable and factor beliefs.
+    double[] varBeliefsUnSum; // Indexed by variable id.
+    double[] facBeliefsUnSum; // Indexed by factor id.
+
+    // Adjoints of the messages for each edge in the factor graph. Indexed by edge id. 
     private Messages[] msgsAdj;
-    /** The adjoints for the potential tables (i.e. factors). One per factor. */
+    // The adjoints for the potential tables (i.e. factors). Indexed by factor id. The output of a backward call.
     private DenseFactor[] potentialsAdj;
     
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
@@ -173,6 +181,8 @@ public class ErmaBp implements FgInferencer {
                 break;
             }
         }
+        
+        forwardVarAndFacBeliefs();
     }
 
     private void forwardCreateMessage(FgEdge edge, int iter) {
@@ -295,26 +305,42 @@ public class ErmaBp implements FgInferencer {
         return sum;
     }
 
+    private void forwardVarAndFacBeliefs() {
+        // Cache the variable beliefs and their normalizing constants.
+        varBeliefs = new DenseFactor[fg.getNumVars()];
+        varBeliefsUnSum = new double[fg.getNumVars()];
+        for (int v=0; v<varBeliefs.length; v++) {
+            DenseFactor b = calcVarBeliefs(fg.getVar(v));
+            varBeliefsUnSum[v] = (prm.logDomain) ? b.logNormalize() : b.normalize();
+            varBeliefs[v] = b;
+        }
+        // Cache the factor beliefs and their normalizing constants.
+        facBeliefs = new DenseFactor[fg.getNumFactors()];
+        facBeliefsUnSum = new double[fg.getNumFactors()];
+        for (int a=0; a<facBeliefs.length; a++) {
+            Factor fac = fg.getFactor(a);
+            if (!(fac instanceof GlobalFactor)) {
+                DenseFactor b = calcFactorBeliefs(fg.getFactor(a));
+                facBeliefsUnSum[a] = (prm.logDomain) ? b.logNormalize() : b.normalize();
+                facBeliefs[a] = b;
+            }
+        }
+    }
+    
     // TODO:
     Algebra s = new RealAlgebra();
 
-    public void backward(DenseFactor[] varBeliefsAdj, DenseFactor[] facBeliefsAdj) {
-        // TODO:
-        DenseFactor[] varBeliefs = null;
-        DenseFactor[] facBeliefs = null;
-        double[] varBeliefsUnSum = null; 
-        double[] facBeliefsUnSum = null; 
-        
+    public void backward(DenseFactor[] varBeliefsAdj, DenseFactor[] facBeliefsAdj) {        
         // Initialize the adjoints.
 
-        // We are given the adjoints of the unnormalized beleifs. Compute
+        // We are given the adjoints of the normalized beleifs. Compute
         // the adjoints of the unnormalized beliefs and store them in the original
         // adjoint arrays.
         for (int v=0; v<varBeliefsAdj.length; v++) {
-            unormalizeAdjInPlace(varBeliefs[v], varBeliefsAdj[v], varBeliefsUnSum[v]);
+            unnormalizeAdjInPlace(varBeliefs[v], varBeliefsAdj[v], varBeliefsUnSum[v]);
         }
         for (int a=0; a<facBeliefsAdj.length; a++) {
-            unormalizeAdjInPlace(facBeliefs[a], facBeliefsAdj[a], facBeliefsUnSum[a]);
+            unnormalizeAdjInPlace(facBeliefs[a], facBeliefsAdj[a], facBeliefsUnSum[a]);
         }
 
         // Compute the adjoints of the normalized messages.
@@ -402,7 +428,7 @@ public class ErmaBp implements FgInferencer {
 
         if (prm.normalizeMessages) {
             // Convert the adjoint of the message to the adjoint of the unnormalized message.
-            unormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
+            unnormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
         }
     }
     
@@ -431,7 +457,7 @@ public class ErmaBp implements FgInferencer {
         }        
     }
 
-    private void unormalizeAdjInPlace(DenseFactor dist, DenseFactor distAdj, double unormSum) {
+    private void unnormalizeAdjInPlace(DenseFactor dist, DenseFactor distAdj, double unormSum) {
         // TODO: use a semiring
         DenseFactor unormAdj = distAdj;
         double dotProd = dist.dotProduct(distAdj);       
@@ -495,6 +521,14 @@ public class ErmaBp implements FgInferencer {
                 // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
             }
         }
+    }
+    
+    public DenseFactor[] getPotentialsAdj() {
+        return potentialsAdj;
+    }
+    
+    public DenseFactor getPotentialsAdj(int factorId) {
+        return potentialsAdj[factorId];
     }
     
     public void clear() {
@@ -609,22 +643,44 @@ public class ErmaBp implements FgInferencer {
     }
     
     protected DenseFactor getVarBeliefs(int varId) {
-        return getVarBeliefs(fg.getVar(varId));
+        return varBeliefs[varId];
     }
     
     protected DenseFactor getFactorBeliefs(int facId) {
-        return getFactorBeliefs(fg.getFactor(facId));
+        if (facBeliefs[facId] == null) {
+            // Beliefs for global factors are not cached.
+            Factor factor = fg.getFactor(facId);
+            assert factor instanceof GlobalFactor;
+            DenseFactor b = calcFactorBeliefs(factor);
+            if (prm.logDomain) {
+                b.logNormalize();
+            } else {
+                b.normalize();
+            }
+            return b;
+        }
+        return facBeliefs[facId];
     }
-    
+
     protected DenseFactor getVarBeliefs(Var var) {
-        DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
-        // Compute the product of all messages sent to this variable.
-        FgNode node = fg.getVarNode(var.getId());
-        getProductOfMessagesNormalized(node, prod, null);
-        return prod;
+        return getVarBeliefs(var.getId());
     }
 
     protected DenseFactor getFactorBeliefs(Factor factor) {
+        return getFactorBeliefs(factor.getId());
+    }
+    
+    /** Gets the unnormalized variable beleifs. */
+    protected DenseFactor calcVarBeliefs(Var var) {
+        DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        // Compute the product of all messages sent to this variable.
+        FgNode node = fg.getVarNode(var.getId());
+        getProductOfMessages(node, prod, null);
+        return prod;
+    }
+
+    /** Gets the unnormalized factor beleifs. */
+    protected DenseFactor calcFactorBeliefs(Factor factor) {
         if (factor instanceof GlobalFactor) {
             log.warn("Getting marginals of a global factor is not supported."
                     + " This will require exponential space to store the resulting factor."
@@ -634,7 +690,7 @@ public class ErmaBp implements FgInferencer {
         DenseFactor prod = new DenseFactor(BruteForceInferencer.safeGetDenseFactor(factor));
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
-        getProductOfMessagesNormalized(node, prod, null);
+        getProductOfMessages(node, prod, null);
         return prod;
     }
     
@@ -773,6 +829,7 @@ public class ErmaBp implements FgInferencer {
     public DenseFactor getMarginals(Var var) {
         DenseFactor marg = getVarBeliefs(var);
         if (prm.logDomain) {
+            marg = new DenseFactor(marg); // Keep the cached beliefs intact.
             marg.convertLogToReal();
         }
         return marg;
@@ -784,6 +841,7 @@ public class ErmaBp implements FgInferencer {
     public DenseFactor getMarginals(Factor factor) {
         DenseFactor marg = getFactorBeliefs(factor);
         if (prm.logDomain) {
+            marg = new DenseFactor(marg); // Keep the cached beliefs intact.
             marg.convertLogToReal();
         }
         return marg;
@@ -817,6 +875,7 @@ public class ErmaBp implements FgInferencer {
     public DenseFactor getLogMarginals(Var var) {
         DenseFactor marg = getVarBeliefs(var);
         if (!prm.logDomain) {
+            marg = new DenseFactor(marg); // Keep the cached beliefs intact.
             marg.convertRealToLog();
         }
         return marg;
@@ -828,6 +887,7 @@ public class ErmaBp implements FgInferencer {
     public DenseFactor getLogMarginals(Factor factor) {
         DenseFactor marg = getFactorBeliefs(factor);
         if (!prm.logDomain) {
+            marg = new DenseFactor(marg); // Keep the cached beliefs intact.
             marg.convertRealToLog();
         }
         return marg;
@@ -858,6 +918,10 @@ public class ErmaBp implements FgInferencer {
     @Override
     public boolean isLogDomain() {
         return prm.logDomain;
+    }
+
+    public FactorGraph getFactorGraph() {
+        return fg;
     }
     
 }

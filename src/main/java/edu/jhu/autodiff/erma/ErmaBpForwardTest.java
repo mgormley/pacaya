@@ -24,7 +24,7 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.collections.Lists;
 
 
-public class ErmaBpTest {
+public class ErmaBpForwardTest {
 	
 	@Test
 	public void testCanHandleProbHardFactors() {
