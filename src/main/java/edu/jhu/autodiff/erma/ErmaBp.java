@@ -574,7 +574,6 @@ public class ErmaBp implements FgInferencer {
             } else {
                 prod.prod(nbMsg);
             }
-            assert !prod.containsBadValues(prm.logDomain) : "prod = " + prod;
         }
     }
 
