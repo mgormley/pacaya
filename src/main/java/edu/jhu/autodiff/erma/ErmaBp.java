@@ -467,7 +467,9 @@ public class ErmaBp implements FgInferencer {
     }
 
     private void initVarToFactorAdj(int i, DenseFactor[] facBeliefsAdj, int varId, int facId, FgEdge edge) {
+        Factor fac = fg.getFactor(facId);
         DenseFactor prod = new DenseFactor(facBeliefsAdj[facId]);
+        prod.prod(BruteForceInferencer.safeGetDenseFactor(fac));
         getProductOfMessages(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
         if (prm.logDomain) { 
             msgsAdj[i].message = prod.getLogMarginal(new VarSet(edge.getVar()), false);
