@@ -1,7 +1,7 @@
 package edu.jhu.gm.feat;
 
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FeExpFamFactor;
@@ -32,7 +32,7 @@ public class FeatureCache implements FeatureExtractor {
             Factor f = fg.getFactor(a);
             if (f instanceof GlobalFactor) {
                 continue;
-            } else if (f instanceof DenseFactor) {
+            } else if (f instanceof VarTensor) {
                 int numConfigs = f.getVars().calcNumConfigs();
                 // If there are no latent/predicted variables there must be observed variables.
                 numConfigs = (numConfigs == 0) ? 1 : numConfigs;

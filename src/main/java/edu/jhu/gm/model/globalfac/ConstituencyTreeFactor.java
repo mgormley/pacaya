@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.Sentence;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
@@ -210,7 +210,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             
             // Get the incoming messages.
             FgEdge inEdge = outEdge.getOpposing();
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            VarTensor inMsg = msgs[inEdge.getId()].message;
             double inMsgTrue, inMsgFalse;
             if (logDomain) {
                 inMsgTrue = inMsg.getValue(SpanVar.TRUE);
@@ -255,7 +255,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         DoubleArrays.fill(spanWeights, Double.NEGATIVE_INFINITY);
         for (FgEdge inEdge : parent.getInEdges()) {
             SpanVar span = (SpanVar) inEdge.getVar();
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            VarTensor inMsg = msgs[inEdge.getId()].message;
             double oddsRatio;
             if (logDomain) {
                 oddsRatio = inMsg.getValue(SpanVar.TRUE) - inMsg.getValue(SpanVar.FALSE);
@@ -294,7 +294,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         // Here we store log pi.
         double pi = 0.0;
         for (FgEdge inEdge : parent.getInEdges()) {
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            VarTensor inMsg = msgs[inEdge.getId()].message;
             if (logDomain) {
                 pi += inMsg.getValue(LinkVar.FALSE);
             } else {
@@ -309,7 +309,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             double outMsgTrue, double outMsgFalse) {
         
         // Set the outgoing messages.
-        DenseFactor outMsg = msgs[outEdge.getId()].newMessage;
+        VarTensor outMsg = msgs[outEdge.getId()].newMessage;
         outMsg.setValue(SpanVar.FALSE, outMsgFalse);
         outMsg.setValue(SpanVar.TRUE, outMsgTrue);
                 

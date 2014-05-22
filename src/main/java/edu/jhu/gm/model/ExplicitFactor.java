@@ -8,7 +8,7 @@ import edu.jhu.gm.inf.FgInferencer;
  * 
  * @author mgormley
  */
-public class ExplicitFactor extends DenseFactor implements Factor {
+public class ExplicitFactor extends VarTensor implements Factor {
 
     private static final long serialVersionUID = 1L;
     
@@ -22,12 +22,12 @@ public class ExplicitFactor extends DenseFactor implements Factor {
         super(other);
     }
     
-    public ExplicitFactor(DenseFactor other) {
+    public ExplicitFactor(VarTensor other) {
         super(other);
     }
 
     public ExplicitFactor getClamped(VarConfig clmpVarConfig) {
-        DenseFactor df = super.getClamped(clmpVarConfig);
+        VarTensor df = super.getClamped(clmpVarConfig);
         return new ExplicitFactor(df);
     }
     

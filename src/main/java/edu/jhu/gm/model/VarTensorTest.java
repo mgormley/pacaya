@@ -6,13 +6,13 @@ import org.junit.Test;
 
 import edu.jhu.util.JUnitUtils;
 
-public class DenseFactorTest {
+public class VarTensorTest {
 
     @Test
     public void testValueOperations() {
         VarSet vars1 = new VarSet();
         vars1.add(VarSetTest.getVar(0, 2));
-        DenseFactor f1 = new DenseFactor(vars1);
+        VarTensor f1 = new VarTensor(vars1);
         f1.setValue(0, 0);
         f1.setValue(1, 1);
         
@@ -61,14 +61,14 @@ public class DenseFactorTest {
         VarSet vars1 = new VarSet();
         vars1.add(v0);
         vars1.add(v1);
-        DenseFactor f1 = new DenseFactor(vars1);
+        VarTensor f1 = new VarTensor(vars1);
         f1.setValue(0, 0);
         f1.setValue(1, 1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         f1.setValue(4, 4);
         
-        DenseFactor marg = f1.getMarginal(new VarSet(v0), false);
+        VarTensor marg = f1.getMarginal(new VarSet(v0), false);
         System.out.println(marg);
         JUnitUtils.assertArrayEquals(new double[]{6, 4}, marg.getValues(), 1e-13);
         
@@ -85,7 +85,7 @@ public class DenseFactorTest {
         VarSet vars1 = new VarSet();
         vars1.add(v0);
         vars1.add(v1);
-        DenseFactor f1 = new DenseFactor(vars1);
+        VarTensor f1 = new VarTensor(vars1);
         f1.setValue(0, 0);
         f1.setValue(1, 1);
         f1.setValue(2, 2);
@@ -97,7 +97,7 @@ public class DenseFactorTest {
         
         VarConfig vc0 = new VarConfig();
         vc0.put(v0, 0);
-        DenseFactor clmp = f1.getClamped(vc0);
+        VarTensor clmp = f1.getClamped(vc0);
         System.out.println(clmp);
         JUnitUtils.assertArrayEquals(new double[]{0, 2, 4}, clmp.getValues(), 1e-13);
         
@@ -116,13 +116,13 @@ public class DenseFactorTest {
         VarSet vars1 = new VarSet();
         vars1.add(VarSetTest.getVar(0, 2));
         vars1.add(VarSetTest.getVar(1, 3));        
-        DenseFactor f1 = new DenseFactor(vars1);
+        VarTensor f1 = new VarTensor(vars1);
         f1.set(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
         VarSet vars2 = vars1;
-        DenseFactor f2 = new DenseFactor(vars2);
+        VarTensor f2 = new VarTensor(vars2);
         f2.set(2);
         f2.setValue(2, 5);
         f2.setValue(5, 7);
@@ -147,14 +147,14 @@ public class DenseFactorTest {
         VarSet vars1 = new VarSet();
         vars1.add(v0);
         vars1.add(v1);        
-        DenseFactor f1 = new DenseFactor(vars1);
+        VarTensor f1 = new VarTensor(vars1);
         f1.set(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
         VarSet vars2 = new VarSet();
         vars2.add(v1);        
-        DenseFactor f2 = new DenseFactor(vars2);
+        VarTensor f2 = new VarTensor(vars2);
         f2.set(2);
         f2.setValue(2, 5);
         
@@ -179,7 +179,7 @@ public class DenseFactorTest {
         VarSet vars1 = new VarSet();
         vars1.add(v0);
         vars1.add(v1);        
-        DenseFactor f1 = new DenseFactor(vars1);
+        VarTensor f1 = new VarTensor(vars1);
         f1.set(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
@@ -187,7 +187,7 @@ public class DenseFactorTest {
         VarSet vars2 = new VarSet();
         vars2.add(v1);
         vars2.add(v2);    
-        DenseFactor f2 = new DenseFactor(vars2);
+        VarTensor f2 = new VarTensor(vars2);
         f2.set(2);
         f2.setValue(2, 5);
         f2.setValue(5, 7);

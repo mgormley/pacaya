@@ -9,7 +9,7 @@ import org.junit.Test;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -34,7 +34,7 @@ public class BeliefPropagationTest {
 		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
 		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
 		
-		DenseFactor df = new DenseFactor(new VarSet(x0, x1));
+		VarTensor df = new VarTensor(new VarSet(x0, x1));
 		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
 			VarConfig vCfg = df.getVars().getVarConfig(cfg);
 			int v0 = vCfg.getState(x0);
@@ -62,21 +62,21 @@ public class BeliefPropagationTest {
         bp.run();
         assertEqualMarginals(fg, bf, bp);
         
-        DenseFactor x0_marg = bp.getMarginals(x0);
+        VarTensor x0_marg = bp.getMarginals(x0);
         assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
         assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
-        DenseFactor x1_marg = bp.getMarginals(x1);
+        VarTensor x1_marg = bp.getMarginals(x1);
         assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
         assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
 				
 		// check again once we've added some unary factors on x0 and x1
-		df = new DenseFactor(new VarSet(x0));
+		df = new VarTensor(new VarSet(x0));
 		df.setValue(0, 3d);
 		df.setValue(1, 2d);
 		ExplicitFactor f0 = new ExplicitFactor(df);
 		fg.addFactor(f0);
 		
-		df = new DenseFactor(new VarSet(x0));
+		df = new VarTensor(new VarSet(x0));
 		df.setValue(0, 5d);
 		df.setValue(1, 1d);
 		ExplicitFactor f1 = new ExplicitFactor(df);
@@ -103,7 +103,7 @@ public class BeliefPropagationTest {
 		
 		// add a hard xor factor
 		// this shouldn't move the marginals away from uniform
-		DenseFactor df = new DenseFactor(new VarSet(x0, x1));
+		VarTensor df = new VarTensor(new VarSet(x0, x1));
 		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
 			VarConfig vCfg = df.getVars().getVarConfig(cfg);
 			int v0 = vCfg.getState(x0);
@@ -131,21 +131,21 @@ public class BeliefPropagationTest {
         bp.run();
         assertEqualMarginals(fg, bf, bp);
         
-    	DenseFactor x0_marg = bp.getLogMarginals(x0);
+    	VarTensor x0_marg = bp.getLogMarginals(x0);
         assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
         assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
-        DenseFactor x1_marg = bp.getLogMarginals(x1);
+        VarTensor x1_marg = bp.getLogMarginals(x1);
         assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
         assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
 				
 		// check again once we've added some unary factors on x0 and x1
-		df = new DenseFactor(new VarSet(x0));
+		df = new VarTensor(new VarSet(x0));
 		df.setValue(0, -2d);
 		df.setValue(1, -3d);
 		ExplicitFactor f0 = new ExplicitFactor(df);
 		fg.addFactor(f0);
 		
-		df = new DenseFactor(new VarSet(x0));
+		df = new VarTensor(new VarSet(x0));
 		df.setValue(0, -1d);
 		df.setValue(1, -5d);
 		ExplicitFactor f1 = new ExplicitFactor(df);
@@ -184,7 +184,7 @@ public class BeliefPropagationTest {
         
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
+                ((VarTensor)f).convertRealToLog();
             }
         }
         
@@ -224,7 +224,7 @@ public class BeliefPropagationTest {
         
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
+                ((VarTensor)f).convertRealToLog();
             }
         }
         
@@ -290,7 +290,7 @@ public class BeliefPropagationTest {
 
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
+                ((VarTensor)f).convertRealToLog();
             }
         }
         return fg;
@@ -422,15 +422,15 @@ public class BeliefPropagationTest {
             BeliefPropagation bp, double tolerance) {
         for (Var var : fg.getVars()) {
             {
-                DenseFactor bfm = bf.getMarginals(var);
-                DenseFactor bpm = bp.getMarginals(var);
+                VarTensor bfm = bf.getMarginals(var);
+                VarTensor bpm = bp.getMarginals(var);
                 if (!bfm.equals(bpm, tolerance)) {
                     assertEquals(bfm, bpm);
                 }
             }
             {
-                DenseFactor bfm = bf.getLogMarginals(var);
-                DenseFactor bpm = bp.getLogMarginals(var);
+                VarTensor bfm = bf.getLogMarginals(var);
+                VarTensor bpm = bp.getLogMarginals(var);
                 if (!bfm.equals(bpm, tolerance)) {
                     assertEquals(bfm, bpm);
                 }
@@ -438,15 +438,15 @@ public class BeliefPropagationTest {
         }
         for (Factor f : fg.getFactors()) {
             {
-                DenseFactor bfm = bf.getMarginals(f);
-                DenseFactor bpm = bp.getMarginals(f);
+                VarTensor bfm = bf.getMarginals(f);
+                VarTensor bpm = bp.getMarginals(f);
                 if (!bfm.equals(bpm, tolerance)) {
                     assertEquals(bfm, bpm);
                 }
             }
             {
-                DenseFactor bfm = bf.getLogMarginals(f);
-                DenseFactor bpm = bp.getLogMarginals(f);
+                VarTensor bfm = bf.getLogMarginals(f);
+                VarTensor bpm = bp.getLogMarginals(f);
                 if (!bfm.equals(bpm, tolerance)) {
                     assertEquals(bfm, bpm);
                 }

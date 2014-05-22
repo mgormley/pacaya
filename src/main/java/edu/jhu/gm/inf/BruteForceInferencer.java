@@ -1,7 +1,7 @@
 package edu.jhu.gm.inf;
 
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -31,7 +31,7 @@ public class BruteForceInferencer implements FgInferencer {
     }
     
     private FactorGraph fg;
-    private DenseFactor joint;
+    private VarTensor joint;
     private boolean logDomain;
     
     public BruteForceInferencer(FactorGraph fg, boolean logDomain) {
@@ -47,11 +47,11 @@ public class BruteForceInferencer implements FgInferencer {
      *            Whether to work in the log-domain.
      * @return The product of all the factors.
      */
-    private static DenseFactor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
-        DenseFactor joint = new DenseFactor(new VarSet(), logDomain ? 0.0 : 1.0);
+    private static VarTensor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
+        VarTensor joint = new VarTensor(new VarSet(), logDomain ? 0.0 : 1.0);
         for (int a=0; a<fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
-            DenseFactor factor = safeGetDenseFactor(f);
+            VarTensor factor = safeGetDenseFactor(f);
             assert !factor.containsBadValues(logDomain) : factor;
             if (logDomain) {
                 joint.add(factor);
@@ -63,13 +63,13 @@ public class BruteForceInferencer implements FgInferencer {
     }
 
     /** Gets this factor as a DenseFactor. This will construct such a factor if it is not already one. */
-    public static DenseFactor safeGetDenseFactor(Factor f) {
-        DenseFactor factor;
+    public static VarTensor safeGetDenseFactor(Factor f) {
+        VarTensor factor;
         if (f instanceof ExplicitFactor) {
-            factor = (DenseFactor) f;
+            factor = (VarTensor) f;
         } else {
             // Create a DenseFactor which the values of this non-explicitly represented factor.
-            factor = new DenseFactor(f.getVars());
+            factor = new VarTensor(f.getVars());
             for (int c=0; c<factor.size(); c++) {
                 factor.setValue(c, f.getUnormalizedScore(c));
             }
@@ -83,11 +83,11 @@ public class BruteForceInferencer implements FgInferencer {
     }
 
     /** Gets the unnormalized joint factor over all variables. */
-    public DenseFactor getJointFactor() {
+    public VarTensor getJointFactor() {
         return joint;
     }
     
-    protected DenseFactor getVarBeliefs(Var var) {
+    protected VarTensor getVarBeliefs(Var var) {
         if (logDomain) {
             return joint.getLogMarginal(new VarSet(var), true);
         } else {
@@ -95,7 +95,7 @@ public class BruteForceInferencer implements FgInferencer {
         }
     }
 
-    protected DenseFactor getFactorBeliefs(Factor factor) {
+    protected VarTensor getFactorBeliefs(Factor factor) {
         if (logDomain) {
             return joint.getLogMarginal(factor.getVars(), true);
         } else {
@@ -119,8 +119,8 @@ public class BruteForceInferencer implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getMarginals(Var var) {
-        DenseFactor marg = getVarBeliefs(var);
+    public VarTensor getMarginals(Var var) {
+        VarTensor marg = getVarBeliefs(var);
         if (logDomain) {
             marg.convertLogToReal();
         }
@@ -130,8 +130,8 @@ public class BruteForceInferencer implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getMarginals(Factor factor) {
-        DenseFactor marg = getFactorBeliefs(factor);
+    public VarTensor getMarginals(Factor factor) {
+        VarTensor marg = getFactorBeliefs(factor);
         if (logDomain) {
             marg.convertLogToReal();
         }
@@ -140,13 +140,13 @@ public class BruteForceInferencer implements FgInferencer {
         
     /** @inheritDoc */
     @Override
-    public DenseFactor getMarginalsForVarId(int varId) {
+    public VarTensor getMarginalsForVarId(int varId) {
         return getMarginals(fg.getVar(varId));
     }
 
     /** @inheritDoc */
     @Override
-    public DenseFactor getMarginalsForFactorId(int factorId) {
+    public VarTensor getMarginalsForFactorId(int factorId) {
         return getMarginals(fg.getFactor(factorId));
     }
 
@@ -163,8 +163,8 @@ public class BruteForceInferencer implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getLogMarginals(Var var) {
-        DenseFactor marg = getVarBeliefs(var);
+    public VarTensor getLogMarginals(Var var) {
+        VarTensor marg = getVarBeliefs(var);
         if (!logDomain) {
             marg.convertRealToLog();
         }
@@ -174,8 +174,8 @@ public class BruteForceInferencer implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getLogMarginals(Factor factor) {
-        DenseFactor marg = getFactorBeliefs(factor);
+    public VarTensor getLogMarginals(Factor factor) {
+        VarTensor marg = getFactorBeliefs(factor);
         if (!logDomain) {
             marg.convertRealToLog();
         }
@@ -184,13 +184,13 @@ public class BruteForceInferencer implements FgInferencer {
         
     /** @inheritDoc */
     @Override
-    public DenseFactor getLogMarginalsForVarId(int varId) {
+    public VarTensor getLogMarginalsForVarId(int varId) {
         return getLogMarginals(fg.getVar(varId));
     }
 
     /** @inheritDoc */
     @Override
-    public DenseFactor getLogMarginalsForFactorId(int factorId) {
+    public VarTensor getLogMarginalsForFactorId(int factorId) {
         return getLogMarginals(fg.getFactor(factorId));
     }
 

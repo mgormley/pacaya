@@ -13,7 +13,7 @@ import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -104,7 +104,7 @@ public class MbrDecoderTest {
 
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
+                ((VarTensor)f).convertRealToLog();
             }
         }
         return fg;

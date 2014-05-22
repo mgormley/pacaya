@@ -21,7 +21,7 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.model.ClampFactor;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.FgModel;
@@ -310,7 +310,7 @@ public class JointNlpFactorGraphTest {
         // Marginals should yield a left-branching tree.        
         System.out.println("\n\nVariable marginals:\n");
         for (Var v : sfg.getVars()) {
-            DenseFactor marg = bp.getMarginals(v);
+            VarTensor marg = bp.getMarginals(v);
             if (v instanceof LinkVar) {
                 LinkVar link = (LinkVar) v;
                 if (link.getParent() + 1 == link.getChild()) {

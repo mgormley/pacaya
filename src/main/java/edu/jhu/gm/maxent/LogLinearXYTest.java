@@ -10,7 +10,7 @@ import org.junit.Test;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.JUnitUtils;
@@ -54,9 +54,9 @@ public class LogLinearXYTest {
         FgModel model = td.train(exs);
         System.out.println(model);
         {
-            Pair<String,DenseFactor> p = td.decode(model, data.get(0));
+            Pair<String,VarTensor> p = td.decode(model, data.get(0));
             String predLabel = p.get1();
-            DenseFactor dist = p.get2();
+            VarTensor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
             assertEquals("y=A", predLabel);
             // TODO: Bring back this assertion.
@@ -64,9 +64,9 @@ public class LogLinearXYTest {
             //        }, dist.getValues(), 1e-3);
         }
         {
-            Pair<String,DenseFactor> p = td.decode(model, data.get(2));
+            Pair<String,VarTensor> p = td.decode(model, data.get(2));
             String predLabel = p.get1();
-            DenseFactor dist = p.get2();
+            VarTensor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
             assertEquals("y=B", predLabel);
             // TODO: Bring back this assertion.

@@ -1,6 +1,6 @@
 package edu.jhu.gm.inf;
 
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
@@ -25,7 +25,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as probabilities
      */
-    DenseFactor getMarginals(Var var);
+    VarTensor getMarginals(Var var);
 
     /**
      * Gets the approximate probabilities for the marginal distribution of a
@@ -33,7 +33,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as probabilities
      */
-    DenseFactor getMarginals(Factor factor);
+    VarTensor getMarginals(Factor factor);
 
     /**
      * Gets the approximate probabilities for the marginal distribution of a
@@ -41,7 +41,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as probabilities
      */
-    DenseFactor getMarginalsForVarId(int varId);
+    VarTensor getMarginalsForVarId(int varId);
 
     /**
      * Gets the approximate probabilities for the marginal distribution of a
@@ -49,7 +49,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as probabilities
      */
-    DenseFactor getMarginalsForFactorId(int factorId);
+    VarTensor getMarginalsForFactorId(int factorId);
 
     /**
      * Gets the (approximate) partition function, which is the normalizing
@@ -65,7 +65,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as log-probabilities.
      */
-    DenseFactor getLogMarginals(Var var);
+    VarTensor getLogMarginals(Var var);
 
     /**
      * Gets the approximate log-probabilities for the marginal distribution of a
@@ -73,7 +73,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as log-probabilities.
      */
-    DenseFactor getLogMarginals(Factor factor);
+    VarTensor getLogMarginals(Factor factor);
 
     /**
      * Gets the approximate log-probabilities for the marginal distribution of a
@@ -81,7 +81,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as log-probabilities.
      */
-    DenseFactor getLogMarginalsForVarId(int varId);
+    VarTensor getLogMarginalsForVarId(int varId);
 
     /**
      * Gets the approximate log-probabilities for the marginal distribution of a
@@ -89,7 +89,7 @@ public interface FgInferencer {
      * 
      * @return The marginal distribution as log-probabilities.
      */
-    DenseFactor getLogMarginalsForFactorId(int factorId);
+    VarTensor getLogMarginalsForFactorId(int factorId);
 
     /**
      * Gets the log of the (approximate) partition function, which is the

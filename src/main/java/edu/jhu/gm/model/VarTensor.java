@@ -17,7 +17,7 @@ import edu.jhu.prim.util.math.FastMath;
  * @author mgormley
  *
  */
-public class DenseFactor implements Serializable {
+public class VarTensor implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -33,7 +33,7 @@ public class DenseFactor implements Serializable {
     private double[] values;
     
     /** Constructs a factor initializing the values to 0.0. */
-    public DenseFactor(VarSet vars) {
+    public VarTensor(VarSet vars) {
         this(vars, 0.0);
     }
     
@@ -42,7 +42,7 @@ public class DenseFactor implements Serializable {
      * @param vars The variable set.
      * @param initialValue The initial value.
      */
-    public DenseFactor(VarSet vars, double initialValue) {
+    public VarTensor(VarSet vars, double initialValue) {
         this.vars = vars;
         int numConfigs = vars.calcNumConfigs();
         this.values = new double[numConfigs];
@@ -50,7 +50,7 @@ public class DenseFactor implements Serializable {
     }
     
     /** Copy constructor. */
-    public DenseFactor(DenseFactor f) {
+    public VarTensor(VarTensor f) {
         this.vars = f.vars;
         this.values = DoubleArrays.copyOf(f.values);
         // We don't want to copy the node id since it uniquely refers to the
@@ -66,7 +66,7 @@ public class DenseFactor implements Serializable {
      * @param normalize Whether to normalize the resulting distribution.
      * @return The marginal distribution represented as log-probabilities.
      */
-    public DenseFactor getMarginal(VarSet vars, boolean normalize) {
+    public VarTensor getMarginal(VarSet vars, boolean normalize) {
         return getMarginal(vars, normalize, false);
     }
 
@@ -79,15 +79,15 @@ public class DenseFactor implements Serializable {
      * @param normalize Whether to normalize the resulting distribution.
      * @return The marginal distribution represented as log-probabilities.
      */
-    public DenseFactor getLogMarginal(VarSet vars, boolean normalize) {
+    public VarTensor getLogMarginal(VarSet vars, boolean normalize) {
         return getMarginal(vars, normalize, true);
     }
     
-    private DenseFactor getMarginal(VarSet vars, boolean normalize, boolean logDomain) {
+    private VarTensor getMarginal(VarSet vars, boolean normalize, boolean logDomain) {
         VarSet margVars = new VarSet(this.vars);
         margVars.retainAll(vars);
         
-        DenseFactor marg = new DenseFactor(margVars, logDomain ? Double.NEGATIVE_INFINITY : 0.0);
+        VarTensor marg = new VarTensor(margVars, logDomain ? Double.NEGATIVE_INFINITY : 0.0);
         if (margVars.size() == 0) {
             return marg;
         }
@@ -113,15 +113,15 @@ public class DenseFactor implements Serializable {
         return marg;
     }
     
-    public DenseFactor getClamped(VarConfig clmpVarConfig) {
+    public VarTensor getClamped(VarConfig clmpVarConfig) {
         if (clmpVarConfig.size() == 0) {
-            return new DenseFactor(this);
+            return new VarTensor(this);
         }
         VarSet clmpVars = clmpVarConfig.getVars();
         VarSet unclmpVars = new VarSet(this.vars);
         unclmpVars.removeAll(clmpVars); 
 
-        DenseFactor clmp = new DenseFactor(unclmpVars);
+        VarTensor clmp = new VarTensor(unclmpVars);
         IntIter iter = IndexForVc.getConfigIter(this.vars, clmpVarConfig);
         
         if (clmp.values.length > 0) {
@@ -203,8 +203,8 @@ public class DenseFactor implements Serializable {
      *  \f$f : \prod_{l\in L} X_l \to [0,\infty)\f$ and \f$g : \prod_{m\in M} X_m \to [0,\infty)\f$, then
      *  \f[f+g : \prod_{l\in L\cup M} X_l \to [0,\infty) : x \mapsto f(x_L) + g(x_M).\f]
      */
-    public void add(DenseFactor f) {
-        DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleAdd());
+    public void add(VarTensor f) {
+        VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleAdd());
         this.vars = newFactor.vars;
         this.values = newFactor.values;      
     }
@@ -217,8 +217,8 @@ public class DenseFactor implements Serializable {
      *  \f$f : \prod_{l\in L} X_l \to [0,\infty)\f$ and \f$g : \prod_{m\in M} X_m \to [0,\infty)\f$, then
      *  \f[fg : \prod_{l\in L\cup M} X_l \to [0,\infty) : x \mapsto f(x_L) g(x_M).\f]
      */
-    public void prod(DenseFactor f) {
-        DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleProd());
+    public void prod(VarTensor f) {
+        VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleProd());
         this.vars = newFactor.vars;
         this.values = newFactor.values;  
     }
@@ -227,8 +227,8 @@ public class DenseFactor implements Serializable {
      * this /= f
      * indices matching 0 /= 0 are set to 0.
      */
-    public void divBP(DenseFactor f) {
-    	DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleDivBP());
+    public void divBP(VarTensor f) {
+    	VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleDivBP());
         this.vars = newFactor.vars;
         this.values = newFactor.values;
     }
@@ -237,8 +237,8 @@ public class DenseFactor implements Serializable {
      * this -= f
      * indices matching (-Infinity) -= (-Infinity) are set to 0.
      */
-    public void subBP(DenseFactor f) {
-    	DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleSubtractBP());
+    public void subBP(VarTensor f) {
+    	VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleSubtractBP());
         this.vars = newFactor.vars;
         this.values = newFactor.values;
     }
@@ -249,8 +249,8 @@ public class DenseFactor implements Serializable {
      * This is analogous to factor addition, except that the logAdd operator
      * is used instead.
      */
-    public void logAdd(DenseFactor f) {
-        DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleLogAdd());
+    public void logAdd(VarTensor f) {
+        VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleLogAdd());
         this.vars = newFactor.vars;
         this.values = newFactor.values;  
     }
@@ -268,10 +268,10 @@ public class DenseFactor implements Serializable {
      * @param op The binary operator.
      * @return The new factor.
      */
-    private static DenseFactor applyBinOp(final DenseFactor f1, final DenseFactor f2, final LambdaBinOpDouble op) {
+    private static VarTensor applyBinOp(final VarTensor f1, final VarTensor f2, final LambdaBinOpDouble op) {
         if (f1.vars.size() == 0) {
             // Return a copy of f2.
-            return new DenseFactor(f2);
+            return new VarTensor(f2);
         } else if (f2.vars.size() == 0) {
             // Don't use the copy constructor, just return f1.
             return f1;
@@ -294,7 +294,7 @@ public class DenseFactor implements Serializable {
         } else {
             // The union of the two variable sets must be created.
             VarSet union = new VarSet(f1.vars, f2.vars);
-            DenseFactor out = new DenseFactor(union);
+            VarTensor out = new VarTensor(union);
             IntIter iter1 = f1.vars.getConfigIter(union);
             IntIter iter2 = f2.vars.getConfigIter(union);
             int n = out.vars.calcNumConfigs();
@@ -311,7 +311,7 @@ public class DenseFactor implements Serializable {
      * Sets each entry in this factor to that of the given factor.
      * @param factor
      */
-    public void set(DenseFactor f) {
+    public void set(VarTensor f) {
         if (!this.vars.equals(f.vars)) {
             throw new IllegalStateException("The varsets must be equal.");
         }
@@ -359,7 +359,7 @@ public class DenseFactor implements Serializable {
     /* Note that Factors do not implement the standard hashCode() or equals() methods. */
     
     /** Special equals with a tolerance. */
-    public boolean equals(DenseFactor other, double delta) {
+    public boolean equals(VarTensor other, double delta) {
         if (this == other)
             return true;
         if (other == null)
@@ -403,7 +403,7 @@ public class DenseFactor implements Serializable {
     }
 
     /** Computes the sum of the entries of the pointwise product of two tensors with identical domains. */
-    public double dotProduct(DenseFactor other) {
+    public double dotProduct(VarTensor other) {
         if (!this.vars.equals(other.vars)) {
             throw new IllegalArgumentException("Tensors must have identical domains");
         }

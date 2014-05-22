@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -82,9 +82,9 @@ public class BeliefPropagation implements FgInferencer {
     public static class Messages {
         
         /** The current message. */
-        public DenseFactor message;
+        public VarTensor message;
         /** The pending messge. */
-        public DenseFactor newMessage;
+        public VarTensor newMessage;
         /** The residual between the previous message and the current message. */
         public double residual = Double.POSITIVE_INFINITY;
         
@@ -97,8 +97,8 @@ public class BeliefPropagation implements FgInferencer {
             // that variable only.
             Var var = edge.getVar();
             VarSet vars = new VarSet(var); // TODO: Can we create only one of these per variable?
-            message = new DenseFactor(vars, initialValue);
-            newMessage = new DenseFactor(vars, initialValue);
+            message = new VarTensor(vars, initialValue);
+            newMessage = new VarTensor(vars, initialValue);
             
             if (normalizeMessages) {
                 // Normalize the initial messages.
@@ -121,7 +121,7 @@ public class BeliefPropagation implements FgInferencer {
     private BpSchedule sched;
     private List<FgEdge> order;
     
-    private DenseFactor[] factorBeliefCache;
+    private VarTensor[] factorBeliefCache;
     // The number of messages that have converged.
     private int numConverged = 0;
 
@@ -129,7 +129,7 @@ public class BeliefPropagation implements FgInferencer {
         this.prm = prm;
         this.fg = fg;
         this.msgs = new Messages[fg.getNumEdges()];
-        this.factorBeliefCache = new DenseFactor[fg.getNumFactors()];
+        this.factorBeliefCache = new VarTensor[fg.getNumFactors()];
         
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
@@ -171,13 +171,13 @@ public class BeliefPropagation implements FgInferencer {
             for(FgNode node : fg.getNodes()) {
             	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
                 	Factor f = node.getFactor();        		
-            		DenseFactor fBel = new DenseFactor(f.getVars());
+            		VarTensor fBel = new VarTensor(f.getVars());
                 	int c = f.getVars().calcNumConfigs();
                 	for(int i=0; i<c; i++)
                 		fBel.setValue(i, f.getUnormalizedScore(i));
                 	
                 	for(FgEdge v2f : node.getInEdges()) {
-                		DenseFactor vBel = msgs[v2f.getId()].message;
+                		VarTensor vBel = msgs[v2f.getId()].message;
                 		if(prm.logDomain) fBel.add(vBel);
                 		else fBel.prod(vBel);
                 	}
@@ -267,7 +267,7 @@ public class BeliefPropagation implements FgInferencer {
         	// Since this is not a global factor, we send messages in the normal way, which
             // in the case of a factor to variable message requires enumerating all possible
             // variable configurations.
-            DenseFactor msg = msgs[edgeId].newMessage;
+            VarTensor msg = msgs[edgeId].newMessage;
             
             // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
             msg.set(prm.logDomain ? 0.0 : 1.0);
@@ -284,20 +284,20 @@ public class BeliefPropagation implements FgInferencer {
                 // Compute the product of all messages received by f* (each
                 // of which will have a different domain) with the factor f* itself.
                 // Exclude the message going out to the variable, v*.
-                DenseFactor prod;
+                VarTensor prod;
             	if(prm.cacheFactorBeliefs && !(factor instanceof GlobalFactor)) {
             		// we are computing f->v, which is the product of a bunch of factor values and v->f messages
             		// we can cache this product and remove the v->f message that would have been excluded from the product
-            		DenseFactor remove = msgs[edge.getOpposing().getId()].message;
-            		DenseFactor from = factorBeliefCache[factor.getId()];
-            		prod = new DenseFactor(from);
+            		VarTensor remove = msgs[edge.getOpposing().getId()].message;
+            		VarTensor from = factorBeliefCache[factor.getId()];
+            		prod = new VarTensor(from);
             		if(prm.logDomain) prod.subBP(remove);
             		else prod.divBP(remove);
             		
             		assert !prod.containsBadValues(prm.logDomain) : "prod from cached beliefs = " + prod;
             	}
             	else {	// fall back on normal way of computing messages without caching
-            		prod = new DenseFactor(factor.getVars());
+            		prod = new VarTensor(factor.getVars());
                 	// Set the initial values of the product to those of the sending factor.
                 	int numConfigs = prod.getVars().calcNumConfigs();
                 	for (int c = 0; c < numConfigs; c++) {
@@ -325,7 +325,7 @@ public class BeliefPropagation implements FgInferencer {
         }
     }
 
-    private void normalize(DenseFactor msg) {
+    private void normalize(VarTensor msg) {
         if (prm.normalizeMessages) {
             if (prm.logDomain) { 
                 msg.logNormalize();
@@ -356,14 +356,14 @@ public class BeliefPropagation implements FgInferencer {
      *            non-null, any message sent from exclNode to node will be
      *            excluded from the product.
      */
-    protected void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode) {
+    protected void getProductOfMessages(FgNode node, VarTensor prod, FgNode exclNode) {
         for (FgEdge nbEdge : node.getInEdges()) {
             if (nbEdge.getParent() == exclNode) {
                 // Don't include the receiving variable.
                 continue;
             }
             // Get message from neighbor to factor.
-            DenseFactor nbMsg = msgs[nbEdge.getId()].message;
+            VarTensor nbMsg = msgs[nbEdge.getId()].message;
             
             // The neighbor messages have a different domain, but addition
             // should still be well defined.
@@ -377,7 +377,7 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     /** Gets the product of messages (as in getProductOfMessages()) and then normalizes. */
-    protected void getProductOfMessagesNormalized(FgNode node, DenseFactor prod, FgNode exclNode) {
+    protected void getProductOfMessagesNormalized(FgNode node, VarTensor prod, FgNode exclNode) {
         getProductOfMessages(node, prod, exclNode);
         if (prm.logDomain) { 
             prod.logNormalize();
@@ -411,7 +411,7 @@ public class BeliefPropagation implements FgInferencer {
         
         // Send message: Just swap the pointers to the current message and the new message, so
         // that we don't have to create a new factor object.
-        DenseFactor oldMessage = ec.message;
+        VarTensor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
         assert !ec.message.containsBadValues(prm.logDomain) : "ec.message = " + ec.message;
@@ -419,7 +419,7 @@ public class BeliefPropagation implements FgInferencer {
         // Update factor beliefs
         if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
         	Factor f = edge.getFactor();
-        	DenseFactor update = factorBeliefCache[f.getId()];
+        	VarTensor update = factorBeliefCache[f.getId()];
         	if(prm.isLogDomain()) {
         		update.subBP(oldMessage);
         		update.add(ec.message);
@@ -443,8 +443,8 @@ public class BeliefPropagation implements FgInferencer {
      * residual as the infinity norm of the difference of the log of the message
      * vectors.
      */
-    private double getResidual(DenseFactor message, DenseFactor newMessage) {
-        DenseFactor logRatio = new DenseFactor(newMessage);
+    private double getResidual(VarTensor message, VarTensor newMessage) {
+        VarTensor logRatio = new VarTensor(newMessage);
         if (prm.logDomain) {
             logRatio.subBP(message);
         } else {
@@ -454,30 +454,30 @@ public class BeliefPropagation implements FgInferencer {
         return logRatio.getInfNorm();
     }
     
-    protected DenseFactor getVarBeliefs(int varId) {
+    protected VarTensor getVarBeliefs(int varId) {
         return getVarBeliefs(fg.getVar(varId));
     }
     
-    protected DenseFactor getFactorBeliefs(int facId) {
+    protected VarTensor getFactorBeliefs(int facId) {
         return getFactorBeliefs(fg.getFactor(facId));
     }
     
-    protected DenseFactor getVarBeliefs(Var var) {
-        DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+    protected VarTensor getVarBeliefs(Var var) {
+        VarTensor prod = new VarTensor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
         FgNode node = fg.getVarNode(var.getId());
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
 
-    protected DenseFactor getFactorBeliefs(Factor factor) {
+    protected VarTensor getFactorBeliefs(Factor factor) {
         if (factor instanceof GlobalFactor) {
             log.warn("Getting marginals of a global factor is not supported."
                     + " This will require exponential space to store the resulting factor."
                     + " This should only be used for testing.");
         }
         
-        DenseFactor prod = new DenseFactor(BruteForceInferencer.safeGetDenseFactor(factor));
+        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetDenseFactor(factor));
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessagesNormalized(node, prod, null);
@@ -548,7 +548,7 @@ public class BeliefPropagation implements FgInferencer {
             Factor f = fg.getFactors().get(a);
             if (!(f instanceof GlobalFactor)) {
                 int numConfigs = f.getVars().calcNumConfigs();
-                DenseFactor beliefs = getFactorBeliefs(a);
+                VarTensor beliefs = getFactorBeliefs(a);
                 for (int c=0; c<numConfigs; c++) {                
                     double chi_c = f.getUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
@@ -567,7 +567,7 @@ public class BeliefPropagation implements FgInferencer {
         for (int i=0; i<fg.getVars().size(); i++) {
             Var v = fg.getVars().get(i);
             int numNeighbors = fg.getVarNode(i).getOutEdges().size();
-            DenseFactor beliefs = getVarBeliefs(i);
+            VarTensor beliefs = getVarBeliefs(i);
             double sum = 0.0;
             for (int c=0; c<v.getNumStates(); c++) {
                 if (beliefs.getValue(c) != semiringZero) { 
@@ -601,7 +601,7 @@ public class BeliefPropagation implements FgInferencer {
             throw new IllegalArgumentException("Node must be a variable node.");
         }
         Var var = node.getVar();
-        DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        VarTensor prod = new VarTensor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this node.
         getProductOfMessages(node, prod, null);
         if (prm.logDomain) {
@@ -616,8 +616,8 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getMarginals(Var var) {
-        DenseFactor marg = getVarBeliefs(var);
+    public VarTensor getMarginals(Var var) {
+        VarTensor marg = getVarBeliefs(var);
         if (prm.logDomain) {
             marg.convertLogToReal();
         }
@@ -627,8 +627,8 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getMarginals(Factor factor) {
-        DenseFactor marg = getFactorBeliefs(factor);
+    public VarTensor getMarginals(Factor factor) {
+        VarTensor marg = getFactorBeliefs(factor);
         if (prm.logDomain) {
             marg.convertLogToReal();
         }
@@ -637,13 +637,13 @@ public class BeliefPropagation implements FgInferencer {
         
     /** @inheritDoc */
     @Override
-    public DenseFactor getMarginalsForVarId(int varId) {
+    public VarTensor getMarginalsForVarId(int varId) {
         return getMarginals(fg.getVar(varId));
     }
 
     /** @inheritDoc */
     @Override
-    public DenseFactor getMarginalsForFactorId(int factorId) {
+    public VarTensor getMarginalsForFactorId(int factorId) {
         return getMarginals(fg.getFactor(factorId));
     }
 
@@ -660,8 +660,8 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getLogMarginals(Var var) {
-        DenseFactor marg = getVarBeliefs(var);
+    public VarTensor getLogMarginals(Var var) {
+        VarTensor marg = getVarBeliefs(var);
         if (!prm.logDomain) {
             marg.convertRealToLog();
         }
@@ -671,8 +671,8 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc
      */
     @Override
-    public DenseFactor getLogMarginals(Factor factor) {
-        DenseFactor marg = getFactorBeliefs(factor);
+    public VarTensor getLogMarginals(Factor factor) {
+        VarTensor marg = getFactorBeliefs(factor);
         if (!prm.logDomain) {
             marg.convertRealToLog();
         }
@@ -681,13 +681,13 @@ public class BeliefPropagation implements FgInferencer {
         
     /** @inheritDoc */
     @Override
-    public DenseFactor getLogMarginalsForVarId(int varId) {
+    public VarTensor getLogMarginalsForVarId(int varId) {
         return getLogMarginals(fg.getVar(varId));
     }
 
     /** @inheritDoc */
     @Override
-    public DenseFactor getLogMarginalsForFactorId(int factorId) {
+    public VarTensor getLogMarginalsForFactorId(int factorId) {
         return getLogMarginals(fg.getFactor(factorId));
     }
 

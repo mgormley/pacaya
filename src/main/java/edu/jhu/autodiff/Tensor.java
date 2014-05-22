@@ -1,11 +1,11 @@
 package edu.jhu.autodiff;
 
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.Var.VarType;
 
-public class Tensor extends DenseFactor {
+public class Tensor extends VarTensor {
 
     public Tensor(int... dimensions) {
         super(getFakeVarSet(dimensions));

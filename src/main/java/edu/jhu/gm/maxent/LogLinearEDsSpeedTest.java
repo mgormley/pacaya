@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.maxent.LogLinearXY.LogLinearXYPrm;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
@@ -70,7 +70,7 @@ public class LogLinearEDsSpeedTest {
             tDecode.start();
             int numCorrect = 0;
             for (int i=0; i<data.size(); i++) {
-                Pair<String, DenseFactor> pair = maxent.decode(model, data.get(i));
+                Pair<String, VarTensor> pair = maxent.decode(model, data.get(i));
                 int y = data.get(i).getY();
                 String yStr = data.getYAlphabet().lookupObject(y).toString();
                 if (pair.get1().equals(yStr)) {

@@ -9,7 +9,7 @@ import org.junit.Test;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BruteForceInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarSet;
@@ -39,8 +39,8 @@ public class ConstituencyTreeFactorTest {
                 for(int i=0; i<n; i++)  {
                     for(int j=i+1; j<=n; j++) {
                         SpanVar var = ctFact.getSpanVar(i, j);
-                        DenseFactor bpMarg = bp.getMarginals(var);
-                        DenseFactor bfMarg = bf.getMarginals(var);
+                        VarTensor bpMarg = bp.getMarginals(var);
+                        VarTensor bfMarg = bf.getMarginals(var);
                         assertTrue(bpMarg.equals(bfMarg, 1e-6));
                     }
                 }
@@ -58,13 +58,13 @@ public class ConstituencyTreeFactorTest {
         fg.addFactor(ctFact);
         
         SpanVar johnLoves = ctFact.getSpanVar(0, 2);
-        DenseFactor doesntLikeSpan = new DenseFactor(new VarSet(johnLoves));
+        VarTensor doesntLikeSpan = new VarTensor(new VarSet(johnLoves));
         doesntLikeSpan.setValue(SpanVar.TRUE, -1d);
         doesntLikeSpan.setValue(SpanVar.FALSE, 1d);
         fg.addFactor(new ExplicitExpFamFactor(doesntLikeSpan));
 
         SpanVar lovesMary = ctFact.getSpanVar(1, 3);
-        DenseFactor likesSpan = new DenseFactor(new VarSet(lovesMary));
+        VarTensor likesSpan = new VarTensor(new VarSet(lovesMary));
         likesSpan.setValue(SpanVar.TRUE, 1d);
         likesSpan.setValue(SpanVar.FALSE, -1d);
         fg.addFactor(new ExplicitExpFamFactor(likesSpan));
@@ -74,8 +74,8 @@ public class ConstituencyTreeFactorTest {
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         
-        DenseFactor johnLovesMarg = bp.getMarginals(johnLoves);
-        DenseFactor lovesMaryMarg = bp.getMarginals(lovesMary);
+        VarTensor johnLovesMarg = bp.getMarginals(johnLoves);
+        VarTensor lovesMaryMarg = bp.getMarginals(lovesMary);
         assertTrue(johnLovesMarg.getValue(SpanVar.TRUE) < lovesMaryMarg.getValue(SpanVar.TRUE));
         
         // TODO do inside by hand and put in some exact numbers

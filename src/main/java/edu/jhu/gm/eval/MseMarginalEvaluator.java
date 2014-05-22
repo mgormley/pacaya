@@ -1,7 +1,7 @@
 package edu.jhu.gm.eval;
 
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -26,7 +26,7 @@ public class MseMarginalEvaluator {
 
         for (Var v : goldConfig.getVars()) {
             if (v.getType() == VarType.PREDICTED) {
-                DenseFactor marg = inf.getMarginals(v);
+                VarTensor marg = inf.getMarginals(v);
                 int goldState = goldConfig.getState(v);
                 for (int c=0; c<marg.size(); c++) {
                     double goldMarg = (c == goldState) ? s.one() : s.zero();

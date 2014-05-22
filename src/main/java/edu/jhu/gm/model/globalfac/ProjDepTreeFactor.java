@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
@@ -208,7 +208,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
             // Get the incoming messages.
             FgEdge inEdge = outEdge.getOpposing();
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            VarTensor inMsg = msgs[inEdge.getId()].message;
             double inMsgTrue, inMsgFalse;
             if (logDomain) {
                 inMsgTrue = inMsg.getValue(LinkVar.TRUE);
@@ -245,7 +245,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
         // Get the incoming messages.
         FgEdge inEdge = outEdge.getOpposing();
-        DenseFactor inMsg = msgs[inEdge.getId()].message;
+        VarTensor inMsg = msgs[inEdge.getId()].message;
         double inMsgTrue, inMsgFalse;
         if (logDomain) {
             inMsgTrue = inMsg.getValue(LinkVar.TRUE);
@@ -320,7 +320,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
         for (FgEdge inEdge : parent.getInEdges()) {
             LinkVar link = (LinkVar) inEdge.getVar();
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            VarTensor inMsg = msgs[inEdge.getId()].message;
             double oddsRatio;
             if (logDomain) {
                 oddsRatio = inMsg.getValue(LinkVar.TRUE) - inMsg.getValue(LinkVar.FALSE);
@@ -366,7 +366,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         // Here we store log pi.
         double pi = 0.0;
         for (FgEdge inEdge : parent.getInEdges()) {
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            VarTensor inMsg = msgs[inEdge.getId()].message;
             if (logDomain) {
                 pi += inMsg.getValue(LinkVar.FALSE);
             } else {
@@ -381,7 +381,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             double outMsgTrue, double outMsgFalse) {
         
         // Set the outgoing messages.
-        DenseFactor outMsg = msgs[outEdge.getId()].newMessage;
+        VarTensor outMsg = msgs[outEdge.getId()].newMessage;
         outMsg.setValue(LinkVar.FALSE, outMsgFalse);
         outMsg.setValue(LinkVar.TRUE, outMsgTrue);
                 

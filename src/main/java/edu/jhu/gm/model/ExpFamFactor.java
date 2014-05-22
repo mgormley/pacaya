@@ -34,7 +34,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
     
-    public ExpFamFactor(DenseFactor other) {
+    public ExpFamFactor(VarTensor other) {
         super(other);
         this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
@@ -99,7 +99,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
     @Override
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
-        DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
+        VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
         
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
         if (numConfigs == 0) {
@@ -130,7 +130,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     }
 
     public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-        DenseFactor df = super.getClamped(clmpVarConfig);
+        VarTensor df = super.getClamped(clmpVarConfig);
         return new ClampedExpFamFactor(df, clmpVarConfig, this);
     }
     
@@ -142,7 +142,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         private ExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedExpFamFactor(DenseFactor clmpDf, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
+        public ClampedExpFamFactor(VarTensor clmpDf, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
             super(clmpDf);
             this.unclmpFactor = unclmpFactor;
             VarSet unclmpVarSet = unclmpFactor.getVars();

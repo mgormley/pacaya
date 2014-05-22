@@ -7,7 +7,7 @@ import java.io.InputStream;
 
 import org.junit.Test;
 
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 
@@ -32,7 +32,7 @@ public class BayesNetReaderTest {
         FactorGraph fg = bnr.readBnAsFg(networkIs, cpdIs);
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
+                ((VarTensor)f).convertRealToLog();
             }
         }
         return fg;

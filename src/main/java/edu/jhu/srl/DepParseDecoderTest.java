@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.data.DepEdgeMask;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
@@ -29,12 +29,12 @@ public class DepParseDecoderTest {
     public void testGetParents() {
         boolean logDomain = true;
         int n = 3;
-        List<DenseFactor> margs = new ArrayList<DenseFactor>();
+        List<VarTensor> margs = new ArrayList<VarTensor>();
         List<Var> vars = new ArrayList<Var>();
         for (int p=-1; p<n; p++) {
             for (int c=0; c<n; c++) {
                 LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
-                DenseFactor f = new DenseFactor(new VarSet(v));
+                VarTensor f = new VarTensor(new VarSet(v));
                 if ((p == -1 && c == 1) || 
                         (p == 1 && c == 0) || 
                         (p == 1 && c == 2)) {
@@ -59,12 +59,12 @@ public class DepParseDecoderTest {
     public void testGetDepEdgeMask() {
         boolean logDomain = true;
         int n = 3;
-        List<DenseFactor> margs = new ArrayList<DenseFactor>();
+        List<VarTensor> margs = new ArrayList<VarTensor>();
         List<Var> vars = new ArrayList<Var>();
         for (int p=-1; p<n; p++) {
             for (int c=0; c<n; c++) {
                 LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
-                DenseFactor f = new DenseFactor(new VarSet(v));
+                VarTensor f = new VarTensor(new VarSet(v));
                 if ((p == -1 && c == 1) || 
                         (p == 1 && c == 0) || 
                         (p == 1 && c == 2)) {

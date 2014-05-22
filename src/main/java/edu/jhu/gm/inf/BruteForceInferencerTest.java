@@ -7,7 +7,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import edu.jhu.gm.data.bayesnet.BayesNetReaderTest;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.VarSet;
@@ -58,7 +58,7 @@ public class BruteForceInferencerTest {
             FgInferencer bp, boolean logDomain) {        
         bp.run();
 
-        DenseFactor marg;
+        VarTensor marg;
         double[] goldMarg;
         
         marg = bp.getMarginals(fg.getVar(0));
@@ -85,7 +85,7 @@ public class BruteForceInferencerTest {
 
         // System.out.println(bp.getJointFactor());
 
-        DenseFactor marg;
+        VarTensor marg;
         double[] goldMarg;
         
         assertEquals("A", fg.getVar(0).getName());

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import org.junit.Test;
 
 import edu.jhu.gm.inf.BruteForceInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
@@ -26,8 +26,8 @@ public class MseMarginalEvaluatorTest {
             super(null, false);
         }
         
-        public DenseFactor getMarginals(Var var) {
-            DenseFactor marg = new DenseFactor(new VarSet(var));
+        public VarTensor getMarginals(Var var) {
+            VarTensor marg = new VarTensor(new VarSet(var));
             if (var == v1) {
                 marg.setValue(0, 0.4);
                 marg.setValue(1, 0.6);

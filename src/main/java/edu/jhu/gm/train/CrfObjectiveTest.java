@@ -33,7 +33,7 @@ import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -100,7 +100,7 @@ public class CrfObjectiveTest {
 			double v = infFactory.isLogDomain()
 					? Math.sqrt(i + 1)
 					: 1d / Math.sqrt(i + 1);
-			DenseFactor df = new DenseFactor(new VarSet(xi), v);
+			VarTensor df = new VarTensor(new VarSet(xi), v);
 			df.setValue(0, infFactory.isLogDomain()
 					? 1d
 					: 2d + v);

@@ -15,7 +15,7 @@ import com.google.common.collect.Iterators;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.IFgModel;
@@ -174,8 +174,8 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         
         @Override
-        public DenseFactor getMarginalsForFactorId(int factorId) { 
-            return new DenseFactor(fg.getFactor(factorId).getVars()); 
+        public VarTensor getMarginalsForFactorId(int factorId) { 
+            return new VarTensor(fg.getFactor(factorId).getVars()); 
         }
 
         @Override
@@ -188,28 +188,28 @@ public class ObsFeatureConjoiner implements Serializable {
         public double getPartition() { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
         
         @Override
         public double getLogPartition() { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getLogMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getLogMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getLogMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getLogMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getLogMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getLogMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
 
         @Override
-        public DenseFactor getLogMarginalsForFactorId(int factorId) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getLogMarginalsForFactorId(int factorId) { throw new RuntimeException("This method should never be called."); }
             
     }
     

@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
@@ -20,7 +20,7 @@ public class DepParseDecoder {
 
     private static final Logger log = Logger.getLogger(DepParseDecoder.class);
 
-    public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n) {        
+    public static int[] getParents(List<VarTensor> margs, List<Var> vars, int n) {        
         // Build up the beliefs about the link variables (if present),
         // and compute the MBR dependency parse.
         Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false);
@@ -39,12 +39,12 @@ public class DepParseDecoder {
         }
     }
 
-    private static Pair<EdgeScores, Integer> getEdgeScores(List<DenseFactor> margs, List<Var> vars, int n, boolean logOdds) {
+    private static Pair<EdgeScores, Integer> getEdgeScores(List<VarTensor> margs, List<Var> vars, int n, boolean logOdds) {
         int linkVarCount = 0;
         EdgeScores scores = new EdgeScores(n, Double.NEGATIVE_INFINITY);
         for (int varId = 0; varId < vars.size(); varId++) {
             Var var = vars.get(varId);
-            DenseFactor marg = margs.get(varId);
+            VarTensor marg = margs.get(varId);
             if (var instanceof LinkVar && (var.getType() == VarType.LATENT || var.getType() == VarType.PREDICTED)) {
                 LinkVar link = ((LinkVar)var);
                 int c = link.getChild();
@@ -70,7 +70,7 @@ public class DepParseDecoder {
         return new Pair<EdgeScores, Integer>(scores, linkVarCount);
     }
 
-    public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg) {
+    public static DepEdgeMask getDepEdgeMask(List<VarTensor> margs, List<Var> vars, int n, double propMaxMarg) {
         Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();

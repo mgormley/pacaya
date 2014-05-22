@@ -18,7 +18,7 @@ import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -616,8 +616,8 @@ public class ProjDepTreeFactorTest {
         Messages[] msgsExpl = bpExpl.getMessages();
         Messages[] msgsDp = bpDp.getMessages();
         for (int i=0; i<fgExpl.getNumEdges(); i++) {
-            DenseFactor msgExpl = msgsExpl[i].message;
-            DenseFactor msgDp = msgsDp[i].message;
+            VarTensor msgExpl = msgsExpl[i].message;
+            VarTensor msgDp = msgsDp[i].message;
             assertEquals(msgExpl.size(), msgDp.size());
             for (int c=0; c<msgExpl.size(); c++) {
                 if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
@@ -841,7 +841,7 @@ public class ProjDepTreeFactorTest {
     }
     
     private double getExpectedCount(BeliefPropagation bp, LinkVar[] rootVars, LinkVar[][] childVars, int i, int j) {
-        DenseFactor marg;
+        VarTensor marg;
         if (i == -1) {
             marg = bp.getMarginals(rootVars[j]);
         } else {

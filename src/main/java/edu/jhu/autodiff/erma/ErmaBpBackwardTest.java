@@ -9,7 +9,7 @@ import com.apple.mrj.macos.carbon.Timer;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -194,7 +194,7 @@ public class ErmaBpBackwardTest {
             er.backward(1);
             bp.backward(er.getVarBeliefsAdjs(), er.getFacBeliefsAdjs());
             
-            DenseFactor[] potentialsAdj = bp.getPotentialsAdj();
+            VarTensor[] potentialsAdj = bp.getPotentialsAdj();
             IntDoubleVector grad = new IntDoubleDenseVector(numParams);
             int i=0;
             for (int a=0; a<potentialsAdj.length; a++) {

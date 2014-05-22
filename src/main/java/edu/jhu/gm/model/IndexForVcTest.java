@@ -48,7 +48,7 @@ public class IndexForVcTest {
         VarConfig vc2 = new VarConfig();
         vc2.put(v1, 0);
         
-        System.out.println(new DenseFactor(vars1));
+        System.out.println(new VarTensor(vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = IndexForVc.getConfigArr(vars1, vc2);
@@ -71,7 +71,7 @@ public class IndexForVcTest {
         VarConfig vc2 = new VarConfig();
         vc2.put(v1, 1);
         
-        System.out.println(new DenseFactor(vars1));
+        System.out.println(new VarTensor(vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = IndexForVc.getConfigArr(vars1, vc2);
@@ -95,7 +95,7 @@ public class IndexForVcTest {
         vc2.put(v0, 1);
         vc2.put(v2, 4);
         
-        System.out.println(new DenseFactor(vars1));
+        System.out.println(new VarTensor(vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = IndexForVc.getConfigArr(vars1, vc2);

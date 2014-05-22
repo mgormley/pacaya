@@ -18,7 +18,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -93,20 +93,20 @@ public class LogLinearXY {
      * @return A pair containing the most likely label (i.e. value of y) and the
      *         distribution over y values.
      */
-    public Pair<String, DenseFactor> decode(FgModel model, LogLinearExample llex) {
+    public Pair<String, VarTensor> decode(FgModel model, LogLinearExample llex) {
         LFgExample ex = getFgExample(llex);
         
         MbrDecoderPrm prm = new MbrDecoderPrm();
         prm.infFactory = getBpPrm(); 
         MbrDecoder decoder = new MbrDecoder(prm);
         decoder.decode(model, ex);
-        List<DenseFactor> marginals = decoder.getVarMarginals();
+        List<VarTensor> marginals = decoder.getVarMarginals();
         VarConfig vc = decoder.getMbrVarConfig();
         String stateName = vc.getStateName(ex.getFgLatPred().getVar(0));
         if (marginals.size() != 1) {
             throw new IllegalStateException("Example is not from a LogLinearData factory");
         }
-        return new Pair<String,DenseFactor>(stateName, marginals.get(0));
+        return new Pair<String,VarTensor>(stateName, marginals.get(0));
     }
 
     /**

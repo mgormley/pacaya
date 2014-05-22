@@ -11,7 +11,7 @@ import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
@@ -42,7 +42,7 @@ public class MbrDecoder {
     private MbrDecoderPrm prm;    
     private VarConfig mbrVarConfig;
     private Map<Var,Double> varMargMap;
-    private ArrayList<DenseFactor> margs;
+    private ArrayList<VarTensor> margs;
 
     public MbrDecoder(MbrDecoderPrm prm) {
         this.prm = prm;
@@ -74,7 +74,7 @@ public class MbrDecoder {
         FactorGraph fgLatPred = ex.getFgLatPred();
         
         mbrVarConfig = new VarConfig();
-        margs = new ArrayList<DenseFactor>();
+        margs = new ArrayList<VarTensor>();
         varMargMap = new HashMap<Var,Double>();
 
         // Add in the observed variables.
@@ -85,7 +85,7 @@ public class MbrDecoder {
         if (prm.loss == Loss.ACCURACY || prm.loss == Loss.MSE || prm.loss == Loss.L1) {
             for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
                 Var var = fgLatPred.getVar(varId);
-                DenseFactor marg = infLatPred.getMarginalsForVarId(varId);
+                VarTensor marg = infLatPred.getMarginalsForVarId(varId);
                 margs.add(marg);
                 int argmaxState = marg.getArgmaxConfigId();
                 mbrVarConfig.put(var, argmaxState);
@@ -115,7 +115,7 @@ public class MbrDecoder {
      * The i'th DenseFactor in the list corresponds to the i'th variable in the
      * factor graph.
      */
-    public List<DenseFactor> getVarMarginals() {
+    public List<VarTensor> getVarMarginals() {
         return margs;
     }
 
@@ -123,9 +123,9 @@ public class MbrDecoder {
      * Convenience wrapper around getVarMarginals().
      * Does not memoize, so use sparingly.
      */
-    public Map<Var, DenseFactor> getVarMarginalsIndexed() {
-    	Map<Var, DenseFactor> m = new HashMap<Var, DenseFactor>();
-    	for(DenseFactor df : margs) {
+    public Map<Var, VarTensor> getVarMarginalsIndexed() {
+    	Map<Var, VarTensor> m = new HashMap<Var, VarTensor>();
+    	for(VarTensor df : margs) {
     		assert df.getVars().size() == 1;
     		m.put(df.getVars().get(0), df);
     	}
