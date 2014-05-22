@@ -8,8 +8,8 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 
 public class VarSetTest {
 

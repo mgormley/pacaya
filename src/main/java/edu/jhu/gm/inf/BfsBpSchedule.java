@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
-import edu.jhu.gm.model.GlobalFactor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 
 /**
  * A sequential schedule for (optionally disconnected) factor graphs in which

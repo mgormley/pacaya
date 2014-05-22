@@ -14,9 +14,9 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 

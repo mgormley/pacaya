@@ -8,7 +8,7 @@ import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
 
 // TODO: This should modify a {@link AnnoSentence} rather than cache the parents and srlGraph explicitly.

@@ -12,9 +12,9 @@ import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.ProjDepTreeFactor;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
 
 /**

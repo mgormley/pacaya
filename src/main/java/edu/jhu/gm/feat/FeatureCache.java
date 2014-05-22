@@ -5,9 +5,9 @@ import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FeExpFamFactor;
-import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
 

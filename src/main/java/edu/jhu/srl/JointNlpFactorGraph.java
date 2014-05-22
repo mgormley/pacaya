@@ -12,7 +12,7 @@ import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.set.IntSet;
 import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;

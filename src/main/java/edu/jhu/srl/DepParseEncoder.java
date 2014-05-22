@@ -1,8 +1,8 @@
 package edu.jhu.srl;
 
 import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
 
 public class DepParseEncoder {

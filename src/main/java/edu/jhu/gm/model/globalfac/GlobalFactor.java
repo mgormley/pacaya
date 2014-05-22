@@ -1,6 +1,8 @@
-package edu.jhu.gm.model;
+package edu.jhu.gm.model.globalfac;
 
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
+import edu.jhu.gm.model.Factor;
+import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 
 /**
