@@ -2,8 +2,8 @@ package edu.jhu.gm.model.globalfac;
 
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.util.semiring.Algebra;
 
 /**
  * A constraint global factor.
@@ -44,6 +44,15 @@ public interface GlobalFactor extends Factor {
      */
     double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain);
     
-    void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean logDomain);
+    /**
+     * Computes all the message adjoints. This method will only be called once
+     * per iteration (unlike createMessages).
+     * 
+     * @param parent The node for this global factor.
+     * @param msgs The messages.
+     * @param msgsAdj The adjoints of the messages.
+     * @param s The abstract algebra in which to represent the adjoints.
+     */
+    void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s);
 
 }

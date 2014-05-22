@@ -453,7 +453,7 @@ public class ErmaBp implements FgInferencer {
             // TODO: The schedule should be over edge sets, not individual edges, so we don't need the "created" flag.
             GlobalFactor factor = (GlobalFactor) edge.getFactor();
             if (created) {
-                factor.backwardCreateMessages(edge.getParent(), msgs, msgsAdj, prm.logDomain);
+                factor.backwardCreateMessages(edge.getParent(), msgs, msgsAdj, s);
             }
         } else {            
             if (edge.isVarToFactor()) {

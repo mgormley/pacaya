@@ -11,13 +11,12 @@ import edu.jhu.data.Sentence;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.CnfGrammar;
@@ -30,6 +29,7 @@ import edu.jhu.parse.cky.Scorer;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
@@ -444,7 +444,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean logDomain) {
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
         // TODO:
         throw new RuntimeException("not yet implemented");        
     }

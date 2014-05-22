@@ -537,8 +537,10 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
 
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean logDomain) {
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
         
+        
+        throw new RuntimeException("not implemented");
     }
 
 }
