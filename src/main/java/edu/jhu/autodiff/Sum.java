@@ -14,9 +14,7 @@ public class Sum extends AbstractModule {
     @Override
     public Tensor backward(Tensor input, Tensor adjointIn) {
         Tensor adjointOut = new Tensor(input);
-        for (int i=0; i< adjointOut.size(); i++) {
-            adjointOut.setValue(i, adjointIn.getValue(i));
-        }
+        adjointOut.add(adjointIn);
         return adjointOut;
     }
 

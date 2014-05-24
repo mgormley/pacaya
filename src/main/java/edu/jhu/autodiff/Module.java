@@ -14,10 +14,10 @@ public interface Module {
      * Computes the backward pass.
      * 
      * @param input The input variable values (expects the same input as forward call).
-     * @param adjointIn The adjoints with respect to the output variables of this module.
+     * @param outputAdj The adjoints with respect to the output variables of this module.
      * @return The adjoints with respect to the input variables of this module.
      */
-    Tensor backward(Tensor input, Tensor adjointIn);
+    Tensor backward(Tensor input, Tensor outputAdj);
     
     /**
      * Adds the given gradien to the internal accumulator.
