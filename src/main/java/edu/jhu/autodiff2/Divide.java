@@ -1,0 +1,68 @@
+package edu.jhu.autodiff2;
+
+/**
+ * Division of each entry in a tensor by a scalar from another tensor.
+ * 
+ * @author mgormley
+ */
+public class Divide implements Module<Tensor> {
+
+    private Tensor y;
+    private Tensor yAdj;
+    private Module<Tensor> modInX;
+    private Module<Tensor> modInW;
+    // The index in w, by which each x entry should be divided.
+    private int k;
+    
+    public Divide(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
+        this.modInX = modInX;
+        this.modInW = modInW;
+        this.k = k;
+    }
+    
+    /** Foward pass: y_i = x_i / w_k */
+    @Override
+    public Tensor forward() {
+        Tensor x = modInX.getOutput();
+        double w_k = modInW.getOutput().getValue(k);
+        y = x.copy();
+        y.divide(w_k);
+        return y;
+    }
+
+    /** 
+     * Backward pass: 
+     *    dG/dx_i += dG/dy_i dy_i/dx_i = dG/dy_i / w_k
+     *    dG/dw_k += \sum_{i=1}^n dG/dy_i dy_i/dw_k = \sum_{i=1}^n dG/dy_i x_i * (- w_k^2)
+     */
+    @Override
+    public void backward() {
+        Tensor x = modInX.getOutput();
+        double w_k = modInW.getOutput().getValue(k);
+        {
+            Tensor tmp = yAdj.copy();
+            tmp.divide(w_k);
+            modInX.getOutputAdj().elemAdd(tmp);
+        }
+        {
+            Tensor tmp = yAdj.copy();
+            tmp.elemMultiply(x);
+            tmp.multiply(- (w_k * w_k));
+            modInW.getOutputAdj().addValue(k, tmp.getSum());
+        }
+    }
+
+    @Override
+    public Tensor getOutput() {
+        return y;
+    }
+
+    @Override
+    public Tensor getOutputAdj() {
+        if (yAdj == null) {
+            yAdj = y.copyAndFill(0);
+        }
+        return yAdj;
+    }
+
+}
