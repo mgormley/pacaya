@@ -217,4 +217,9 @@ public class Tensor {
         return sb.toString();
     }
     
+    /** For testing only. */
+    double[] getValues() {
+        return values;
+    }
+    
 }
