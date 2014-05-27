@@ -17,14 +17,14 @@ public class VarTensorTest {
         f1.setValue(1, 1);
         
         // set, add, scale, get
-        f1.set(2);
+        f1.fill(2);
         JUnitUtils.assertArrayEquals(new double[]{2, 2}, f1.getValues(), 1e-13);
         
         f1.setValue(0, 1);
         f1.add(2);
         JUnitUtils.assertArrayEquals(new double[]{3, 4}, f1.getValues(), 1e-13);
         
-        f1.scale(0.5);
+        f1.multiply(0.5);
         JUnitUtils.assertArrayEquals(new double[]{1.5, 2}, f1.getValues(), 1e-13);
         
         assertEquals(1.5, f1.getValue(0), 1e-13);
@@ -117,13 +117,13 @@ public class VarTensorTest {
         vars1.add(VarSetTest.getVar(0, 2));
         vars1.add(VarSetTest.getVar(1, 3));        
         VarTensor f1 = new VarTensor(vars1);
-        f1.set(1);
+        f1.fill(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
         VarSet vars2 = vars1;
         VarTensor f2 = new VarTensor(vars2);
-        f2.set(2);
+        f2.fill(2);
         f2.setValue(2, 5);
         f2.setValue(5, 7);
         
@@ -148,14 +148,14 @@ public class VarTensorTest {
         vars1.add(v0);
         vars1.add(v1);        
         VarTensor f1 = new VarTensor(vars1);
-        f1.set(1);
+        f1.fill(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
         VarSet vars2 = new VarSet();
         vars2.add(v1);        
         VarTensor f2 = new VarTensor(vars2);
-        f2.set(2);
+        f2.fill(2);
         f2.setValue(2, 5);
         
         // values=[1.0, 1.0, 2.0, 3.0, 1.0, 1.0]
@@ -180,7 +180,7 @@ public class VarTensorTest {
         vars1.add(v0);
         vars1.add(v1);        
         VarTensor f1 = new VarTensor(vars1);
-        f1.set(1);
+        f1.fill(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
@@ -188,7 +188,7 @@ public class VarTensorTest {
         vars2.add(v1);
         vars2.add(v2);    
         VarTensor f2 = new VarTensor(vars2);
-        f2.set(2);
+        f2.fill(2);
         f2.setValue(2, 5);
         f2.setValue(5, 7);
         

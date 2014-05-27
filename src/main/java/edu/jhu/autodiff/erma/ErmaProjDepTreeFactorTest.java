@@ -443,7 +443,7 @@ public class ErmaProjDepTreeFactorTest {
         }
         fg.addFactor(roleLinkFac);
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar));
-        roleFac.set(1.0);
+        roleFac.fill(1.0);
         if (logDomain) {
             roleFac.convertRealToLog();
         }
@@ -802,7 +802,7 @@ public class ErmaProjDepTreeFactorTest {
         
         if (useExplicitTreeFactor) {
             ExplicitFactor f = new ExplicitFactor(new VarSet(rootVars[0], rootVars[1], childVars[0][1], childVars[1][0]));
-            f.set(Double.NEGATIVE_INFINITY);
+            f.fill(Double.NEGATIVE_INFINITY);
             VarConfig vc = new VarConfig();
             vc.put(rootVars[0], LinkVar.TRUE);
             vc.put(rootVars[1], LinkVar.FALSE);

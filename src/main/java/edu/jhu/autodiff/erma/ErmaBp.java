@@ -229,7 +229,7 @@ public class ErmaBp implements FgInferencer {
         VarTensor msg = msgs[edge.getId()].newMessage;
         
         // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-        msg.set(prm.logDomain ? 0.0 : 1.0);
+        msg.fill(prm.logDomain ? 0.0 : 1.0);
         
         // Message from variable v* to factor f*.
         //
@@ -250,7 +250,7 @@ public class ErmaBp implements FgInferencer {
         VarTensor msg = msgs[edge.getId()].newMessage;
         
         // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-        msg.set(prm.logDomain ? 0.0 : 1.0);
+        msg.fill(prm.logDomain ? 0.0 : 1.0);
         
         // Message from factor f* to variable v*.
         //
@@ -350,10 +350,10 @@ public class ErmaBp implements FgInferencer {
             int varId = edge.getVar().getId();
             int facId = edge.getFactor().getId();
             msgsAdj[i] = new Messages(edge, prm.logDomain, prm.normalizeMessages);
-            msgsAdj[i].message.scale(s.zero());
+            msgsAdj[i].message.multiply(s.zero());
             // Instead of setting newMessage to null, we just zero it and then
             // swap these back and forth during backwardSendMessage.
-            msgsAdj[i].newMessage.scale(s.zero()); 
+            msgsAdj[i].newMessage.multiply(s.zero()); 
             if (edge.isVarToFactor()) {
                 initVarToFactorAdj(i, facBeliefsAdj, varId, facId, edge);
             } else if (!(edge.getFactor() instanceof GlobalFactor)) {                
@@ -423,7 +423,7 @@ public class ErmaBp implements FgInferencer {
         msgs[i].message = oldMsg;                   // The message at time (t)
         // Swap the adjoint messages and zero the one for time (t).
         VarTensor tmp = msgsAdj[i].newMessage;
-        tmp.scale(0);
+        tmp.multiply(0);
         msgsAdj[i].newMessage = msgsAdj[i].message; // The adjoint at time (t+1)
         msgsAdj[i].message = tmp;                   // The adjoint at time (t)
     }
@@ -469,7 +469,7 @@ public class ErmaBp implements FgInferencer {
         VarTensor unormAdj = distAdj;
         double dotProd = dist.dotProduct(distAdj);       
         unormAdj.add(- dotProd);
-        unormAdj.scale(1.0 / unormSum);
+        unormAdj.multiply(1.0 / unormSum);
     }
 
     private void initVarToFactorAdj(int i, VarTensor[] facBeliefsAdj, int varId, int facId, FgEdge edge) {

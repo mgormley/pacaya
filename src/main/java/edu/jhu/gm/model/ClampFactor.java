@@ -13,12 +13,12 @@ public class ClampFactor extends ExplicitFactor implements Factor {
     public ClampFactor(Var v, int state) {
         super(new VarSet(v));
         this.state = state;
-        this.set(Double.NaN);
+        this.fill(Double.NaN);
     }
 
     public void updateFromModel(FgModel model, boolean logDomain) {
         Semiring s = logDomain ? new LogSemiring() : new RealAlgebra();
-        this.set(s.zero());
+        this.fill(s.zero());
         this.setValue(state, s.one());
     }
 

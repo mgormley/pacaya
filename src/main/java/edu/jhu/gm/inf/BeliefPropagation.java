@@ -270,7 +270,7 @@ public class BeliefPropagation implements FgInferencer {
             VarTensor msg = msgs[edgeId].newMessage;
             
             // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-            msg.set(prm.logDomain ? 0.0 : 1.0);
+            msg.fill(prm.logDomain ? 0.0 : 1.0);
             
             if (edge.isVarToFactor()) {
                 // Message from variable v* to factor f*.

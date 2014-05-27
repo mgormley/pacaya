@@ -218,7 +218,7 @@ public class ErmaBpForwardTest {
         emit0.setValue(1, 1.9);
 
         ExplicitFactor tran0 = new ExplicitFactor(new VarSet(t0, t1)); 
-        tran0.set(1);
+        tran0.fill(1);
         tran0.setValue(0, 2.2);
         tran0.setValue(1, 2.3);
         tran0.setValue(2, 2.4);

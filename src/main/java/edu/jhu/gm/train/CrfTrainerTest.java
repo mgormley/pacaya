@@ -366,12 +366,12 @@ public class CrfTrainerTest {
         ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
         ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
         
-        tran0.set(1);
+        tran0.fill(1);
         tran0.setValue(0, 0.2);
         tran0.setValue(1, 0.3);
         tran0.setValue(2, 0.4);
         tran0.setValue(3, 0.5);
-        tran1.set(1);
+        tran1.fill(1);
         tran1.setValue(0, 1.2);
         tran1.setValue(1, 1.3);
         tran1.setValue(2, 1.4);
@@ -447,12 +447,12 @@ public class CrfTrainerTest {
         ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
         ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
         
-        tran0.set(1);
+        tran0.fill(1);
         tran0.setValue(0, 0.2);
         tran0.setValue(1, 0.3);
         tran0.setValue(2, 0.4);
         tran0.setValue(3, 0.5);
-        tran1.set(1);
+        tran1.fill(1);
         tran1.setValue(0, 1.2);
         tran1.setValue(1, 1.3);
         tran1.setValue(2, 1.4);

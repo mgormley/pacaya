@@ -151,7 +151,7 @@ public class VarTensor implements Serializable {
     }
     
     /** Set all the values to the given value. */
-    public void set(double value) {
+    public void fill(double value) {
         Arrays.fill(values, value);
     }
     
@@ -161,7 +161,7 @@ public class VarTensor implements Serializable {
     }
     
     /** Scale each value by lambda. */
-    public void scale(double lambda) {
+    public void multiply(double lambda) {
         DoubleArrays.scale(values, lambda);
     }
     
