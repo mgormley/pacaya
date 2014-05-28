@@ -76,7 +76,7 @@ public class HyperalgoTest {
         
         expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
         forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
-    } 
+    }
        
     private static MemHypergraph getSimpleGraph() {
         MemHypergraph graph = new MemHypergraph();
