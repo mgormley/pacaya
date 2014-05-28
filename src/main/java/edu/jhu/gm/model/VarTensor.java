@@ -149,6 +149,11 @@ public class VarTensor implements Serializable {
     public void setValue(int c, double value) {
         values[c] = value;
     }
+
+    /** Adds the value to the c'th configuration of the variables. */
+    public void addValue(int c, double value) {
+        values[c] += value;
+    }
     
     /** Set all the values to the given value. */
     public void fill(double value) {

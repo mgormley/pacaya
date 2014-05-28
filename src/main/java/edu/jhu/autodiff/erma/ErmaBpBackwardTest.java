@@ -191,8 +191,9 @@ public class ErmaBpBackwardTest {
         @Override
         public IntDoubleVector getGradient(IntDoubleVector theta) {
             runForward(theta);
-            er.backward(1);
-            bp.backward(er.getVarBeliefsAdjs(), er.getFacBeliefsAdjs());
+            er.getOutputAdj().fill(1);
+            er.backward();
+            bp.backward();
             
             VarTensor[] potentialsAdj = bp.getPotentialsAdj();
             IntDoubleVector grad = new IntDoubleDenseVector(numParams);

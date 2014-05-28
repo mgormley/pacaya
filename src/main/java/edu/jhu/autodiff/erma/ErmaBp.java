@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff2.Module;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
@@ -19,19 +20,18 @@ import edu.jhu.gm.inf.BpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.RandomBpSchedule;
-import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
-import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 /**
  * Loopy belief propagation inference algorithm with support for empirical risk
@@ -39,7 +39,7 @@ import edu.jhu.util.semiring.Algebra;
  * 
  * @author mgormley
  */
-public class ErmaBp implements FgInferencer {
+public class ErmaBp implements Module<Beliefs>, FgInferencer {
     
     private static final Logger log = Logger.getLogger(ErmaBp.class);
     private static final FgEdge END_OF_EDGE_CREATION = null;
@@ -104,6 +104,10 @@ public class ErmaBp implements FgInferencer {
     // The adjoints for the potential tables (i.e. factors). Indexed by factor id. The output of a backward call.
     private VarTensor[] potentialsAdj;
     
+    Algebra s = new RealAlgebra();     // TODO:
+    private Beliefs b;
+    private Beliefs bAdj;
+
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
         this.prm = prm;
         this.fg = fg;
@@ -132,7 +136,8 @@ public class ErmaBp implements FgInferencer {
         forward();
     }
     
-    public void forward() {
+    @Override
+    public Beliefs forward() {
         // Initialization.
         tape = new Tape();
         this.msgs = new Messages[fg.getNumEdges()];        
@@ -183,6 +188,8 @@ public class ErmaBp implements FgInferencer {
         }
         
         forwardVarAndFacBeliefs();
+        b = new Beliefs(varBeliefs, facBeliefs);
+        return b;
     }
 
     private void forwardCreateMessage(FgEdge edge, int iter) {
@@ -326,11 +333,11 @@ public class ErmaBp implements FgInferencer {
             }
         }
     }
-    
-    // TODO:
-    Algebra s = new RealAlgebra();
-
-    public void backward(VarTensor[] varBeliefsAdj, VarTensor[] facBeliefsAdj) {        
+       
+    public void backward() {
+        VarTensor[] varBeliefsAdj = bAdj.varBeliefs;
+        VarTensor[] facBeliefsAdj = bAdj.facBeliefs;
+        
         // Initialize the adjoints.
 
         // We are given the adjoints of the normalized beleifs. Compute
@@ -929,6 +936,19 @@ public class ErmaBp implements FgInferencer {
 
     public FactorGraph getFactorGraph() {
         return fg;
+    }
+
+    @Override
+    public Beliefs getOutput() {
+        return b;
+    }
+
+    @Override
+    public Beliefs getOutputAdj() {
+        if (bAdj == null) {
+            bAdj = b.copyAndFill(0);
+        }
+        return bAdj;
     }
     
 }
