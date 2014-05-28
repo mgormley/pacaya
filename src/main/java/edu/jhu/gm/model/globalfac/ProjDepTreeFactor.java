@@ -313,12 +313,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     private static int oddsRatioCount = 0;
 
     /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
-    private void getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[] root, double[][] child) {
-        // Keep track of the minimum and maximum odds ratios, in order to detect
-        // possible numerical precision issues.
-        double minOddsRatio = Double.POSITIVE_INFINITY;
-        double maxOddsRatio = Double.NEGATIVE_INFINITY;
-        
+    private void getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[] root, double[][] child) {     
         // Compute the odds ratios of the messages for each edge in the tree.
         DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
         DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
@@ -333,21 +328,37 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 assert inMsg.getValue(LinkVar.FALSE) >= 0 : inMsg.getValue(LinkVar.FALSE);
                 // We still need the log of this ratio since the parsing algorithm works in the log domain.
                 oddsRatio = FastMath.log(inMsg.getValue(LinkVar.TRUE)) - FastMath.log(inMsg.getValue(LinkVar.FALSE));
-            }            
+            }
             
             if (link.getParent() == -1) {
                 root[link.getChild()] = oddsRatio;
             } else {
                 child[link.getParent()][link.getChild()] = oddsRatio;
             }
-            
-            // Check min/max.
-            if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
-                // Don't count *negative* infinities when logging extreme odds ratios.
-                minOddsRatio = oddsRatio;
-            }
-            if (oddsRatio > maxOddsRatio) {
-                maxOddsRatio = oddsRatio;
+        }
+        
+        checkLogOddsRatios(parent, msgs, logDomain, root, child);
+    }
+    
+    private void checkLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[] root, double[][] child) {
+        EdgeScores es = new EdgeScores(root, child);
+        
+        // Keep track of the minimum and maximum odds ratios, in order to detect
+        // possible numerical precision issues.        
+        double minOddsRatio = Double.POSITIVE_INFINITY;
+        double maxOddsRatio = Double.NEGATIVE_INFINITY;
+        
+        for (int p=-1; p<child.length; p++) {
+            for (int c=0; c<child.length; c++) {
+                double oddsRatio = es.getScore(p, c);
+                // Check min/max.
+                if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
+                    // Don't count *negative* infinities when logging extreme odds ratios.
+                    minOddsRatio = oddsRatio;
+                }
+                if (oddsRatio > maxOddsRatio) {
+                    maxOddsRatio = oddsRatio;
+                }
             }
         }
 
