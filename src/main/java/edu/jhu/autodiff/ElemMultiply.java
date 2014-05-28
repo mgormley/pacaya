@@ -1,4 +1,4 @@
-package edu.jhu.autodiff2;
+package edu.jhu.autodiff;
 
 /**
  * Elementwise multiplication of the entries in two tensors of identical size.

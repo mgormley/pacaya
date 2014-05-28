@@ -1,4 +1,4 @@
-package edu.jhu.autodiff2;
+package edu.jhu.autodiff;
 
 /**
  * This module is simply the identity function. 

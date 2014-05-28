@@ -1,8 +1,8 @@
 package edu.jhu.autodiff.erma;
 
-import edu.jhu.autodiff2.AbstractTensorModule;
-import edu.jhu.autodiff2.Module;
-import edu.jhu.autodiff2.Tensor;
+import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;

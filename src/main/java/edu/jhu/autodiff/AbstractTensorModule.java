@@ -1,4 +1,4 @@
-package edu.jhu.autodiff2;
+package edu.jhu.autodiff;
 
 public abstract class AbstractTensorModule implements Module<Tensor> {
 

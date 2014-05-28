@@ -1,4 +1,4 @@
-package edu.jhu.autodiff2;
+package edu.jhu.autodiff;
 
 /**
  * Addition of each entry in a tensor by a scalar from another tensor.

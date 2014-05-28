@@ -1,7 +1,7 @@
 package edu.jhu.autodiff.erma;
 
-import edu.jhu.autodiff2.Module;
-import edu.jhu.autodiff2.Tensor;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Tensor;
 
 /**
  * This module is simply the identity function. 

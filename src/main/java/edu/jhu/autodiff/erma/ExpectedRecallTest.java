@@ -4,9 +4,9 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff2.ModuleTestUtils;
-import edu.jhu.autodiff2.ModuleTestUtils.ModuleVecFn;
-import edu.jhu.autodiff2.Tensor;
+import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.gm.model.Var.VarType;
