@@ -30,7 +30,8 @@ public class Prod implements Module<Tensor> {
         // multiplying \prod_{j=1}^{i-1} x_j \prod_{j+1}^n x_j  
         Tensor x = modIn.getOutput();
         Tensor xAdj = modIn.getOutputAdj();
-        Tensor tmp = yAdj.copy();
+        Tensor tmp = xAdj.copy();
+        tmp.fill(yAdj.getValue(0));
         tmp.multiply(y.getValue(0));
         tmp.elemDivide(x);
         xAdj.elemAdd(tmp);

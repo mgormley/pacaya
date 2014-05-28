@@ -30,7 +30,7 @@ public class ElemDivide implements Module<Tensor> {
     /** 
      * Backward pass: 
      *    dG/dx_i += dG/dy_i dy_i/dx_i = dG/dy_i / w_i 
-     *    dG/dw_i += dG/dy_i dy_i/dw_i = dG/dy_i * x_i * (- w_i^2)
+     *    dG/dw_i += dG/dy_i dy_i/dw_i = dG/dy_i * x_i / (- w_i^2)
      */
     @Override
     public void backward() {
@@ -43,7 +43,9 @@ public class ElemDivide implements Module<Tensor> {
         }
         {
             Tensor tmp = w.copy();
-            tmp.elemMultiply(w);
+            tmp.fill(1.0);
+            tmp.elemDivide(w);
+            tmp.elemDivide(w);
             tmp.multiply(-1);
             tmp.elemMultiply(yAdj);
             tmp.elemMultiply(x);            

@@ -231,5 +231,11 @@ public class Tensor {
     double[] getValues() {
         return values;
     }
+
+    public static Tensor getScalarTensor(double val) {
+        Tensor er = new Tensor(1);
+        er.setValue(0, val);
+        return er;
+    }
     
 }

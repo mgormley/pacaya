@@ -5,7 +5,7 @@ package edu.jhu.autodiff2;
  * 
  * @author mgormley
  */
-public class Add implements Module<Tensor> {
+public class ScalarAdd implements Module<Tensor> {
 
     private Tensor y;
     private Tensor yAdj;
@@ -14,7 +14,7 @@ public class Add implements Module<Tensor> {
     // The index in w, which should be multiplied each x entry.
     private int k;
     
-    public Add(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
+    public ScalarAdd(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
         this.modInX = modInX;
         this.modInW = modInW;
         this.k = k;
