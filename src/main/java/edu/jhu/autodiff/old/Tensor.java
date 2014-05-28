@@ -1,4 +1,4 @@
-package edu.jhu.autodiff;
+package edu.jhu.autodiff.old;
 
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
