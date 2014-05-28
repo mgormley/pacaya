@@ -6,18 +6,23 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.ElemDivide;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Prod;
+import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.hypergraph.Hyperalgo;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
@@ -25,15 +30,14 @@ import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.Algebra;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -538,9 +542,56 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
     @Override
     public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
+        int numEdges = 0;
+        
+        // These tensors are indexed by the edge id, then 0/1 for T/F respectively. 
+        Tensor mTrue = new Tensor(numEdges);
+        Tensor mFalse = new Tensor(numEdges);
+        TensorIdentity mTrueId = new TensorIdentity(mTrue);
+        TensorIdentity mFalseId = new TensorIdentity(mFalse);
+        
+        Prod pi = new Prod(mFalseId);
+        ElemDivide weights = new ElemDivide(mTrueId, mFalseId);
+
+        double[] fracRoot = null;
+        double[][] fracChild = null;
+        FirstOrderDepParseHypergraph graph = new FirstOrderDepParseHypergraph(fracRoot, fracChild, s);
+        Scores scores = new Scores();
+        Hyperalgo.forward(graph, graph.getPotentials(), s, scores);
+        
+        // TODO: fill these tensors.
+        
         
         
         throw new RuntimeException("not implemented");
+    }
+    
+    private static class HyperalgoModule implements Module<Scores> {
+
+        @Override
+        public Scores forward() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void backward() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public Scores getOutput() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Scores getOutputAdj() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+        
     }
 
 }

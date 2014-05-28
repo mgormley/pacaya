@@ -163,7 +163,8 @@ public class ModuleTestUtils {
                 double dotFd = StochasticGradientApproximation.getGradDotDirApprox(fn, x, d, epsilon);
                 IntDoubleVector grad = fn.getGradient(x);
                 double dotAd = grad.dot(d);
-                System.out.println("dotFd="+dotFd+" dotAd="+dotAd);
+                double relError = Math.abs(dotFd - dotAd) / Math.max(Math.abs(dotFd), Math.abs(dotAd));
+                System.out.println("dotFd="+dotFd+" dotAd="+dotAd+" relError="+relError);
                 assertEquals(dotFd, dotAd, delta);
             }
         }
