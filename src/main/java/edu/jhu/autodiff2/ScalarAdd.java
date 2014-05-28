@@ -5,10 +5,8 @@ package edu.jhu.autodiff2;
  * 
  * @author mgormley
  */
-public class ScalarAdd implements Module<Tensor> {
+public class ScalarAdd extends AbstractTensorModule implements Module<Tensor> {
 
-    private Tensor y;
-    private Tensor yAdj;
     private Module<Tensor> modInX;
     private Module<Tensor> modInW;
     // The index in w, which should be multiplied each x entry.
@@ -39,19 +37,6 @@ public class ScalarAdd implements Module<Tensor> {
     public void backward() {
         modInX.getOutputAdj().elemAdd(yAdj);
         modInW.getOutputAdj().addValue(k, yAdj.getSum());
-    }
-
-    @Override
-    public Tensor getOutput() {
-        return y;
-    }
-
-    @Override
-    public Tensor getOutputAdj() {
-        if (yAdj == null) {
-            yAdj = y.copyAndFill(0);
-        }
-        return yAdj;
     }
 
 }

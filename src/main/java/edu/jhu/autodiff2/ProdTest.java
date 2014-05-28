@@ -13,7 +13,7 @@ public class ProdTest {
     @Test
     public void testForward() {
         Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Identity id1 = new Identity(t1);
+        TensorIdentity id1 = new TensorIdentity(t1);
         Prod s = new Prod(id1);
         Tensor out = s.forward();
         assertEquals(2.*3.*5., out.getValue(0), 1e-13);
@@ -29,7 +29,7 @@ public class ProdTest {
     @Test
     public void testGradByFiniteDiffs() {
         Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Identity id1 = new Identity(t1);
+        TensorIdentity id1 = new TensorIdentity(t1);
         Prod s = new Prod(id1);
         
         ModuleVecFn vecFn = new ModuleVecFn(id1, s);

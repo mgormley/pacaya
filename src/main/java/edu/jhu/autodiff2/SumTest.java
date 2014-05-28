@@ -12,7 +12,7 @@ public class SumTest {
     @Test
     public void testForward() {
         Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Identity id1 = new Identity(t1);
+        TensorIdentity id1 = new TensorIdentity(t1);
         Sum s = new Sum(id1);
         assertEquals(2.+3.+5., s.forward().getValue(0), 1e-13);
         assertEquals(2.+3.+5., s.getOutput().getValue(0), 1e-13);
@@ -27,7 +27,7 @@ public class SumTest {
     @Test
     public void testGradByFiniteDiffs() {
         Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Identity id1 = new Identity(t1);
+        TensorIdentity id1 = new TensorIdentity(t1);
         Sum s = new Sum(id1);
         
         ModuleVecFn vecFn = new ModuleVecFn(id1, s);

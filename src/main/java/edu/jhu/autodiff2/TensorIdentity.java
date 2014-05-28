@@ -4,12 +4,12 @@ package edu.jhu.autodiff2;
  * This module is simply the identity function. 
  * @author mgormley
  */
-public class Identity implements Module<Tensor> {
+public class TensorIdentity implements Module<Tensor> {
 
     private Tensor y;
     private Tensor yAdj;
     
-    public Identity(Tensor y) {
+    public TensorIdentity(Tensor y) {
         this.y = y;
     }
     

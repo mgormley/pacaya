@@ -16,8 +16,8 @@ public class ElemDivideTest {
     public void testForwardAndBackward() {
         Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
         Tensor t2 = ModuleTestUtils.getVector(4, 6, 7);
-        Identity id1 = new Identity(t1);
-        Identity id2 = new Identity(t2);
+        TensorIdentity id1 = new TensorIdentity(t1);
+        TensorIdentity id2 = new TensorIdentity(t2);
         ElemDivide ea = new ElemDivide(id1, id2);
 
         Tensor out = ea.forward();
@@ -43,8 +43,8 @@ public class ElemDivideTest {
     public void testGradByFiniteDiffs() {
         Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
         Tensor t2 = ModuleTestUtils.getVector(4, 6, 7);
-        Identity id1 = new Identity(t1);
-        Identity id2 = new Identity(t2);
+        TensorIdentity id1 = new TensorIdentity(t1);
+        TensorIdentity id2 = new TensorIdentity(t2);
         ElemDivide ea = new ElemDivide(id1, id2);
         
         ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1, id2), ea);

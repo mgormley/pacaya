@@ -8,10 +8,8 @@ import edu.jhu.util.collections.Lists;
  * Sum of all the entries in the tensor.
  * @author mgormley
  */
-public class Sum implements Module<Tensor> {
+public class Sum extends AbstractTensorModule implements Module<Tensor> {
 
-    private Tensor y;
-    private Tensor yAdj;
     private Module<Tensor> modIn;
     
     public Sum(Module<Tensor> modIn) {
@@ -34,19 +32,6 @@ public class Sum implements Module<Tensor> {
         xAdj.add(yAdj.getValue(0));
     }
 
-    @Override
-    public Tensor getOutput() {
-        return y;
-    }
-
-    @Override
-    public Tensor getOutputAdj() {
-        if (yAdj == null) {
-            yAdj = y.copyAndFill(0);
-        }
-        return yAdj;
-    }
-    
     public List<Module<Tensor>> getInputs() {
         return Lists.getList(modIn);
     }

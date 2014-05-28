@@ -5,10 +5,8 @@ package edu.jhu.autodiff2;
  * 
  * @author mgormley
  */
-public class ElemAdd implements Module<Tensor> {
+public class ElemAdd extends AbstractTensorModule implements Module<Tensor> {
 
-    private Tensor y;
-    private Tensor yAdj;
     private Module<Tensor> modInX;
     private Module<Tensor> modInW;
     
@@ -36,19 +34,6 @@ public class ElemAdd implements Module<Tensor> {
     public void backward() {
         modInX.getOutputAdj().elemAdd(yAdj);
         modInW.getOutputAdj().elemAdd(yAdj);
-    }
-
-    @Override
-    public Tensor getOutput() {
-        return y;
-    }
-
-    @Override
-    public Tensor getOutputAdj() {
-        if (yAdj == null) {
-            yAdj = y.copyAndFill(0);
-        }
-        return yAdj;
     }
 
 }

@@ -5,10 +5,8 @@ package edu.jhu.autodiff2;
  * 
  * @author mgormley
  */
-public class ScalarDivide implements Module<Tensor> {
+public class ScalarDivide extends AbstractTensorModule implements Module<Tensor> {
 
-    private Tensor y;
-    private Tensor yAdj;
     private Module<Tensor> modInX;
     private Module<Tensor> modInW;
     // The index in w, by which each x entry should be divided.
@@ -50,19 +48,6 @@ public class ScalarDivide implements Module<Tensor> {
             tmp.divide(- (w_k * w_k));
             modInW.getOutputAdj().addValue(k, tmp.getSum());
         }
-    }
-
-    @Override
-    public Tensor getOutput() {
-        return y;
-    }
-
-    @Override
-    public Tensor getOutputAdj() {
-        if (yAdj == null) {
-            yAdj = y.copyAndFill(0);
-        }
-        return yAdj;
     }
 
 }
