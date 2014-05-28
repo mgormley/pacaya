@@ -5,10 +5,93 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Timer;
 
 
 public class TensorTest {
 
+    @Test
+    public void testGetSetAddWithIndices() {
+        Tensor t1 = new Tensor(2,3,5);
+        // Test set.
+        double val;
+        val = 0;
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<3; j++) {
+                for (int k=0; k<5; k++) {
+                    assertEquals(0, t1.set(val++, i,j,k), 1e-13);            
+                }
+            }
+        }
+        // Test set returns previous.
+        val = 0;
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<3; j++) {
+                for (int k=0; k<5; k++) {
+                    assertEquals(val, t1.set(val, i,j,k), 1e-13);
+                    val++;
+                }
+            }
+        }
+        // Test get.
+        val = 0;
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<3; j++) {
+                for (int k=0; k<5; k++) {
+                    assertEquals(val++, t1.get(i,j,k), 1e-13);            
+                }
+            }
+        }
+
+        // Test add.
+        val = 0;
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<3; j++) {
+                for (int k=0; k<5; k++) {
+                    assertEquals(val, t1.add(val, i,j,k), 1e-13);
+                    assertEquals(val*2, t1.get(i,j,k), 1e-13);            
+                    val++;
+                }
+            }
+        }
+    }
+    
+    @Test
+    public void testSpeedOfIndexOperations() {
+        Tensor[] arr = new Tensor[1000];
+        int[] dims = new int[]{31, 5, 7, 11};
+        for (int i=0; i<arr.length; i++) {
+            arr[i] = new Tensor(dims);
+        }
+        {
+            Timer timer = new Timer();
+            timer.start();
+            for (int i=0; i<arr.length; i++) {
+                Tensor tensor = arr[i];                
+                for (int c=0; c < tensor.size(); c++) {
+                    tensor.addValue(c, c);
+                }
+            }
+            timer.stop();
+            System.out.println("tot(ms) direct iteration: " + timer.totMs());
+        }
+        {
+            Timer timer = new Timer();
+            timer.start();
+            for (int i=0; i<arr.length; i++) {
+                Tensor tensor = arr[i];  
+                DimIter iter = new DimIter(tensor.getDims());                
+                //for (int c=0; c < tensor.size(); c++) {
+                int c = 0;
+                while (iter.hasNext()) {
+                    tensor.add(c++, iter.next());
+                }
+            }
+            timer.stop();
+            System.out.println("tot(ms) index iteration: " + timer.totMs());
+        }
+    }
+    
     @Test
     public void testValueOperations() {
         Tensor f1 = new Tensor(2);

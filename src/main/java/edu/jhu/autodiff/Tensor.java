@@ -14,6 +14,7 @@ import edu.jhu.prim.util.Lambda;
 public class Tensor {
 
     private int[] dims;
+    private int[] strides;
     private double[] values;
 
     /**
@@ -23,13 +24,104 @@ public class Tensor {
     public Tensor(int... dimensions) {
         int numConfigs = IntArrays.prod(dimensions);
         this.dims = dimensions;
+        this.strides = getStrides(dims);
         this.values = new double[numConfigs];
     }
 
     /** Copy constructor. */
     public Tensor(Tensor other) {
         this.dims = IntArrays.copyOf(other.dims);
+        this.strides = IntArrays.copyOf(other.strides);
         this.values = DoubleArrays.copyOf(other.values);
+    }
+    
+    /** 
+     * Gets the value of the entry corresponding to the given indices.
+     * @param indices The indices of the multi-dimensional array.
+     * @return The current value.
+     */
+    public double get(int... indices) {
+        checkIndices(indices);
+        int c = getConfigIdx(indices);
+        return values[c];
+    }
+
+    /** 
+     * Sets the value of the entry corresponding to the given indices.
+     * @param indices The indices of the multi-dimensional array.
+     * @param val The value to set.
+     * @return The previous value.
+     */
+    public double set(int[] indices, double val) {
+        checkIndices(indices);
+        int c = getConfigIdx(indices);
+        double prev = values[c];
+        values[c] = val;
+        return prev;
+    }
+
+    /** 
+     * Adds the value to the entry corresponding to the given indices.
+     * @param indices The indices of the multi-dimensional array.
+     * @param val The value to set.
+     * @return The previous value.
+     */
+    public double add(int[] indices, double val) {
+        checkIndices(indices);
+        int c = getConfigIdx(indices);
+        double prev = values[c];
+        values[c] += val;
+        return prev;
+    }
+
+    /** Convenience method for setting a value with a variable number of indices. */
+    public double set(double val, int... indices) {
+        return set(indices, val);
+    }
+
+    /** Convenience method for adding a value with a variable number of indices. */
+    public double add(double val, int... indices) {
+        return add(indices, val);
+    }
+    
+    /** Gets the index into the values array that corresponds to the indices. */
+    public int getConfigIdx(int... indices) {
+        int c = 0;
+        for (int i=0; i<indices.length; i++) {
+            c += strides[i] * indices[i];
+        }
+        return c;
+    }
+
+    /**
+     * Gets the strides for the given dimensions. The stride for dimension i
+     * (stride[i]) denotes the step forward in values array necessary to
+     * increase the index for that dimension by 1.
+     */
+    private static int[] getStrides(int[] dims) {
+        int rightmost = dims.length - 1;
+        int[] strides = new int[dims.length];
+        strides[rightmost] = 1;
+        for (int i=rightmost-1; i >= 0; i--) {
+            strides[i] = dims[i+1]*strides[i+1];
+        }
+        return strides;      
+    }
+
+    /** Checks that the indices are valid. */
+    private void checkIndices(int... indices) {
+        if (indices.length != dims.length) {
+            throw new IllegalArgumentException(String.format(
+                    "Indices array is not the correct length. expected=%d actual=%d", 
+                    indices.length, dims.length));
+        }
+        for (int i=0; i<indices.length; i++) {
+            if (indices[i] >= dims[i]) {
+                throw new IllegalArgumentException(String.format(
+                        "Indices array contains an index that is out of bounds: i=%d index=%d", 
+                        i, indices[i]));
+            }
+        }
     }
 
     /**
@@ -45,7 +137,9 @@ public class Tensor {
      * @param The index, c 
      */
     public double setValue(int idx, double val) {
-        return values[idx] = val;
+        double prev = values[idx];
+        values[idx] = val;
+        return prev;
     }
 
     /** 
@@ -227,9 +321,14 @@ public class Tensor {
         return sb.toString();
     }
     
-    /** For testing only. */
+    /** Gets the internal values array. For testing only. */
     double[] getValues() {
         return values;
+    }
+
+    /** Gets the internal dimensions array. */
+    public int[] getDims() {
+        return dims;
     }
 
     public static Tensor getScalarTensor(double val) {
