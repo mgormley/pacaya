@@ -1,5 +1,7 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
 
 public interface Module<T> {
 
@@ -7,5 +9,6 @@ public interface Module<T> {
     void backward();    
     T getOutput();
     T getOutputAdj();
+    List<? extends Object> getInputs();
     
 }

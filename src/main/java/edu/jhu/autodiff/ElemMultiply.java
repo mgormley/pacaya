@@ -1,5 +1,9 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Elementwise multiplication of the entries in two tensors of identical size.
  * 
@@ -44,6 +48,11 @@ public class ElemMultiply extends AbstractTensorModule implements Module<Tensor>
             tmp.elemMultiply(x);
             modInW.getOutputAdj().elemAdd(tmp);
         }
+    }
+
+    @Override
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modInX, modInW);
     }
 
 }

@@ -1,5 +1,9 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Elementwise addition of the entries in two tensors of identical size.
  * 
@@ -34,6 +38,11 @@ public class ElemAdd extends AbstractTensorModule implements Module<Tensor> {
     public void backward() {
         modInX.getOutputAdj().elemAdd(yAdj);
         modInW.getOutputAdj().elemAdd(yAdj);
+    }
+
+    @Override
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modInX, modInW);
     }
 
 }

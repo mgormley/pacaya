@@ -1,7 +1,10 @@
 package edu.jhu.autodiff.erma;
 
+import java.util.List;
+
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.util.collections.Lists;
 
 /**
  * This module is simply the identity function. 
@@ -40,5 +43,9 @@ public class BeliefsIdentity implements Module<Beliefs> {
         return yAdj;
     }
 
+    @Override
+    public List<Module<Beliefs>> getInputs() {
+        return Lists.getList();
+    }
 
 }

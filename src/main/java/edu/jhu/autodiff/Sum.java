@@ -32,6 +32,7 @@ public class Sum extends AbstractTensorModule implements Module<Tensor> {
         xAdj.add(yAdj.getValue(0));
     }
 
+    @Override
     public List<Module<Tensor>> getInputs() {
         return Lists.getList(modIn);
     }

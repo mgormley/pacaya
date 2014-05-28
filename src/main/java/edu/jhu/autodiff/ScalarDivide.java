@@ -1,5 +1,9 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Division of each entry in a tensor by a scalar from another tensor.
  * 
@@ -48,6 +52,11 @@ public class ScalarDivide extends AbstractTensorModule implements Module<Tensor>
             tmp.divide(- (w_k * w_k));
             modInW.getOutputAdj().addValue(k, tmp.getSum());
         }
+    }
+
+    @Override
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modInX, modInW);
     }
 
 }

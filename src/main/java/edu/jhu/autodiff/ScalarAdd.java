@@ -1,5 +1,9 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Addition of each entry in a tensor by a scalar from another tensor.
  * 
@@ -37,6 +41,11 @@ public class ScalarAdd extends AbstractTensorModule implements Module<Tensor> {
     public void backward() {
         modInX.getOutputAdj().elemAdd(yAdj);
         modInW.getOutputAdj().addValue(k, yAdj.getSum());
+    }
+
+    @Override
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modInX, modInW);
     }
 
 }

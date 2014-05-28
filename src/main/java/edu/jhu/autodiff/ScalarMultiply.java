@@ -1,5 +1,9 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Multiplication of each entry in a tensor by a scalar from another tensor.
  * 
@@ -47,6 +51,11 @@ public class ScalarMultiply extends AbstractTensorModule implements Module<Tenso
             tmp.elemMultiply(x);
             modInW.getOutputAdj().addValue(k, tmp.getSum());
         }
+    }
+
+    @Override
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modInX, modInW);
     }
     
 }

@@ -1,5 +1,9 @@
 package edu.jhu.autodiff;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Sum of all the entries in the tensor.
  * @author mgormley
@@ -33,6 +37,11 @@ public class Prod extends AbstractTensorModule implements Module<Tensor> {
         tmp.multiply(y.getValue(0));
         tmp.elemDivide(x);
         xAdj.elemAdd(tmp);
+    }
+
+    @Override
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modIn);
     }
 
 }

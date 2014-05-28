@@ -30,6 +30,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -949,6 +950,12 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             bAdj = b.copyAndFill(0);
         }
         return bAdj;
+    }
+
+    @Override
+    public List<Module<Beliefs>> getInputs() {
+        throw new RuntimeException("Not implemented");
+        //return Lists.getList();
     }
     
 }
