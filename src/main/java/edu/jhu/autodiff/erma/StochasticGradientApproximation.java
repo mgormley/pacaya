@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
@@ -25,12 +26,10 @@ public class StochasticGradientApproximation {
         int numParams = fn.getNumDimensions();
         // The gradient estimate
         IntDoubleVector grad = new IntDoubleDenseVector(numParams);
-        // The scaling term
-        double c = 1e-6;
         for (int k=0; k<numSamples; k++) {   
             // Get a random direction
             IntDoubleVector d = getRandomBernoulliDirection(numParams);
-            double scaler = getGradDotDirApprox(fn, x, d, c);
+            double scaler = getGradDotDirApprox(fn, x, d);
             for (int i=0; i< numParams; i++) {
                 grad.add(i, scaler * 1.0 / d.get(i));
             }
@@ -48,16 +47,39 @@ public class StochasticGradientApproximation {
      * @param c Epsilon constant.
      * @return
      */
-    private static double getGradDotDirApprox(Function fn, IntDoubleVector x, IntDoubleVector d, double c) {
-        // 
-        double scaler = 0;
+    public static double getGradDotDirApprox(Function fn, IntDoubleVector x, IntDoubleVector d) {
+        return getGradDotDirApprox(fn, x, d, getEpsilon(x, d));
+    }
+
+    /**
+     * Gets an epsilon constant as advised by Andrei (2009).
+     * See also, http://timvieira.github.io/blog/post/2014/02/10/gradient-vector-product/. 
+     */
+    private static double getEpsilon(IntDoubleVector x, IntDoubleVector d) {
+        double machineEpsilon = 2.2204460492503131e-16;
+        double xInfNorm = DoubleArrays.infinityNorm(x.toNativeArray());
+        double dInfNorm = DoubleArrays.infinityNorm(d.toNativeArray());
+        return machineEpsilon * (1.0 + xInfNorm) / dInfNorm;
+    }
+
+    /**
+     * Compute f'(x)^T d = ( L(x + c * d) - L(x - c * d) ) / (2c)
+     * 
+     * @param fn Function, f.
+     * @param x Point at which to evaluate the gradient, x.
+     * @param d Random direction, d.
+     * @param c Epsilon constant.
+     * @return
+     */
+    public static double getGradDotDirApprox(Function fn, IntDoubleVector x, IntDoubleVector d, double c) {
+        double dot = 0;
         {
             // L(\theta + c * d)
             IntDoubleVector d1 = d.copy();
             d1.scale(c);
             IntDoubleVector x1 = x.copy();
             x1.add(d1);
-            scaler += fn.getValue(x1);
+            dot += fn.getValue(x1);
         }
         {
             // - L(\theta - c * d)
@@ -65,10 +87,10 @@ public class StochasticGradientApproximation {
             d1.scale(-c);
             IntDoubleVector x1 = x.copy();
             x1.add(d1);        
-            scaler -= fn.getValue(x1);
+            dot -= fn.getValue(x1);
         }
-        scaler /= 2.0 * c;
-        return scaler;
+        dot /= (2.0 * c);
+        return dot;
     }
     
     /* ----------- For random directions ------------ */

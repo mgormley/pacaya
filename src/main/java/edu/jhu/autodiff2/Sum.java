@@ -1,5 +1,9 @@
 package edu.jhu.autodiff2;
 
+import java.util.List;
+
+import edu.jhu.util.collections.Lists;
+
 /**
  * Sum of all the entries in the tensor.
  * @author mgormley
@@ -41,6 +45,10 @@ public class Sum implements Module<Tensor> {
             yAdj = y.copyAndFill(0);
         }
         return yAdj;
+    }
+    
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(modIn);
     }
 
 }

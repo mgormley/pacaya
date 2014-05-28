@@ -51,10 +51,12 @@ public class Lists {
         }
     }
 
+    @SafeVarargs
     public static <T> List<T> getList(T... args) {
         return Arrays.asList(args);
     }
 
+    @SafeVarargs
     public static <T> List<T> cons(T val, T... values) {
         List<T> list = new ArrayList<T>(Arrays.asList(values));
         list.add(val);

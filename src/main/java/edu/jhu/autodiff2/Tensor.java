@@ -27,9 +27,9 @@ public class Tensor {
     }
 
     /** Copy constructor. */
-    public Tensor(Tensor input) {
-        this.dims = IntArrays.copyOf(dims);
-        this.values = DoubleArrays.copyOf(values);
+    public Tensor(Tensor other) {
+        this.dims = IntArrays.copyOf(other.dims);
+        this.values = DoubleArrays.copyOf(other.values);
     }
 
     /**
@@ -54,6 +54,16 @@ public class Tensor {
      */
     public double addValue(int idx, double val) {
         return values[idx] += val; 
+    }
+
+    /**
+     * Sets the dimensions and values to be the same as the given tensor.
+     * Assumes that the size of the two vectors are equal.
+     */
+    public void set(Tensor other) {
+        checkEqualSize(this, other);
+        this.dims = IntArrays.copyOf(other.dims);
+        DoubleArrays.copy(other.values, this.values);
     }
     
     /** Add the addend to each value. */    
