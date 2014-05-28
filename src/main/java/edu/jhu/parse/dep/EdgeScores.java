@@ -2,6 +2,7 @@ package edu.jhu.parse.dep;
 
 import java.util.Arrays;
 
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
@@ -30,6 +31,14 @@ public class EdgeScores {
     
     public double getScore(int p, int c) {
         return (p == -1) ? root[c] : child[p][c];
+    }
+
+    public void setScore(int p, int c, double val) {
+        if (p == -1) {
+            root[c] = val;
+        } else {
+            child[p][c] = val;
+        }
     }
     
     /** Safely checks whether the child array contains a value -- ignoring diagonal entries. */
@@ -60,6 +69,38 @@ public class EdgeScores {
                 child[i][j] = lambda.call(child[i][j]);
             }
         }
+    }    
+
+    /** Convert an EdgeScores object to a Tensor, where the wall node is indexed as position n+1 in the Tensor. */
+    public static Tensor edgeScoresToTensor(EdgeScores es) {
+        int n = es.child.length;
+        Tensor m = new Tensor(n + 1, n);
+        for (int p = -1; p < n; p++) {
+            for (int c = 0; c < n; c++) {
+                // The wall node is indexed as position n.
+                int pp = (p == -1) ? n : p;
+                m.set(es.getScore(p, c), pp, c);
+            }
+        }
+        return m;
+    }
+    
+    /** Convert a Tensor object to an EdgeScores, where the wall node is indexed as position n+1 in the Tensor. */
+    public static EdgeScores tensorToEdgeScores(Tensor t) {
+        int n = t.getDims()[1];
+        EdgeScores es = new EdgeScores(n, 0);        
+        for (int p = -1; p < n; p++) {
+            for (int c = 0; c < n; c++) {
+                // The wall node is indexed as position n.
+                int pp = (p == -1) ? n : p;
+                es.setScore(p, c, t.get(pp, c));
+            }
+        }
+        return es;
+    }
+
+    public Tensor toTensor() {
+        return edgeScoresToTensor(this);
     }
     
 }
