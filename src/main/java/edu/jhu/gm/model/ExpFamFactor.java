@@ -97,10 +97,13 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
          else { return FastMath.exp(dot); }
     }
 
-    @Override
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
-        VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
-        
+        VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);        
+        addExpectedFeatureCounts(counts, factorMarginal, multiplier);
+    }
+
+    @Override
+    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
         if (numConfigs == 0) {
             // If there are no variables in this factor, we still need to get the cached features.

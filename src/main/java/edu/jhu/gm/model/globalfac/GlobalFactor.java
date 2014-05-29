@@ -1,7 +1,9 @@
 package edu.jhu.gm.model.globalfac;
 
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.Factor;
+import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.util.semiring.Algebra;
 
@@ -54,5 +56,16 @@ public interface GlobalFactor extends Factor {
      * @param s The abstract algebra in which to represent the adjoints.
      */
     void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s);
+
+    /**
+     * Adds the expected feature counts for this factor, given the marginal distribution 
+     * specified by the inferencer for this factor.
+     * 
+     * @param counts The object collecting the feature counts.
+     * @param multiplier The multiplier for the added feature accounts.
+     * @param inferencer The inferencer from which the marginal distribution is taken.
+     * @param factorId The id of this factor within the inferencer.
+     */
+    void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId);
 
 }

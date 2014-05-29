@@ -87,7 +87,7 @@ public class FgModel implements Serializable, IFgModel {
     
     public void add(int feat, double addend) {
       if (feat < 0 || numParams <= feat) {
-          throw new IllegalArgumentException("The specified parameter is not included in this model");
+          throw new IllegalArgumentException("The specified parameter is not included in this model: " + feat);
       }
       params.add(feat, addend);
     }

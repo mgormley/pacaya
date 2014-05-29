@@ -5,6 +5,7 @@ import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.IFgModel;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 
 public abstract class AbstractGlobalFactor implements GlobalFactor {
@@ -38,6 +39,10 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
         // therefore have no model parameters.
         this.logDomain = logDomain;
     }   
+
+    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+        // No op since this type of factor doesn't have any features.
+    }
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         // No op since this type of factor doesn't have any features.

@@ -25,6 +25,7 @@ import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.util.ArrayIter3D;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.iter.IntIter;
@@ -241,7 +242,13 @@ public class ObsFeatureConjoiner implements Serializable {
                 } else {
                     // For each standard factor.  
                     f = ex.getFgLatPred().getFactor(a);
-                    f.addExpectedFeatureCounts(counts, 0, inferencer, a);
+                    if (f instanceof GlobalFactor) {
+                        ((GlobalFactor) f).addExpectedFeatureCounts(counts, 0, inferencer, a);
+                    } else {
+                        VarTensor marg = inferencer.getMarginalsForFactorId(a);
+                        f.addExpectedFeatureCounts(counts, marg, 0);
+                    }
+                    
                 }
             }
         }

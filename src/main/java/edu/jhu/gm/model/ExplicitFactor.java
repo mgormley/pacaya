@@ -43,7 +43,7 @@ public class ExplicitFactor extends VarTensor implements Factor {
         return getUnormalizedScore(vc.getConfigIndex());
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         // No op since this type of factor doesn't have any features.
     }
 

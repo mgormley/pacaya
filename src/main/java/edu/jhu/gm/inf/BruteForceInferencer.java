@@ -65,10 +65,10 @@ public class BruteForceInferencer implements FgInferencer {
     /** Gets this factor as a DenseFactor. This will construct such a factor if it is not already one. */
     public static VarTensor safeGetDenseFactor(Factor f) {
         VarTensor factor;
-        if (f instanceof ExplicitFactor) {
+        if (f instanceof VarTensor) {
             factor = (VarTensor) f;
         } else {
-            // Create a DenseFactor which the values of this non-explicitly represented factor.
+            // Create a VarTensor which the values of this non-explicitly represented factor.
             factor = new VarTensor(f.getVars());
             for (int c=0; c<factor.size(); c++) {
                 factor.setValue(c, f.getUnormalizedScore(c));

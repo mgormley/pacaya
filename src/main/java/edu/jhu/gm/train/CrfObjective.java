@@ -13,6 +13,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.prim.util.math.FastMath;
@@ -214,7 +215,12 @@ public class CrfObjective implements ExampleObjective {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
-            f.addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
+            if (f instanceof GlobalFactor) {
+                ((GlobalFactor) f).addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
+            } else {
+                VarTensor marg = inferencer.getMarginalsForFactorId(factorId);
+                f.addExpectedFeatureCounts(gradient, marg, multiplier);
+            }
         }
     }
 
