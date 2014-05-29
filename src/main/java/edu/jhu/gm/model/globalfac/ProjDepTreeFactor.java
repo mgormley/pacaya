@@ -339,7 +339,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             } else {
                 es.child[link.getParent()][link.getChild()] = oddsRatio;
             }
-        }        
+        }
         checkLogOddsRatios(parent, msgs, logDomain, es);
         return es;
     }
@@ -553,7 +553,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
     @Override
     public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
-        throw new RuntimeException("not implemented");
+        forwardAndBackward(parent, msgs, msgsAdj, s, false);
     }
     
     public void forwardAndBackward(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s, boolean isForward) {
