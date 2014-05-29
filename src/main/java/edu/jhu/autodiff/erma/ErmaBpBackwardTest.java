@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import com.apple.mrj.macos.carbon.Timer;
 
+import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -24,7 +25,6 @@ import edu.jhu.hlt.optimize.function.ValueGradient;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
-import edu.jhu.util.dist.Gaussian;
 
 
 public class ErmaBpBackwardTest {
@@ -43,7 +43,7 @@ public class ErmaBpBackwardTest {
                 
         ErmaErFn fn = new ErmaErFn(fg, goldConfig); 
         Prng.seed(12345);
-        fn.getGradient(getTheta(fn.getNumDimensions()));
+        fn.getGradient(ModuleTestUtils.getAbsZeroOneGaussian(fn.getNumDimensions()));
         
         IntDoubleVector gradAd = testGradientByFiniteDifferences(fn);
         //assertEquals(new double[]{-0.034560412986688674, 0.8756722814502975}, );
@@ -103,7 +103,7 @@ public class ErmaBpBackwardTest {
     private static IntDoubleVector testGradientByFiniteDifferences(ErmaErFn fn) {
         Prng.seed(12345);
         int numParams = fn.getNumDimensions();
-        IntDoubleVector theta0 = getTheta(numParams);
+        IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         System.out.println("theta0 = " + theta0);
         Prng.seed(System.currentTimeMillis());
         
@@ -130,16 +130,6 @@ public class ErmaBpBackwardTest {
         return infNorm;
     }
 
-    private static IntDoubleDenseVector getTheta(int numParams) {
-        // Define the "model" as the explicit factor entries.
-        IntDoubleDenseVector theta = new IntDoubleDenseVector(numParams);
-        // Randomly initialize the model.
-        for (int i=0; i< numParams; i++) {
-            theta.set(i, Math.abs(Gaussian.nextDouble(0.0, 1.0)));
-        }
-        return theta;
-    }
-    
     private static class ErmaErFn implements DifferentiableFunction {
 
         private FactorGraph fg;

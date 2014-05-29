@@ -37,8 +37,8 @@ public class HyperalgoModule extends AbstractTensorModule implements Module<Tens
     
     @Override
     public Tensor forward() {
-        EdgeScores es = EdgeScores.tensorToEdgeScores(weightsIn.getOutput());            
         scores = new Scores();
+        EdgeScores es = EdgeScores.tensorToEdgeScores(weightsIn.getOutput());            
         graph = new FirstOrderDepParseHypergraph(es.root, es.child, s);            
         Hyperpotential w = graph.getPotentials();
         Hyperalgo.insideAlgorithm(graph, w, s, scores);
@@ -66,6 +66,8 @@ public class HyperalgoModule extends AbstractTensorModule implements Module<Tens
     @Override
     public void backward() {
         final int n = graph.getNumTokens();
+        scores.alphaAdj = new double[graph.getNodes().size()];
+        scores.betaAdj = new double[graph.getNodes().size()];
         // Update output adjoints in scores.
         for (Hypernode node : graph.getNodes()) {
             if (node instanceof PCBasicHypernode) {   

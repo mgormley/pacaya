@@ -159,6 +159,11 @@ public class Tensor {
         this.dims = IntArrays.copyOf(other.dims);
         DoubleArrays.copy(other.values, this.values);
     }
+
+    public void setValuesOnly(Tensor other) {
+        checkEqualSize(this, other);
+        DoubleArrays.copy(other.values, this.values);
+    }
     
     /** Add the addend to each value. */    
     public void add(double addend) {

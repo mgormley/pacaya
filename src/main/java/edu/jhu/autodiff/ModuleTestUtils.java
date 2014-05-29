@@ -112,7 +112,10 @@ public class ModuleTestUtils {
         
         @Override
         public double getValue(IntDoubleVector point) {
-            return vecFn.forward(point).getValue(outIdx);
+            Tensor out = vecFn.forward(point);
+            //System.out.println("ModuleFn:\n" + point);
+            //System.out.println("ModuleFn:\n" + out);
+            return out.getValue(outIdx);
         }
     
         @Override
@@ -131,12 +134,22 @@ public class ModuleTestUtils {
         
     }
 
-    public static IntDoubleDenseVector getMultiZeroOneGaussian(int numParams) {
+    public static IntDoubleDenseVector getZeroOneGaussian(int numDims) {
         // Define the "model" as the explicit factor entries.
-        IntDoubleDenseVector theta = new IntDoubleDenseVector(numParams);
+        IntDoubleDenseVector theta = new IntDoubleDenseVector(numDims);
         // Randomly initialize the model.
-        for (int i=0; i< numParams; i++) {
+        for (int i=0; i< numDims; i++) {
             theta.set(i, Gaussian.nextDouble(0.0, 1.0));
+        }
+        return theta;
+    }
+
+    public static IntDoubleDenseVector getAbsZeroOneGaussian(int numDims) {
+        // Define the "model" as the explicit factor entries.
+        IntDoubleDenseVector theta = new IntDoubleDenseVector(numDims);
+        // Randomly initialize the model.
+        for (int i=0; i< numDims; i++) {
+            theta.set(i, Math.abs(Gaussian.nextDouble(0.0, 1.0)));
         }
         return theta;
     }
@@ -151,7 +164,12 @@ public class ModuleTestUtils {
 
     public static void assertFdAndAdEqual(ModuleVecFn vecFn, double epsilon, double delta) {
         int numParams = vecFn.getNumDimensions();                
-        IntDoubleDenseVector x = getMultiZeroOneGaussian(numParams);
+        IntDoubleDenseVector x = getZeroOneGaussian(numParams);
+        assertFdAndAdEqual(vecFn, x, epsilon, delta);
+    }
+
+    public static void assertFdAndAdEqual(ModuleVecFn vecFn, IntDoubleDenseVector x, double epsilon, double delta) {
+        int numParams = vecFn.getNumDimensions();                
         // Run forward once to figure out the output dimension.
         int outDim = vecFn.forward(x).size();
         for (int i=0; i<outDim; i++) {
@@ -164,7 +182,7 @@ public class ModuleTestUtils {
                 IntDoubleVector grad = fn.getGradient(x);
                 double dotAd = grad.dot(d);
                 double relError = Math.abs(dotFd - dotAd) / Math.max(Math.abs(dotFd), Math.abs(dotAd));
-                System.out.println("dotFd="+dotFd+" dotAd="+dotAd+" relError="+relError);
+                System.out.printf("i=%d j=%d dotFd=%g dotAd=%g relError=%g\n", i, j, dotFd, dotAd, relError);
                 assertEquals(dotFd, dotAd, delta);
             }
         }
