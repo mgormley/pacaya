@@ -10,7 +10,14 @@ import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
 import edu.jhu.util.dist.Gaussian;
 
+/**
+ * Methods for performing stochastic gradient approximation and for doing finite difference testing.
+ * 
+ * @author mgormley
+ */
 public class StochasticGradientApproximation {
+    
+    private StochasticGradientApproximation() { }
     
     /**
      * Estimates a gradient of a function by simultaneous perterbations

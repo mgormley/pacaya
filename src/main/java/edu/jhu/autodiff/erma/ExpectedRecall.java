@@ -12,6 +12,10 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
 
+/** 
+ * Loss function computing the expected recall.
+ * @author mgormley
+ */
 public class ExpectedRecall extends AbstractTensorModule implements Module<Tensor> {
     
     private Module<Beliefs> inf;

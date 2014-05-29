@@ -2,7 +2,7 @@ package edu.jhu.autodiff.erma;
 
 import edu.jhu.gm.model.VarTensor;
 
-/** Struct for beliefs (i.e. approximate marginals) for a factor graph. */
+/** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
 public class Beliefs {
     
     public VarTensor[] varBeliefs;

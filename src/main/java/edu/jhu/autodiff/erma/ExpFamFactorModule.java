@@ -12,6 +12,11 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.util.collections.Lists;
 
+/**
+ * Module for computing exp(\theta \cdot f(x,y)) to populate each of the exponential family factors.
+ * 
+ * @author mgormley
+ */
 public class ExpFamFactorModule implements Module<VarTensor[]> {
 
     private FgModel model;
