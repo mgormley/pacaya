@@ -36,6 +36,8 @@ public class CrfObjective implements ExampleObjective {
     private Timer valTimer = new Timer();
     // Timer: compute the gradient.
     private Timer gradTimer = new Timer();
+    // Timer: total time for an example.
+    private Timer tot = new Timer(); 
     
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
         this.data = data;
@@ -52,6 +54,7 @@ public class CrfObjective implements ExampleObjective {
     // Assumed by caller to be threadsafe.
     @Override
     public void accum(FgModel model, int i, Accumulator ac) {
+        Timer t0 = new Timer(); t0.start();        
         LFgExample ex = data.get(i);
         Timer t = new Timer();
         
@@ -100,6 +103,7 @@ public class CrfObjective implements ExampleObjective {
             //if (loss != null) { ac.trainLoss += loss.getLoss(i, ex, infLatPred); }
             //ac.trainLoss += getMseLoss(ex, infLatPred);
         }
+        t0.stop(); tot.add(t0);
     }
 
     private double getMseLoss(LFgExample ex, FgInferencer infLatPred) {
@@ -265,7 +269,8 @@ public class CrfObjective implements ExampleObjective {
         }
         double sum = updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
         double mult = 100.0 / sum;
-        log.debug(String.format("Timers total%% (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
-                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult));
+        log.debug(String.format("Timers total%% (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f avg=%.1f max=%.1f stddev=%.1f", 
+                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult,
+                tot.avgMs(), tot.maxSplitMs(), tot.stdDevMs()));
     }
 }
