@@ -98,7 +98,8 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
      * @param logDomain TODO
      */
     public FactorGraph updateFgLat(FgModel model, boolean logDomain) {
-        return getUpdatedFactorGraph(fgLat, model, logDomain);
+        fgLat.updateFromModel(model, logDomain);
+        return fgLat;
     }
 
     /** Gets the gold configuration of the variables. */

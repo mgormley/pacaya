@@ -397,6 +397,13 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
         return true;
     }
     
+    public void updateFromModel(FgModel model, boolean logDomain) {
+        for (int a=0; a < this.getNumFactors(); a++) {
+            Factor f = this.getFactor(a);
+            f.updateFromModel(model, logDomain);
+        }
+    }
+    
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (FgEdge e : getEdges()) {

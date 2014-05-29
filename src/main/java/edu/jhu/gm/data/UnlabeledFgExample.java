@@ -120,17 +120,8 @@ public class UnlabeledFgExample implements LFgExample, Serializable {
      * @param logDomain TODO
      */
     public FactorGraph updateFgLatPred(FgModel model, boolean logDomain) {
-        return getUpdatedFactorGraph(fgLatPred, model, logDomain);
-    }
-
-    /** Updates the factor graph with the latest parameter vector. 
-     * @param logDomain TODO*/
-    protected FactorGraph getUpdatedFactorGraph(FactorGraph fg, FgModel model, boolean logDomain) {
-        for (int a=0; a < fg.getNumFactors(); a++) {
-            Factor f = fg.getFactor(a);
-            f.updateFromModel(model, logDomain);
-        }
-        return fg;
+        fgLatPred.updateFromModel(model, logDomain);
+        return fgLatPred;
     }
 
     public boolean hasLatentVars() {
