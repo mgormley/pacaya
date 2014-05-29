@@ -231,18 +231,25 @@ public class Tensor {
         }
     }
 
+    /** Gets the sum of all the entries in this tensor. */
     public double getSum() {
         return DoubleArrays.sum(this.values);
     }
 
+    /** Gets the product of all the entries in this tensor. */
     public double getProd() {
         return DoubleArrays.prod(this.values);
+    }
+
+    /** Gets the max value in the tensor. */
+    public double getMax() {
+        return DoubleArrays.max(values);
     }
 
     /** Gets the ID of the configuration with the maximum value. */
     public int getArgmaxConfigId() {
         return DoubleArrays.argmax(values);
-    }    
+    }
 
     /**
      * Gets the infinity norm of this tensor. Defined as the maximum absolute

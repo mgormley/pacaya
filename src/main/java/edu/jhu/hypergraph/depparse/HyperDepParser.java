@@ -2,20 +2,21 @@ package edu.jhu.hypergraph.depparse;
 
 import edu.jhu.hypergraph.Hyperalgo;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
+import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph.PCBasicHypernode;
 import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.HyperpotentialFoe;
+import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseType;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.Algebras;
 
 public class HyperDepParser {
 
@@ -70,7 +71,7 @@ public class HyperDepParser {
 
         return getDepIoChart(graph, scores);
     }
-
+    
     public static DepIoChart getDepIoChart(FirstOrderDepParseHypergraph graph, Scores scores) {
         final int n = graph.getNumTokens();        
         final DepParseChart inChart = new DepParseChart(n, DepParseType.INSIDE);

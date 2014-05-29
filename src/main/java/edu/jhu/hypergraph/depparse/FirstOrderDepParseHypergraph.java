@@ -17,6 +17,39 @@ import edu.jhu.util.semiring.Semiring;
 
 public class FirstOrderDepParseHypergraph implements Hypergraph {
 
+    public static class PCBasicHypernode extends BasicHypernode {
+
+        private int p;
+        private int c;
+        
+        public PCBasicHypernode(String label, int id, int p, int c) {
+            super(label, id);
+            this.p = p;
+            this.c = c;
+        }
+        
+
+        public PCBasicHypernode(String label, int id) {
+            super(label, id);
+            this.p = -2;
+            this.c = -2;
+        }
+
+        public int getP() {
+            return p;
+        }
+
+        public int getC() {
+            return c;
+        }
+        
+        public void setPC(int p, int c) {
+            this.p = p;
+            this.c = c;
+        }
+        
+    }
+    
     private static final Logger log = Logger.getLogger(FirstOrderDepParseHypergraph.class);
 
     private static final int NOT_INITIALIZED = -1;
@@ -73,7 +106,15 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                         if (log.isTraceEnabled()) {
                             label = String.format("chart[%d][%d][%d][%d]", s,t,d,c);
                         }
-                        BasicHypernode node = new BasicHypernode(label, id++);
+                        Hypernode node;
+                        if (c == INCOMPLETE) {
+                            int parent = (d == LEFT) ? t : s;
+                            int child  = (d == LEFT) ? s : t;
+                            node = new PCBasicHypernode(label, id++, parent, child);
+                        } else {
+                            node = new BasicHypernode(label, id++);
+                        }
+                            
                         nodes.add(node);
                         childChart[s][t][d][c] = node;
                     }
@@ -85,7 +126,7 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
             if (log.isTraceEnabled()) {
                 label = String.format("wall[%d]", s);
             }
-            BasicHypernode node = new BasicHypernode(label, id++);
+            PCBasicHypernode node = new PCBasicHypernode(label, id++, -1, s);
             nodes.add(node);
             wallChart[s] = node;
         }

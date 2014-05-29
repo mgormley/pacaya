@@ -22,4 +22,11 @@ public abstract class AbstractTensorModule implements Module<Tensor> {
         return yAdj;
     }
 
+    @Override
+    public String toString() {
+        return this.getClass() + " [y=" + y + ", yAdj=" + yAdj + "]";
+    }
+
+    
+    
 }

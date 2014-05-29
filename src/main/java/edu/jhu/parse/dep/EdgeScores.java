@@ -74,11 +74,11 @@ public class EdgeScores {
     /** Convert an EdgeScores object to a Tensor, where the wall node is indexed as position n+1 in the Tensor. */
     public static Tensor edgeScoresToTensor(EdgeScores es) {
         int n = es.child.length;
-        Tensor m = new Tensor(n + 1, n);
+        Tensor m = new Tensor(n, n);
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
-                // The wall node is indexed as position n.
-                int pp = (p == -1) ? n : p;
+                if (p == c) { continue; }
+                int pp = getTensorParent(n, p, c);
                 m.set(es.getScore(p, c), pp, c);
             }
         }
@@ -87,12 +87,15 @@ public class EdgeScores {
     
     /** Convert a Tensor object to an EdgeScores, where the wall node is indexed as position n+1 in the Tensor. */
     public static EdgeScores tensorToEdgeScores(Tensor t) {
+        if (t.getDims().length != 2) {
+            throw new IllegalArgumentException("Tensor must be an nxn matrix.");
+        }
         int n = t.getDims()[1];
         EdgeScores es = new EdgeScores(n, 0);        
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
-                // The wall node is indexed as position n.
-                int pp = (p == -1) ? n : p;
+                if (p == c) { continue; }
+                int pp = getTensorParent(n, p, c);
                 es.setScore(p, c, t.get(pp, c));
             }
         }
@@ -101,6 +104,14 @@ public class EdgeScores {
 
     public Tensor toTensor() {
         return edgeScoresToTensor(this);
+    }
+
+    /** In the tensor, we use the diagonal as the scores for the wall node. */
+    public static int getTensorParent(int n, int p, int c) {
+        if (p == c) {
+            throw new IllegalArgumentException("No entry defined for p == c case.");
+        }
+        return (p == -1) ? c : p;
     }
     
 }

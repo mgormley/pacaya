@@ -399,11 +399,37 @@ public class Hyperalgo {
      */
     public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
+        final double[] weightAdj = new double[graph.getNumEdges()];
+        HyperedgeDoubleFn lambda = new HyperedgeDoubleFn() {
+            public void apply(Hyperedge e, double val) {
+                weightAdj[e.getId()] = val;
+            }
+        };
+        weightAdjoint(graph, w, s, scores, lambda);
+        scores.weightAdj = weightAdj;
+    }
+    
+    public interface HyperedgeDoubleFn {
+        void apply(Hyperedge e, double val);
+    }
+    
+    /**
+     * Computes the adjoints of the hyperedge weights.
+     * INPUT: scores.alpha, scores.beta, scores.alphaAdj, scores.betaAdj.
+     * OUTPUT: The adjoints of the weights.
+     * 
+     * @param graph The hypergraph
+     * @param w The potential function.
+     * @param s The semiring.
+     * @param scores Input struct.
+     * @param lambda Function to call with the edge and the edge adjoint.
+     */
+    public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, 
+            final Algebra s, final Scores scores, final HyperedgeDoubleFn lambda) {
         final double[] alpha = scores.alpha;
         final double[] beta = scores.beta;
         final double[] alphaAdj = scores.alphaAdj;
         final double[] betaAdj = scores.betaAdj;
-        final double[] weightAdj = new double[graph.getNumEdges()];
         
         graph.applyTopoSort(new HyperedgeFn() {
             
@@ -430,12 +456,10 @@ public class Hyperalgo {
                     w_e = s.plus(w_e, prod);
                 }
                 
-                weightAdj[e.getId()] = w_e;
+                lambda.apply(e, w_e);
             }
             
-        });
-        
-        scores.weightAdj = weightAdj;
+        });        
     }
     
 }
