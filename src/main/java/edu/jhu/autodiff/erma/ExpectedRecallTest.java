@@ -19,7 +19,7 @@ import edu.jhu.util.collections.Lists;
 public class ExpectedRecallTest {
 
     @Test
-    public void testGradByFiniteDiffs() {
+    public void testSimple() {
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
         t0.setId(0);
@@ -45,10 +45,7 @@ public class ExpectedRecallTest {
         assertEquals(0, id1.getOutputAdj().varBeliefs[0].getValue(0), 1e-13);
         assertEquals(0, id1.getOutputAdj().varBeliefs[0].getValue(1), 1e-13);
         assertEquals(0, id1.getOutputAdj().varBeliefs[1].getValue(0), 1e-13);
-        assertEquals(1, id1.getOutputAdj().varBeliefs[1].getValue(1), 1e-13);
-        
-        //ModuleVecFn vecFn = new ModuleVecFn(id1, s);
-        //ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+        assertEquals(1, id1.getOutputAdj().varBeliefs[1].getValue(1), 1e-13);        
     }
     
 }
