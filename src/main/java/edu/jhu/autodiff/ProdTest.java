@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 
 public class ProdTest {
 
@@ -32,7 +32,7 @@ public class ProdTest {
         TensorIdentity id1 = new TensorIdentity(t1);
         Prod s = new Prod(id1);
         
-        ModuleVecFn vecFn = new ModuleVecFn(id1, s);
+        TensorVecFn vecFn = new TensorVecFn(id1, s);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
     

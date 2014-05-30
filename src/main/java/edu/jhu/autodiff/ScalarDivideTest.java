@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.util.collections.Lists;
 
 public class ScalarDivideTest {
@@ -47,7 +47,7 @@ public class ScalarDivideTest {
         TensorIdentity id2 = new TensorIdentity(t2);
         ScalarDivide ea = new ScalarDivide(id1, id2, 1);
         
-        ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1, id2), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), ea);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
     

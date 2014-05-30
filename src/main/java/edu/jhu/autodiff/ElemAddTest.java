@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.util.collections.Lists;
 
 public class ElemAddTest {
@@ -47,7 +47,7 @@ public class ElemAddTest {
         TensorIdentity id2 = new TensorIdentity(t2);
         ElemAdd ea = new ElemAdd(id1, id2);
         
-        ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1, id2), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), ea);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
     

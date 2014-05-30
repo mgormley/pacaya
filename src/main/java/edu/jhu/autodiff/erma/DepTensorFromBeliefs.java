@@ -15,12 +15,12 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class SelectDepParseMarginals extends AbstractTensorModule implements Module<Tensor> {
+public class DepTensorFromBeliefs extends AbstractTensorModule implements Module<Tensor> {
 
     private Module<Beliefs> inf;
     private int n;
     
-    public SelectDepParseMarginals(Module<Beliefs> inf, int n) {
+    public DepTensorFromBeliefs(Module<Beliefs> inf, int n) {
         this.inf = inf;
         this.n = n;
     }
@@ -57,7 +57,7 @@ public class SelectDepParseMarginals extends AbstractTensorModule implements Mod
                 int pp = EdgeScores.getTensorParent(p, c);
                 assert p < n && c < n;
                 
-                // Set the adjoint of p(e_{p,c} = True).
+                // Add the adjoint of p(e_{p,c} = True).
                 bAdj.varBeliefs[v].addValue(LinkVar.TRUE, yAdj.get(pp, c));
             }
         }

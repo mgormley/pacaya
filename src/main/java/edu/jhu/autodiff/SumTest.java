@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 
 public class SumTest {
 
@@ -30,7 +30,7 @@ public class SumTest {
         TensorIdentity id1 = new TensorIdentity(t1);
         Sum s = new Sum(id1);
         
-        ModuleVecFn vecFn = new ModuleVecFn(id1, s);
+        TensorVecFn vecFn = new TensorVecFn(id1, s);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
     

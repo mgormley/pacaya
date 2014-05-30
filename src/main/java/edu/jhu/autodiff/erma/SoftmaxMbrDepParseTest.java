@@ -9,9 +9,11 @@ import org.apache.commons.lang.mutable.MutableDouble;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.gm.model.globalfac.InsideOutsideDepParse;
 import edu.jhu.gm.model.globalfac.InsideOutsideDepParseTest;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
@@ -62,12 +64,12 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testGradByFiniteDiffs() {       
-        Tensor t1 = new Tensor(1,1);
+        Tensor t1 = new Tensor(4,4);
         TensorIdentity id1 = new TensorIdentity(t1);
         int T = 2;
         SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, T, s);
         
-        ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
         int numParams = vecFn.getNumDimensions();                
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         final MutableDouble sum = new MutableDouble(0);
@@ -77,7 +79,7 @@ public class SoftmaxMbrDepParseTest {
             }
         });
         x.scale(-1.0/sum.doubleValue());
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-8, 1e-8);
+        ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-8, 1e-5);
     }
     
 }

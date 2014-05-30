@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class TopoOrderTest {
@@ -55,7 +55,7 @@ public class TopoOrderTest {
         Exp exp = new Exp(add);
         topo.add(exp);
         
-        ModuleVecFn vecFn = new ModuleVecFn(id1, topo);
+        TensorVecFn vecFn = new TensorVecFn(id1, topo);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
 
         int numParams = vecFn.getNumDimensions();                

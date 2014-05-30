@@ -12,10 +12,32 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.util.collections.Lists;
 
-public class SelectDepParseMarginalsTest {
+public class DepTensorFromBeliefsTest {
 
     @Test
     public void testSimple() {
+        BeliefsIdentity id1 = getBeliefsModule();
+        DepTensorFromBeliefs s = new DepTensorFromBeliefs(id1, 2);
+        
+        Tensor out = s.forward();
+        assertEquals(0.0, out.get(0,0), 1e-13); // -1, 0
+        assertEquals(0.0, out.get(0,1), 1e-13);
+        assertEquals(0.5, out.get(1,0), 1e-13);
+        assertEquals(0.5, out.get(1,1), 1e-13); // -1, 1
+        
+        s.getOutputAdj().fill(1.0);
+        s.backward();
+        assertEquals(0, id1.getOutputAdj().varBeliefs[0].getValue(0), 1e-13);
+        assertEquals(0, id1.getOutputAdj().varBeliefs[0].getValue(1), 1e-13);
+        assertEquals(0, id1.getOutputAdj().varBeliefs[1].getValue(0), 1e-13);
+        assertEquals(0, id1.getOutputAdj().varBeliefs[1].getValue(1), 1e-13);
+        assertEquals(0, id1.getOutputAdj().varBeliefs[2].getValue(0), 1e-13);
+        assertEquals(1, id1.getOutputAdj().varBeliefs[2].getValue(1), 1e-13);
+        assertEquals(0, id1.getOutputAdj().varBeliefs[3].getValue(0), 1e-13);
+        assertEquals(1, id1.getOutputAdj().varBeliefs[3].getValue(1), 1e-13);
+    }
+
+    public static BeliefsIdentity getBeliefsModule() {
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
         LinkVar l0 = new LinkVar(VarType.PREDICTED, "l0", -1, 1);
@@ -34,24 +56,7 @@ public class SelectDepParseMarginalsTest {
         b.varBeliefs[3] = new VarTensor(new VarSet(l1), 0.5);
         
         BeliefsIdentity id1 = new BeliefsIdentity(b);
-        SelectDepParseMarginals s = new SelectDepParseMarginals(id1, 2);
-        
-        Tensor out = s.forward();
-        assertEquals(0.0, out.get(0,0), 1e-13); // -1, 0
-        assertEquals(0.0, out.get(0,1), 1e-13);
-        assertEquals(0.5, out.get(1,0), 1e-13);
-        assertEquals(0.5, out.get(1,1), 1e-13); // -1, 1
-        
-        s.getOutputAdj().fill(1.0);
-        s.backward();
-        assertEquals(0, id1.getOutputAdj().varBeliefs[0].getValue(0), 1e-13);
-        assertEquals(0, id1.getOutputAdj().varBeliefs[0].getValue(1), 1e-13);
-        assertEquals(0, id1.getOutputAdj().varBeliefs[1].getValue(0), 1e-13);
-        assertEquals(0, id1.getOutputAdj().varBeliefs[1].getValue(1), 1e-13);
-        assertEquals(0, id1.getOutputAdj().varBeliefs[2].getValue(0), 1e-13);
-        assertEquals(1, id1.getOutputAdj().varBeliefs[2].getValue(1), 1e-13);
-        assertEquals(0, id1.getOutputAdj().varBeliefs[3].getValue(0), 1e-13);
-        assertEquals(1, id1.getOutputAdj().varBeliefs[3].getValue(1), 1e-13);
+        return id1;
     }
 
 }

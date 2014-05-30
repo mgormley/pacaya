@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 
@@ -40,7 +40,7 @@ public class ExpTest {
         TensorIdentity id1 = new TensorIdentity(t1);
         Exp ea = new Exp(id1);
         
-        ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
     

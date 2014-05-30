@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.ScalarAdd;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
@@ -74,7 +74,7 @@ public class InsideOutsideDepParseTest {
         TensorIdentity id1 = new TensorIdentity(t1);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(id1, s);
         
-        ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
         int numParams = vecFn.getNumDimensions();                
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-5, 1e-8);

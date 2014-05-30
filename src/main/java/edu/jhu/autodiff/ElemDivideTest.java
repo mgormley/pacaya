@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.util.collections.Lists;
 
 public class ElemDivideTest {
@@ -47,7 +47,7 @@ public class ElemDivideTest {
         TensorIdentity id2 = new TensorIdentity(t2);
         ElemDivide ea = new ElemDivide(id1, id2);
         
-        ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1, id2), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), ea);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-10, 1e-5);
     }
     
