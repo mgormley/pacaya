@@ -2,10 +2,14 @@ package edu.jhu.gm.train;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.ErmaObjective;
+import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
+import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.Optimizer;
@@ -34,12 +38,16 @@ public class CrfTrainer {
         public Optimizer<DifferentiableBatchFunction> batchMaximizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
         public int numThreads = 1;
+        /** Whether to use ERMA training. */
+        public boolean ermaTraining = false;
+        /** The decoder and loss function used by ERMA training. */
+        public DlFactory dlFactory = new ExpectedRecallFactory();
         /**
          * Whether to use the mean squared error (MSE) in place of conditional
          * log-likelihood in the CRF objective. This is useful for loopy graphs
          * where the BP estimate of the partition function is unreliable.
          */
-        public boolean useMseForValue;
+        public boolean useMseForValue = false;
     }
         
     private CrfTrainerPrm prm; 
@@ -53,14 +61,24 @@ public class CrfTrainer {
     
     public FgModel train(FgModel model, FgExampleList data) {
 
-        AvgBatchObjective objective = new AvgBatchObjective(new CrfObjective(data, prm.infFactory, prm.useMseForValue), model, prm.numThreads);
+        ExampleObjective exObj;
+        if (prm.ermaTraining) {
+            exObj = new ErmaObjective(data, prm.infFactory, prm.dlFactory);
+        } else {
+            exObj = new CrfObjective(data, prm.infFactory, prm.useMseForValue);
+        }
+        AvgBatchObjective objective = new AvgBatchObjective(exObj, model, prm.numThreads);
         if (prm.maximizer != null) {
             DifferentiableFunction fn = objective;
             if (prm.regularizer != null) {
                 prm.regularizer.setNumDimensions(model.getNumParams());
                 fn = new DifferentiableFunctionOpts.AddFunctions(objective, prm.regularizer);
             }
-            prm.maximizer.maximize(fn, model.getParams());
+            if (prm.ermaTraining) {
+                prm.maximizer.minimize(fn, model.getParams());
+            } else {
+                prm.maximizer.maximize(fn, model.getParams());
+            }
             log.info("Final objective value: " + fn.getValue(model.getParams()));
         } else {
             DifferentiableBatchFunction fn = objective;
@@ -71,7 +89,11 @@ public class CrfTrainer {
                 DifferentiableBatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
                 fn = new BatchFunctionOpts.AddFunctions(objective, br);
             }
-            prm.batchMaximizer.maximize(fn, model.getParams());   
+            if (prm.ermaTraining) {
+                prm.batchMaximizer.minimize(fn, model.getParams());   
+            } else {
+                prm.batchMaximizer.maximize(fn, model.getParams());   
+            }
             log.info("Final objective value: " + fn.getValue(model.getParams(), IntSort.getIndexArray(fn.getNumExamples())));
         }
         objective.shutdown();
