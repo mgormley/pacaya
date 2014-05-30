@@ -2,13 +2,11 @@ package edu.jhu.autodiff;
 
 import java.util.Arrays;
 
-import edu.jhu.gm.model.IndexFor;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
+import edu.jhu.prim.util.math.FastMath;
 
 
 public class Tensor {
@@ -236,6 +234,20 @@ public class Tensor {
         }
     }
 
+    /** Take the exp of each entry. */
+    public void exp() {
+        for (int c=0; c<this.values.length; c++) {
+            this.values[c] = FastMath.exp(this.values[c]);
+        }
+    }
+    
+    /** Take the log of each entry. */
+    public void log() {
+        for (int c=0; c<this.values.length; c++) {
+            this.values[c] = FastMath.log(this.values[c]);
+        }
+    }
+    
     /** Gets the sum of all the entries in this tensor. */
     public double getSum() {
         return DoubleArrays.sum(this.values);
