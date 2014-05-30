@@ -18,23 +18,36 @@ public class Beliefs {
 
     public Beliefs copy() {
         Beliefs clone = new Beliefs();
-        clone.varBeliefs = new VarTensor[this.varBeliefs.length];
-        clone.facBeliefs = new VarTensor[this.facBeliefs.length];
-        for (int v = 0; v < varBeliefs.length; v++) {
-            clone.varBeliefs[v] = new VarTensor(this.varBeliefs[v]);
+        clone.varBeliefs = copyOfVarTensorArray(this.varBeliefs);
+        clone.facBeliefs = copyOfVarTensorArray(this.facBeliefs);
+        return clone;
+    }
+
+    private static VarTensor[] copyOfVarTensorArray(VarTensor[] orig) {
+        if (orig == null) {
+            return null;
         }
-        for (int a = 0; a < facBeliefs.length; a++) {
-            clone.facBeliefs[a] = new VarTensor(this.facBeliefs[a]);
+        VarTensor[] clone = new VarTensor[orig.length];
+        for (int v = 0; v < clone.length; v++) {
+            if (orig[v] != null) {
+                clone[v] = new VarTensor(orig[v]);
+            }
         }
         return clone;
     }
 
     public void fill(double val) {
-        for (int v = 0; v < varBeliefs.length; v++) {
-            varBeliefs[v].fill(val);
-        }
-        for (int a = 0; a < facBeliefs.length; a++) {
-            facBeliefs[a].fill(val);
+        fillVarTensorArray(varBeliefs, val);
+        fillVarTensorArray(facBeliefs, val);
+    }
+
+    private static void fillVarTensorArray(VarTensor[] beliefs, double val) {
+        if (beliefs != null) {
+            for (int i = 0; i < beliefs.length; i++) {
+                if (beliefs[i] != null) {
+                    beliefs[i].fill(val);
+                }
+            }
         }
     }
 
@@ -42,6 +55,22 @@ public class Beliefs {
         Beliefs clone = copy();
         clone.fill(val);
         return clone;
+    }
+
+    public int size() {
+        return count(varBeliefs) + count(facBeliefs);
+    }
+
+    private static int count(VarTensor[] beliefs) {
+        int count = 0;
+        if (beliefs != null) {
+            for (int i = 0; i < beliefs.length; i++) {
+                if (beliefs[i] != null) {
+                    count += beliefs[i].size();
+                }
+            }
+        }
+        return count;
     }
     
 }

@@ -15,10 +15,11 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
-public class ExpectedRecallTest {
-
+public class MeanSquaredErrorTest {
+    
     private VarConfig goldConfig;
     private BeliefsIdentity id1;
 
@@ -30,31 +31,42 @@ public class ExpectedRecallTest {
         t1.setId(1);
         
         goldConfig = new VarConfig();
+        goldConfig.put(t0, 0);
         goldConfig.put(t1, 1);
 
         Beliefs b = new Beliefs();
         b.varBeliefs = new VarTensor[2];
         b.facBeliefs = new VarTensor[0];
-        b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.5);
-        b.varBeliefs[1] = new VarTensor(new VarSet(t1), 0.5);
+        b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.0);
+        b.varBeliefs[1] = new VarTensor(new VarSet(t1), 0.0);
+        
+        b.varBeliefs[0].setValue(0, 0.3); // Gold value
+        b.varBeliefs[0].setValue(1, 0.7);
+        b.varBeliefs[1].setValue(0, 0.4);
+        b.varBeliefs[1].setValue(1, 0.6); // Gold value
         
         id1 = new BeliefsIdentity(b);
     }
     
     @Test
     public void testSimple() {
-        ExpectedRecall s = new ExpectedRecall(id1, goldConfig);
+        Algebra s = new RealAlgebra();        
+        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig, s);
         
-        Tensor out = s.forward();
-        assertEquals(0.5, out.getValue(0), 1e-13);
+        Tensor out = mse.forward();
+        assertEquals(sq(1-0.3)+sq(0-.7)+sq(0-.4)+sq(1-.6), out.getValue(0), 1e-13);
         
-        s.getOutputAdj().setValue(0, 1);
-        s.backward();
+        mse.getOutputAdj().setValue(0, 2.2);
+        mse.backward();
         Beliefs inAdj = id1.getOutputAdj();
-        assertEquals(0, inAdj.varBeliefs[0].getValue(0), 1e-13);
-        assertEquals(0, inAdj.varBeliefs[0].getValue(1), 1e-13);
-        assertEquals(0, inAdj.varBeliefs[1].getValue(0), 1e-13);
-        assertEquals(1, inAdj.varBeliefs[1].getValue(1), 1e-13);        
+        assertEquals(2.2 * 2 * (.3-1), inAdj.varBeliefs[0].getValue(0), 1e-13);
+        assertEquals(2.2 * 2 * (.7-0), inAdj.varBeliefs[0].getValue(1), 1e-13);
+        assertEquals(2.2 * 2 * (.4-0), inAdj.varBeliefs[1].getValue(0), 1e-13);
+        assertEquals(2.2 * 2 * (.6-1), inAdj.varBeliefs[1].getValue(1), 1e-13);        
+    }
+
+    private double sq(double d) {
+        return d*d;
     }
     
     @Test
@@ -63,6 +75,7 @@ public class ExpectedRecallTest {
         MeanSquaredError mse = new MeanSquaredError(id1, goldConfig, s);        
         BeliefsVecFn vecFn = new BeliefsVecFn(id1, mse);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+        // TODO: for (Algebra s : Lists.getList(new RealAlgebra(), new LogPosNegAlgebra())) {  }
     }
-    
+
 }
