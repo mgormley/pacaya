@@ -17,16 +17,19 @@ public abstract class AbstractTensorModule implements Module<Tensor> {
     @Override
     public Tensor getOutputAdj() {
         if (yAdj == null) {
-            yAdj = y.copyAndFill(0);
+            yAdj = y.copyAndFill(0.0);
         }
         return yAdj;
+    }
+    
+    @Override
+    public void zeroOutputAdj() {
+        if (yAdj != null) { yAdj.fill(0.0); }
     }
 
     @Override
     public String toString() {
         return this.getClass() + " [y=" + y + ", yAdj=" + yAdj + "]";
-    }
-
-    
+    }    
     
 }

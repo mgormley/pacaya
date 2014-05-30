@@ -62,9 +62,7 @@ public class ModuleTestUtils {
         }
         
         public IntDoubleVector forwardAndBackward(IntDoubleVector point, Tensor outputAdj) {
-            for (Module<Tensor> input : inputs) {
-                input.getOutputAdj().fill(0);
-            }
+            zeroOutputAdjs(output);
             // Run the forward pass.
             forward(point);
             // Set the adjoint.
@@ -83,6 +81,13 @@ public class ModuleTestUtils {
                 }
             }
             return grad;
+        }
+
+        private void zeroOutputAdjs(Module<? extends Object> output) {
+            output.zeroOutputAdj();
+            for (Object input : output.getInputs()) {
+                zeroOutputAdjs((Module)input);
+            }
         }
 
         public Module<Tensor> getOutput() {

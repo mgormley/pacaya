@@ -38,9 +38,14 @@ public class BeliefsIdentity implements Module<Beliefs> {
     @Override
     public Beliefs getOutputAdj() {
         if (yAdj == null) {
-            yAdj = y.copyAndFill(0);
+            yAdj = y.copyAndFill(0.0);
         }
         return yAdj;
+    }
+
+    @Override
+    public void zeroOutputAdj() {
+        if (yAdj != null) { yAdj.fill(0.0); }
     }
 
     @Override

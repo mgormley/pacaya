@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.AbstractTensorModule;
 import edu.jhu.autodiff.ElemDivide;
 import edu.jhu.autodiff.ElemMultiply;
 import edu.jhu.autodiff.Module;
@@ -584,7 +585,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         ElemDivide mTrueOut = new ElemDivide(bTrue, mTrueIn);
         ElemDivide mFalseOut = new ElemDivide(bFalse, mFalseIn);
 
-        List<Module<Tensor>> topoOrder = Lists.getList(pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
+        List<AbstractTensorModule> topoOrder = Lists.getList(pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
                 partition, neg1, negBTrue, bFalse, mTrueOut, mFalseOut);
 
         // Forward pass.

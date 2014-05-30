@@ -68,10 +68,21 @@ public class ExpFamFactorModule implements Module<VarTensor[]> {
         if (yAdj == null) {
             yAdj = new VarTensor[y.length];
             for (int a = 0; a < yAdj.length; a++) {
-                yAdj[a] = new VarTensor(y[a].getVars(), 0.0); // TODO: semiring
+                if (y[a] != null) {
+                    yAdj[a] = new VarTensor(y[a].getVars(), 0.0); // TODO: semiring
+                }
             }
         }
         return yAdj;
+    }
+
+    @Override
+    public void zeroOutputAdj() {
+        if (yAdj != null) {
+            for (int a = 0; a < yAdj.length; a++) {
+                if (yAdj[a] != null) { yAdj[a].fill(0.0); }
+            }
+        }
     }
 
     @Override

@@ -947,9 +947,14 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     @Override
     public Beliefs getOutputAdj() {
         if (bAdj == null) {
-            bAdj = b.copyAndFill(0);
+            bAdj = b.copyAndFill(0.0);
         }
         return bAdj;
+    }
+
+    @Override
+    public void zeroOutputAdj() {
+        if (bAdj != null) { bAdj.fill(0.0); }
     }
 
     @Override
