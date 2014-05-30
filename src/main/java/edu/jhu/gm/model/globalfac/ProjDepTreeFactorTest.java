@@ -194,44 +194,26 @@ public class ProjDepTreeFactorTest {
         inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
     }
 
+    public static class FgAndLinks {
+        public FactorGraph fg;
+        public LinkVar[] rootVars;
+        public LinkVar[][] childVars;
+        public int n;
+        public FgAndLinks(FactorGraph fg, LinkVar[] rootVars, LinkVar[][] childVars, int n) {
+            this.fg = fg;
+            this.rootVars = rootVars;
+            this.childVars = childVars;
+            this.n = n;
+        }        
+    }
+        
     private void inferAndCheckMarginalsAndPartitionFunction(boolean logDomain, boolean normalizeMessages, boolean useBetheFreeEnergy) {
-        double[] root = new double[] {1, 2, 3}; 
-        double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
+        FgAndLinks fgl = getFgl(logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
         
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-                
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
-                    fg.addFactor(f);
-                }
-            }
-        }
-        
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
-                
         BeliefPropagationPrm prm = new BeliefPropagationPrm();        
         prm.logDomain = logDomain;
         if (useBetheFreeEnergy) {
@@ -299,41 +281,13 @@ public class ProjDepTreeFactorTest {
     
     public void testPartitionWithAdditionalVariableHelper(boolean logDomain, boolean normalizeMessages) {
         double[] root = new double[] {1, 2}; 
-        double[][] child = new double[][]{ {0, 3}, {4, 0} };
+        double[][] child = new double[][]{ {0, 3}, {4, 0} };   
         
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-                
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
-                    fg.addFactor(f);
-                }
-            }
-        }
-        
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
+        FgAndLinks fgl = getFgl(root, child, logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
                 
         // Add an extra variable over which we will marginalize.        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
@@ -396,41 +350,13 @@ public class ProjDepTreeFactorTest {
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
 
+        FgAndLinks fgl = getFgl(root, child, logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
+        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Lists.getList("arg0", "_"));
-
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-              
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
-                    fg.addFactor(f);
-                }
-            }
-        }
-
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
                 
         // Add an extra variable over which we will marginalize.        
         ExplicitFactor roleLinkFac = new ExplicitFactor(new VarSet(childVars[1][0], roleVar));
@@ -508,39 +434,11 @@ public class ProjDepTreeFactorTest {
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
 
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-              
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
-                    fg.addFactor(f);
-                }
-            }
-        }
-
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
+        FgAndLinks fgl = getFgl(root, child, logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
                 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
@@ -848,6 +746,51 @@ public class ProjDepTreeFactorTest {
             marg = bp.getMarginals(childVars[i][j]);
         }        
         return marg.getValue(LinkVar.TRUE);
+    }
+
+    public static FgAndLinks getFgl(boolean logDomain) {
+        double[] root = new double[] {1, 2, 3}; 
+        double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };        
+        return getFgl(root, child, logDomain);
+    }
+
+    public static FgAndLinks getFgl(double[] root, double[][] child, boolean logDomain) {
+        // Create an edge factored dependency tree factor graph.
+        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
+        FactorGraph fg = new FactorGraph();
+        int n = root.length;
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
+
+        LinkVar[] rootVars = treeFac.getRootVars();
+        LinkVar[][] childVars = treeFac.getChildVars();
+        
+        // Add unary factors to each edge.
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i != j) {
+                    ExplicitFactor f;
+                    if (i == -1) {
+                        f = new ExplicitFactor(new VarSet(rootVars[j]));
+                        f.setValue(LinkVar.TRUE, root[j]);
+                        f.setValue(LinkVar.FALSE, 1.0);
+                    } else {
+                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
+                        f.setValue(LinkVar.TRUE, child[i][j]);
+                        f.setValue(LinkVar.FALSE, 1.0);
+                    }
+                    if (logDomain) {
+                        f.convertRealToLog();
+                    }
+                    fg.addFactor(f);
+                }
+            }
+        }
+        
+        // Add this at the end, just to exercise the BFS schedule a bit more.
+        fg.addFactor(treeFac);
+        
+        return new FgAndLinks(fg, rootVars, childVars, n);
     }
     
 }

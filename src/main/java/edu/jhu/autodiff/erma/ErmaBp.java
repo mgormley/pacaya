@@ -348,7 +348,9 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             unnormalizeAdjInPlace(varBeliefs[v], varBeliefsAdj[v], varBeliefsUnSum[v]);
         }
         for (int a=0; a<facBeliefsAdj.length; a++) {
-            unnormalizeAdjInPlace(facBeliefs[a], facBeliefsAdj[a], facBeliefsUnSum[a]);
+            if (facBeliefs[a] != null) {
+                unnormalizeAdjInPlace(facBeliefs[a], facBeliefsAdj[a], facBeliefsUnSum[a]);
+            }
         }
 
         // Compute the adjoints of the normalized messages.
@@ -361,19 +363,21 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             msgsAdj[i].message.multiply(s.zero());
             // Instead of setting newMessage to null, we just zero it and then
             // swap these back and forth during backwardSendMessage.
-            msgsAdj[i].newMessage.multiply(s.zero()); 
-            if (edge.isVarToFactor()) {
+            msgsAdj[i].newMessage.multiply(s.zero());
+            if (!edge.isVarToFactor()) {
+                // Backward pass for variable beliefs.
+                initFactorToVarAdj(i, varBeliefsAdj, varId, facId);                
+            } else if (!(fg.getFactor(facId) instanceof GlobalFactor)) {
+                // Backward pass for factor beliefs. Part 1.
                 initVarToFactorAdj(i, facBeliefsAdj, varId, facId, edge);
-            } else if (!(edge.getFactor() instanceof GlobalFactor)) {                
-                initFactorToVarAdj(i, varBeliefsAdj, varId, facId);
-            } else {
-                // Do nothing.
-                msgsAdj[i] = null; // TODO: Should this be zero?
             }
         }
         this.potentialsAdj = new VarTensor[fg.getNumFactors()];
         for (int a=0; a<fg.getNumFactors(); a++) {
-            initPotentialsAdj(a, facBeliefsAdj);
+            if (!(fg.getFactor(a) instanceof GlobalFactor)) {
+                // Backward pass for factor beliefs. Part 2.
+                initPotentialsAdj(a, facBeliefsAdj);
+            }
         }
         
         // Reset the global factors.

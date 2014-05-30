@@ -4,22 +4,28 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.apple.mrj.macos.carbon.Timer;
-
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
+import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -99,6 +105,29 @@ public class ErmaBpBackwardTest {
         
         testGradientByFiniteDifferences(fn);
     }
+    
+    @Test
+    public void testErmaGradientGlobalFactor() {
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+                
+        VarConfig goldConfig = new VarConfig();
+        goldConfig.put(rootVars[0], 0);
+        goldConfig.put(rootVars[1], 1);
+        goldConfig.put(rootVars[2], 0);
+        goldConfig.put(childVars[0][1], 0);
+        goldConfig.put(childVars[0][2], 0);
+        goldConfig.put(childVars[1][0], 1);
+        goldConfig.put(childVars[1][2], 1);
+        goldConfig.put(childVars[2][0], 0);
+        goldConfig.put(childVars[2][1], 0);
+       
+        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
+        
+        testGradientByFiniteDifferences(fn);
+    }
 
     private static IntDoubleVector testGradientByFiniteDifferences(ErmaErFn fn) {
         Prng.seed(12345);
@@ -163,7 +192,9 @@ public class ErmaBpBackwardTest {
         private void cacheNumParams() {
             numParams = 0;
             for (Factor f : fg.getFactors()) {
-                numParams += f.getVars().calcNumConfigs();
+                if (!(f instanceof GlobalFactor)) {
+                    numParams += f.getVars().calcNumConfigs();
+                }
             }
         }
         
@@ -189,8 +220,11 @@ public class ErmaBpBackwardTest {
             IntDoubleVector grad = new IntDoubleDenseVector(numParams);
             int i=0;
             for (int a=0; a<potentialsAdj.length; a++) {
-                for (int c=0; c<potentialsAdj[a].size(); c++) {
-                    grad.set(i++, potentialsAdj[a].getValue(c));
+                // Skip GlobalFactors.
+                if (potentialsAdj[a] != null) {
+                    for (int c=0; c<potentialsAdj[a].size(); c++) {
+                        grad.set(i++, potentialsAdj[a].getValue(c));
+                    }
                 }
             }
             assert i == numParams;
@@ -215,13 +249,50 @@ public class ErmaBpBackwardTest {
             // Update factors from the model in params array.
             int i=0;
             for (Factor f : fg.getFactors()) {
-                ExplicitFactor factor = (ExplicitFactor) f;
-                for (int c=0; c<factor.size(); c++) {
-                    factor.setValue(c, theta.get(i++));
+                if (!(f instanceof GlobalFactor)) { 
+                    ExplicitFactor factor = (ExplicitFactor) f;
+                    for (int c=0; c<factor.size(); c++) {
+                        factor.setValue(c, theta.get(i++));
+                    }
                 }
             }
         }
         
     }
 
+    @Test
+    public void testCreateModule() {
+        final FgModel model = new FgModel(10);
+        final LFgExample ex = data.get(i);
+        final VarConfig goldConfig = ex.getGoldConfig();
+        final boolean logDomain = infFactory.isLogDomain(); // TODO: semiring
+        assert !logDomain;
+        final FactorGraph fg = ex.getFgLatPred();
+        
+        TopoOrder topo = new TopoOrder();
+        
+        // Model initialization.
+        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, logDomain);
+        topo.add(effm);
+        
+        // Inference.
+        Module<Beliefs> inf = (Module<Beliefs>) infFactory.getInferencer(fg);
+        topo.add(inf);
+        
+        // Decoding.
+        DepTensorFromBeliefs b2d = new DepTensorFromBeliefs(inf, n);
+        topo.add(b2d);
+        SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, s);
+        topo.add(mbr);
+        DepTensorToBeliefs d2b = new DepTensorToBeliefs(mbr, inf);
+        topo.add(d2b);
+        
+        // Loss.
+        VarSet predVars = VarSet.getVarsOfType(goldConfig.getVars(), VarType.PREDICTED);
+        VarConfig predConfig = goldConfig.getSubset(predVars);
+        ExpectedRecall er = new ExpectedRecall(d2b, predConfig);
+        topo.add(er);
+        
+        effm.getModelAdj();
+    }
 }

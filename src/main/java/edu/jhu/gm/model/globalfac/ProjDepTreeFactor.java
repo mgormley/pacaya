@@ -615,7 +615,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             mTrueOut.getOutputAdj().elemAdd(tTrue);
             Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-            mTrueOut.getOutputAdj().elemAdd(tFalse);
+            mFalseOut.getOutputAdj().elemAdd(tFalse);
             
             // Backward pass.
             Collections.reverse(topoOrder);

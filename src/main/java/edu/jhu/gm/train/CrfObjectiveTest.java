@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -227,6 +228,24 @@ public class CrfObjectiveTest {
     
     public void dpLogLikelihoodCorrectLessThanZero(boolean logDomain) throws Exception {
         Prng.seed(123456789101112l);
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+
+        FgExampleList data = getDpData(ofc);
+        
+        System.out.println("Num features: " + ofc.getNumParams());
+        FgModel model = new FgModel(ofc.getNumParams());
+        model.setRandomStandardNormal();
+        System.out.println("Model L2 norm: " + model.l2Norm());
+        
+        FgInferencerFactory infFactory = getInfFactory(logDomain); 
+        Function obj = getCrfObj(model, data, infFactory);
+        double ll = obj.getValue(model.getParams());        
+        assertTrue(ll < 0d);
+        assertEquals(-5.26574, ll, 1e-3);
+    }
+
+    public static FgExampleList getDpData(ObsFeatureConjoiner ofc) throws IOException {
         AnnoSentenceReaderPrm rPrm = new AnnoSentenceReaderPrm();
         rPrm.maxNumSentences = 3;
         rPrm.maxSentenceLength = 7;
@@ -240,27 +259,15 @@ public class CrfObjectiveTest {
         AnnoSentenceCollection sents = r.getData();
         cs.init(sents);
         
-        FactorTemplateList fts = new FactorTemplateList();
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.fgPrm.includeSrl = false;
         prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         prm.exPrm.cacheType = CacheType.NONE;
         
-        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
-        
-        System.out.println("Num features: " + ofc.getNumParams());
-        FgModel model = new FgModel(ofc.getNumParams());
-        model.setRandomStandardNormal();
-        System.out.println("Model L2 norm: " + model.l2Norm());
-        
-        FgInferencerFactory infFactory = getInfFactory(logDomain); 
-        Function obj = getCrfObj(model, data, infFactory);
-        double ll = obj.getValue(model.getParams());        
-        assertTrue(ll < 0d);
-        assertEquals(-5.26574, ll, 1e-3);
+        return data;
     }
 
     // TODO: This (slow) test exposes a bug:
