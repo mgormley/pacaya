@@ -78,7 +78,7 @@ public class EdgeScores {
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
                 if (p == c) { continue; }
-                int pp = getTensorParent(n, p, c);
+                int pp = getTensorParent(p, c);
                 m.set(es.getScore(p, c), pp, c);
             }
         }
@@ -95,7 +95,7 @@ public class EdgeScores {
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
                 if (p == c) { continue; }
-                int pp = getTensorParent(n, p, c);
+                int pp = getTensorParent(p, c);
                 es.setScore(p, c, t.get(pp, c));
             }
         }
@@ -107,7 +107,7 @@ public class EdgeScores {
     }
 
     /** In the tensor, we use the diagonal as the scores for the wall node. */
-    public static int getTensorParent(int n, int p, int c) {
+    public static int getTensorParent(int p, int c) {
         if (p == c) {
             throw new IllegalArgumentException("No entry defined for p == c case.");
         }

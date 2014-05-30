@@ -9,7 +9,7 @@ import edu.jhu.autodiff.ScalarDivide;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
-import edu.jhu.gm.model.globalfac.HyperalgoModule;
+import edu.jhu.gm.model.globalfac.InsideOutsideDepParse;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 
@@ -18,6 +18,10 @@ import edu.jhu.util.semiring.Algebra;
  * 
  * 1. Compute edge weights w_e = exp(p_{\theta}(y_e=1|x) / T)
  * 2. Run inside-outside on w_e to get q_{\theta}^{1/T}(e)
+ * 
+ * The input to this module is expected to be a tensor containing the edge weights for dependency
+ * parsing. The tensor is expected to be an nxn matrix, capable of being converted to EdgeScores
+ * internally by EdgeScores.tensorToEdgeScores().
  * 
  * @author mgormley
  */
@@ -45,7 +49,7 @@ public class SoftmaxMbrDepParse implements Module<Tensor> {
         Exp exp = new Exp(divide);
         topo.add(exp);
         // TODO: convert between non-semiring numbers and semiring numbers.
-        HyperalgoModule io = new HyperalgoModule(exp, s);
+        InsideOutsideDepParse io = new InsideOutsideDepParse(exp, s);
         topo.add(io);
         
         return topo.forward();

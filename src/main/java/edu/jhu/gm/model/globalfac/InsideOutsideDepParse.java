@@ -17,7 +17,16 @@ import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 
-public class HyperalgoModule extends AbstractTensorModule implements Module<Tensor> {
+/**
+ * Inside-outside dependency parsing.
+ * 
+ * The input to this module is expected to be a tensor containing the edge weights for dependency
+ * parsing. The tensor is expected to be an nxn matrix, capable of being converted to EdgeScores
+ * internally by EdgeScores.tensorToEdgeScores().
+ * 
+ * @author mgormley
+ */
+public class InsideOutsideDepParse extends AbstractTensorModule implements Module<Tensor> {
     
     public static final int BETA_IDX = 0;
     public static final int ALPHA_IDX = 1;
@@ -30,7 +39,7 @@ public class HyperalgoModule extends AbstractTensorModule implements Module<Tens
     // Cached for efficiency.
     private FirstOrderDepParseHypergraph graph;
     
-    public HyperalgoModule(Module<Tensor> weightsIn, Algebra s) {           
+    public InsideOutsideDepParse(Module<Tensor> weightsIn, Algebra s) {           
         this.weightsIn = weightsIn;
         this.s = s;
     }
@@ -52,7 +61,7 @@ public class HyperalgoModule extends AbstractTensorModule implements Module<Tens
                 PCBasicHypernode pc = (PCBasicHypernode) node;
                 int p = pc.getP();
                 int c = pc.getC();
-                int pp = EdgeScores.getTensorParent(n, p, c);
+                int pp = EdgeScores.getTensorParent(p, c);
                 
                 int id = node.getId();
                 y.set(scores.beta[id], BETA_IDX, pp, c);
@@ -74,7 +83,7 @@ public class HyperalgoModule extends AbstractTensorModule implements Module<Tens
                 PCBasicHypernode pc = (PCBasicHypernode) node;
                 int p = pc.getP();
                 int c = pc.getC();
-                int pp = EdgeScores.getTensorParent(n, p, c);
+                int pp = EdgeScores.getTensorParent(p, c);
                 
                 int id = node.getId();
                 scores.alphaAdj[id] = yAdj.get(ALPHA_IDX, pp, c);
@@ -98,7 +107,7 @@ public class HyperalgoModule extends AbstractTensorModule implements Module<Tens
                     PCBasicHypernode pc = (PCBasicHypernode) head;
                     int p = pc.getP();
                     int c = pc.getC();
-                    int pp = EdgeScores.getTensorParent(n, p, c);
+                    int pp = EdgeScores.getTensorParent(p, c);
                     wAdj.add(adj_w_e, pp, c);
                 }
             }

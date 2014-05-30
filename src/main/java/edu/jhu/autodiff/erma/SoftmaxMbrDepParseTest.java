@@ -12,8 +12,8 @@ import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.ModuleVecFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.gm.model.globalfac.HyperalgoModule;
-import edu.jhu.gm.model.globalfac.HyperalgoModuleTest;
+import edu.jhu.gm.model.globalfac.InsideOutsideDepParse;
+import edu.jhu.gm.model.globalfac.InsideOutsideDepParseTest;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
@@ -45,7 +45,7 @@ public class SoftmaxMbrDepParseTest {
         Tensor out = ea.forward();
         System.out.println(out);
         // Forward yields the same result as the test in HyperalgoModuleTest.
-        assertEquals(HyperalgoModuleTest.expout, out.toString());
+        assertEquals(InsideOutsideDepParseTest.expout, out.toString());
         assertEquals(6, out.getValue(0), 1e-13);
         assertTrue(out == ea.getOutput());
 

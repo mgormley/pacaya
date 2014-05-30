@@ -569,10 +569,10 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         Prod pi = new Prod(mFalseIn);
         ElemDivide weights = new ElemDivide(mTrueIn, mFalseIn);
         
-        HyperalgoModule parse = new HyperalgoModule(weights, s);
-        Select alphas = new Select(parse, 0, HyperalgoModule.ALPHA_IDX);
-        Select betas = new Select(parse, 0, HyperalgoModule.BETA_IDX);
-        Select root = new Select(parse, 0, HyperalgoModule.ROOT_IDX); // The first entry in this selection is for the root.
+        InsideOutsideDepParse parse = new InsideOutsideDepParse(weights, s);
+        Select alphas = new Select(parse, 0, InsideOutsideDepParse.ALPHA_IDX);
+        Select betas = new Select(parse, 0, InsideOutsideDepParse.BETA_IDX);
+        Select root = new Select(parse, 0, InsideOutsideDepParse.ROOT_IDX); // The first entry in this selection is for the root.
         
         ElemMultiply edgeSums = new ElemMultiply(alphas, betas);
         ScalarMultiply bTrue = new ScalarMultiply(edgeSums, pi, 0);

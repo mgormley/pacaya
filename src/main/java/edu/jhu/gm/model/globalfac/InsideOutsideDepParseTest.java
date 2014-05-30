@@ -18,7 +18,7 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
-public class HyperalgoModuleTest {
+public class InsideOutsideDepParseTest {
 
     Algebra s = new RealAlgebra();
 
@@ -51,7 +51,7 @@ public class HyperalgoModuleTest {
         Tensor t1 = new Tensor(2,2);
         t1.setValuesOnly(ModuleTestUtils.getVector(2, 3, 5, 7));
         TensorIdentity id1 = new TensorIdentity(t1);
-        HyperalgoModule ea = new HyperalgoModule(id1, s);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1, s);
 
         Tensor out = ea.forward();
         System.out.println(out);
@@ -72,7 +72,7 @@ public class HyperalgoModuleTest {
     public void testGradByFiniteDiffs() {       
         Tensor t1 = new Tensor(4,4);
         TensorIdentity id1 = new TensorIdentity(t1);
-        HyperalgoModule ea = new HyperalgoModule(id1, s);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1, s);
         
         ModuleVecFn vecFn = new ModuleVecFn((List)Lists.getList(id1), ea);
         int numParams = vecFn.getNumDimensions();                
