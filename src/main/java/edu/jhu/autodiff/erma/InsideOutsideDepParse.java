@@ -1,4 +1,4 @@
-package edu.jhu.gm.model.globalfac;
+package edu.jhu.autodiff.erma;
 
 import java.util.List;
 

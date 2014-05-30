@@ -9,7 +9,6 @@ import edu.jhu.autodiff.ScalarDivide;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
-import edu.jhu.gm.model.globalfac.InsideOutsideDepParse;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 

@@ -14,8 +14,6 @@ import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
-import edu.jhu.gm.model.globalfac.InsideOutsideDepParse;
-import edu.jhu.gm.model.globalfac.InsideOutsideDepParseTest;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;

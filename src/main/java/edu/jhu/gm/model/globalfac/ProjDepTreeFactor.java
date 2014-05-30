@@ -17,6 +17,7 @@ import edu.jhu.autodiff.ScalarMultiply;
 import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
