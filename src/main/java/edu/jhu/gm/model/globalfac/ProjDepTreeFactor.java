@@ -20,7 +20,7 @@ import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.WallDepTreeNode;
-import edu.jhu.gm.inf.BeliefPropagation.Messages;
+import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;

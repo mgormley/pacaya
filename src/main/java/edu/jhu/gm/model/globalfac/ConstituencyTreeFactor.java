@@ -8,7 +8,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.Sentence;
-import edu.jhu.gm.inf.BeliefPropagation.Messages;
+import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgEdge;

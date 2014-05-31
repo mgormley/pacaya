@@ -9,17 +9,18 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
