@@ -107,7 +107,26 @@ public class ErmaBpBackwardTest {
     }
     
     @Test
-    public void testErmaGradientGlobalFactor() {
+    public void testErmaGradient2WordGlobalFactor() {
+        double[] root = new double[]{ 1.0, 1.0 };
+        double[][] child = new double[][]{ { 0.0, 1.0 }, { 0.0, 1.0 } };
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child, logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+                
+        VarConfig goldConfig = new VarConfig();
+        goldConfig.put(rootVars[0], 0);
+        goldConfig.put(rootVars[1], 1);
+        goldConfig.put(childVars[0][1], 0);
+        goldConfig.put(childVars[1][0], 1);
+        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
+        
+        testGradientByFiniteDifferences(fn);
+    }
+    
+    @Test
+    public void testErmaGradient3WordGlobalFactor() {
         FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(logDomain);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;

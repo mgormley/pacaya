@@ -2,8 +2,13 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Tensor;
 
 public class Lists {
 
@@ -118,6 +123,10 @@ public class Lists {
             array[i++] = v;
         }
         return array;
+    }
+
+    public static <T> List<T> reverse(List<T> list) {
+        return com.google.common.collect.Lists.reverse(list);
     }
     
 }

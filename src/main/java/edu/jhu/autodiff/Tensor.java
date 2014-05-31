@@ -301,6 +301,45 @@ public class Tensor {
         return other;
     }
 
+    /**
+     * Selects a sub-tensor from this one. This can be though of as fixing a particular dimension to
+     * a given index.
+     * 
+     * @param dim The dimension to treat as fixed.
+     * @param idx The index of that dimension to fix.
+     * @return The sub-tensor selected.
+     */
+    public Tensor select(int dim, int idx) {
+        int[] yDims = IntArrays.removeEntry(this.getDims(), dim);
+        Tensor y = new Tensor(yDims);
+        DimIter yIter = new DimIter(y.getDims());
+        while (yIter.hasNext()) {
+            int[] yIdx = yIter.next();
+            int[] xIdx = IntArrays.insertEntry(yIdx, dim, idx);
+            y.set(yIdx, this.get(xIdx));
+        }
+        return y;
+    }
+    
+    /**
+     * Adds a smaller tensor to this one, inserting it at a specified dimension
+     * and index. This can be thought of as selecting the sub-tensor of this tensor adding the
+     * smaller tensor to it.
+     * 
+     * This is the larger tensor (i.e. the augend).
+     * 
+     * @param addend The smaller tensor (i.e. the addend)
+     * @param dim The dimension which will be treated as fixed on the larger tensor.
+     * @param idx The index at which that dimension will be fixed.
+     */
+    public void addTensor(Tensor addend, int dim, int idx) {
+        DimIter yIter = new DimIter(addend.getDims());
+        while (yIter.hasNext()) {
+            int[] yIdx = yIter.next();
+            int[] xIdx = IntArrays.insertEntry(yIdx, dim, idx);
+            this.add(xIdx, addend.get(yIdx));
+        }
+    }
 
     private static void checkEqualSize(Tensor t1, Tensor t2) {
         if (t1.size() != t2.size()) {
@@ -353,6 +392,24 @@ public class Tensor {
     /** Gets the internal dimensions array. */
     public int[] getDims() {
         return dims;
+    }
+
+    /** 
+     * Combines two identically sized tensors by adding an initial dimension of size 2. 
+     * @param t1 The first tensor to add.
+     * @param t2 The second tensor to add.
+     * @return The combined tensor.
+     */
+    public static Tensor combine(Tensor t1, Tensor t2) {
+        if (!Arrays.equals(t1.getDims(), t2.getDims())) {
+            throw new IllegalStateException("Input tensors are not the same dimension.");
+        }
+        
+        int[] dims3 = IntArrays.insertEntry(t1.getDims(), 0, 2);
+        Tensor y = new Tensor(dims3);
+        y.addTensor(t1, 0, 0);
+        y.addTensor(t2, 0, 1);
+        return y;
     }
 
     public static Tensor getScalarTensor(double val) {

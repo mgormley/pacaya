@@ -101,6 +101,13 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     private LinkVar[] rootVars;
     private LinkVar[][] childVars;
     
+    // Counters.
+    private static int unsafeLogSubtracts = 0;
+    private static int logSubtractCount = 0;
+    private static int extremeOddsRatios = 0;
+    private static int oddsRatioCount = 0;
+
+    
     /**
      * Constructor.
      * @param n The length of the sentence.
@@ -314,11 +321,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         logSubtractCount++;
         return outMsgFalse;
     }
-    private static int unsafeLogSubtracts = 0;
-    private static int logSubtractCount = 0;
-    private static int extremeOddsRatios = 0;
-    private static int oddsRatioCount = 0;
-
+    
     /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
     private EdgeScores getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain) {   
         EdgeScores es = new EdgeScores(n, Double.NEGATIVE_INFINITY);
@@ -342,40 +345,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 es.child[link.getParent()][link.getChild()] = oddsRatio;
             }
         }
-        checkLogOddsRatios(parent, msgs, logDomain, es);
+        checkLogOddsRatios(es);
         return es;
-    }
-    
-    private void checkLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, EdgeScores es) {       
-        // Keep track of the minimum and maximum odds ratios, in order to detect
-        // possible numerical precision issues.        
-        double minOddsRatio = Double.POSITIVE_INFINITY;
-        double maxOddsRatio = Double.NEGATIVE_INFINITY;
-
-        for (int p = -1; p < n; p++) {
-            for (int c = 0; c < n; c++) {
-                double oddsRatio = es.getScore(p, c);
-                // Check min/max.
-                if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
-                    // Don't count *negative* infinities when logging extreme odds ratios.
-                    minOddsRatio = oddsRatio;
-                }
-                if (oddsRatio > maxOddsRatio) {
-                    maxOddsRatio = oddsRatio;
-                }
-            }
-        }
-
-        // Check whether the max/min odds ratios (if added) would result in a
-        // floating point error.
-        oddsRatioCount++;
-        if (FastMath.logSubtractExact(FastMath.logAdd(maxOddsRatio, minOddsRatio), maxOddsRatio) == Double.NEGATIVE_INFINITY) {
-            extremeOddsRatios++;            
-            log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
-            log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
-            // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
-            log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
-        }
     }
 
     /** Computes pi = \prod_i \mu_i(0). */
@@ -597,7 +568,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 checkAndFixPartition(bTrue, partition); // TODO: semiring
             } else if (module == weights && s instanceof LogSemiring) {
                 // Check odds ratios for potential floating point precision errors.
-                checkLogOddsRatios(parent, msgs, logDomain, EdgeScores.tensorToEdgeScores(weights.getOutput()));
+                checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()));
             }
         }
 
@@ -706,6 +677,38 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             unsafeLogSubtracts++;
         }
         logSubtractCount++;
+    }
+    
+    private void checkLogOddsRatios(EdgeScores es) {       
+        // Keep track of the minimum and maximum odds ratios, in order to detect
+        // possible numerical precision issues.        
+        double minOddsRatio = Double.POSITIVE_INFINITY;
+        double maxOddsRatio = Double.NEGATIVE_INFINITY;
+
+        for (int p = -1; p < n; p++) {
+            for (int c = 0; c < n; c++) {
+                double oddsRatio = es.getScore(p, c);
+                // Check min/max.
+                if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
+                    // Don't count *negative* infinities when logging extreme odds ratios.
+                    minOddsRatio = oddsRatio;
+                }
+                if (oddsRatio > maxOddsRatio) {
+                    maxOddsRatio = oddsRatio;
+                }
+            }
+        }
+
+        // Check whether the max/min odds ratios (if added) would result in a
+        // floating point error.
+        oddsRatioCount++;
+        if (FastMath.logSubtractExact(FastMath.logAdd(maxOddsRatio, minOddsRatio), maxOddsRatio) == Double.NEGATIVE_INFINITY) {
+            extremeOddsRatios++;            
+            log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
+            log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
+            // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
+            log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
+        }
     }
 
 }

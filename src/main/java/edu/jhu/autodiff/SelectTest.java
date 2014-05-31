@@ -14,18 +14,8 @@ public class SelectTest {
 
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = new Tensor(2, 3, 5);
-        double val;
-        val = 0;
-        for (int i=0; i<2; i++) {
-            for (int j=0; j<3; j++) {
-                for (int k=0; k<5; k++) {
-                    t1.set(val++, i,j,k);            
-                }
-            }
-        }
-        
-        
+        Tensor t1 = ModuleTestUtils.get3DTensor(2, 3, 5);
+                
         TensorIdentity id1 = new TensorIdentity(t1);
         Select ea = new Select(id1, 1, 2);
         
@@ -57,13 +47,10 @@ public class SelectTest {
 
     @Test
     public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(4, 6, 7);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity id2 = new TensorIdentity(t2);
-        ScalarAdd ea = new ScalarAdd(id1, id2, 1);
+        TensorIdentity id1 = new TensorIdentity(ModuleTestUtils.get3DTensor(2, 3, 5));
+        Select ea = new Select(id1, 1, 2);
         
-        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), ea);
+        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
     

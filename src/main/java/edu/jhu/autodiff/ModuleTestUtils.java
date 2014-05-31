@@ -267,14 +267,6 @@ public class ModuleTestUtils {
         return theta;
     }
 
-    public static Tensor getVector(double... values) {
-        Tensor t1 = new Tensor(values.length);
-        for (int c=0; c<values.length; c++) {
-            t1.setValue(c, values[c]);
-        }
-        return t1;
-    }
-
     public static void assertFdAndAdEqual(VecFn vecFn, double epsilon, double delta) {
         int numParams = vecFn.getNumDimensions();                
         IntDoubleDenseVector x = getZeroOneGaussian(numParams);
@@ -299,6 +291,40 @@ public class ModuleTestUtils {
                 assertEquals(dotFd, dotAd, delta);
             }
         }
+    }
+
+    public static Tensor getVector(double... values) {
+        Tensor t1 = new Tensor(values.length);
+        for (int c=0; c<values.length; c++) {
+            t1.setValue(c, values[c]);
+        }
+        return t1;
+    }
+
+    public static Tensor get2DTensor(int s1, int s2) {
+        Tensor t1 = new Tensor(s1, s2);
+        double val;
+        val = 0;
+        for (int i=0; i<s1; i++) {
+            for (int j=0; j<s2; j++) {
+                t1.set(val++, i,j);
+            }
+        }
+        return t1;
+    }
+
+    public static Tensor get3DTensor(int s1, int s2, int s3) {
+        Tensor t1 = new Tensor(s1, s2, s3);
+        double val;
+        val = 0;
+        for (int i=0; i<s1; i++) {
+            for (int j=0; j<s2; j++) {
+                for (int k=0; k<s3; k++) {
+                    t1.set(val++, i,j,k);            
+                }
+            }
+        }
+        return t1;
     }
 
 

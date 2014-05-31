@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 
 /**
  * Topographically ordered list of modules, combined into a single module. This module will call
@@ -33,8 +35,7 @@ public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
 
     @Override
     public void backward() {
-        List<Module<? extends Object>> revTopo = new ArrayList<Module<? extends Object>>(topoOrder);        
-        Collections.reverse(revTopo);
+        List<Module<? extends Object>> revTopo = Lists.reverse(topoOrder);
         for (Module<? extends Object> m : revTopo) {
             m.backward();
         }

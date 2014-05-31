@@ -2,6 +2,7 @@ package edu.jhu.autodiff;
 
 import java.util.List;
 
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -24,14 +25,7 @@ public class Select extends AbstractTensorModule implements Module<Tensor> {
     @Override
     public Tensor forward() {
         Tensor x = modIn.getOutput();
-        int[] yDims = getYDimsFromXDims(x.getDims());
-        y = new Tensor(yDims);
-        DimIter yIter = new DimIter(y.getDims());
-        while (yIter.hasNext()) {
-            int[] yIdx = yIter.next();
-            int[] xIdx = getXIdxFromYIdx(yIdx);
-            y.set(yIdx, x.get(xIdx));
-        }
+        y = x.select(dim, idx);
         return y;
     }
 
@@ -39,38 +33,7 @@ public class Select extends AbstractTensorModule implements Module<Tensor> {
     @Override
     public void backward() {
         Tensor xAdj = modIn.getOutputAdj();
-        DimIter yIter = new DimIter(yAdj.getDims());
-        while (yIter.hasNext()) {
-            int[] yIdx = yIter.next();
-            int[] xIdx = getXIdxFromYIdx(yIdx);
-            xAdj.add(xIdx, yAdj.get(yIdx));
-        }
-    }
-
-    int[] getYDimsFromXDims(int[] xDims) {
-        int[] yDims = new int[xDims.length-1];
-        for (int i=0; i<yDims.length; i++) {
-            if (i < dim) {
-                yDims[i] = xDims[i];
-            } else {
-                yDims[i] = xDims[i+1];
-            }
-        }
-        return yDims;
-    }
-
-    int[] getXIdxFromYIdx(int[] yIdx) {
-        int[] xIdx = new int[yIdx.length+1];
-        for (int i=0; i<xIdx.length; i++) {
-            if (i < dim) {
-                xIdx[i] = yIdx[i];
-            } else if (i == dim) {
-                xIdx[dim] = idx;        
-            } else {
-                xIdx[i] = yIdx[i-1];
-            }
-        }
-        return xIdx;
+        xAdj.addTensor(yAdj, dim, idx);
     }
 
     @Override
