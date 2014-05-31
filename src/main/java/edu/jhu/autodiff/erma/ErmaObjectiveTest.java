@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.gm.data.FgExampleList;
@@ -20,11 +21,6 @@ import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
 
 public class ErmaObjectiveTest {
-
-    @Test
-    public void testSimple() {
-       // fail("Not yet implemented");
-    }
     
     @Test
     public void testDpData() throws IOException {
@@ -41,8 +37,9 @@ public class ErmaObjectiveTest {
         ErmaObjective exObj = new ErmaObjective(data, getErmaBpPrm(false), dl);
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
-        assertEquals(15.27, obj.getValue(model.getParams()), 1e-2);
-        assertEquals(1, obj.getGradient(model.getParams()).get(0), 1e-13);
+        ModuleTestUtils.assertFdAndAdEqual(obj, model.getParams(), 1e-8, 1e-8);
+        //assertEquals(15.27, obj.getValue(model.getParams()), 1e-2);
+        //assertEquals(1, obj.getGradient(model.getParams()).get(0), 1e-13);
     }
 
 

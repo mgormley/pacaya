@@ -108,10 +108,16 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     Algebra s = new RealAlgebra();     // TODO:
     private Beliefs b;
     private Beliefs bAdj;
+    private ExpFamFactorModule effm;
 
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
+        this(fg, prm, null);
+    }
+    
+    public ErmaBp(FactorGraph fg, ErmaBpPrm prm, ExpFamFactorModule effm) {
         this.prm = prm;
         this.fg = fg;
+        this.effm = effm;
         
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
@@ -426,7 +432,17 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             }
             assert !msgsAdj[i].message.containsNaN() : "msgsAdj[i].message = " + msgsAdj[i].message + "\n" + "edge: " + edge;
         }
-        this.potentialsAdj = new VarTensor[fg.getNumFactors()];
+        // Get or create the adjoints of the potentials.
+        if (effm != null) {
+            this.potentialsAdj = effm.getOutputAdj();
+        } else {
+            this.potentialsAdj = new VarTensor[fg.getNumFactors()];
+            for (int a=0; a<fg.getNumFactors(); a++) {
+                if (!(fg.getFactor(a) instanceof GlobalFactor)) {
+                    potentialsAdj[a] = new VarTensor(facBeliefsAdj[a]);
+                }
+            }
+        }
         for (int a=0; a<fg.getNumFactors(); a++) {
             if (!(fg.getFactor(a) instanceof GlobalFactor)) {
                 // Backward pass for factor beliefs. Part 2.
@@ -516,7 +532,6 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     }
 
     private void initPotentialsAdj(int a, VarTensor[] facBeliefsAdj) {
-        potentialsAdj[a] = new VarTensor(facBeliefsAdj[a]);
         getProductOfMessages(fg.getFactorNode(a), potentialsAdj[a], null);
         assert !potentialsAdj[a].containsNaN() : "potentialsAdj[a] = " + potentialsAdj[a];
     }
@@ -748,7 +763,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
                     }
                 }
                 
-                double nodePartition = getPartitionFunctionAtVarNode(node);
+                double nodePartition = getPartitionBeliefAtVarNode(node);
                 if (prm.logDomain) {
                     partition += nodePartition;
                 } else {
@@ -839,7 +854,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
      * Gets the partition function for the connected component containing the given node.
      */
     // TODO: This should be package private or protected. It is exposed for testing only.
-    public double getPartitionFunctionAtVarNode(FgNode node) {
+    public double getPartitionBeliefAtVarNode(FgNode node) {
         // We just return the normalizing constant for the marginals of any variable.
         if (!node.isVar()) {
             throw new IllegalArgumentException("Node must be a variable node.");
@@ -980,6 +995,10 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     public List<Module<Beliefs>> getInputs() {
         throw new RuntimeException("Not implemented");
         //return Lists.getList();
+    }
+
+    public void setEffm(ExpFamFactorModule effm) {
+        this.effm = effm;
     }
     
 }

@@ -69,7 +69,8 @@ public class ErmaObjective implements ExampleObjective {
         // Model initialization.
         ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, logDomain);
         // Inference.
-        Module<Beliefs> inf = (Module<Beliefs>) infFactory.getInferencer(fg);
+        ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
+        inf.setEffm(effm);
         // Decoding and Loss.
         Module<Tensor> dl = dlFactory.getDl(fg, goldConfig, inf, s);
         t.stop(); initTimer.add(t);
