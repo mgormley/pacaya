@@ -38,8 +38,6 @@ public class ErmaObjectiveTest {
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         ModuleTestUtils.assertFdAndAdEqual(obj, model.getParams(), 1e-8, 1e-8);
-        //assertEquals(15.27, obj.getValue(model.getParams()), 1e-2);
-        //assertEquals(1, obj.getGradient(model.getParams()).get(0), 1e-13);
     }
 
 

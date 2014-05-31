@@ -35,6 +35,7 @@ import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.util.math.LogAddTable;
+import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
 
 public class ProjDepTreeFactorTest {
@@ -489,13 +490,16 @@ public class ProjDepTreeFactorTest {
     }
 
     // This test fails because of a known floating point precision limitation of the ProjDepTreeFactor.
+    // Currently, the values in get2WordSentFactorGraph() are scaled to avoid the floating point error.
     @Test
-    public void testCompareMessagesWithExplicitTreeFactor() {
-        compareMessagesWithExplicitTreeFactor(true, true, false);
-        compareMessagesWithExplicitTreeFactor(true, true, true);
+    public void testBpCompareMessagesWithExplicitTreeFactor() {
+        compareBpMessagesWithExplicitTreeFactor(false, true, false);
+        compareBpMessagesWithExplicitTreeFactor(false, true, true);
+        compareBpMessagesWithExplicitTreeFactor(true, true, false);
+        compareBpMessagesWithExplicitTreeFactor(true, true, true);
     }
 
-    public void compareMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+    public void compareBpMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.logDomain = logDomain;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
@@ -513,9 +517,55 @@ public class ProjDepTreeFactorTest {
         //printMessages(fgDp, bpDp);
         
         System.out.println("Messages");
-        Messages[] msgsExpl = bpExpl.getMessages();
-        Messages[] msgsDp = bpDp.getMessages();
-        for (int i=0; i<fgExpl.getNumEdges(); i++) {
+        assertEqualMessages(fgExpl, bpExpl.getMessages(), bpDp.getMessages());
+        System.out.println("Partition: " + bpExpl.getPartition());
+        System.out.println("Partition: " + bpDp.getPartition());
+        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
+    }
+    
+    @Test
+    public void testErmaCompareMessagesWithExplicitTreeFactor() {
+        compareErmaMessagesWithExplicitTreeFactor(false, true, false);
+        compareErmaMessagesWithExplicitTreeFactor(false, true, true);
+    }
+
+    public void compareErmaMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.logDomain = logDomain;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        prm.maxIterations = 3;
+        prm.normalizeMessages = normalizeMessages;
+        
+        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
+        ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
+        bpExpl.forward();
+        //printMessages(fgExpl, bpExpl);
+        
+        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
+        ErmaBp bpDp = new ErmaBp(fgDp, prm);
+        bpDp.forward();
+        //printMessages(fgDp, bpDp);
+        
+        System.out.println("Messages");
+        assertEqualMessages(fgExpl, bpExpl.getMessages(), bpDp.getMessages());
+        System.out.println("Beliefs");
+        assertEqualVarTensors(bpExpl.getOutput().varBeliefs, bpDp.getOutput().varBeliefs);
+        assertEqualVarTensors(bpExpl.getOutput().facBeliefs, bpDp.getOutput().facBeliefs);
+        System.out.println("Partition: " + bpExpl.getPartition());
+        System.out.println("Partition: " + bpDp.getPartition());
+        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
+        
+        bpExpl.getOutputAdj().fill(1.0);
+        bpExpl.backward();
+        bpDp.getOutputAdj().fill(1.0);
+        bpDp.backward();
+        System.out.println("Adjoints");
+        assertEqualMessages(fgExpl, bpExpl.getMessagesAdj(), bpDp.getMessagesAdj());
+        assertEqualVarTensors(bpExpl.getPotentialsAdj(), bpDp.getPotentialsAdj());
+    }
+
+    private void assertEqualMessages(FactorGraph fgExpl, Messages[] msgsExpl, Messages[] msgsDp) {
+        for (int i=0; i<msgsExpl.length; i++) {
             VarTensor msgExpl = msgsExpl[i].message;
             VarTensor msgDp = msgsDp[i].message;
             assertEquals(msgExpl.size(), msgDp.size());
@@ -525,21 +575,42 @@ public class ProjDepTreeFactorTest {
                     //continue;
                 }
 
-                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-8)) {
+                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
                     System.out.println("NOT EQUAL:");
                     System.out.println(fgExpl.getEdge(i));
                     System.out.println(msgExpl);
                     System.out.println(msgDp);
                 } 
-                // TODO: This assertion exposes a very subtle problem with the dynamic programming
-                // calculation of the messages from a PTREE factor. Because it computes the belief about being false 
                 assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
             }
-            //assertTrue(msgExpl.equals(msgDp, 1e-5));
+            // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
         }
-        System.out.println("Partition: " + bpExpl.getPartition());
-        System.out.println("Partition: " + bpDp.getPartition());
-        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
+    }
+
+    private void assertEqualVarTensors(VarTensor[] msgsExpl, VarTensor[] msgsDp) {
+        for (int i=0; i<msgsExpl.length; i++) {
+            if (msgsExpl[i] == null || msgsDp[i] == null) {
+                // Don't compare the potentials for the projective dependency tree factor.
+                continue;
+            }
+            VarTensor msgExpl = msgsExpl[i];
+            VarTensor msgDp = msgsDp[i];
+            assertEquals(msgExpl.size(), msgDp.size());
+            for (int c=0; c<msgExpl.size(); c++) {
+                if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
+                        || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
+                    //continue;
+                }
+
+                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
+                    System.out.println("NOT EQUAL:");
+                    System.out.println(msgExpl);
+                    System.out.println(msgDp);
+                } 
+                assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
+            }
+            // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
+        }
     }
 
     private void printMessages(FactorGraph fg, BeliefPropagation bp) {
@@ -689,7 +760,7 @@ public class ProjDepTreeFactorTest {
         bp.forward();
         bp.getOutputAdj().fill(1.0);
         bp.backward();
-     
+
         System.out.println("Messages:");
         printMessages(fg, bp.getMessages());
         System.out.println("\nMessage Adjoints:");
@@ -703,17 +774,30 @@ public class ProjDepTreeFactorTest {
         }
     }
 
-    private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
+    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
         return get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, false);
     }
     
-    private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+        return get2WordSentFgAndLinks(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight).fg;
+    }
+    
+    public static FgAndLinks get2WordSentFgAndLinks(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
-
+        // TODO: These scaling factors are added to avoid the floating point error in some of the
+        // tests above. This should really have multiple tests with and without the floating point
+        // error.
         DoubleArrays.scale(root, .1);
         DoubleArrays.scale(child, .1);
+        
+        // For random values:
+        //        Prng.seed(14423444);
+        //        root = DoubleArrays.getLog(ModuleTestUtils.getAbsZeroOneGaussian(2).toNativeArray());
+        //        child[0] = DoubleArrays.getLog(ModuleTestUtils.getAbsZeroOneGaussian(2).toNativeArray());
+        //        child[1] = DoubleArrays.getLog(ModuleTestUtils.getAbsZeroOneGaussian(2).toNativeArray());
+        
         if (negInfEdgeWeight) {
             child[0][1] = Double.NEGATIVE_INFINITY;
         }
@@ -752,7 +836,7 @@ public class ProjDepTreeFactorTest {
         
         if (makeLoopy) {
             ExplicitFactor f = new ExplicitFactor(new VarSet(rootVars[0], rootVars[1]));
-            f.setValue(3, -97.786518);
+            f.setValue(3, -DoubleArrays.sum(root));
             fg.addFactor(f);
             //f.scale(0.01);
             if (!logDomain) {
@@ -782,7 +866,7 @@ public class ProjDepTreeFactorTest {
         } else {
             fg.addFactor(treeFac);
         }
-        return fg;
+        return new FgAndLinks(fg, rootVars, childVars, 2);
     }
 
     private void printBeliefs(FactorGraph fg, FgInferencer bp) {

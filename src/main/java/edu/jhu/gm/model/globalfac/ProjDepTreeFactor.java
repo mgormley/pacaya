@@ -409,15 +409,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         double pi = s.fromLogProb(logPi);
         double partition = s.times(pi, Z);
         double expectation = s.toLogProb(s.divide(pi, partition)) + s.toReal(s.divide(rbar, Z));
-        // Equivalent code:
-        //        double logZ = s.toLogProb(scores.beta[rt]);     
-        //        double logRbar = s.toLogProb(scores.betaFoe[rt]);
-        //        double logPartition = logPi + logZ;
-        //        double expectation = logPi - logPartition + FastMath.exp(logRbar - logZ);
-
-        // TODO: Keep these for debugging.
-        // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", logZ, logRbar, logPi, expectation));
-        // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", s.toReal(logZ), s.toReal(logRbar), FastMath.exp(logPi), expectation));
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("Z=%g rbar=%g pi=%g part=%g E=%g", Z, rbar, pi, partition, expectation));
+        }
         if (Double.isNaN(expectation)) {
             log.warn("Expected log belief was NaN. Returning zero instead.");
             return 0.0;

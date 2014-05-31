@@ -407,7 +407,7 @@ public class Tensor {
             for (int state : states) {
                 sb.append(String.format("%5d", state));
             }
-            sb.append(String.format("  |  %f\n", values[c]));
+            sb.append(String.format("  |  %g\n", values[c]));
         }
         sb.append("]");
         return sb.toString();

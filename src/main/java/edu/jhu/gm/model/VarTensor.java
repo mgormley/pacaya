@@ -340,7 +340,7 @@ public class VarTensor implements Serializable {
                 // TODO: use string names for states if available.
                 sb.append(String.format("%5d", state));
             }
-            sb.append(String.format("  |  %f\n", values[c]));
+            sb.append(String.format("  |  %g\n", values[c]));
         }
         sb.append("]");
         return sb.toString();

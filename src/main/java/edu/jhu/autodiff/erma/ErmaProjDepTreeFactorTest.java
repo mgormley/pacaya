@@ -484,7 +484,7 @@ public class ErmaProjDepTreeFactorTest {
         // Check partition function.
         assertEquals(Z, bp.getPartition(), 1e-3);
         for (Var v : fg.getVars()) {
-            double partition = bp.getPartitionFunctionAtVarNode(fg.getNode(v));
+            double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
             assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
@@ -571,7 +571,7 @@ public class ErmaProjDepTreeFactorTest {
         assertEquals(Z, bp.getPartition(), 1e-3);
         if (prm.normalizeMessages == false) {
             for (Var v : fg.getVars()) {
-                double partition = bp.getPartitionFunctionAtVarNode(fg.getNode(v));
+                double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
                 System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
                 assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
             }

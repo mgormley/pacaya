@@ -1,14 +1,12 @@
 package edu.jhu.autodiff.erma;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.ExplicitFactor;
@@ -16,13 +14,13 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
@@ -120,6 +118,43 @@ public class ErmaBpBackwardTest {
         ErmaErFn fn = new ErmaErFn(fg, goldConfig);
         
         testGradientByFiniteDifferences(fn);
+    }
+    
+    @Test
+    public void testErmaGradient2WordExplicitTreeFactor() {
+        ErmaErFn fnExpl = getErmaFnFor2WordSent(true);        
+        ErmaErFn fnDp = getErmaFnFor2WordSent(false);
+        assertEquals(fnExpl.getNumDimensions(), fnDp.getNumDimensions());
+        IntDoubleVector x = ModuleTestUtils.getAbsZeroOneGaussian(fnExpl.getNumDimensions());
+        assertEquals(fnExpl.getValue(x), fnDp.getValue(x), 1e-13);
+        IntDoubleVector gradExpl = fnExpl.getGradient(x);
+        IntDoubleVector gradDp = fnDp.getGradient(x);
+        for (int c=0; c<gradExpl.getNumImplicitEntries(); c++) {
+            assertEquals(gradExpl.get(c), gradDp.get(c), 1e-13);
+        }
+        
+        fdWithOrWithoutExplicit(true);
+        fdWithOrWithoutExplicit(false);
+    }
+
+    private void fdWithOrWithoutExplicit(boolean useExplicit) {
+        ErmaErFn fn = getErmaFnFor2WordSent(useExplicit);        
+        testGradientByFiniteDifferences(fn);
+    }
+
+    private ErmaErFn getErmaFnFor2WordSent(boolean useExplicit) {
+        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(logDomain, useExplicit, false, false);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        
+        VarConfig goldConfig = new VarConfig();
+        goldConfig.put(rootVars[0], 0);
+        goldConfig.put(rootVars[1], 1);
+        goldConfig.put(childVars[0][1], 0);
+        goldConfig.put(childVars[1][0], 1);
+        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
+        return fn;
     }
     
     @Test
@@ -229,9 +264,11 @@ public class ErmaBpBackwardTest {
         private void cacheNumParams() {
             numParams = 0;
             for (Factor f : fg.getFactors()) {
-                if (!(f instanceof GlobalFactor)) {
-                    numParams += f.getVars().calcNumConfigs();
+                if (f instanceof GlobalFactor || f.getVars().size() == 4) {
+                    System.out.println("Skipping factor: " + f);
+                    continue;
                 }
+                numParams += f.getVars().calcNumConfigs();
             }
         }
         
@@ -257,6 +294,11 @@ public class ErmaBpBackwardTest {
             IntDoubleVector grad = new IntDoubleDenseVector(numParams);
             int i=0;
             for (int a=0; a<potentialsAdj.length; a++) {
+                Factor f = fg.getFactor(a);
+                if (f instanceof GlobalFactor || f.getVars().size() == 4) {
+                    System.out.println("Skipping factor: " + f);
+                    continue;
+                }
                 // Skip GlobalFactors.
                 if (potentialsAdj[a] != null) {
                     for (int c=0; c<potentialsAdj[a].size(); c++) {
@@ -286,11 +328,13 @@ public class ErmaBpBackwardTest {
             // Update factors from the model in params array.
             int i=0;
             for (Factor f : fg.getFactors()) {
-                if (!(f instanceof GlobalFactor)) { 
-                    ExplicitFactor factor = (ExplicitFactor) f;
-                    for (int c=0; c<factor.size(); c++) {
-                        factor.setValue(c, theta.get(i++));
-                    }
+                if (f instanceof GlobalFactor || f.getVars().size() == 4) {
+                    System.out.println("Skipping factor: " + f);
+                    continue;
+                }
+                ExplicitFactor factor = (ExplicitFactor) f;
+                for (int c=0; c<factor.size(); c++) {
+                    factor.setValue(c, theta.get(i++));
                 }
             }
         }
