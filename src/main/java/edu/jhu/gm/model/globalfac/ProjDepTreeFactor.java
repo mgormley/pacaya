@@ -536,64 +536,30 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         
         // Construct the circuit.
         TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
-        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);
-        
-        Prod pi = new Prod(mFalseIn);
-        ElemDivide weights = new ElemDivide(mTrueIn, mFalseIn);
-        
-        InsideOutsideDepParse parse = new InsideOutsideDepParse(weights, s);
-        Select alphas = new Select(parse, 0, InsideOutsideDepParse.ALPHA_IDX);
-        Select betas = new Select(parse, 0, InsideOutsideDepParse.BETA_IDX);
-        Select root = new Select(parse, 0, InsideOutsideDepParse.ROOT_IDX); // The first entry in this selection is for the root.
-        
-        ElemMultiply edgeSums = new ElemMultiply(alphas, betas);
-        ScalarMultiply bTrue = new ScalarMultiply(edgeSums, pi, 0);
-        
-        ScalarMultiply partition = new ScalarMultiply(pi, root, 0);
-        TensorIdentity neg1 = new TensorIdentity(Tensor.getScalarTensor(s.fromReal(-1.0)));
-        ScalarMultiply negBTrue = new ScalarMultiply(bTrue, neg1, 0);
-        ScalarAdd bFalse = new ScalarAdd(negBTrue, partition, 0);
-        
-        ElemDivide mTrueOut = new ElemDivide(bTrue, mTrueIn);
-        ElemDivide mFalseOut = new ElemDivide(bFalse, mFalseIn);
-
-        List<AbstractTensorModule> topoOrder = Lists.getList(pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
-                partition, neg1, negBTrue, bFalse, mTrueOut, mFalseOut);
-
-        // Forward pass.
-        for (Module<Tensor> module : topoOrder) {
-            module.forward();
-            if (module == partition) {
-                // Correct if partition function is too small.
-                checkAndFixPartition(bTrue, partition); // TODO: semiring
-            } else if (module == weights && s instanceof LogSemiring) {
-                // Check odds ratios for potential floating point precision errors.
-                checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()));
-            }
-        }
-
-        Tensor tmTrueOut = mTrueOut.getOutput();
-        Tensor tmFalseOut = mFalseOut.getOutput();
-        
-        // Correct if input messages have negative infinity.
-        checkAndFixOutMsgs(tmTrueIn, tmFalseIn, tmTrueOut, tmFalseOut, s);
+        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
+        ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, s);
+        dep.forward();
         
         if (isForward) {
+            Pair<Tensor, Tensor> pair = dep.getOutput();
+            Tensor tmTrueOut = pair.get1();
+            Tensor tmFalseOut = pair.get2();
+            
             // Set the outgoing messages at time (t+1).
             setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
         } else {            
-            // Set adjoints on outgoing message modules at time (t+1).
+            // Add adjoints on outgoing message modules at time (t+1).
             Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-            mTrueOut.getOutputAdj().elemAdd(tTrue);
             Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-            mFalseOut.getOutputAdj().elemAdd(tFalse);
+            Pair<Tensor, Tensor> pairAdj = dep.getOutput();
+            Tensor tmTrueOutAdj = pairAdj.get1();
+            Tensor tmFalseOutAdj = pairAdj.get2();
+            tmTrueOutAdj.elemAdd(tTrue);
+            tmFalseOutAdj.elemAdd(tFalse);
             
             // Backward pass.
-            Collections.reverse(topoOrder);
-            for (Module<Tensor> module : topoOrder) {
-                module.backward();
-            }
+            dep.backward();
             
             // Increment adjoints of the incoming messages at time (t).
             // TODO: Here we just set the outgoing messages, this shouldn't be a
@@ -668,17 +634,6 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         }
     }
 
-    private void checkAndFixPartition(Module<Tensor> bTrue, Module<Tensor> module) {
-        // Correct for the case where the partition function is smaller
-        // than some of the beliefs.
-        double max = bTrue.getOutput().getMax();
-        if (max > module.getOutput().getValue(0)) {
-            module.getOutput().setValue(0, max);
-            unsafeLogSubtracts++;
-        }
-        logSubtractCount++;
-    }
-    
     private void checkLogOddsRatios(EdgeScores es) {       
         // Keep track of the minimum and maximum odds ratios, in order to detect
         // possible numerical precision issues.        
