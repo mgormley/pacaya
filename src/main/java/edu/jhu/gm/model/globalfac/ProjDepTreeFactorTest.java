@@ -555,9 +555,17 @@ public class ProjDepTreeFactorTest {
         System.out.println("Partition: " + bpDp.getPartition());
         assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
         
-        bpExpl.getOutputAdj().fill(1.0);
+        for (int v=0; v<fgDp.getNumVars(); v++) {
+            LinkVar link = (LinkVar) fgDp.getVar(v);
+            double adj = 0.0;
+            if ((link.getParent() == -1 && link.getChild() == 1) || 
+                    (link.getParent() == 1 && link.getChild() == 0)) {
+                adj = 1.0;
+            }
+            bpExpl.getOutputAdj().varBeliefs[v].setValue(LinkVar.TRUE, adj);
+            bpDp.getOutputAdj().varBeliefs[v].setValue(LinkVar.TRUE, adj);
+        }
         bpExpl.backward();
-        bpDp.getOutputAdj().fill(1.0);
         bpDp.backward();
         System.out.println("Adjoints");
         assertEqualMessages(fgExpl, bpExpl.getMessagesAdj(), bpDp.getMessagesAdj());
