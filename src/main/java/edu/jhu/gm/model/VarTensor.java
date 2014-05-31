@@ -351,6 +351,17 @@ public class VarTensor implements Serializable {
         return values;
     }
     
+    /** Returns true if this tensor contains any NaNs. */
+    public boolean containsNaN() {
+        for (int i = 0; i < values.length; i++) {
+            if (Double.isNaN(values[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // TODO: Move this to BeliefPropagation.java.
     public boolean containsBadValues(boolean logDomain) {
     	for(int i=0; i<values.length; i++) {
     		if(Double.isNaN(values[i]))

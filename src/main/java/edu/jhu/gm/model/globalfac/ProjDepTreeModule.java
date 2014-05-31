@@ -26,9 +26,9 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
 
     private Module<Tensor> mTrueIn;
     private Module<Tensor> mFalseIn;
-    private List<AbstractTensorModule> topoOrder;
-    private ElemDivide mTrueOut;
-    private ElemDivide mFalseOut;
+    private List<Module<Tensor>> topoOrder;
+    private Module<Tensor> mTrueOut;
+    private Module<Tensor> mFalseOut;
     private Algebra s;
 
     private static final Logger log = Logger.getLogger(ProjDepTreeFactor.class);
@@ -50,17 +50,12 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     
     @Override
     public Pair<Tensor, Tensor> forward() {
-        //        // Get the incoming messages at time (t).
-        //        Tensor tmTrueIn = getMsgs(parent, msgs, LinkVar.TRUE, CUR_MSG, IN_MSG, s);        
-        //        Tensor tmFalseIn = getMsgs(parent, msgs, LinkVar.FALSE, CUR_MSG, IN_MSG, s);
-        //        
-        //        // Construct the circuit.
-        //        TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
-        //        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);
-
+        // Construct the circuit.
         Tensor tmTrueIn = mTrueIn.getOutput();
         Tensor tmFalseIn = mFalseIn.getOutput();
         n = tmTrueIn.getDims()[1];
+        
+        requireNoZeros(tmFalseIn);
         
         Prod pi = new Prod(mFalseIn);
         ElemDivide weights = new ElemDivide(mTrueIn, mFalseIn);
@@ -78,11 +73,17 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         ScalarMultiply negBTrue = new ScalarMultiply(bTrue, neg1, 0);
         ScalarAdd bFalse = new ScalarAdd(negBTrue, partition, 0);
         
-        mTrueOut = new ElemDivide(bTrue, mTrueIn);
-        mFalseOut = new ElemDivide(bFalse, mFalseIn);
-
+        ElemDivide mTrueOut0 = new ElemDivide(bTrue, mTrueIn);
+        ElemDivide mFalseOut0 = new ElemDivide(bFalse, mFalseIn);
+        
+        // If the incoming message contained zeros, send back the same message.
+        Tensor inProd = tmTrueIn.copy();
+        inProd.elemMultiply(tmTrueIn);
+        mTrueOut = new TakeLeftIfZero(mTrueIn, mTrueOut0, inProd);
+        mFalseOut = new TakeLeftIfZero(mFalseIn, mFalseOut0, inProd);
+        
         topoOrder = Lists.getList(pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
-                partition, neg1, negBTrue, bFalse, mTrueOut, mFalseOut);
+                partition, neg1, negBTrue, bFalse, mTrueOut0, mFalseOut0, mTrueOut, mFalseOut);
 
         // Forward pass.
         for (Module<Tensor> module : topoOrder) {
@@ -97,37 +98,24 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         }
 
         Tensor tmTrueOut = mTrueOut.getOutput();
-        Tensor tmFalseOut = mFalseOut.getOutput();
-        
-        // Correct if input messages have negative infinity.
-        checkAndFixOutMsgs(tmTrueIn, tmFalseIn, tmTrueOut, tmFalseOut, s);
+        Tensor tmFalseOut = mFalseOut.getOutput();       
+        assert !tmTrueOut.containsNaN() && !tmFalseOut.containsNaN();
         
         return getOutput();
-        
-//        // Set the outgoing messages at time (t+1).
-//        setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-//        setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
     }
 
     @Override
-    public void backward() {        
-//        // Set adjoints on outgoing message modules at time (t+1).
-//        Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-//        mTrueOut.getOutputAdj().elemAdd(tTrue);
-//        Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-//        mFalseOut.getOutputAdj().elemAdd(tFalse);
-        
+    public void backward() {
         // Backward pass.
-        List<AbstractTensorModule> rev = Lists.reverse(topoOrder);
+        List<Module<Tensor>> rev = Lists.reverse(topoOrder);
         for (Module<Tensor> module : rev) {
+            assert !module.getOutputAdj().containsNaN();
             module.backward();
-        }
-        
-//        // Increment adjoints of the incoming messages at time (t).
-//        // TODO: Here we just set the outgoing messages, this shouldn't be a
-//        // problem since they will never be nonzero.
-//        setMsgs(parent, msgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
-//        setMsgs(parent, msgsAdj, mFalseIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);        
+            for (Object in : module.getInputs()) {
+                Module<Tensor> inn = (Module<Tensor>) in;
+                assert !inn.getOutputAdj().containsNaN();
+            }
+        } 
     }
 
     @Override
@@ -149,19 +137,6 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     @Override
     public List<? extends Object> getInputs() {
         return Lists.getList(mTrueIn, mFalseIn);
-    }
-    
-    private void checkAndFixOutMsgs(Tensor tmTrueIn, Tensor tmFalseIn, Tensor tmTrueOut, Tensor tmFalseOut, Algebra s) {
-        // TODO: Should this in some way impact the backward pass?
-        for (int c=0; c<tmTrueOut.size(); c++) {
-            double inMsgTrue = tmTrueIn.getValue(c);
-            double inMsgFalse = tmFalseIn.getValue(c);
-            if (inMsgTrue == s.zero() || inMsgFalse == s.zero()) {
-                // If the incoming message contained zeros, send back the same message.
-                tmTrueOut.setValue(c, inMsgTrue);
-                tmFalseOut.setValue(c, inMsgFalse);
-            }
-        }
     }
 
     private void checkAndFixPartition(Module<Tensor> bTrue, Module<Tensor> module) {
@@ -205,6 +180,64 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
             // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
             log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
         }
+    }
+
+    private void requireNoZeros(Tensor tmFalseIn) {
+        for (int i=0; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if ( tmFalseIn.get(i,j) == 0.0) {
+                    throw new IllegalStateException("Hard constraints turning ON an edge are not supported.");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Element-wise operation which takes the left side if the mark is zero, and the right side
+     * otherwise.
+     * 
+     * @author mgormley
+     */
+    private static class TakeLeftIfZero extends AbstractTensorModule implements Module<Tensor> {
+        
+        Module<Tensor> leftIn; 
+        Module<Tensor> rightIn; 
+        Tensor mark;
+        
+        public TakeLeftIfZero(Module<Tensor> left, Module<Tensor> right, Tensor mark) {
+            this.leftIn = left;
+            this.rightIn = right;
+            this.mark = mark;
+        }
+
+        @Override
+        public Tensor forward() {
+            Tensor left = leftIn.getOutput();
+            Tensor right = rightIn.getOutput();
+            Tensor.checkEqualSize(left, right);
+            y = left.copyAndFill(0.0);
+            for (int c=0; c<y.size(); c++) {
+                Tensor t = (mark.getValue(c) == 0.0) ? left : right;
+                y.setValue(c, t.getValue(c));
+            }
+            return y;
+        }
+
+        @Override
+        public void backward() {
+            Tensor leftAdj = leftIn.getOutputAdj();
+            Tensor rightAdj = rightIn.getOutputAdj();
+            for (int c=0; c<yAdj.size(); c++) {
+                Tensor t = (mark.getValue(c) == 0.0) ? leftAdj : rightAdj;
+                t.addValue(c, yAdj.getValue(c));
+            }
+        }
+
+        @Override
+        public List<? extends Object> getInputs() {
+            return Lists.getList(leftIn, rightIn);
+        }
+        
     }
 
 }

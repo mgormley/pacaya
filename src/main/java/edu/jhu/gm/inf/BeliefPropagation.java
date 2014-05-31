@@ -142,9 +142,7 @@ public class BeliefPropagation implements FgInferencer {
         }
     }
     
-    /**
-     * For debugging. Remove later.
-     */
+    /** For testing only. */
     public Messages[] getMessages() {
     	return msgs;
     }

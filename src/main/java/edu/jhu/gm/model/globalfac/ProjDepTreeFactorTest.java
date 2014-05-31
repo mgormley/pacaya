@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.erma.ErmaBp;
+import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -18,15 +20,15 @@ import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
@@ -426,7 +428,6 @@ public class ProjDepTreeFactorTest {
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
     
-
     @Test
     public void testMarginalsAndPartitionWithAllOnes() {
         boolean logDomain = false;        
@@ -543,6 +544,18 @@ public class ProjDepTreeFactorTest {
     private void printMessages(FactorGraph fg, BeliefPropagation bp) {
         System.out.println("Messages");
         Messages[] msgs = bp.getMessages();
+        printMessages(fg, msgs);
+        System.out.println("Partition: " + bp.getPartition());
+    }
+
+    private void printMessages(FactorGraph fg, ErmaBp bp) {
+        System.out.println("Messages");
+        Messages[] msgs = bp.getMessages();
+        printMessages(fg, msgs);
+        System.out.println("Partition: " + bp.getPartition());
+    }
+
+    private void printMessages(FactorGraph fg, Messages[] msgs) {
         for (int i=0; i<fg.getNumEdges(); i++) {            
             FgEdge edge = fg.getEdge(i);
             //if (edge.isVarToFactor() && edge.getFactor().getVars().size() == 4) {
@@ -551,7 +564,6 @@ public class ProjDepTreeFactorTest {
                 System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
             //}
         }
-        System.out.println("Partition: " + bp.getPartition());
     }
 
     // This test used to fail when the number of iterations was too low. But
@@ -640,6 +652,54 @@ public class ProjDepTreeFactorTest {
             }
         }
         
+    }
+    
+    @Test
+    public void testBackwardPass2WordGlobalFactor() {
+        boolean logDomain = false;        
+        double[] root = new double[]{ 1.0, 1.0 };
+        double[][] child = new double[][]{ { 0.0, 1.0 }, { 1.0, 0.0 } };
+        testBackwardPassGlobalFactor(logDomain, root, child);
+    }
+    
+    @Test
+    public void testBackwardPass2WordGlobalFactorWithPruning() {
+        boolean logDomain = false;        
+        double[] root = new double[]{ 1.0, 1.0 };
+        // We prune the edge from 1 --> 0.
+        double[][] child = new double[][]{ { 0.0, 1.0 }, { 0.0, 0.0 } };
+        testBackwardPassGlobalFactor(logDomain, root, child);
+    }
+
+    private void testBackwardPassGlobalFactor(boolean logDomain, double[] root, double[][] child) {
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child, logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.logDomain = logDomain;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.maxIterations = 2;
+        prm.normalizeMessages = true;
+        ErmaBp bp = new ErmaBp(fg, prm);
+
+        bp.forward();
+        bp.getOutputAdj().fill(1.0);
+        bp.backward();
+     
+        System.out.println("Messages:");
+        printMessages(fg, bp.getMessages());
+        System.out.println("\nMessage Adjoints:");
+        printMessages(fg, bp.getMessagesAdj());
+        System.out.println("\nPotential Adjoints:");
+        for (VarTensor adj : bp.getPotentialsAdj()) {
+            if (adj != null) {
+                System.out.println(adj);
+                assertTrue(!adj.containsNaN());
+            }
+        }
     }
 
     private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {

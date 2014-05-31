@@ -8,7 +8,11 @@ import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.prim.util.math.FastMath;
 
-
+/**
+ * Tensor of doubles (i.e. a multi-dimensional array).
+ * 
+ * @author mgormley
+ */
 public class Tensor {
 
     private int[] dims;
@@ -33,6 +37,8 @@ public class Tensor {
         this.values = DoubleArrays.copyOf(other.values);
     }
     
+    /* --------------------- Multi-Dimensional View --------------------- */
+
     /** 
      * Gets the value of the entry corresponding to the given indices.
      * @param indices The indices of the multi-dimensional array.
@@ -121,6 +127,8 @@ public class Tensor {
             }
         }
     }
+    
+    /* --------------------- 1-Dimensional View --------------------- */
 
     /**
      * Gets the value of the c'th entry.
@@ -147,21 +155,8 @@ public class Tensor {
     public double addValue(int idx, double val) {
         return values[idx] += val; 
     }
-
-    /**
-     * Sets the dimensions and values to be the same as the given tensor.
-     * Assumes that the size of the two vectors are equal.
-     */
-    public void set(Tensor other) {
-        checkEqualSize(this, other);
-        this.dims = IntArrays.copyOf(other.dims);
-        DoubleArrays.copy(other.values, this.values);
-    }
-
-    public void setValuesOnly(Tensor other) {
-        checkEqualSize(this, other);
-        DoubleArrays.copy(other.values, this.values);
-    }
+    
+    /* --------------------- Scalar Operations --------------------- */
     
     /** Add the addend to each value. */    
     public void add(double addend) {
@@ -186,6 +181,8 @@ public class Tensor {
     public void fill(double val) {
         Arrays.fill(values, val);
     }
+
+    /* --------------------- Element-wise Operations --------------------- */
 
     /**
      * Adds a factor elementwise to this one.
@@ -227,6 +224,17 @@ public class Tensor {
         DoubleArrays.divide(this.values, other.values);        
     }
     
+    /**
+     * Adds a factor elementwise to this one.
+     * @param other The addend.
+     * @throws IllegalArgumentException If the two tensors have different sizes.
+     */
+    public void elemApply(Lambda.FnIntDoubleToDouble fn) {
+        for (int c=0; c<this.values.length; c++) {
+            this.values[c] = fn.call(c, this.values[c]);
+        }
+    }
+    
     public void elemOp(Tensor other, Lambda.LambdaBinOpDouble fn) {
         checkEqualSize(this, other);
         for (int c=0; c<this.values.length; c++) {
@@ -246,6 +254,13 @@ public class Tensor {
         for (int c=0; c<this.values.length; c++) {
             this.values[c] = FastMath.log(this.values[c]);
         }
+    }
+
+    /* --------------------- Summary Statistics --------------------- */
+
+    /** Gets the number of entries in the Tensor. */
+    public int size() {
+        return values.length;
     }
     
     /** Gets the sum of all the entries in this tensor. */
@@ -282,11 +297,23 @@ public class Tensor {
         return DoubleArrays.dotProduct(this.values, other.values);
     }
     
-    /** Gets the number of entries in the Tensor. */
-    public int size() {
-        return values.length;
+    /* --------------------- Reshaping --------------------- */
+
+    /**
+     * Sets the dimensions and values to be the same as the given tensor.
+     * Assumes that the size of the two vectors are equal.
+     */
+    public void set(Tensor other) {
+        checkEqualSize(this, other);
+        this.dims = IntArrays.copyOf(other.dims);
+        DoubleArrays.copy(other.values, this.values);
     }
 
+    public void setValuesOnly(Tensor other) {
+        checkEqualSize(this, other);
+        DoubleArrays.copy(other.values, this.values);
+    }
+    
     public Tensor copy() {
         return new Tensor(this);
     }
@@ -341,12 +368,14 @@ public class Tensor {
         }
     }
 
-    private static void checkEqualSize(Tensor t1, Tensor t2) {
+    public static void checkEqualSize(Tensor t1, Tensor t2) {
         if (t1.size() != t2.size()) {
             throw new IllegalArgumentException("Input tensors are not the same size");
         }
     }
     
+    /* --------------------- Inspection --------------------- */
+
     /** Special equals with a tolerance. */
     public boolean equals(Tensor other, double delta) {
         if (this == other)
@@ -393,6 +422,18 @@ public class Tensor {
     public int[] getDims() {
         return dims;
     }
+
+    /** Returns true if this tensor contains any NaNs. */
+    public boolean containsNaN() {
+        for (int i = 0; i < values.length; i++) {
+            if (Double.isNaN(values[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /* --------------------- Factory Methods --------------------- */
 
     /** 
      * Combines two identically sized tensors by adding an initial dimension of size 2. 

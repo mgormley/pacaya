@@ -2,6 +2,7 @@ package edu.jhu.autodiff;
 
 import java.util.List;
 
+import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -41,6 +42,7 @@ public class ElemDivide extends AbstractTensorModule implements Module<Tensor> {
         {
             Tensor tmp = yAdj.copy();
             tmp.elemDivide(w);
+            correctForZeros(tmp);
             modInX.getOutputAdj().elemAdd(tmp);
         }
         {
@@ -50,9 +52,26 @@ public class ElemDivide extends AbstractTensorModule implements Module<Tensor> {
             tmp.elemDivide(w);
             tmp.multiply(-1);
             tmp.elemMultiply(yAdj);
-            tmp.elemMultiply(x);            
+            tmp.elemMultiply(x); 
+            correctForZeros(tmp);
             modInW.getOutputAdj().elemAdd(tmp);
         }
+    }
+
+    private void correctForZeros(Tensor tmp) {
+        // If the adjoint of y is zero, then zero the result.
+        // This allows us to correct for NaNs introduced by division by zero.
+        final Tensor yAdjFinal = yAdj;
+        tmp.elemApply(new FnIntDoubleToDouble() {
+            @Override
+            public double call(int idx, double val) {
+                if (yAdjFinal.getValue(idx) == 0.0) {
+                    return 0;
+                } else {
+                    return val;
+                }
+            }
+        } );
     }
 
     @Override

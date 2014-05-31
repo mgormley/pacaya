@@ -548,7 +548,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             // Set the outgoing messages at time (t+1).
             setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-        } else {            
+        } else {
             // Add adjoints on outgoing message modules at time (t+1).
             Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
