@@ -131,6 +131,11 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     	return msgs;
     }
     
+    /** For testing only. */
+    public Messages[] getMessagesAdj() {
+        return msgsAdj;
+    }
+    
     /** @inheritDoc */
     @Override
     public void run() {
@@ -353,32 +358,8 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             }
         }
 
-        // Compute the adjoints of the normalized messages.
-        this.msgsAdj = new Messages[fg.getNumEdges()];
-        for (int i=0; i<msgs.length; i++) {
-            FgEdge edge = fg.getEdge(i);
-            int varId = edge.getVar().getId();
-            int facId = edge.getFactor().getId();
-            msgsAdj[i] = new Messages(edge, prm.logDomain, prm.normalizeMessages);
-            msgsAdj[i].message.multiply(s.zero());
-            // Instead of setting newMessage to null, we just zero it and then
-            // swap these back and forth during backwardSendMessage.
-            msgsAdj[i].newMessage.multiply(s.zero());
-            if (!edge.isVarToFactor()) {
-                // Backward pass for variable beliefs.
-                initFactorToVarAdj(i, varBeliefsAdj, varId, facId);                
-            } else if (!(fg.getFactor(facId) instanceof GlobalFactor)) {
-                // Backward pass for factor beliefs. Part 1.
-                initVarToFactorAdj(i, facBeliefsAdj, varId, facId, edge);
-            }
-        }
-        this.potentialsAdj = new VarTensor[fg.getNumFactors()];
-        for (int a=0; a<fg.getNumFactors(); a++) {
-            if (!(fg.getFactor(a) instanceof GlobalFactor)) {
-                // Backward pass for factor beliefs. Part 2.
-                initPotentialsAdj(a, facBeliefsAdj);
-            }
-        }
+        // Initialize the message and potential adjoints by running the variable / factor belief computation in reverse.
+        backwardVarFacBeliefs(varBeliefsAdj, facBeliefsAdj);
         
         // Reset the global factors.
         for (Factor factor : fg.getFactors()) {
@@ -424,6 +405,36 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         }
     }
 
+    private void backwardVarFacBeliefs(VarTensor[] varBeliefsAdj, VarTensor[] facBeliefsAdj) {
+        // Compute the adjoints of the normalized messages.
+        this.msgsAdj = new Messages[fg.getNumEdges()];
+        for (int i=0; i<msgs.length; i++) {
+            FgEdge edge = fg.getEdge(i);
+            int varId = edge.getVar().getId();
+            int facId = edge.getFactor().getId();
+            msgsAdj[i] = new Messages(edge, prm.logDomain, prm.normalizeMessages);
+            msgsAdj[i].message.multiply(s.zero());
+            // Instead of setting newMessage to null, we just zero it and then
+            // swap these back and forth during backwardSendMessage.
+            msgsAdj[i].newMessage.multiply(s.zero());
+            if (!edge.isVarToFactor()) {
+                // Backward pass for variable beliefs.
+                initFactorToVarAdj(i, varBeliefsAdj, varId, facId);                
+            } else if (!(fg.getFactor(facId) instanceof GlobalFactor)) {
+                // Backward pass for factor beliefs. Part 1.
+                initVarToFactorAdj(i, facBeliefsAdj, varId, facId, edge);
+            }
+            assert !msgsAdj[i].message.containsNaN() : "msgsAdj[i].message = " + msgsAdj[i].message + "\n" + "edge: " + edge;
+        }
+        this.potentialsAdj = new VarTensor[fg.getNumFactors()];
+        for (int a=0; a<fg.getNumFactors(); a++) {
+            if (!(fg.getFactor(a) instanceof GlobalFactor)) {
+                // Backward pass for factor beliefs. Part 2.
+                initPotentialsAdj(a, facBeliefsAdj);
+            }
+        }
+    }
+
     private void backwardSendMessage(int t) {
         // Dequeue from tape.
         FgEdge edge = tape.edges.get(t);
@@ -438,6 +449,8 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         tmp.multiply(0);
         msgsAdj[i].newMessage = msgsAdj[i].message; // The adjoint at time (t+1)
         msgsAdj[i].message = tmp;                   // The adjoint at time (t)
+        
+        assert !msgsAdj[i].newMessage.containsNaN() : "msgsAdj[i].newMessage = " + msgsAdj[i].newMessage + "\n" + "edge: " + edge;
     }
 
     private void backwardNormalize(int t) {
@@ -472,8 +485,9 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
                 backwardVarToFactor(edge, i);
             } else {
                 backwardFactorToVar(edge, i);
-            }
-        }        
+            }        
+        }    
+        assert !msgsAdj[i].message.containsNaN() : "msgsAdj[i].message = " + msgsAdj[i].message + "\n" + "edge: " + edge;
     }
 
     private void unnormalizeAdjInPlace(VarTensor dist, VarTensor distAdj, double unormSum) {
@@ -504,6 +518,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     private void initPotentialsAdj(int a, VarTensor[] facBeliefsAdj) {
         potentialsAdj[a] = new VarTensor(facBeliefsAdj[a]);
         getProductOfMessages(fg.getFactorNode(a), potentialsAdj[a], null);
+        assert !potentialsAdj[a].containsNaN() : "potentialsAdj[a] = " + potentialsAdj[a];
     }
 
     private void backwardVarToFactor(FgEdge edgeIA, int i) {
