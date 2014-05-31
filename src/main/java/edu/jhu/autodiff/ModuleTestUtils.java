@@ -292,6 +292,27 @@ public class ModuleTestUtils {
             }
         }
     }
+    
+    public static void assertFdAndAdEqual(DifferentiableFunction fn, double epsilon, double delta) {
+        int numParams = fn.getNumDimensions();                
+        IntDoubleDenseVector x = getZeroOneGaussian(numParams);
+        assertFdAndAdEqual(fn, x, epsilon, delta);
+    }
+    
+    public static void assertFdAndAdEqual(DifferentiableFunction fn, IntDoubleVector x, double epsilon, double delta) {
+        int numParams = fn.getNumDimensions();
+        for (int j=0; j<numParams; j++) {
+            // Test the deriviative d/dx_j(f(\vec{x}))
+            IntDoubleVector d = new IntDoubleDenseVector(numParams);
+            d.set(j, 1);
+            double dotFd = StochasticGradientApproximation.getGradDotDirApprox(fn, x, d, epsilon);
+            IntDoubleVector grad = fn.getGradient(x);
+            double dotAd = grad.dot(d);
+            double relError = Math.abs(dotFd - dotAd) / Math.max(Math.abs(dotFd), Math.abs(dotAd));
+            System.out.printf("j=%d dotFd=%g dotAd=%g relError=%g\n", j, dotFd, dotAd, relError);
+            assertEquals(dotFd, dotAd, delta);
+        }
+    }
 
     public static Tensor getVector(double... values) {
         Tensor t1 = new Tensor(values.length);

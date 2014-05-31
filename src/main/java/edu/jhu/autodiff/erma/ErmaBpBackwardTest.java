@@ -155,6 +155,8 @@ public class ErmaBpBackwardTest {
         System.out.println("theta0 = " + theta0);
         Prng.seed(System.currentTimeMillis());
         
+        ModuleTestUtils.assertFdAndAdEqual(fn, theta0, 1e-5, 1e-8);
+        
         IntDoubleVector gradFd0 = StochasticGradientApproximation.estimateGradientSpsa(fn, theta0, 1000);      
         IntDoubleVector gradFd1 = StochasticGradientApproximation.estimateGradientSpsa(fn, theta0, 1000);      
         IntDoubleVector gradAd = fn.getGradient(theta0);

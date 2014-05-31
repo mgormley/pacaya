@@ -552,7 +552,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             // Add adjoints on outgoing message modules at time (t+1).
             Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-            Pair<Tensor, Tensor> pairAdj = dep.getOutput();
+            Pair<Tensor, Tensor> pairAdj = dep.getOutputAdj();
             Tensor tmTrueOutAdj = pairAdj.get1();
             Tensor tmFalseOutAdj = pairAdj.get2();
             tmTrueOutAdj.elemAdd(tTrue);
