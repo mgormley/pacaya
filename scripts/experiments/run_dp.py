@@ -179,7 +179,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
         elif self.expname == "gobble-memory":
             exps = []
-            stage = GobbleMemory(work_mem_megs=1000)
+            stage = GobbleMemory(megsToGobble = 300, work_mem_megs=100)
+            stage.set_incl_arg("work_mem_megs", False)
             exps += get_oome_stages(stage)
             return self._get_pipeline_from_exps(exps)
         
@@ -204,7 +205,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 self.make_stage_fast(stage)
                 # Uncomment next line for multiple threads on a fast run: 
                 # stage.update(threads=2)
-            if isinstance(stage, SrlExpParams) and not self.big_machine:
+            if isinstance(stage, SrlExpParams) and not self.big_machine and not self.dry_run:
                 stage.update(work_mem_megs=1100, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
