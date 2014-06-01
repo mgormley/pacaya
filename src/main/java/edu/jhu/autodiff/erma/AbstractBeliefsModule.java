@@ -2,14 +2,16 @@ package edu.jhu.autodiff.erma;
 
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.util.semiring.Algebra;
 
 public abstract class AbstractBeliefsModule implements Module<Beliefs> {
 
     protected Beliefs b;
     protected Beliefs bAdj;
-
-    public AbstractBeliefsModule() {
-        super();
+    protected Algebra s;
+    
+    public AbstractBeliefsModule(Algebra s) {
+        this.s = s;
     }
 
     @Override
@@ -31,8 +33,23 @@ public abstract class AbstractBeliefsModule implements Module<Beliefs> {
     }
 
     @Override
+    public Algebra getAlgebra() {
+        return s;
+    }
+
+    @Override
     public String toString() {
         return this.getClass() + " [b=" + b + ", bAdj=" + bAdj + "]";
-    }    
+    } 
     
+    public static void checkEqualAlgebras(Module<Tensor> m1, Module<Tensor> m2) {
+        if (m1.getAlgebra().getClass() != m2.getAlgebra().getClass()) {
+            throw new IllegalArgumentException("Algebras must be the same");
+        }
+    }
+    
+    public static void checkEqualAlgebras(Module<Tensor> m1, Module<Tensor> m2, Module<Tensor> m3) {
+        checkEqualAlgebras(m1, m2);
+        checkEqualAlgebras(m2, m3);
+    }
 }

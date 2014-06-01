@@ -13,6 +13,8 @@ public class Sum extends AbstractTensorModule implements Module<Tensor> {
     private Module<Tensor> modIn;
     
     public Sum(Module<Tensor> modIn) {
+        super(modIn.getAlgebra());
+        checkEqualAlgebras(this, modIn);
         this.modIn = modIn;
     }
     
@@ -20,7 +22,7 @@ public class Sum extends AbstractTensorModule implements Module<Tensor> {
     @Override
     public Tensor forward() {
         Tensor x = modIn.getOutput();
-        y = new Tensor(1);
+        y = new Tensor(s, 1);
         y.setValue(0, x.getSum());
         return y;
     }

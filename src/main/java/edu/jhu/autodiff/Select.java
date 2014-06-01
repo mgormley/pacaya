@@ -16,6 +16,7 @@ public class Select extends AbstractTensorModule implements Module<Tensor> {
     private int idx; // In comments below, k.
     
     public Select(Module<Tensor> modIn, int dim, int idx) {
+        super(modIn.getAlgebra());
         this.modIn = modIn;
         this.dim = dim;
         this.idx = idx;

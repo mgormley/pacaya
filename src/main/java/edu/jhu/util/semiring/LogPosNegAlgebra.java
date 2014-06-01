@@ -64,8 +64,13 @@ public class LogPosNegAlgebra implements Semiring, Algebra {
     }
     
     /** Negates the compacted number. */
-    public static final double negate(double xd) {
+    public double negate(double xd) {
         return Double.longBitsToDouble(SIGN_MASK ^ Double.doubleToRawLongBits(xd));
+    }
+
+    @Override
+    public double abs(double xd) {
+        return compact(POSITIVE, natlog(xd));
     }
         
     @Override
@@ -96,16 +101,6 @@ public class LogPosNegAlgebra implements Semiring, Algebra {
     }
 
     @Override
-    public double zero() {
-        return Double.NEGATIVE_INFINITY;
-    }
-
-    @Override
-    public double one() {
-        return 0;
-    }
-
-    @Override
     public double minus(double x, double y) {
         return plus(x, negate(y));
     }
@@ -125,6 +120,56 @@ public class LogPosNegAlgebra implements Semiring, Algebra {
             throw new IllegalStateException("Unable to take the log of a negative number.");
         }
         return fromReal(natlog(x));
+    }
+
+    @Override
+    public double zero() {
+        return Double.NEGATIVE_INFINITY;
+    }
+
+    @Override
+    public double one() {
+        return 0;
+    }
+
+    @Override
+    public double posInf() {
+        return fromReal(Double.POSITIVE_INFINITY);
+    }
+
+    @Override
+    public double negInf() {
+        return fromReal(Double.NEGATIVE_INFINITY);
+    }
+
+    @Override
+    public boolean gt(double x, double y) {
+        throw new RuntimeException("not yet implemented");
+    }
+
+    @Override
+    public boolean lt(double x, double y) {
+        throw new RuntimeException("not yet implemented");
+    }
+
+    @Override
+    public boolean gte(double x, double y) {
+        throw new RuntimeException("not yet implemented");
+    }
+
+    @Override
+    public boolean lte(double x, double y) {
+        throw new RuntimeException("not yet implemented");
+    }
+
+    @Override
+    public boolean eq(double x, double y, double delta) {
+        throw new RuntimeException("not yet implemented");
+    }
+
+    @Override
+    public boolean isNaN(double x) {
+        throw new RuntimeException("not yet implemented");
     }
         
 }

@@ -1,5 +1,6 @@
 package edu.jhu.util.semiring;
 
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.util.math.FastMath;
 
 public class RealAlgebra implements Semiring, Algebra {
@@ -15,6 +16,16 @@ public class RealAlgebra implements Semiring, Algebra {
     }
 
     @Override
+    public double minus(double x, double y) {
+        return x - y;
+    }
+    
+    @Override
+    public double divide(double x, double y) {
+        return x / y;
+    }
+
+    @Override
     public double zero() {
         return 0;
     }
@@ -25,13 +36,65 @@ public class RealAlgebra implements Semiring, Algebra {
     }
 
     @Override
-    public double minus(double x, double y) {
-        return x - y;
+    public double posInf() {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    @Override
+    public double negInf() {
+        return Double.NEGATIVE_INFINITY;
     }
     
     @Override
-    public double divide(double x, double y) {
-        return x / y;
+    public double exp(double x) {
+        return FastMath.exp(x);
+    }
+
+    @Override
+    public double log(double x) {
+        if (x < 0) {
+            throw new IllegalStateException("Unable to take the log of a negative number.");
+        }
+        return FastMath.log(x);
+    }
+
+    @Override
+    public double abs(double x) {
+        return Math.abs(x);
+    }
+
+    @Override
+    public double negate(double x) {
+        return -x;
+    }
+
+    @Override
+    public boolean gt(double x, double y) {
+        return x > y;
+    }
+
+    @Override
+    public boolean lt(double x, double y) {
+        return x < y;
+    }
+
+    @Override
+    public boolean gte(double x, double y) {
+        return x >= y;
+    }
+
+    @Override
+    public boolean lte(double x, double y) {
+        return x <= y;
+    }
+
+    @Override
+    public boolean eq(double a, double b, double delta) {
+        if (a == b) {
+            // This case is needed for infinity equality.
+            return true;
+        }
+        return Math.abs(a - b) < delta;
     }
 
     @Override
@@ -53,18 +116,10 @@ public class RealAlgebra implements Semiring, Algebra {
     public double fromLogProb(double logProb) {
         return FastMath.exp(logProb);
     }
-    
-    @Override
-    public double exp(double x) {
-        return FastMath.exp(x);
-    }
 
     @Override
-    public double log(double x) {
-        if (x < 0) {
-            throw new IllegalStateException("Unable to take the log of a negative number.");
-        }
-        return FastMath.log(x);
+    public boolean isNaN(double x) {
+        return Double.isNaN(x);
     }
     
 }

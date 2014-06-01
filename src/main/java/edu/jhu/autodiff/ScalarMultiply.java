@@ -17,6 +17,8 @@ public class ScalarMultiply extends AbstractTensorModule implements Module<Tenso
     private int k;
     
     public ScalarMultiply(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
+        super(modInX.getAlgebra());
+        checkEqualAlgebras(this, modInX, modInW);
         this.modInX = modInX;
         this.modInW = modInW;
         this.k = k;

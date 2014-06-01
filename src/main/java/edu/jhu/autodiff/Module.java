@@ -2,6 +2,8 @@ package edu.jhu.autodiff;
 
 import java.util.List;
 
+import edu.jhu.util.semiring.Algebra;
+
 
 public interface Module<T> {
 
@@ -11,5 +13,6 @@ public interface Module<T> {
     T getOutputAdj();
     void zeroOutputAdj();
     List<? extends Object> getInputs();
+    Algebra getAlgebra();
     
 }

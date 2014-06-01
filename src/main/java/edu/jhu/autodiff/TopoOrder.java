@@ -19,10 +19,11 @@ public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
     protected Tensor y;
     protected Tensor yAdj;
 
-    public TopoOrder() { }
+    public TopoOrder() { super(null); }
     
     public void add(Module<? extends Object> m) {
         topoOrder.add(m);
+        s = m.getAlgebra();
     }
     
     @Override

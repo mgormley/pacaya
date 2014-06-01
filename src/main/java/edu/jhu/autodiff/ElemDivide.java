@@ -14,12 +14,16 @@ public class ElemDivide extends AbstractTensorModule implements Module<Tensor> {
 
     private Module<Tensor> modInX;
     private Module<Tensor> modInW;
+    private final double negOne;
     
     public ElemDivide(Module<Tensor> modInX, Module<Tensor> modInW) {
+        super(modInX.getAlgebra());
+        checkEqualAlgebras(this, modInX, modInW);
         this.modInX = modInX;
         this.modInW = modInW;
+        negOne = s.minus(s.zero(), s.one());
     }
-    
+
     /** Foward pass: y_i = x_i / w_i */
     @Override
     public Tensor forward() {
@@ -47,10 +51,10 @@ public class ElemDivide extends AbstractTensorModule implements Module<Tensor> {
         }
         {
             Tensor tmp = w.copy();
-            tmp.fill(1.0);
+            tmp.fill(s.one());
             tmp.elemDivide(w);
             tmp.elemDivide(w);
-            tmp.multiply(-1);
+            tmp.multiply(negOne);
             tmp.elemMultiply(yAdj);
             tmp.elemMultiply(x); 
             correctForZeros(tmp);
@@ -65,8 +69,8 @@ public class ElemDivide extends AbstractTensorModule implements Module<Tensor> {
         tmp.elemApply(new FnIntDoubleToDouble() {
             @Override
             public double call(int idx, double val) {
-                if (yAdjFinal.getValue(idx) == 0.0) {
-                    return 0;
+                if (yAdjFinal.getValue(idx) == s.zero()) {
+                    return s.zero();
                 } else {
                     return val;
                 }

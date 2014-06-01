@@ -35,8 +35,8 @@ public class SoftmaxMbrDepParseTest {
     @Test
     public void testForwardAndBackward() {
         double T = 1;
-        Tensor t1 = new Tensor(2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVector(2, 3, 5, 7));
+        Tensor t1 = new Tensor(s, 2,2);
+        t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
         t1.log();
         t1.multiply(T);
         TensorIdentity id1 = new TensorIdentity(t1);
@@ -62,7 +62,7 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testGradByFiniteDiffs() {       
-        Tensor t1 = new Tensor(4,4);
+        Tensor t1 = new Tensor(s, 4,4);
         TensorIdentity id1 = new TensorIdentity(t1);
         int T = 2;
         SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, T, s);

@@ -5,8 +5,12 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class EdgeScoresTest {
+
+    private Algebra s = new RealAlgebra();
 
     @Test
     public void testConversionToAndFromTensor() {
@@ -17,7 +21,7 @@ public class EdgeScoresTest {
         es1.setScore(-1, 0, 20);
         es1.setScore(-1, 1, -20);
                 
-        Tensor t = es1.toTensor();
+        Tensor t = es1.toTensor(s);
         assertEquals(10, t.get(0, 1), 1e-13);
         assertEquals(-10, t.get(1, 0), 1e-13);
         assertEquals(20, t.get(2, 0), 1e-13);

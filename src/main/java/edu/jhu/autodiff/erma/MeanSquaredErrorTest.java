@@ -22,6 +22,7 @@ public class MeanSquaredErrorTest {
     
     private VarConfig goldConfig;
     private BeliefsIdentity id1;
+    private Algebra s = new RealAlgebra();
 
     @Before
     public void setUp() {
@@ -34,7 +35,7 @@ public class MeanSquaredErrorTest {
         goldConfig.put(t0, 0);
         goldConfig.put(t1, 1);
 
-        Beliefs b = new Beliefs();
+        Beliefs b = new Beliefs(s);
         b.varBeliefs = new VarTensor[2];
         b.facBeliefs = new VarTensor[0];
         b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.0);
@@ -51,7 +52,7 @@ public class MeanSquaredErrorTest {
     @Test
     public void testSimple() {
         Algebra s = new RealAlgebra();        
-        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig, s);
+        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);
         
         Tensor out = mse.forward();
         assertEquals(sq(1-0.3)+sq(0-.7)+sq(0-.4)+sq(1-.6), out.getValue(0), 1e-13);
@@ -72,7 +73,7 @@ public class MeanSquaredErrorTest {
     @Test
     public void testGradByFiniteDiffs() {
         Algebra s = new RealAlgebra();
-        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig, s);        
+        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);        
         BeliefsVecFn vecFn = new BeliefsVecFn(id1, mse);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
         // TODO: for (Algebra s : Lists.getList(new RealAlgebra(), new LogPosNegAlgebra())) {  }

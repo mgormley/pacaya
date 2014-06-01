@@ -21,6 +21,7 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
     private Module<Beliefs> inf;
     
     public DepTensorToBeliefs(Module<Tensor> dep, Module<Beliefs> inf) {
+        super(dep.getAlgebra());
         this.depIn = dep;
         this.inf = inf;
     }
@@ -30,7 +31,7 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
         Tensor dep = depIn.getOutput();
         int n = dep.getDims()[1];
         Beliefs origB = inf.getOutput();
-        b = new Beliefs();
+        b = new Beliefs(s);
         b.varBeliefs = new VarTensor[origB.varBeliefs.length];
         b.facBeliefs = null;
         

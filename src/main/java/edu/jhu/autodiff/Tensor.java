@@ -2,11 +2,12 @@ package edu.jhu.autodiff;
 
 import java.util.Arrays;
 
-import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.RealAlgebra;
 
 /**
  * Tensor of doubles (i.e. a multi-dimensional array).
@@ -18,16 +19,18 @@ public class Tensor {
     private int[] dims;
     private int[] strides;
     private double[] values;
-
+    private final Algebra s;
+    
     /**
      * Standard constructor of multi-dimensional array.
      * @param dimensions The dimensions of this tensor.
      */
-    public Tensor(int... dimensions) {
+    public Tensor(Algebra s, int... dimensions) {
         int numConfigs = IntArrays.prod(dimensions);
         this.dims = dimensions;
         this.strides = getStrides(dims);
         this.values = new double[numConfigs];
+        this.s = s;
     }
 
     /** Copy constructor. */
@@ -35,6 +38,7 @@ public class Tensor {
         this.dims = IntArrays.copyOf(other.dims);
         this.strides = IntArrays.copyOf(other.strides);
         this.values = DoubleArrays.copyOf(other.values);
+        this.s = other.s;
     }
     
     /* --------------------- Multi-Dimensional View --------------------- */
@@ -74,7 +78,7 @@ public class Tensor {
         checkIndices(indices);
         int c = getConfigIdx(indices);
         double prev = values[c];
-        values[c] += val;
+        values[c] = s.plus(values[c], val);
         return prev;
     }
 
@@ -131,16 +135,14 @@ public class Tensor {
     /* --------------------- 1-Dimensional View --------------------- */
 
     /**
-     * Gets the value of the c'th entry.
-     * @param idx The index, c
+     * Gets the value of the idx'th entry.
      */
     public double getValue(int idx) {
         return values[idx];
     }
 
     /** 
-     * Sets the value of the c'th entry.
-     * @param The index, c 
+     * Sets the value of the idx'th entry.
      */
     public double setValue(int idx, double val) {
         double prev = values[idx];
@@ -149,32 +151,60 @@ public class Tensor {
     }
 
     /** 
-     * Adds the value to the c'th entry.
-     * @param The index, c 
+     * Adds the value to the idx'th entry.
      */
-    public double addValue(int idx, double val) {
-        return values[idx] += val; 
+    public void addValue(int idx, double val) {
+        values[idx] = s.plus(values[idx], val); 
+    }
+
+    /** 
+     * Subtracts the value from the idx'th entry.
+     */
+    public void subtractValue(int idx, double val) {
+        values[idx] = s.minus(values[idx], val); 
+    }
+
+    /** 
+     * Multiplies the value with the idx'th entry.
+     */
+    public void multiplyValue(int idx, double val) {
+        values[idx] = s.times(values[idx], val); 
+    }
+
+    /** 
+     * Divides the value from the idx'th entry.
+     */
+    public void divideValue(int idx, double val) {
+        values[idx] = s.divide(values[idx], val); 
     }
     
     /* --------------------- Scalar Operations --------------------- */
     
     /** Add the addend to each value. */    
-    public void add(double addend) {
-        DoubleArrays.add(values, addend);        
+    public void add(double addend) {  
+        for (int c = 0; c < this.values.length; c++) {
+            addValue(c, addend);
+        }
     }
 
     public void subtract(double val) {
-        DoubleArrays.add(values, val);
+        for (int c = 0; c < this.values.length; c++) {
+            subtractValue(c, val);
+        }
     }
     
     /** Scale each value by lambda. */
     public void multiply(double val) {
-        DoubleArrays.scale(values, val);        
+        for (int c = 0; c < this.values.length; c++) {
+            multiplyValue(c, val);
+        }
     }
 
     /** Divide each value by lambda. */
     public void divide(double val) {
-        DoubleArrays.scale(values, 1.0 / val);
+        for (int c = 0; c < this.values.length; c++) {
+            divideValue(c, val);
+        }
     }
 
     /** Set all the values to the given value. */
@@ -191,7 +221,9 @@ public class Tensor {
      */
     public void elemAdd(Tensor other) {
         checkEqualSize(this, other);
-        DoubleArrays.add(this.values, other.values);        
+        for (int c = 0; c < this.values.length; c++) {
+            addValue(c, other.values[c]);
+        }
     }
 
     /**
@@ -201,7 +233,9 @@ public class Tensor {
      */
     public void elemSubtract(Tensor other) {
         checkEqualSize(this, other);
-        DoubleArrays.subtract(this.values, other.values);        
+        for (int c = 0; c < this.values.length; c++) {
+            subtractValue(c, other.values[c]);
+        }
     }
 
     /**
@@ -211,7 +245,9 @@ public class Tensor {
      */
     public void elemMultiply(Tensor other) {
         checkEqualSize(this, other);
-        DoubleArrays.multiply(this.values, other.values);        
+        for (int c = 0; c < this.values.length; c++) {
+            multiplyValue(c, other.values[c]);
+        }     
     }
 
     /**
@@ -221,7 +257,9 @@ public class Tensor {
      */
     public void elemDivide(Tensor other) {
         checkEqualSize(this, other);
-        DoubleArrays.divide(this.values, other.values);        
+        for (int c = 0; c < this.values.length; c++) {
+            divideValue(c, other.values[c]);
+        }
     }
     
     /**
@@ -245,17 +283,17 @@ public class Tensor {
     /** Take the exp of each entry. */
     public void exp() {
         for (int c=0; c<this.values.length; c++) {
-            this.values[c] = FastMath.exp(this.values[c]);
+            this.values[c] = s.exp(this.values[c]);
         }
     }
     
     /** Take the log of each entry. */
     public void log() {
         for (int c=0; c<this.values.length; c++) {
-            this.values[c] = FastMath.log(this.values[c]);
+            this.values[c] = s.log(this.values[c]);
         }
     }
-
+    
     /* --------------------- Summary Statistics --------------------- */
 
     /** Gets the number of entries in the Tensor. */
@@ -265,22 +303,44 @@ public class Tensor {
     
     /** Gets the sum of all the entries in this tensor. */
     public double getSum() {
-        return DoubleArrays.sum(this.values);
+        double sum = s.zero();
+        for (int c = 0; c < this.values.length; c++) {
+            sum = s.plus(sum, values[c]);
+        }
+        return sum;
     }
 
     /** Gets the product of all the entries in this tensor. */
     public double getProd() {
-        return DoubleArrays.prod(this.values);
+        double prod = s.zero();
+        for (int c = 0; c < this.values.length; c++) {
+            prod = s.times(prod, values[c]);
+        }
+        return prod;
     }
 
     /** Gets the max value in the tensor. */
     public double getMax() {
-        return DoubleArrays.max(values);
+        double max = s.negInf();
+        for (int c = 0; c < this.values.length; c++) {
+            if (s.gte(values[c], max)) {
+                max = values[c];
+            }
+        }
+        return max;
     }
 
     /** Gets the ID of the configuration with the maximum value. */
     public int getArgmaxConfigId() {
-        return DoubleArrays.argmax(values);
+        int argmax = -1;
+        double max = s.negInf();
+        for (int c = 0; c < this.values.length; c++) {
+            if (s.gte(values[c], max)) {
+                max = values[c];
+                argmax = c;
+            }
+        }
+        return argmax;
     }
 
     /**
@@ -288,13 +348,24 @@ public class Tensor {
      * value of the entries.
      */
     public double getInfNorm() {
-        return DoubleArrays.infinityNorm(values);
+        double max = s.negInf();
+        for (int c = 0; c < this.values.length; c++) {
+            double abs = s.abs(values[c]);
+            if (s.gte(abs, max)) {
+                max = abs;
+            }
+        }
+        return max;
     }
 
     /** Computes the sum of the entries of the pointwise product of two tensors with identical domains. */
     public double getDotProduct(Tensor other) {
         checkEqualSize(this, other);
-        return DoubleArrays.dotProduct(this.values, other.values);
+        double dot = s.negInf();
+        for (int c = 0; c < this.values.length; c++) {
+            dot = s.plus(dot, s.times(this.values[c], other.values[c]));
+        }
+        return dot;
     }
     
     /* --------------------- Reshaping --------------------- */
@@ -338,7 +409,7 @@ public class Tensor {
      */
     public Tensor select(int dim, int idx) {
         int[] yDims = IntArrays.removeEntry(this.getDims(), dim);
-        Tensor y = new Tensor(yDims);
+        Tensor y = new Tensor(s, yDims);
         DimIter yIter = new DimIter(y.getDims());
         while (yIter.hasNext()) {
             int[] yIdx = yIter.next();
@@ -360,6 +431,7 @@ public class Tensor {
      * @param idx The index at which that dimension will be fixed.
      */
     public void addTensor(Tensor addend, int dim, int idx) {
+        checkSameAlgebra(this, addend);
         DimIter yIter = new DimIter(addend.getDims());
         while (yIter.hasNext()) {
             int[] yIdx = yIter.next();
@@ -371,6 +443,13 @@ public class Tensor {
     public static void checkEqualSize(Tensor t1, Tensor t2) {
         if (t1.size() != t2.size()) {
             throw new IllegalArgumentException("Input tensors are not the same size");
+        }
+        checkSameAlgebra(t1, t2);
+    }
+
+    public static void checkSameAlgebra(Tensor t1, Tensor t2) {
+        if (!t1.s.getClass().equals(t2.getClass())) {
+            throw new IllegalArgumentException("Input tensors must have the same abstract algebra: " + t1.s + " " + t2.s);
         }
     }
     
@@ -387,7 +466,7 @@ public class Tensor {
         if (this.values.length != other.values.length)
             return false;
         for (int i=0; i<values.length; i++) {
-            if (!Primitives.equals(values[i], other.values[i], delta))
+            if (!s.eq(values[i], other.values[i], delta))
                 return false;
         }
         return true;
@@ -396,7 +475,7 @@ public class Tensor {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Factor [\n");
+        sb.append("Tensor (" + s + ") [\n");
         for (int i=0; i<dims.length; i++) {
             sb.append(String.format("%5s", i));
         }
@@ -423,10 +502,15 @@ public class Tensor {
         return dims;
     }
 
+    /** Gets the abstract algebra for this tensor. */
+    public Algebra getAlgebra() {
+        return s;
+    }
+
     /** Returns true if this tensor contains any NaNs. */
     public boolean containsNaN() {
         for (int i = 0; i < values.length; i++) {
-            if (Double.isNaN(values[i])) {
+            if (s.isNaN(values[i])) {
                 return true;
             }
         }
@@ -442,21 +526,50 @@ public class Tensor {
      * @return The combined tensor.
      */
     public static Tensor combine(Tensor t1, Tensor t2) {
-        if (!Arrays.equals(t1.getDims(), t2.getDims())) {
-            throw new IllegalStateException("Input tensors are not the same dimension.");
-        }
+        checkSameDims(t1, t2);
+        checkSameAlgebra(t1, t2);
         
         int[] dims3 = IntArrays.insertEntry(t1.getDims(), 0, 2);
-        Tensor y = new Tensor(dims3);
+        Tensor y = new Tensor(t1.s, dims3);
         y.addTensor(t1, 0, 0);
         y.addTensor(t2, 0, 1);
         return y;
     }
 
-    public static Tensor getScalarTensor(double val) {
-        Tensor er = new Tensor(1);
+    private static void checkSameDims(Tensor t1, Tensor t2) {
+        if (!Arrays.equals(t1.getDims(), t2.getDims())) {
+            throw new IllegalStateException("Input tensors are not the same dimension.");
+        }
+    }
+
+    public static Tensor getScalarTensor(Algebra s, double val) {
+        Tensor er = new Tensor(s, 1);
         er.setValue(0, val);
         return er;
+    }
+
+    public Tensor copyAndConvertAlgebra(Algebra newS) {
+        Tensor t = new Tensor(newS, this.getDims());
+        t.setFromDiffAlgebra(this);
+        return t;
+    }
+
+    private void setFromDiffAlgebra(Tensor other) {       
+        for (int c=0; c<this.values.length; c++) {
+            if (this.s.getClass() == other.s.getClass()) {
+                this.values[c] = other.values[c];
+            } else if (other.s.getClass() == RealAlgebra.class) {
+                this.values[c] = this.s.fromReal(other.values[c]);
+            } else if (other.s.getClass() == LogSemiring.class) {
+                this.values[c] = this.s.fromLogProb(other.values[c]);
+            } else if (this.s.getClass() == RealAlgebra.class) {
+                this.values[c] = other.s.toReal(other.values[c]);
+            } else if (this.s.getClass() == LogSemiring.class) {
+                this.values[c] = other.s.toLogProb(other.values[c]);
+            } else {
+                throw new RuntimeException("Unable to convert from " + other.s + " to " + this.s);
+            }
+        }
     }
     
 }

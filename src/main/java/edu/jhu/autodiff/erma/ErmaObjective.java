@@ -67,7 +67,7 @@ public class ErmaObjective implements ExampleObjective {
         // Get the modules.
         t.reset(); t.start();
         // Model initialization.
-        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, logDomain);
+        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, s);
         // Inference.
         ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
         inf.setEffm(effm);

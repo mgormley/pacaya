@@ -13,6 +13,8 @@ public class Prod extends AbstractTensorModule implements Module<Tensor> {
     private Module<Tensor> modIn;
     
     public Prod(Module<Tensor> modIn) {
+        super(modIn.getAlgebra());
+        checkEqualAlgebras(this, modIn);
         this.modIn = modIn;
     }
     
@@ -20,14 +22,14 @@ public class Prod extends AbstractTensorModule implements Module<Tensor> {
     @Override
     public Tensor forward() {
         Tensor x = modIn.getOutput();
-        y = new Tensor(1);
+        y = new Tensor(s, 1);
         y.setValue(0, x.getProd());
         return y;
     }
 
     /** Backward pass: dG/dx_i += dG/dy dy/dx_i = dG/dy \prod_{j \neq i} x_j */
     @Override
-    public void backward() {        
+    public void backward() {
         // TODO: This is less numerically stable than the O(n^2) method of
         // multiplying \prod_{j=1}^{i-1} x_j \prod_{j+1}^n x_j  
         Tensor x = modIn.getOutput();

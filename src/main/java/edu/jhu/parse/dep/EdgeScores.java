@@ -6,6 +6,7 @@ import edu.jhu.autodiff.Tensor;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
+import edu.jhu.util.semiring.Algebra;
 
 /**
  * Edge scores for a dependency parser.
@@ -71,10 +72,11 @@ public class EdgeScores {
         }
     }    
 
-    /** Convert an EdgeScores object to a Tensor, where the wall node is indexed as position n+1 in the Tensor. */
-    public static Tensor edgeScoresToTensor(EdgeScores es) {
+    /** Convert an EdgeScores object to a Tensor, where the wall node is indexed as position n+1 in the Tensor. 
+     * @param s TODO*/
+    public static Tensor edgeScoresToTensor(EdgeScores es, Algebra s) {
         int n = es.child.length;
-        Tensor m = new Tensor(n, n);
+        Tensor m = new Tensor(s, n, n);
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
                 if (p == c) { continue; }
@@ -102,8 +104,8 @@ public class EdgeScores {
         return es;
     }
 
-    public Tensor toTensor() {
-        return edgeScoresToTensor(this);
+    public Tensor toTensor(Algebra s) {
+        return edgeScoresToTensor(this, s);
     }
 
     /** In the tensor, we use the diagonal as the scores for the wall node. */

@@ -17,6 +17,8 @@ public class ScalarAdd extends AbstractTensorModule implements Module<Tensor> {
     private int k;
     
     public ScalarAdd(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
+        super(modInX.getAlgebra());
+        checkEqualAlgebras(this, modInX, modInW);
         this.modInX = modInX;
         this.modInW = modInW;
         this.k = k;

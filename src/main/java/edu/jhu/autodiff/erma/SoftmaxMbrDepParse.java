@@ -3,6 +3,7 @@ package edu.jhu.autodiff.erma;
 import java.util.List;
 
 import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.ConvertAlgebra;
 import edu.jhu.autodiff.Exp;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ScalarDivide;
@@ -28,28 +29,36 @@ public class SoftmaxMbrDepParse implements Module<Tensor> {
     
     private Module<Tensor> pIn;
     private double temperature;
-    private Algebra s;
     private TopoOrder topo;
+    private Algebra outS;
+    private Algebra tmpS;
     
-    public SoftmaxMbrDepParse(Module<Tensor> margIn, double temperature, Algebra s) {
+    public SoftmaxMbrDepParse(Module<Tensor> margIn, double temperature, Algebra tmpS) {
         this.pIn = margIn;
         this.temperature = temperature;
-        this.s = s;
+        this.outS = margIn.getAlgebra();
+        this.tmpS = tmpS;
     }
     
     @Override
     public Tensor forward() {
         topo = new TopoOrder();
         
-        TensorIdentity ti = new TensorIdentity(Tensor.getScalarTensor(temperature));
+        // Internally we use a different algebra to avoid numerical precision problems.
+        ConvertAlgebra pIn1 = new ConvertAlgebra(pIn, tmpS);
+        topo.add(pIn1);
+        
+        TensorIdentity ti = new TensorIdentity(Tensor.getScalarTensor(tmpS, temperature));
         topo.add(ti);
         ScalarDivide divide = new ScalarDivide(pIn, ti, 0);
         topo.add(divide);
         Exp exp = new Exp(divide);
         topo.add(exp);
-        // TODO: convert between non-semiring numbers and semiring numbers.
-        InsideOutsideDepParse io = new InsideOutsideDepParse(exp, s);
+        InsideOutsideDepParse io = new InsideOutsideDepParse(exp);
         topo.add(io);
+        
+        ConvertAlgebra io1 = new ConvertAlgebra(io, outS);
+        topo.add(io1);
         
         return topo.forward();
     }
@@ -77,6 +86,11 @@ public class SoftmaxMbrDepParse implements Module<Tensor> {
     @Override
     public void zeroOutputAdj() {
         topo.zeroOutputAdj();
+    }
+
+    @Override
+    public Algebra getAlgebra() {
+        return outS;
     }
     
 }

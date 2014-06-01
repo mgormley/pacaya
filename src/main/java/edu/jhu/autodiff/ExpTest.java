@@ -10,12 +10,16 @@ import org.junit.Test;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class ExpTest {
 
+    private Algebra s = new RealAlgebra();
+
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
+        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
         TensorIdentity id1 = new TensorIdentity(t1);
         Exp ea = new Exp(id1);
 
@@ -36,7 +40,7 @@ public class ExpTest {
 
     @Test
     public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
+        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
         TensorIdentity id1 = new TensorIdentity(t1);
         Exp ea = new Exp(id1);
         

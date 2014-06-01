@@ -33,15 +33,14 @@ public class InsideOutsideDepParse extends AbstractTensorModule implements Modul
     public static final int ROOT_IDX = 2;
     
     private Module<Tensor> weightsIn;
-    private Algebra s; // TODO: semiring, use when filling yAdj in abstract parent.
     
     private Scores scores;
     // Cached for efficiency.
     private FirstOrderDepParseHypergraph graph;
     
-    public InsideOutsideDepParse(Module<Tensor> weightsIn, Algebra s) {           
+    public InsideOutsideDepParse(Module<Tensor> weightsIn) {
+        super(weightsIn.getAlgebra());
         this.weightsIn = weightsIn;
-        this.s = s;
     }
     
     @Override
@@ -54,7 +53,7 @@ public class InsideOutsideDepParse extends AbstractTensorModule implements Modul
         Hyperalgo.outsideAlgorithm(graph, w, s, scores);
         int n = graph.getNumTokens();
         
-        y = new Tensor(3, n, n);
+        y = new Tensor(s, 3, n, n);
         y.fill(s.zero());
         for (Hypernode node : graph.getNodes()) {
             if (node instanceof PCBasicHypernode) {   

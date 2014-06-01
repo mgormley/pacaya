@@ -6,13 +6,17 @@ import org.junit.Test;
 
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Timer;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 
 public class TensorTest {
 
+    private Algebra s = new RealAlgebra();
+    
     @Test
     public void testGetSetAddWithIndices() {
-        Tensor t1 = new Tensor(2,3,5);
+        Tensor t1 = new Tensor(s, 2,3,5);
         // Test set.
         double val;
         val = 0;
@@ -61,7 +65,7 @@ public class TensorTest {
         Tensor[] arr = new Tensor[1000];
         int[] dims = new int[]{31, 5, 7, 11};
         for (int i=0; i<arr.length; i++) {
-            arr[i] = new Tensor(dims);
+            arr[i] = new Tensor(s, dims);
         }
         {
             Timer timer = new Timer();
@@ -94,7 +98,7 @@ public class TensorTest {
     
     @Test
     public void testValueOperations() {
-        Tensor f1 = new Tensor(2);
+        Tensor f1 = new Tensor(s, 2);
         f1.setValue(0, 0);
         f1.setValue(1, 1);
         
@@ -116,12 +120,12 @@ public class TensorTest {
     @Test
     public void testFactorAddIdentical() {   
         // Test where vars1 is identical to vars2.
-        Tensor f1 = new Tensor(2, 3);
+        Tensor f1 = new Tensor(s, 2, 3);
         f1.fill(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
-        Tensor f2 = new Tensor(2, 3);
+        Tensor f2 = new Tensor(s, 2, 3);
         f2.fill(2);
         f2.setValue(2, 5);
         f2.setValue(5, 7);

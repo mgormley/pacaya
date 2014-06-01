@@ -20,12 +20,13 @@ import edu.jhu.util.semiring.RealAlgebra;
 
 public class ProjDepTreeModuleTest {
 
+    Algebra s = new RealAlgebra();
+
     @Test
     public void testGradByFiniteDiffs() {
-        Algebra s = new RealAlgebra();
-        Tensor t1 = new Tensor(3,3);
+        Tensor t1 = new Tensor(s, 3,3);
         TensorIdentity id1 = new TensorIdentity(t1);
-        Tensor t2 = new Tensor(3,3);
+        Tensor t2 = new Tensor(s, 3,3);
         TensorIdentity id2 = new TensorIdentity(t2);
 
         TopoOrder topo = new TopoOrder();
@@ -45,10 +46,9 @@ public class ProjDepTreeModuleTest {
         for (Double adjVal : Lists.getList(0., 1.)) {
             for (double[] inVals : Lists.getList(new double[]{.5, .5}, new double[]{0, 1})) {
                 System.out.println("inVals: " + Arrays.toString(inVals) + " adjVal: " + adjVal);
-                Algebra s = new RealAlgebra();
-                Tensor tmTrueIn = new Tensor(3,3);
+                Tensor tmTrueIn = new Tensor(s, 3,3);
                 TensorIdentity id1 = new TensorIdentity(tmTrueIn);
-                Tensor tmFalseIn = new Tensor(3,3);
+                Tensor tmFalseIn = new Tensor(s, 3,3);
                 TensorIdentity id2 = new TensorIdentity(tmFalseIn);
         
                 tmTrueIn.fill(0.5);

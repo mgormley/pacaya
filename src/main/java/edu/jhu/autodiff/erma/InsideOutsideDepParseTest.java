@@ -47,10 +47,10 @@ public class InsideOutsideDepParseTest {
     
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = new Tensor(2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVector(2, 3, 5, 7));
+        Tensor t1 = new Tensor(s, 2,2);
+        t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
         TensorIdentity id1 = new TensorIdentity(t1);
-        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1, s);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
 
         Tensor out = ea.forward();
         System.out.println(out);
@@ -69,9 +69,9 @@ public class InsideOutsideDepParseTest {
     
     @Test
     public void testGradByFiniteDiffs() {       
-        Tensor t1 = new Tensor(4,4);
+        Tensor t1 = new Tensor(s, 4,4);
         TensorIdentity id1 = new TensorIdentity(t1);
-        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1, s);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
         
         TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
         int numParams = vecFn.getNumDimensions();                
