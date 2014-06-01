@@ -1,4 +1,4 @@
-package edu.jhu.gm.model.globalfac;
+package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import edu.jhu.autodiff.ScalarMultiply;
 import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;

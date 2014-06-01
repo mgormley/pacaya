@@ -1,4 +1,4 @@
-package edu.jhu.gm.model.globalfac;
+package edu.jhu.autodiff.erma;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertTrue;
