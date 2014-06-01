@@ -85,7 +85,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # Language specific parameters
         p.cx_langs_with_phead = ["bg", "en", "de", "es"]
-        l2var_map = {"bg" : 10000, "es" : 1000}
+        l2var_map = {"bg" : 10000, "es" : 1000, "en" : 40000 }
 
         for lang_short in p.cx_lang_short_names:
             gl = g.langs[lang_short]
@@ -105,7 +105,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # CoNLL-X experiments.
             exps = []
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
-            for lang_short in ["bg", "es"]:
+            for lang_short in ["bg", "es", "en"]:
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
                 for parser in g.parsers:
@@ -119,6 +119,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exps += get_oome_stages(exp)
                     else:
                         exps.append(exp)
+            exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
            
         elif self.expname == "dp-pruning":            
@@ -126,7 +127,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_mcdonald_basic
             g.defaults.update(pruneByDist=False) # TODO: Consider changing this.
-            for lang_short in ["bg", "es"]:
+            for lang_short in ["bg", "es", "en"]:
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
                 data = gl.cx_data
@@ -135,6 +136,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp = g.defaults + data + g.first_order
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
+            exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tune":
