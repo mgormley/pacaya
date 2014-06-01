@@ -65,6 +65,7 @@ public class ErmaBpForwardTest {
         //TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
+        System.out.println(bp.isConverged());
         assertEqualMarginals(fg, bf, bp);
         
         VarTensor x0_marg = bp.getMarginals(x0);
@@ -91,6 +92,7 @@ public class ErmaBpForwardTest {
         bf.run();
         bp = new ErmaBp(fg, prm);
         bp.run();
+        System.out.println(bp.isConverged());
 		assertEqualMarginals(fg, bf, bp);
 	}
 	
@@ -373,8 +375,8 @@ public class ErmaBpForwardTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(true, 0, 7);
-        testConvergenceHelper(false, 0, 7);
+        testConvergenceHelper(true, 0, 6);
+        testConvergenceHelper(false, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
         testConvergenceHelper(true, 1e-3, 5);
         testConvergenceHelper(false, 1e-3, 5);
@@ -391,7 +393,6 @@ public class ErmaBpForwardTest {
         prm.logDomain = logDomain;
         prm.normalizeMessages = true;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
-        // Enforce exact convergence.
         prm.convergenceThreshold = convergenceThreshold;        
         
         ErmaBp bp = null;

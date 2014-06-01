@@ -51,7 +51,7 @@ public class BruteForceInferencer implements FgInferencer {
         VarTensor joint = new VarTensor(new VarSet(), logDomain ? 0.0 : 1.0);
         for (int a=0; a<fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
-            VarTensor factor = safeGetDenseFactor(f);
+            VarTensor factor = safeGetVarTensor(f);
             assert !factor.containsBadValues(logDomain) : factor;
             if (logDomain) {
                 joint.add(factor);
@@ -62,11 +62,26 @@ public class BruteForceInferencer implements FgInferencer {
         return joint;
     }
 
-    /** Gets this factor as a DenseFactor. This will construct such a factor if it is not already one. */
-    public static VarTensor safeGetDenseFactor(Factor f) {
+    /** Gets this factor as a VarTensor. This will sometimes return a new object. See also safeNewVarTensor(). */
+    public static VarTensor safeGetVarTensor(Factor f) {
         VarTensor factor;
         if (f instanceof VarTensor) {
             factor = (VarTensor) f;
+        } else {
+            // Create a VarTensor which the values of this non-explicitly represented factor.
+            factor = new VarTensor(f.getVars());
+            for (int c=0; c<factor.size(); c++) {
+                factor.setValue(c, f.getUnormalizedScore(c));
+            }
+        }
+        return factor;
+    }
+    
+    /** Gets this factor as a VarTensor. This will always return a new object. See also safeGetVarTensor(). */
+    public static VarTensor safeNewVarTensor(Factor f) {
+        VarTensor factor;
+        if (f instanceof VarTensor) {
+            factor = new VarTensor((VarTensor) f);
         } else {
             // Create a VarTensor which the values of this non-explicitly represented factor.
             factor = new VarTensor(f.getVars());

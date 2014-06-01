@@ -433,7 +433,7 @@ public class BeliefPropagation implements FgInferencer {
                     + " This should only be used for testing.");
         }
         
-        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetDenseFactor(factor));
+        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetVarTensor(factor));
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessagesNormalized(node, prod, null);

@@ -12,7 +12,7 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
     private int id = -1;
-    private int iterAtLastCreateMessagesCall = -1;
+    private int iterAtLastCreateMessagesCall = Integer.MIN_VALUE;
     protected boolean logDomain;
     
     public AbstractGlobalFactor() {
@@ -31,7 +31,7 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
 
     @Override
     public void reset() {
-        iterAtLastCreateMessagesCall = -1;
+        iterAtLastCreateMessagesCall = Integer.MIN_VALUE;
     }
 
     public void updateFromModel(FgModel model, boolean logDomain) {

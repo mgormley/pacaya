@@ -26,10 +26,10 @@ public class SoftmaxMbrDepParseTest {
     
     String expoutAdj = "Factor [\n"
             + "    0    1  |  value\n"
-            + "    0    0  |  30.800000\n"
-            + "    0    1  |  33.000000\n"
-            + "    1    0  |  165.000000\n"
-            + "    1    1  |  169.400000\n"
+            + "    0    0  |  30.8000\n"
+            + "    0    1  |  33.0000\n"
+            + "    1    0  |  165.000\n"
+            + "    1    1  |  169.400\n"
             + "]";
     
     @Test

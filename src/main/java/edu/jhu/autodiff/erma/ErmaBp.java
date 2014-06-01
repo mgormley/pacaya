@@ -165,13 +165,12 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         }
         
         // Message passing.
-        List<FgEdge> order = (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) ?
-            order = sched.getOrder() : null;
-        for (int iter=0; iter < prm.maxIterations; iter++) {
-            if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-                if (prm.schedule == BpScheduleType.RANDOM) {
-                    order = sched.getOrder();
-                }
+        //
+        // At iteration -1, we send all the constant messages. Then we never send them again.
+        List<FgEdge> order = null;
+        for (int iter=-1; iter < prm.maxIterations; iter++) {
+            order = updateOrder(order, iter);
+            if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {                
                 for (FgEdge edge : order) {
                     forwardCreateMessage(edge, iter);
                     forwardSendMessage(edge);
@@ -181,12 +180,12 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
                     }
                 }
             } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-                for (FgEdge edge : fg.getEdges()) {
+                for (FgEdge edge : order) {
                     forwardCreateMessage(edge, iter);
                 }
                 // Mark the end of the message creation on the tape with a special tape entry.
                 tape.add(END_OF_EDGE_CREATION, null, 0, false);
-                for (FgEdge edge : fg.getEdges()) {
+                for (FgEdge edge : order) {
                     forwardSendMessage(edge);
                 }
             } else {
@@ -202,6 +201,56 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         forwardVarAndFacBeliefs();
         b = new Beliefs(varBeliefs, facBeliefs);
         return b;
+    }
+
+    private List<FgEdge> updateOrder(List<FgEdge> order, int iter) {
+        if (iter >= 1 && !(prm.updateOrder == BpUpdateOrder.SEQUENTIAL || prm.schedule == BpScheduleType.RANDOM)) {
+            // Just re-use the same order.
+            return order;
+        }
+        // Get the initial order for the edges.
+        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
+            order = sched.getOrder();
+        } else {
+            order = fg.getEdges();
+        }
+        if (iter == -1) {   
+            // Keep only the messages from the leaves for iteration -1. Then never send these again.
+            order = filterNonConstantMsgs(order);
+        } else {
+            // Filter out the messages from the leaves.
+            order = filterConstantMsgs(order);
+        }
+        return order;
+    }
+    
+    /** Filters edges from a leaf node. */
+    private List<FgEdge> filterConstantMsgs(List<FgEdge> order) {
+        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
+        for (FgEdge edge : order) {
+            // If the parent node is not a leaf.
+            if (!isConstantMsg(edge)) {
+                filt.add(edge);
+            }
+        }
+        return filt;
+    }
+    
+    /** Filters edges not from a leaf node. */
+    private List<FgEdge> filterNonConstantMsgs(List<FgEdge> order) {
+        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
+        for (FgEdge edge : order) {
+            // If the parent node is not a leaf.
+            if (isConstantMsg(edge)) {
+                filt.add(edge);
+            }
+        }
+        return filt;
+    }
+
+    /** Returns true iff the edge corresponds to a message which is constant (i.e. sent from a leaf node). */
+    private boolean isConstantMsg(FgEdge edge) {
+        return edge.getParent().getOutEdges().size() == 1;
     }
 
     private void forwardCreateMessage(FgEdge edge, int iter) {
@@ -227,16 +276,6 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         }
     }
 
-    private void normalizeAndAddToTape(FgEdge edge, boolean created) {
-        double msgSum = 0;
-        if (prm.normalizeMessages) {
-            msgSum = forwardNormalize(edge);
-        }
-        // The tape stores the old message, the normalization constant of the new message, and the edge.
-        VarTensor oldMsg = new VarTensor(msgs[edge.getId()].message);
-        tape.add(edge, oldMsg, msgSum, created);
-    }
-
     public boolean isConverged() {
         return numConverged == msgs.length;
     }
@@ -255,9 +294,6 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         // Compute the product of all messages received by v* except for the
         // one from f*.
         getProductOfMessages(edge.getParent(), msg, edge.getChild());
-
-        // Set the final message in case we created a new object.
-        msgs[edge.getId()].newMessage = msg;
     }
 
     private void forwardFactorToVar(FgEdge edge) {
@@ -268,30 +304,32 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         // variable configurations.
         VarTensor msg = msgs[edge.getId()].newMessage;
         
-        // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-        msg.fill(prm.logDomain ? 0.0 : 1.0);
-        
-        // Message from factor f* to variable v*.
-        //
-        // Compute the product of all messages received by f* (each
-        // of which will have a different domain) with the factor f* itself.
-        // Exclude the message going out to the variable, v*.
-        VarTensor prod = new VarTensor(factor.getVars());
-        // Set the initial values of the product to those of the sending factor.
-        int numConfigs = prod.getVars().calcNumConfigs();
-        for (int c = 0; c < numConfigs; c++) {
-            prod.setValue(c, factor.getUnormalizedScore(c));
-        }
-        getProductOfMessages(edge.getParent(), prod, edge.getChild());
-        
-        // Marginalize over all the assignments to variables for f*, except
-        // for v*.
-        if (prm.logDomain) { 
-            msg = prod.getLogMarginal(new VarSet(var), false);
+        if (factor.getVars().size() == 1 && factor instanceof VarTensor) {
+            // Special case for unary factors. We copy the factor so that we can normalize it.
+            // TODO: Only send from unary factors once.
+            msg = new VarTensor((VarTensor) factor);
         } else {
-            msg = prod.getMarginal(new VarSet(var), false);
+            // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
+            msg.fill(prm.logDomain ? 0.0 : 1.0);
+            
+            // Message from factor f* to variable v*.
+            //
+            // Set the initial values of the product to those of the sending factor.
+            VarTensor prod = BruteForceInferencer.safeNewVarTensor(factor);
+            // Compute the product of all messages received by f* (each
+            // of which will have a different domain) with the factor f* itself.
+            // Exclude the message going out to the variable, v*.
+            getProductOfMessages(edge.getParent(), prod, edge.getChild());
+            
+            // Marginalize over all the assignments to variables for f*, except
+            // for v*.
+            if (prm.logDomain) { 
+                msg = prod.getLogMarginal(new VarSet(var), false);
+            } else {
+                msg = prod.getMarginal(new VarSet(var), false);
+            }
         }
-
+        
         // Set the final message in case we created a new object.
         msgs[edge.getId()].newMessage = msg;
     }
@@ -306,19 +344,24 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         return globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, false, iter);
     }
 
+    private void normalizeAndAddToTape(FgEdge edge, boolean created) {
+        double msgSum = 0;
+        if (prm.normalizeMessages) {
+            msgSum = forwardNormalize(edge);
+        }
+        // The tape stores the old message, the normalization constant of the new message, and the edge.
+        VarTensor oldMsg = new VarTensor(msgs[edge.getId()].message);
+        tape.add(edge, oldMsg, msgSum, created);
+    }
+    
     private double forwardNormalize(FgEdge edge) {
         VarTensor msg = msgs[edge.getId()].newMessage;
-        assert (msg.getVars().equals(new VarSet(edge.getVar())));
+        assert (msg.getVars().size() == 1) && (msg.getVars().get(0) == edge.getVar());
         double sum = Double.NaN;
-        if (prm.normalizeMessages) {
-            if (prm.logDomain) { 
-                sum = msg.logNormalize();
-            } else {
-                sum = msg.normalize();
-            }
+        if (prm.logDomain) { 
+            sum = msg.logNormalize();
         } else {
-            // normalize and logNormalize already check for NaN
-            assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;        
+            sum = msg.normalize();
         }
         msgs[edge.getId()].newMessage = msg;
         return sum;
@@ -366,13 +409,6 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
 
         // Initialize the message and potential adjoints by running the variable / factor belief computation in reverse.
         backwardVarFacBeliefs(varBeliefsAdj, facBeliefsAdj);
-        
-        // Reset the global factors.
-        for (Factor factor : fg.getFactors()) {
-            if (factor instanceof GlobalFactor) {
-                ((GlobalFactor)factor).reset();
-            }
-        }
         
         // Compute the message adjoints by running BP in reverse.
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
@@ -516,8 +552,8 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
 
     private void initVarToFactorAdj(int i, VarTensor[] facBeliefsAdj, int varId, int facId, FgEdge edge) {
         Factor fac = fg.getFactor(facId);
-        VarTensor prod = new VarTensor(facBeliefsAdj[facId]);
-        prod.prod(BruteForceInferencer.safeGetDenseFactor(fac));
+        VarTensor prod = BruteForceInferencer.safeNewVarTensor(fac);
+        prod.prod(facBeliefsAdj[facId]);
         getProductOfMessages(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
         if (prm.logDomain) { 
             msgsAdj[i].message = prod.getLogMarginal(new VarSet(edge.getVar()), false);
@@ -563,7 +599,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         // Increment the adjoint for each variable to factor message.
         for (FgEdge edgeJA : fg.getFactorNode(facId).getInEdges()) {
             if (edgeJA != edgeAI.getOpposing()) {
-                VarTensor prod = new VarTensor(BruteForceInferencer.safeGetDenseFactor(factor));
+                VarTensor prod = BruteForceInferencer.safeNewVarTensor(factor);
                 getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
                 prod.prod(msgsAdj[i].newMessage); // TODO: semiring
                 VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
@@ -579,11 +615,6 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     
     public VarTensor getPotentialsAdj(int factorId) {
         return potentialsAdj[factorId];
-    }
-    
-    public void clear() {
-        Arrays.fill(msgs, null);
-        tape = null;
     }
     
     protected void getProductOfMessages(FgNode node, VarTensor prod, FgNode exclNode) {
@@ -650,7 +681,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         Messages ec = msgs[edgeId];
         // Update the residual
         double oldResidual = ec.residual;
-        ec.residual = getResidual(ec.message, ec.newMessage);
+        ec.residual = smartResidual(ec.message, ec.newMessage, edge);
         if (oldResidual > prm.convergenceThreshold && ec.residual <= prm.convergenceThreshold) {
             // This message has (newly) converged.
             numConverged ++;
@@ -670,6 +701,11 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         if (log.isTraceEnabled()) {
             log.trace("Message sent: " + ec.message);
         }
+    }
+
+    /** Returns the "converged" residual for constant messages, and the actual residual otherwise. */
+    private double smartResidual(VarTensor message, VarTensor newMessage, FgEdge edge) {
+        return isConstantMsg(edge) ? 0.0 : getResidual(message, newMessage);
     }
 
     /**
@@ -736,7 +772,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
                     + " This should only be used for testing.");
         }
         
-        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetDenseFactor(factor));
+        VarTensor prod = BruteForceInferencer.safeNewVarTensor(factor);
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessages(node, prod, null);

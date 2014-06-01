@@ -39,7 +39,7 @@ public class ExpFamFactorModule implements Module<VarTensor[]> {
         for (int a = 0; a < y.length; a++) {
             Factor factor = fg.getFactor(a);
             if (!(factor instanceof GlobalFactor)) {
-                y[a] = BruteForceInferencer.safeGetDenseFactor(factor);
+                y[a] = BruteForceInferencer.safeGetVarTensor(factor);
             }
         }
         return y;
