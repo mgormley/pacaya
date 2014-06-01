@@ -14,6 +14,7 @@ import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.dist.Gaussian;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class ModuleTestUtils {
 
@@ -349,5 +350,10 @@ public class ModuleTestUtils {
         return t1;
     }
 
+    /** Gets a tensor in the s semiring, where the input values are assumed to be in the reals. */
+    public static Tensor getVectorFromReals(Algebra s, double... values) {
+        Tensor t0 = getVector(new RealAlgebra(), values);
+        return t0.copyAndConvertAlgebra(s);
+    }
 
 }

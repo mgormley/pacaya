@@ -1,5 +1,6 @@
 package edu.jhu.gm.model.globalfac;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -16,21 +17,92 @@ import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class ProjDepTreeModuleTest {
 
     Algebra s = new RealAlgebra();
-
+    String expout = "Tensor (RealAlgebra) [\n"
+            + "    0    1    2  |  value\n"
+            + "    0    0    0  |  0.0960000\n"
+            + "    0    0    1  |  0.0960000\n"
+            + "    0    1    0  |  0.0960000\n"
+            + "    0    1    1  |  0.0960000\n"
+            + "    1    0    0  |  0.144000\n"
+            + "    1    0    1  |  0.144000\n"
+            + "    1    1    0  |  0.144000\n"
+            + "    1    1    1  |  0.144000\n"
+            + "]";
+    
+    String expoutAdj1 = "Tensor (RealAlgebra) [\n"
+            + "    0    1  |  value\n"
+            + "    0    0  |  1.40800\n"
+            + "    0    1  |  1.40800\n"
+            + "    1    0  |  1.40800\n"
+            + "    1    1  |  1.40800\n"
+            + "]";
+    
+    String expoutAdj2 = "Tensor (RealAlgebra) [\n"
+            + "    0    1  |  value\n"
+            + "    0    0  |  1.84800\n"
+            + "    0    1  |  1.84800\n"
+            + "    1    0  |  1.84800\n"
+            + "    1    1  |  1.84800\n"
+            + "]";    
+    
     @Test
-    public void testGradByFiniteDiffs() {
+    public void testSimpleReal() {
+        helpSimple(new RealAlgebra());
+    }
+    
+    @Test
+    public void testSimpleLogPosNeg() {
+        helpSimple(new LogPosNegAlgebra());
+    }
+
+    private void helpSimple(Algebra tmpS) {
+        Tensor t1 = new Tensor(s, 2,2);
+        Tensor t2 = new Tensor(s, 2,2);
+        t1.fill(0.6);
+        t2.fill(0.4);
+        
+        TensorIdentity id1 = new TensorIdentity(t1);
+        TensorIdentity id2 = new TensorIdentity(t2);
+
+        TopoOrder topo = new TopoOrder();
+        ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, tmpS);
+        Combine comb = new Combine(ea);
+        topo.add(ea);
+        topo.add(comb);
+        
+        Tensor out = topo.forward();
+        assertEquals(expout , out.toString());
+        
+        topo.getOutputAdj().fill(2.2);        
+        topo.backward();
+        assertEquals(expoutAdj1 , id1.getOutputAdj().toString());
+        assertEquals(expoutAdj2 , id2.getOutputAdj().toString());
+    }
+    
+    @Test
+    public void testGradByFiniteDiffsReal() {
+        helpGradByFinDiff(new RealAlgebra());
+    }
+    
+    @Test
+    public void testGradByFiniteDiffsLogPosNeg() {
+        helpGradByFinDiff(new LogPosNegAlgebra());
+    }
+
+    private void helpGradByFinDiff(Algebra tmpS) {
         Tensor t1 = new Tensor(s, 3,3);
         TensorIdentity id1 = new TensorIdentity(t1);
         Tensor t2 = new Tensor(s, 3,3);
         TensorIdentity id2 = new TensorIdentity(t2);
 
         TopoOrder topo = new TopoOrder();
-        ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, s);
+        ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, tmpS);
         Combine comb = new Combine(ea);
         topo.add(ea);
         topo.add(comb);
@@ -57,7 +129,7 @@ public class ProjDepTreeModuleTest {
                 tmFalseIn.set(inVals[1], 0, 1);
                 
                 TopoOrder topo = new TopoOrder();
-                ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, s);
+                ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, new LogPosNegAlgebra());
                 Combine comb = new Combine(ea);
                 topo.add(ea);
                 topo.add(comb);

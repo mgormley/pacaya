@@ -33,7 +33,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     private Module<Tensor> mFalseOut;
     private Algebra outS;
     // For internal use only.
-    private Algebra s;
+    private Algebra tmpS;
 
     private static final Logger log = Logger.getLogger(ProjDepTreeFactor.class);
     
@@ -55,7 +55,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         this.mTrueIn = mTrueIn;
         this.mFalseIn = mFalseIn;
         this.outS = mTrueIn.getAlgebra();
-        this.s = tmpS;
+        this.tmpS = tmpS;
     }
     
     @Override
@@ -71,8 +71,8 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         }
         
         // Internally we use a different algebra to avoid numerical precision problems.
-        ConvertAlgebra mTrueIn1 = new ConvertAlgebra(mTrueIn, s);
-        ConvertAlgebra mFalseIn1 = new ConvertAlgebra(mFalseIn, s);
+        ConvertAlgebra mTrueIn1 = new ConvertAlgebra(mTrueIn, tmpS);
+        ConvertAlgebra mFalseIn1 = new ConvertAlgebra(mFalseIn, tmpS);
         
         Prod pi = new Prod(mFalseIn1);
         ElemDivide weights = new ElemDivide(mTrueIn1, mFalseIn1);
@@ -111,7 +111,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
                 checkAndFixPartition(bTrue, partition); // TODO: semiring
             } else if (module == weights && outS instanceof LogSemiring) {
                 // Check odds ratios for potential floating point precision errors.
-                checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()), s);
+                checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()), tmpS);
             }
         }
 

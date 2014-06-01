@@ -7,20 +7,21 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.ConvertAlgebra;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
-import edu.jhu.autodiff.ScalarAdd;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class InsideOutsideDepParseTest {
-
-    Algebra s = new RealAlgebra();
-    
+   
     public static String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1    2  |  value\n"
             + "    0    0    0  |  6.00000\n"
@@ -45,30 +46,54 @@ public class InsideOutsideDepParseTest {
             + "    1    1  |  24.2000\n"
             + "]";
     
+    Algebra s = new RealAlgebra();
+
     @Test
-    public void testForwardAndBackward() {
-        Tensor t1 = new Tensor(s, 2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
-        TensorIdentity id1 = new TensorIdentity(t1);
-        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
+    public void testSimpleReal() {
+        helpForwardBackward(new RealAlgebra());        
+    }
 
-        Tensor out = ea.forward();
-        System.out.println(out);
-        assertEquals(expout, out.toString());
-        assertEquals(6, out.getValue(0), 1e-13);
-        assertTrue(out == ea.getOutput());
-
-        // Set the adjoint of the sum to be 1.
-        ea.getOutputAdj().fill(2.2);
-        ea.backward();
-        
-        Tensor outAdj = id1.getOutputAdj();
-        System.out.println(outAdj);
-        assertEquals(expoutAdj, outAdj.toString());        
+    @Test
+    public void testSimpleLog() {
+        helpForwardBackward(new LogSemiring());
     }
     
     @Test
-    public void testGradByFiniteDiffs() {       
+    public void testSimpleLogPosNeg() {
+        helpForwardBackward(new LogPosNegAlgebra());        
+    }
+
+    private void helpForwardBackward(Algebra tmpS) {
+        Tensor t1 = new Tensor(s, 2,2);
+        t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
+        TensorIdentity id1 = new TensorIdentity(t1);
+        ConvertAlgebra idCo = new ConvertAlgebra(id1, tmpS);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(idCo);
+        ConvertAlgebra eaCo = new ConvertAlgebra(ea, s);
+
+        TopoOrder topo = new TopoOrder();
+        topo.add(id1); 
+        topo.add(idCo);
+        topo.add(ea);
+        topo.add(eaCo);
+        
+        Tensor out = topo.forward();
+        System.out.println(out);
+        assertEquals(expout, out.toString());
+        assertEquals(6, out.getValue(0), 1e-13);
+        assertTrue(out == topo.getOutput());
+
+        // Set the adjoint of the sum to be 1.
+        topo.getOutputAdj().fill(2.2);
+        topo.backward();
+        
+        Tensor outAdj = id1.getOutputAdj();
+        System.out.println(outAdj);
+        assertEquals(expoutAdj, outAdj.toString());
+    }
+    
+    @Test
+    public void testGradByFiniteDiffs() {    
         Tensor t1 = new Tensor(s, 4,4);
         TensorIdentity id1 = new TensorIdentity(t1);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
