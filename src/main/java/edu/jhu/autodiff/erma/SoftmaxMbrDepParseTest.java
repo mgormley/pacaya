@@ -24,7 +24,7 @@ public class SoftmaxMbrDepParseTest {
 
     Algebra s = new RealAlgebra();
     
-    String expoutAdj = "Factor [\n"
+    String expoutAdj = "Tensor (RealAlgebra) [\n"
             + "    0    1  |  value\n"
             + "    0    0  |  30.8000\n"
             + "    0    1  |  33.0000\n"

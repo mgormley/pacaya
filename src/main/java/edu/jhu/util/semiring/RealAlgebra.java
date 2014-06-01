@@ -121,5 +121,15 @@ public class RealAlgebra implements Semiring, Algebra {
     public boolean isNaN(double x) {
         return Double.isNaN(x);
     }
+
+    @Override
+    public double minValue() {
+        return Double.NEGATIVE_INFINITY;
+    }
+    
+    @Override
+    public String toString() {
+        return "RealAlgebra";
+    }
     
 }

@@ -8,9 +8,10 @@ import edu.jhu.autodiff.AbstractTensorModule;
 import edu.jhu.autodiff.ConvertAlgebra;
 import edu.jhu.autodiff.ElemDivide;
 import edu.jhu.autodiff.ElemMultiply;
+import edu.jhu.autodiff.ElemSubtract;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Prod;
-import edu.jhu.autodiff.ScalarAdd;
+import edu.jhu.autodiff.ScalarFill;
 import edu.jhu.autodiff.ScalarMultiply;
 import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
@@ -18,7 +19,6 @@ import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogPosNegAlgebra;
@@ -86,16 +86,14 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         ScalarMultiply bTrue = new ScalarMultiply(edgeSums, pi, 0);
         
         ScalarMultiply partition = new ScalarMultiply(pi, root, 0);
-        TensorIdentity neg1 = new TensorIdentity(Tensor.getScalarTensor(s, s.fromReal(-1.0)));
-        ScalarMultiply negBTrue = new ScalarMultiply(bTrue, neg1, 0);
-        ScalarAdd bFalse = new ScalarAdd(negBTrue, partition, 0);
+        ScalarFill partitionMat = new ScalarFill(bTrue, partition, 0);
+        ElemSubtract bFalse = new ElemSubtract(partitionMat, bTrue);
         
         ElemDivide mTrueOut0 = new ElemDivide(bTrue, mTrueIn1);
         ElemDivide mFalseOut0 = new ElemDivide(bFalse, mFalseIn1);
 
         // If the incoming message contained zeros, send back the same message.
-        Tensor inProd = mTrueIn1.getOutput().copy();
-        inProd.elemMultiply(mFalseIn1.getOutput());
+        ElemMultiply inProd = new ElemMultiply(mTrueIn1, mFalseIn1);
         TakeLeftIfZero mTrueOut1 = new TakeLeftIfZero(mTrueIn1, mTrueOut0, inProd);
         TakeLeftIfZero mFalseOut1 = new TakeLeftIfZero(mFalseIn1, mFalseOut0, inProd);
 
@@ -103,7 +101,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         mFalseOut = new ConvertAlgebra(mFalseOut1, outS);
         
         topoOrder = Lists.getList(mTrueIn1, mFalseIn1, pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
-                partition, neg1, negBTrue, bFalse, mTrueOut0, mFalseOut0, mTrueOut1, mFalseOut1, mTrueOut, mFalseOut);
+                partition, partitionMat, bFalse, mTrueOut0, mFalseOut0, inProd, mTrueOut1, mFalseOut1, mTrueOut, mFalseOut);
 
         // Forward pass.
         for (Module<Tensor> module : topoOrder) {
@@ -165,7 +163,8 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         // Correct for the case where the partition function is smaller
         // than some of the beliefs.
         double max = bTrue.getOutput().getMax();
-        if (s.gt(max, module.getOutput().getValue(0))) {
+        double partition = module.getOutput().getValue(0);
+        if (!s.gte(partition, max)) {
             module.getOutput().setValue(0, max);
             unsafeLogSubtracts++;
         }
@@ -221,24 +220,27 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
      * Element-wise operation which takes the left side if the mark is zero, and the right side
      * otherwise.
      * 
+     * NOTE: This module abuses the standard design since no information is back-propagated to the mark.
+     * 
      * @author mgormley
      */
     private static class TakeLeftIfZero extends AbstractTensorModule implements Module<Tensor> {
         
         Module<Tensor> leftIn; 
         Module<Tensor> rightIn; 
-        Tensor mark;
+        Module<Tensor> markIn;
         
-        public TakeLeftIfZero(Module<Tensor> left, Module<Tensor> right, Tensor mark) {
+        public TakeLeftIfZero(Module<Tensor> left, Module<Tensor> right, Module<Tensor> mark) {
             super(left.getAlgebra());
-            checkEqualAlgebras(left, right, new TensorIdentity(mark));
+            checkEqualAlgebras(left, right, mark);
             this.leftIn = left;
             this.rightIn = right;
-            this.mark = mark;
+            this.markIn = mark;
         }
 
         @Override
         public Tensor forward() {
+            Tensor mark = markIn.getOutput();
             Tensor left = leftIn.getOutput();
             Tensor right = rightIn.getOutput();
             Tensor.checkEqualSize(left, right);
@@ -252,6 +254,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
 
         @Override
         public void backward() {
+            Tensor mark = markIn.getOutput();
             Tensor leftAdj = leftIn.getOutputAdj();
             Tensor rightAdj = rightIn.getOutputAdj();
             for (int c=0; c<yAdj.size(); c++) {

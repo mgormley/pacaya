@@ -17,8 +17,6 @@ public interface Algebra extends Semiring {
     double negate(double x);
     
     /* ----- Equality / Inequality Testing ----- */    
-    double posInf();
-    double negInf();
     boolean gt(double x, double y);
     boolean lt(double x, double y);
     boolean gte(double x, double y);
@@ -33,5 +31,11 @@ public interface Algebra extends Semiring {
         
     /* ----- Introspection ----- */    
     boolean isNaN(double x);
+    
+    /* ----- Constants ----- */    
+    double posInf();
+    double negInf();
+    double minValue();
+
     
 }

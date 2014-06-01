@@ -124,5 +124,10 @@ public class LogSemiring implements Algebra {
     public boolean isNaN(double x) {
         return Double.isNaN(x);
     }
+
+    @Override
+    public double minValue() {
+        return Double.NEGATIVE_INFINITY;
+    }
     
 }

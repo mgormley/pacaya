@@ -312,7 +312,7 @@ public class Tensor {
 
     /** Gets the product of all the entries in this tensor. */
     public double getProd() {
-        double prod = s.zero();
+        double prod = s.one();
         for (int c = 0; c < this.values.length; c++) {
             prod = s.times(prod, values[c]);
         }
@@ -321,7 +321,7 @@ public class Tensor {
 
     /** Gets the max value in the tensor. */
     public double getMax() {
-        double max = s.negInf();
+        double max = s.minValue();
         for (int c = 0; c < this.values.length; c++) {
             if (s.gte(values[c], max)) {
                 max = values[c];
@@ -333,7 +333,7 @@ public class Tensor {
     /** Gets the ID of the configuration with the maximum value. */
     public int getArgmaxConfigId() {
         int argmax = -1;
-        double max = s.negInf();
+        double max = s.minValue();
         for (int c = 0; c < this.values.length; c++) {
             if (s.gte(values[c], max)) {
                 max = values[c];
@@ -448,7 +448,7 @@ public class Tensor {
     }
 
     public static void checkSameAlgebra(Tensor t1, Tensor t2) {
-        if (!t1.s.getClass().equals(t2.getClass())) {
+        if (t1.s.getClass() != t2.s.getClass()) {
             throw new IllegalArgumentException("Input tensors must have the same abstract algebra: " + t1.s + " " + t2.s);
         }
     }

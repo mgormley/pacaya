@@ -21,7 +21,7 @@ public class InsideOutsideDepParseTest {
 
     Algebra s = new RealAlgebra();
     
-    public static String expout = "Factor [\n"
+    public static String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1    2  |  value\n"
             + "    0    0    0  |  6.00000\n"
             + "    0    0    1  |  3.00000\n"
@@ -37,7 +37,7 @@ public class InsideOutsideDepParseTest {
             + "    2    1    1  |  0.00000\n"
             + "]";
     
-    public static String expoutAdj = "Factor [\n"
+    public static String expoutAdj = "Tensor (RealAlgebra) [\n"
             + "    0    1  |  value\n"
             + "    0    0  |  15.4000\n"
             + "    0    1  |  11.0000\n"

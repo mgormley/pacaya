@@ -116,7 +116,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm, ExpFamFactorModule effm) {
         if (prm.logDomain) {
-            throw new IllegalArgumentException("Log domain not supported.");
+            //TODO: throw new IllegalArgumentException("Log domain not supported.");
         }
         this.prm = prm;
         this.fg = fg;

@@ -50,7 +50,7 @@ public class SoftmaxMbrDepParse implements Module<Tensor> {
         
         TensorIdentity ti = new TensorIdentity(Tensor.getScalarTensor(tmpS, temperature));
         topo.add(ti);
-        ScalarDivide divide = new ScalarDivide(pIn, ti, 0);
+        ScalarDivide divide = new ScalarDivide(pIn1, ti, 0);
         topo.add(divide);
         Exp exp = new Exp(divide);
         topo.add(exp);
