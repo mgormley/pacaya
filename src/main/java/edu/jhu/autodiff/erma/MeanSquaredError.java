@@ -30,20 +30,19 @@ public class MeanSquaredError extends AbstractTensorModule implements Module<Ten
     public static class ExpectedRecallFactory implements DlFactory {
         @Override
         public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s) {
-            return new MeanSquaredError(inf, goldConfig, s);
+            return new MeanSquaredError(inf, goldConfig);
         }
     }
     
     private Module<Beliefs> inf;
     private VarConfig vc;
-    private Algebra s;
     // Output
     private double mse;
     
-    public MeanSquaredError(Module<Beliefs> inf, VarConfig vc, Algebra s) {
+    public MeanSquaredError(Module<Beliefs> inf, VarConfig vc) {
+        super(inf.getAlgebra());
         this.inf = inf;
         this.vc = vc;
-        this.s = s;
     }
 
     /**
@@ -67,7 +66,7 @@ public class MeanSquaredError extends AbstractTensorModule implements Module<Ten
                 }
             }
         }
-        y = Tensor.getScalarTensor(s.toReal(mse));
+        y = Tensor.getScalarTensor(s, mse);
         return y;        
     }
     

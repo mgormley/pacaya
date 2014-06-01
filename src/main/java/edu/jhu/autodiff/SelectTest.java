@@ -9,12 +9,16 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class SelectTest {
 
+    private Algebra s = new RealAlgebra();
+
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = ModuleTestUtils.get3DTensor(2, 3, 5);
+        Tensor t1 = ModuleTestUtils.get3DTensor(s, 2, 3, 5);
                 
         TensorIdentity id1 = new TensorIdentity(t1);
         Select ea = new Select(id1, 1, 2);
@@ -47,7 +51,7 @@ public class SelectTest {
 
     @Test
     public void testGradByFiniteDiffs() {
-        TensorIdentity id1 = new TensorIdentity(ModuleTestUtils.get3DTensor(2, 3, 5));
+        TensorIdentity id1 = new TensorIdentity(ModuleTestUtils.get3DTensor(s, 2, 3, 5));
         Select ea = new Select(id1, 1, 2);
         
         TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);

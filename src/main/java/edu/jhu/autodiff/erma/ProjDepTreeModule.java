@@ -1,25 +1,27 @@
-package edu.jhu.gm.model.globalfac;
+package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.ConvertAlgebra;
 import edu.jhu.autodiff.ElemDivide;
 import edu.jhu.autodiff.ElemMultiply;
+import edu.jhu.autodiff.ElemSubtract;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Prod;
-import edu.jhu.autodiff.ScalarAdd;
+import edu.jhu.autodiff.ScalarFill;
 import edu.jhu.autodiff.ScalarMultiply;
 import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 
 public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
@@ -29,7 +31,9 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     private List<Module<Tensor>> topoOrder;
     private Module<Tensor> mTrueOut;
     private Module<Tensor> mFalseOut;
-    private Algebra s;
+    private Algebra outS;
+    // For internal use only.
+    private Algebra tmpS;
 
     private static final Logger log = Logger.getLogger(ProjDepTreeFactor.class);
     
@@ -42,25 +46,38 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     private static int extremeOddsRatios = 0;
     private static int oddsRatioCount = 0;
     
-    public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn, Algebra s) {
+    public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn) {
+        this(mTrueIn, mFalseIn, new LogPosNegAlgebra());
+    }
+    
+    public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn, Algebra tmpS) {
+        AbstractTensorModule.checkEqualAlgebras(mTrueIn, mFalseIn);
         this.mTrueIn = mTrueIn;
         this.mFalseIn = mFalseIn;
-        this.s = s;
+        this.outS = mTrueIn.getAlgebra();
+        this.tmpS = tmpS;
     }
     
     @Override
     public Pair<Tensor, Tensor> forward() {
         // Construct the circuit.
-        Tensor tmTrueIn = mTrueIn.getOutput();
-        Tensor tmFalseIn = mFalseIn.getOutput();
-        n = tmTrueIn.getDims()[1];
+        {
+            // Initialize using the input tensors.
+            AbstractTensorModule.checkEqualAlgebras(mTrueIn, mFalseIn);
+            Tensor tmTrueIn = mTrueIn.getOutput();
+            Tensor tmFalseIn = mFalseIn.getOutput();
+            n = tmTrueIn.getDims()[1];
+            requireNoZeros(tmFalseIn);
+        }
         
-        requireNoZeros(tmFalseIn);
+        // Internally we use a different algebra to avoid numerical precision problems.
+        ConvertAlgebra mTrueIn1 = new ConvertAlgebra(mTrueIn, tmpS);
+        ConvertAlgebra mFalseIn1 = new ConvertAlgebra(mFalseIn, tmpS);
         
-        Prod pi = new Prod(mFalseIn);
-        ElemDivide weights = new ElemDivide(mTrueIn, mFalseIn);
+        Prod pi = new Prod(mFalseIn1);
+        ElemDivide weights = new ElemDivide(mTrueIn1, mFalseIn1);
         
-        InsideOutsideDepParse parse = new InsideOutsideDepParse(weights, s);
+        InsideOutsideDepParse parse = new InsideOutsideDepParse(weights);
         Select alphas = new Select(parse, 0, InsideOutsideDepParse.ALPHA_IDX);
         Select betas = new Select(parse, 0, InsideOutsideDepParse.BETA_IDX);
         Select root = new Select(parse, 0, InsideOutsideDepParse.ROOT_IDX); // The first entry in this selection is for the root.
@@ -69,21 +86,22 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         ScalarMultiply bTrue = new ScalarMultiply(edgeSums, pi, 0);
         
         ScalarMultiply partition = new ScalarMultiply(pi, root, 0);
-        TensorIdentity neg1 = new TensorIdentity(Tensor.getScalarTensor(s.fromReal(-1.0)));
-        ScalarMultiply negBTrue = new ScalarMultiply(bTrue, neg1, 0);
-        ScalarAdd bFalse = new ScalarAdd(negBTrue, partition, 0);
+        ScalarFill partitionMat = new ScalarFill(bTrue, partition, 0);
+        ElemSubtract bFalse = new ElemSubtract(partitionMat, bTrue);
         
-        ElemDivide mTrueOut0 = new ElemDivide(bTrue, mTrueIn);
-        ElemDivide mFalseOut0 = new ElemDivide(bFalse, mFalseIn);
-        
+        ElemDivide mTrueOut0 = new ElemDivide(bTrue, mTrueIn1);
+        ElemDivide mFalseOut0 = new ElemDivide(bFalse, mFalseIn1);
+
         // If the incoming message contained zeros, send back the same message.
-        Tensor inProd = tmTrueIn.copy();
-        inProd.elemMultiply(tmTrueIn);
-        mTrueOut = new TakeLeftIfZero(mTrueIn, mTrueOut0, inProd);
-        mFalseOut = new TakeLeftIfZero(mFalseIn, mFalseOut0, inProd);
+        ElemMultiply inProd = new ElemMultiply(mTrueIn1, mFalseIn1);
+        TakeLeftIfZero mTrueOut1 = new TakeLeftIfZero(mTrueIn1, mTrueOut0, inProd);
+        TakeLeftIfZero mFalseOut1 = new TakeLeftIfZero(mFalseIn1, mFalseOut0, inProd);
+
+        mTrueOut = new ConvertAlgebra(mTrueOut1, outS);
+        mFalseOut = new ConvertAlgebra(mFalseOut1, outS);
         
-        topoOrder = Lists.getList(pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
-                partition, neg1, negBTrue, bFalse, mTrueOut0, mFalseOut0, mTrueOut, mFalseOut);
+        topoOrder = Lists.getList(mTrueIn1, mFalseIn1, pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
+                partition, partitionMat, bFalse, mTrueOut0, mFalseOut0, inProd, mTrueOut1, mFalseOut1, mTrueOut, mFalseOut);
 
         // Forward pass.
         for (Module<Tensor> module : topoOrder) {
@@ -91,9 +109,9 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
             if (module == partition) {
                 // Correct if partition function is too small.
                 checkAndFixPartition(bTrue, partition); // TODO: semiring
-            } else if (module == weights && s instanceof LogSemiring) {
+            } else if (module == weights && outS instanceof LogSemiring) {
                 // Check odds ratios for potential floating point precision errors.
-                checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()));
+                checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()), tmpS);
             }
         }
 
@@ -140,31 +158,34 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     }
 
     private void checkAndFixPartition(Module<Tensor> bTrue, Module<Tensor> module) {
+        AbstractTensorModule.checkEqualAlgebras(bTrue, module);
+        Algebra s = bTrue.getAlgebra();
         // Correct for the case where the partition function is smaller
         // than some of the beliefs.
         double max = bTrue.getOutput().getMax();
-        if (max > module.getOutput().getValue(0)) {
+        double partition = module.getOutput().getValue(0);
+        if (!s.gte(partition, max)) {
             module.getOutput().setValue(0, max);
             unsafeLogSubtracts++;
         }
         logSubtractCount++;
     }
     
-    private void checkLogOddsRatios(EdgeScores es) {       
+    private void checkLogOddsRatios(EdgeScores es, Algebra s) {       
         // Keep track of the minimum and maximum odds ratios, in order to detect
         // possible numerical precision issues.        
-        double minOddsRatio = Double.POSITIVE_INFINITY;
-        double maxOddsRatio = Double.NEGATIVE_INFINITY;
+        double minOddsRatio = s.posInf();
+        double maxOddsRatio = s.negInf();
 
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
                 double oddsRatio = es.getScore(p, c);
                 // Check min/max.
-                if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
-                    // Don't count *negative* infinities when logging extreme odds ratios.
+                if (s.lt(oddsRatio, minOddsRatio) && oddsRatio != s.zero()) {
+                    // Don't count zeros when logging extreme odds ratios.
                     minOddsRatio = oddsRatio;
                 }
-                if (oddsRatio > maxOddsRatio) {
+                if (s.gt(oddsRatio, maxOddsRatio)) {
                     maxOddsRatio = oddsRatio;
                 }
             }
@@ -173,7 +194,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         // Check whether the max/min odds ratios (if added) would result in a
         // floating point error.
         oddsRatioCount++;
-        if (FastMath.logSubtractExact(FastMath.logAdd(maxOddsRatio, minOddsRatio), maxOddsRatio) == Double.NEGATIVE_INFINITY) {
+        if (s.minus(s.plus(maxOddsRatio, minOddsRatio), maxOddsRatio) == s.zero()) {
             extremeOddsRatios++;            
             log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
             log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
@@ -182,10 +203,13 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         }
     }
 
-    private void requireNoZeros(Tensor tmFalseIn) {
-        for (int i=0; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if ( tmFalseIn.get(i,j) == 0.0) {
+    private static void requireNoZeros(Tensor tmFalseIn) {
+        Algebra s = tmFalseIn.getAlgebra();
+        int[] dims = tmFalseIn.getDims();
+        assert dims.length == 2;
+        for (int i=0; i<dims[0]; i++) {
+            for (int j=0; j<dims[1]; j++) {
+                if ( tmFalseIn.get(i,j) == s.zero()) {
                     throw new IllegalStateException("Hard constraints turning ON an edge are not supported.");
                 }
             }
@@ -196,28 +220,33 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
      * Element-wise operation which takes the left side if the mark is zero, and the right side
      * otherwise.
      * 
+     * NOTE: This module abuses the standard design since no information is back-propagated to the mark.
+     * 
      * @author mgormley
      */
     private static class TakeLeftIfZero extends AbstractTensorModule implements Module<Tensor> {
         
         Module<Tensor> leftIn; 
         Module<Tensor> rightIn; 
-        Tensor mark;
+        Module<Tensor> markIn;
         
-        public TakeLeftIfZero(Module<Tensor> left, Module<Tensor> right, Tensor mark) {
+        public TakeLeftIfZero(Module<Tensor> left, Module<Tensor> right, Module<Tensor> mark) {
+            super(left.getAlgebra());
+            checkEqualAlgebras(left, right, mark);
             this.leftIn = left;
             this.rightIn = right;
-            this.mark = mark;
+            this.markIn = mark;
         }
 
         @Override
         public Tensor forward() {
+            Tensor mark = markIn.getOutput();
             Tensor left = leftIn.getOutput();
             Tensor right = rightIn.getOutput();
             Tensor.checkEqualSize(left, right);
-            y = left.copyAndFill(0.0);
+            y = left.copyAndFill(s.zero());
             for (int c=0; c<y.size(); c++) {
-                Tensor t = (mark.getValue(c) == 0.0) ? left : right;
+                Tensor t = (mark.getValue(c) == s.zero()) ? left : right;
                 y.setValue(c, t.getValue(c));
             }
             return y;
@@ -225,10 +254,11 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
 
         @Override
         public void backward() {
+            Tensor mark = markIn.getOutput();
             Tensor leftAdj = leftIn.getOutputAdj();
             Tensor rightAdj = rightIn.getOutputAdj();
             for (int c=0; c<yAdj.size(); c++) {
-                Tensor t = (mark.getValue(c) == 0.0) ? leftAdj : rightAdj;
+                Tensor t = (mark.getValue(c) == s.zero()) ? leftAdj : rightAdj;
                 t.addValue(c, yAdj.getValue(c));
             }
         }
@@ -238,6 +268,11 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
             return Lists.getList(leftIn, rightIn);
         }
         
+    }
+
+    @Override
+    public Algebra getAlgebra() {
+        return outS;
     }
 
 }

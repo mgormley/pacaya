@@ -21,13 +21,14 @@ public class DepTensorFromBeliefs extends AbstractTensorModule implements Module
     private int n;
     
     public DepTensorFromBeliefs(Module<Beliefs> inf, int n) {
+        super(inf.getAlgebra());
         this.inf = inf;
         this.n = n;
     }
     
     @Override
     public Tensor forward() {
-        y = new Tensor(n, n);
+        y = new Tensor(s, n, n);
         Beliefs b = inf.getOutput();
         for (int v=0; v<b.varBeliefs.length; v++) {
             Var var = b.varBeliefs[v].getVars().get(0);

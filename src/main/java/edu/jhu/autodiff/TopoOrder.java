@@ -1,7 +1,7 @@
 package edu.jhu.autodiff;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -19,10 +19,11 @@ public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
     protected Tensor y;
     protected Tensor yAdj;
 
-    public TopoOrder() { }
+    public TopoOrder() { super(null); }
     
     public void add(Module<? extends Object> m) {
         topoOrder.add(m);
+        s = m.getAlgebra();
     }
     
     @Override
@@ -69,6 +70,10 @@ public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
     
     public Module<Tensor> getLast() {
         return (Module<Tensor>)topoOrder.get(topoOrder.size()-1);
+    }
+
+    public List<Module<? extends Object>> getTopoOrder() {
+        return topoOrder;
     }
     
 }

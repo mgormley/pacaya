@@ -105,7 +105,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     // The adjoints for the potential tables (i.e. factors). Indexed by factor id. The output of a backward call.
     private VarTensor[] potentialsAdj;
     
-    Algebra s = new RealAlgebra();     // TODO:
+    private Algebra s = new RealAlgebra();
     private Beliefs b;
     private Beliefs bAdj;
     private ExpFamFactorModule effm;
@@ -115,6 +115,9 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
     }
     
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm, ExpFamFactorModule effm) {
+        if (prm.logDomain) {
+            //TODO: throw new IllegalArgumentException("Log domain not supported.");
+        }
         this.prm = prm;
         this.fg = fg;
         this.effm = effm;
@@ -1035,6 +1038,11 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
 
     public void setEffm(ExpFamFactorModule effm) {
         this.effm = effm;
+    }
+
+    @Override
+    public Algebra getAlgebra() {
+        return s;
     }
     
 }

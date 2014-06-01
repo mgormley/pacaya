@@ -37,6 +37,7 @@ public class ExpectedRecall extends AbstractTensorModule implements Module<Tenso
     private double expectedRecall;    
     
     public ExpectedRecall(Module<Beliefs> inf, VarConfig vc) {
+        super(inf.getAlgebra());
         this.inf = inf;
         this.vc = vc;
     }
@@ -44,14 +45,14 @@ public class ExpectedRecall extends AbstractTensorModule implements Module<Tenso
     /** Forward pass: y = \sum_{x_i \in x*} b(x_i), where x* is the gold variable assignment. */
     public Tensor forward() {
         VarTensor[] varBeliefs = inf.getOutput().varBeliefs;
-        expectedRecall = 0;
+        expectedRecall = s.zero();
         for (Var var : vc.getVars()) {
             if (var.getType() == VarType.PREDICTED) {
                 VarTensor marg = varBeliefs[var.getId()];
-                expectedRecall += marg.getValue(vc.getState(var));
+                expectedRecall = s.plus(expectedRecall, marg.getValue(vc.getState(var)));
             }
         }
-        y = Tensor.getScalarTensor(expectedRecall);
+        y = Tensor.getScalarTensor(s, expectedRecall);
         return y;
     }
     

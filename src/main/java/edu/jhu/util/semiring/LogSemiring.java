@@ -69,5 +69,65 @@ public class LogSemiring implements Algebra {
         }
         return FastMath.log(x);
     }
+
+    @Override
+    public double abs(double x) {
+        // Log-probs are always positive.
+        return x;
+    }
+
+    @Override
+    public double negate(double x) {
+        throw new IllegalStateException("Unable to take the log of a negative number.");
+    }
+
+    @Override
+    public double posInf() {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    @Override
+    public double negInf() {
+        throw new IllegalStateException("Unable to take the log of a negative number.");
+    }
+
+    @Override
+    public boolean gt(double x, double y) {
+        return x > y;
+    }
+
+    @Override
+    public boolean lt(double x, double y) {
+        return x < y;
+    }
+
+    @Override
+    public boolean gte(double x, double y) {
+        return x >= y;
+    }
+
+    @Override
+    public boolean lte(double x, double y) {
+        return x <= y;
+    }
+
+    @Override
+    public boolean eq(double a, double b, double delta) {
+        if (a == b) {
+            // This case is needed for infinity equality.
+            return true;
+        }
+        return Math.abs(a - b) < delta;
+    }
+
+    @Override
+    public boolean isNaN(double x) {
+        return Double.isNaN(x);
+    }
+
+    @Override
+    public double minValue() {
+        return Double.NEGATIVE_INFINITY;
+    }
     
 }

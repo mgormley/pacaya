@@ -9,14 +9,18 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class CombineTest {
+
+    private Algebra s = new RealAlgebra();
 
     @Test
     public void testForwardAndBackward() {
 
-        Tensor t1 = ModuleTestUtils.getVector(1, 2, 3);
-        Tensor t2 = ModuleTestUtils.getVector(4, 5, 6);
+        Tensor t1 = ModuleTestUtils.getVector(s, 1, 2, 3);
+        Tensor t2 = ModuleTestUtils.getVector(s, 4, 5, 6);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
         Combine ea = new Combine(id1, id2);
@@ -46,8 +50,8 @@ public class CombineTest {
 
     @Test
     public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(4, 6, 7);
+        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
         Combine ea = new Combine(id1, id2);

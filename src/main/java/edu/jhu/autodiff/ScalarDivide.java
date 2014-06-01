@@ -17,6 +17,8 @@ public class ScalarDivide extends AbstractTensorModule implements Module<Tensor>
     private int k;
     
     public ScalarDivide(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
+        super(modInX.getAlgebra());
+        checkEqualAlgebras(this, modInX, modInW);
         this.modInX = modInX;
         this.modInW = modInW;
         this.k = k;
@@ -49,7 +51,7 @@ public class ScalarDivide extends AbstractTensorModule implements Module<Tensor>
         {
             Tensor tmp = yAdj.copy();
             tmp.elemMultiply(x);
-            tmp.divide(- (w_k * w_k));
+            tmp.divide(s.negate(s.times(w_k, w_k)));
             modInW.getOutputAdj().addValue(k, tmp.getSum());
         }
     }

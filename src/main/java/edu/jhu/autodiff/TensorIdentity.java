@@ -11,6 +11,7 @@ import edu.jhu.util.collections.Lists;
 public class TensorIdentity extends AbstractTensorModule implements Module<Tensor> {
 
     public TensorIdentity(Tensor y) {
+        super(y.getAlgebra());
         this.y = y;
     }
     

@@ -1,23 +1,14 @@
 package edu.jhu.gm.model.globalfac;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.autodiff.AbstractTensorModule;
-import edu.jhu.autodiff.ElemDivide;
-import edu.jhu.autodiff.ElemMultiply;
-import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.Prod;
-import edu.jhu.autodiff.ScalarAdd;
-import edu.jhu.autodiff.ScalarMultiply;
-import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.autodiff.erma.ProjDepTreeModule;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.inf.Messages;
@@ -531,7 +522,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         // Construct the circuit.
         TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
         TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
-        ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, s);
+        Algebra tmpS = (isForward) ? new LogSemiring() : new LogPosNegAlgebra();
+        ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();
         
         if (isForward) {
@@ -590,7 +582,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             double val = msg.getValue(tf);
             es.setScore(link.getParent(), link.getChild(), val);
         }
-        return es.toTensor();
+        return es.toTensor(s);
     }
     
     /**

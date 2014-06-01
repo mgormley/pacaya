@@ -1,6 +1,6 @@
 package edu.jhu.autodiff.erma;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
@@ -10,15 +10,19 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.model.ExplicitExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class ExpFamFactorModuleTest {
 
+    boolean logDomain = false;
+    Algebra s = new RealAlgebra();
+    
     @Test
     public void testSimple() {
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
@@ -33,9 +37,8 @@ public class ExpFamFactorModuleTest {
         FgModel model = new FgModel(emit1.size());
         model.getParams().set(0, 2);
         model.getParams().set(1, 3);
-        boolean logDomain = false;
         
-        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, logDomain);
+        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, s);
         effm.forward();
         VarTensor[] y = effm.getOutput();
         System.out.println(Arrays.deepToString(y));

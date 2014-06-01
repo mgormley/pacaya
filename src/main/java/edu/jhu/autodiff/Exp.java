@@ -13,7 +13,8 @@ public class Exp extends AbstractTensorModule implements Module<Tensor> {
 
     private Module<Tensor> modInX;
     
-    public Exp(Module<Tensor> modInX) {
+    public Exp(Module<Tensor> modInX) {        
+        super(modInX.getAlgebra());
         this.modInX = modInX;
     }
     

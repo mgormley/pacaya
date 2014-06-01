@@ -15,6 +15,8 @@ public class ElemMultiply extends AbstractTensorModule implements Module<Tensor>
     private Module<Tensor> modInW;
     
     public ElemMultiply(Module<Tensor> modInX, Module<Tensor> modInW) {
+        super(modInX.getAlgebra());
+        checkEqualAlgebras(this, modInX, modInW);
         this.modInX = modInX;
         this.modInW = modInW;
     }

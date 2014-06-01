@@ -12,7 +12,7 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
-public class ElemAddTest {
+public class ElemSubtractTest {
 
     private Algebra s = new RealAlgebra();
 
@@ -22,12 +22,12 @@ public class ElemAddTest {
         Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
-        ElemAdd ea = new ElemAdd(id1, id2);
+        ElemSubtract ea = new ElemSubtract(id1, id2);
 
         Tensor out = ea.forward();
-        assertEquals(2+4, out.getValue(0), 1e-13);
-        assertEquals(3+6, out.getValue(1), 1e-13);
-        assertEquals(5+7, out.getValue(2), 1e-13);
+        assertEquals(2-4, out.getValue(0), 1e-13);
+        assertEquals(3-6, out.getValue(1), 1e-13);
+        assertEquals(5-7, out.getValue(2), 1e-13);
         assertTrue(out == ea.getOutput());
 
         // Set the adjoint of the sum to be 1.
@@ -38,9 +38,9 @@ public class ElemAddTest {
         assertEquals(2.2, id1.getOutputAdj().getValue(1), 1e-13);
         assertEquals(2.2, id1.getOutputAdj().getValue(2), 1e-13);
         
-        assertEquals(2.2, id2.getOutputAdj().getValue(0), 1e-13);
-        assertEquals(2.2, id2.getOutputAdj().getValue(1), 1e-13);
-        assertEquals(2.2, id2.getOutputAdj().getValue(2), 1e-13);
+        assertEquals(-2.2, id2.getOutputAdj().getValue(0), 1e-13);
+        assertEquals(-2.2, id2.getOutputAdj().getValue(1), 1e-13);
+        assertEquals(-2.2, id2.getOutputAdj().getValue(2), 1e-13);
     }
 
     @Test
@@ -49,7 +49,7 @@ public class ElemAddTest {
         Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
-        ElemAdd ea = new ElemAdd(id1, id2);
+        ElemSubtract ea = new ElemSubtract(id1, id2);
         
         TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), ea);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);

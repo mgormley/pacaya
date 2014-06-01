@@ -14,6 +14,7 @@ import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph.PCBasicHypernode;
 import edu.jhu.parse.dep.EdgeScores;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 
@@ -33,15 +34,14 @@ public class InsideOutsideDepParse extends AbstractTensorModule implements Modul
     public static final int ROOT_IDX = 2;
     
     private Module<Tensor> weightsIn;
-    private Algebra s; // TODO: semiring, use when filling yAdj in abstract parent.
     
     private Scores scores;
     // Cached for efficiency.
     private FirstOrderDepParseHypergraph graph;
     
-    public InsideOutsideDepParse(Module<Tensor> weightsIn, Algebra s) {           
+    public InsideOutsideDepParse(Module<Tensor> weightsIn) {
+        super(weightsIn.getAlgebra());
         this.weightsIn = weightsIn;
-        this.s = s;
     }
     
     @Override
@@ -54,7 +54,7 @@ public class InsideOutsideDepParse extends AbstractTensorModule implements Modul
         Hyperalgo.outsideAlgorithm(graph, w, s, scores);
         int n = graph.getNumTokens();
         
-        y = new Tensor(3, n, n);
+        y = new Tensor(s, 3, n, n);
         y.fill(s.zero());
         for (Hypernode node : graph.getNodes()) {
             if (node instanceof PCBasicHypernode) {   
@@ -74,9 +74,10 @@ public class InsideOutsideDepParse extends AbstractTensorModule implements Modul
 
     @Override
     public void backward() {
-        final int n = graph.getNumTokens();
         scores.alphaAdj = new double[graph.getNodes().size()];
         scores.betaAdj = new double[graph.getNodes().size()];
+        DoubleArrays.fill(scores.alphaAdj, s.zero());
+        DoubleArrays.fill(scores.betaAdj, s.zero());
         // Update output adjoints in scores.
         for (Hypernode node : graph.getNodes()) {
             if (node instanceof PCBasicHypernode) {   
@@ -96,7 +97,6 @@ public class InsideOutsideDepParse extends AbstractTensorModule implements Modul
         Hyperpotential w = graph.getPotentials();
         Hyperalgo.outsideAdjoint(graph, w, s, scores);
         Hyperalgo.insideAdjoint(graph, w, s, scores);
-        Hyperalgo.weightAdjoint(graph, w, s, scores);
         
         // Update input adjoints on weightsIn.
         final Tensor wAdj = weightsIn.getOutputAdj();

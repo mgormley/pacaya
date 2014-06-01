@@ -21,6 +21,7 @@ public class ExpectedRecallTest {
 
     private VarConfig goldConfig;
     private BeliefsIdentity id1;
+    private Algebra s = new RealAlgebra();
 
     @Before
     public void setUp() {
@@ -32,7 +33,7 @@ public class ExpectedRecallTest {
         goldConfig = new VarConfig();
         goldConfig.put(t1, 1);
 
-        Beliefs b = new Beliefs();
+        Beliefs b = new Beliefs(s);
         b.varBeliefs = new VarTensor[2];
         b.facBeliefs = new VarTensor[0];
         b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.5);
@@ -60,7 +61,7 @@ public class ExpectedRecallTest {
     @Test
     public void testGradByFiniteDiffs() {
         Algebra s = new RealAlgebra();
-        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig, s);        
+        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);        
         BeliefsVecFn vecFn = new BeliefsVecFn(id1, mse);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }

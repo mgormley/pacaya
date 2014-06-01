@@ -19,10 +19,13 @@ public class Combine extends AbstractTensorModule implements Module<Tensor> {
     private Module<Tensor> mod2;
 
     public Combine(Module<Pair<Tensor, Tensor>> modIn) {
+        super(modIn.getAlgebra());
         this.modIn = modIn;
     }
 
     public Combine(Module<Tensor> mod1, Module<Tensor> mod2) {
+        super(mod1.getAlgebra());
+        checkEqualAlgebras(mod1, mod2);
         this.mod1 = mod1;
         this.mod2 = mod2;
     }

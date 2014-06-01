@@ -11,8 +11,12 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class DepTensorFromBeliefsTest {
+
+    private static Algebra s = new RealAlgebra();
 
     @Test
     public void testSimple() {
@@ -47,7 +51,7 @@ public class DepTensorFromBeliefsTest {
         l0.setId(2);
         l1.setId(3);
         
-        Beliefs b = new Beliefs();
+        Beliefs b = new Beliefs(s);
         b.varBeliefs = new VarTensor[4];
         b.facBeliefs = new VarTensor[0];
         b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.5);

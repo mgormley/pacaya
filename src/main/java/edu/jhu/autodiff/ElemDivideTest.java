@@ -9,13 +9,17 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class ElemDivideTest {
 
+    private Algebra s = new RealAlgebra();
+
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(4, 6, 7);
+        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
         ElemDivide ea = new ElemDivide(id1, id2);
@@ -74,8 +78,8 @@ public class ElemDivideTest {
     }
 
     private void testDivide(double in1, double in2, double outAdj, double expOut, double expOutAdj1, double expOutAdj2) {
-        Tensor t1 = ModuleTestUtils.getVector(in1);
-        Tensor t2 = ModuleTestUtils.getVector(in2);
+        Tensor t1 = ModuleTestUtils.getVector(s, in1);
+        Tensor t2 = ModuleTestUtils.getVector(s, in2);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
         ElemDivide ea = new ElemDivide(id1, id2);
@@ -94,8 +98,8 @@ public class ElemDivideTest {
 
     @Test
     public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(4, 6, 7);
+        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
         ElemDivide ea = new ElemDivide(id1, id2);

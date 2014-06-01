@@ -1,14 +1,17 @@
 package edu.jhu.autodiff.erma;
 
 import edu.jhu.gm.model.VarTensor;
+import edu.jhu.util.semiring.Algebra;
 
 /** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
 public class Beliefs {
     
     public VarTensor[] varBeliefs;
     public VarTensor[] facBeliefs;
-
-    public Beliefs() {
+    public Algebra s;
+    
+    public Beliefs(Algebra s) {
+        this.s = s;
     }
 
     public Beliefs(VarTensor[] varBeliefs, VarTensor[] facBeliefs) {
@@ -17,7 +20,7 @@ public class Beliefs {
     }
 
     public Beliefs copy() {
-        Beliefs clone = new Beliefs();
+        Beliefs clone = new Beliefs(s);
         clone.varBeliefs = copyOfVarTensorArray(this.varBeliefs);
         clone.facBeliefs = copyOfVarTensorArray(this.facBeliefs);
         return clone;
