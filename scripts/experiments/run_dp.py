@@ -37,6 +37,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-pruning",
                     "gobble-memory",
                     "dp-aware",
+                    "dp-erma",
                     )
     
     def __init__(self, options):
@@ -89,7 +90,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # Language specific parameters
         p.cx_langs_with_phead = ["bg", "en", "de", "es"]
-        l2var_map = {"bg" : 10000, "es" : 1000, "en" : 40000 }
+        #p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en"]
+
+        # This is a map from language to number of sentences.
+        l2var_map = {"ar" : 1500, "zh" : 57000, "cs" : 72700, "da" : 5200, "nl" : 13300,
+                     "de" : 39200, "ja" : 17000, "pt" : 9100, "sl" : 1500, "es" : 3300,
+                     "sv" : 11000, "tr" : 5000, "bg" : 12800, "en" : 40000}
 
         for lang_short in p.cx_lang_short_names:
             gl = g.langs[lang_short]
@@ -140,10 +146,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp = g.defaults + data + g.first_order
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
-            exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
         
-        if self.expname == "dp-aware":
+        elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
             for trainer in [g.erma, g.cll]:
@@ -163,7 +168,46 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             else:
                                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
-           
+         
+        elif self.expname == "dp-erma":
+            # Comparison of CLL and ERMA training with varying models and iterations.
+            exps = []
+            g.defaults += g.erma
+            g.defaults.set_incl_name("l2variance", False)
+            # Train a first-order pruning model for each language
+            prune_exps = {}
+            languages = ["ar","bg"] #p.cx_lang_short_names
+            for lang_short in languages:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                data = gl.cx_data
+                data.update(l2variance=l2var_map[lang_short],
+                            propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                exp = g.defaults + data + g.first_order + g.feat_mcdonald_basic
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                prune_exps[lang_short] = exp
+                exps.append(exp)
+            # Train the other models for each language
+            parser = g.second_order 
+            parser += SrlExpParams(pruneByModel=True,
+                                   tagger_parser=g.second_order.get("tagger_parser")+"-pr")
+            for lang_short in languages:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                data = gl.cx_data
+                data.update(l2variance=l2var_map[lang_short],
+                            # TODO: This method of setting the pruneModel path is very unstable.
+                            pruneModel="../1st_tpl_mcdonald_basic_%s/model.binary.gz" % (lang_short),
+                            propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                exp = g.defaults + data + parser
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                if parser in [g.second_order, g.second_grand, g.second_sib]:
+                    exps += get_oome_stages(exp)
+                else:
+                    exps.append(exp)
+                exp.add_prereq(prune_exps[lang_short])
+            return self._get_pipeline_from_exps(exps)
+             
         
         elif self.expname == "dp-conllx-tune":
             # CoNLL-X experiments.
