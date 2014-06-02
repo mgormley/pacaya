@@ -458,10 +458,10 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             int varId = edge.getVar().getId();
             int facId = edge.getFactor().getId();
             msgsAdj[i] = new Messages(edge, prm.logDomain, prm.normalizeMessages);
-            msgsAdj[i].message.multiply(s.zero());
+            msgsAdj[i].message.fill(s.zero());
             // Instead of setting newMessage to null, we just zero it and then
             // swap these back and forth during backwardSendMessage.
-            msgsAdj[i].newMessage.multiply(s.zero());
+            msgsAdj[i].newMessage.fill(s.zero());
             if (!edge.isVarToFactor()) {
                 // Backward pass for variable beliefs.
                 initFactorToVarAdj(i, varBeliefsAdj, varId, facId);                
