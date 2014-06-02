@@ -30,16 +30,16 @@ import edu.jhu.prim.sort.IntSort;
  */
 public class CrfTrainer {
 
-    private static final Logger log = Logger.getLogger(CrfTrainer.class);
+    public static enum Trainer { CLL, ERMA };
 
     public static class CrfTrainerPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
-        public Optimizer<DifferentiableFunction> maximizer = new MalletLBFGS(new MalletLBFGSPrm());
-        public Optimizer<DifferentiableBatchFunction> batchMaximizer = null;//new SGD(new SGDPrm());
+        public Optimizer<DifferentiableFunction> optimizer = new MalletLBFGS(new MalletLBFGSPrm());
+        public Optimizer<DifferentiableBatchFunction> batchOptimizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
         public int numThreads = 1;
-        /** Whether to use ERMA training. */
-        public boolean ermaTraining = false;
+        /** The type of trainer. */
+        public Trainer trainer = Trainer.CLL;
         /** The decoder and loss function used by ERMA training. */
         public DlFactory dlFactory = new ExpectedRecallFactory();
         /**
@@ -49,35 +49,39 @@ public class CrfTrainer {
          */
         public boolean useMseForValue = false;
     }
-        
+    
+    private static final Logger log = Logger.getLogger(CrfTrainer.class);
+    
     private CrfTrainerPrm prm; 
         
     public CrfTrainer(CrfTrainerPrm prm) {
         this.prm = prm;
-        if (prm.maximizer != null && prm.batchMaximizer != null) {
+        if (prm.optimizer != null && prm.batchOptimizer != null) {
             throw new IllegalStateException("Only one of maximizer and batchMaximizer may be set in CrfTrainerPrm.");
         }
     }
     
-    public FgModel train(FgModel model, FgExampleList data) {
-
+    public FgModel train(FgModel model, FgExampleList data) {        
         ExampleObjective exObj;
-        if (prm.ermaTraining) {
+        boolean isMinimize;
+        if (prm.trainer == Trainer.ERMA) {
             exObj = new ErmaObjective(data, prm.infFactory, prm.dlFactory);
+            isMinimize = true;
         } else {
             exObj = new CrfObjective(data, prm.infFactory, prm.useMseForValue);
+            isMinimize = false;
         }
         AvgBatchObjective objective = new AvgBatchObjective(exObj, model, prm.numThreads);
-        if (prm.maximizer != null) {
+        if (prm.optimizer != null) {
             DifferentiableFunction fn = objective;
             if (prm.regularizer != null) {
                 prm.regularizer.setNumDimensions(model.getNumParams());
                 fn = new DifferentiableFunctionOpts.AddFunctions(objective, prm.regularizer);
             }
-            if (prm.ermaTraining) {
-                prm.maximizer.minimize(fn, model.getParams());
+            if (isMinimize == true) {
+                prm.optimizer.minimize(fn, model.getParams());
             } else {
-                prm.maximizer.maximize(fn, model.getParams());
+                prm.optimizer.maximize(fn, model.getParams());
             }
             log.info("Final objective value: " + fn.getValue(model.getParams()));
         } else {
@@ -89,10 +93,10 @@ public class CrfTrainer {
                 DifferentiableBatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
                 fn = new BatchFunctionOpts.AddFunctions(objective, br);
             }
-            if (prm.ermaTraining) {
-                prm.batchMaximizer.minimize(fn, model.getParams());   
+            if (isMinimize == true) {
+                prm.batchOptimizer.minimize(fn, model.getParams());   
             } else {
-                prm.batchMaximizer.maximize(fn, model.getParams());   
+                prm.batchOptimizer.maximize(fn, model.getParams());   
             }
             log.info("Final objective value: " + fn.getValue(model.getParams(), IntSort.getIndexArray(fn.getNumExamples())));
         }

@@ -224,7 +224,7 @@ public class CrfRunner {
                 
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
-        prm.maximizer = getMaximizer();
+        prm.optimizer = getMaximizer();
         prm.regularizer = new L2(1.0);
         return prm;
     }

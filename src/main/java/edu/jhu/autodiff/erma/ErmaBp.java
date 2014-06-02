@@ -49,7 +49,6 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
-        //public final FactorGraph fg;
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;

@@ -36,6 +36,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-conllx-tune",
                     "dp-pruning",
                     "gobble-memory",
+                    "dp-aware",
                     )
     
     def __init__(self, options):
@@ -77,6 +78,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
         g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
         g.parsers = g.pruned_parsers + g.unpruned_parsers
+        
+        g.erma = SrlExpParams(trainer="ERMA", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
+        g.cll = SrlExpParams(trainer="CLL")
         
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_000"),
@@ -138,6 +142,28 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exps.append(exp)
             exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
+        
+        if self.expname == "dp-aware":
+            # Comparison of CLL and ERMA training with varying models and iterations.
+            exps = []
+            for trainer in [g.erma, g.cll]:
+                for bpMaxIterations in [2, 3, 5, 10]:
+                    for lang_short in ["bg", "es", "en"]:
+                        gl = g.langs[lang_short]
+                        pl = p.langs[lang_short]
+                        for parser in g.parsers:
+                            data = gl.cx_data
+                            data.update(l2variance=l2var_map[lang_short],
+                                        pruneModel=gl.pruneModel,
+                                        propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                            exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            if parser in [g.second_order, g.second_grand, g.second_sib]:
+                                exps += get_oome_stages(exp)
+                            else:
+                                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+           
         
         elif self.expname == "dp-conllx-tune":
             # CoNLL-X experiments.

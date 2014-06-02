@@ -40,7 +40,6 @@ public class ErmaObjectiveTest {
         ModuleTestUtils.assertFdAndAdEqual(obj, model.getParams(), 1e-8, 1e-8);
     }
 
-
     public static ErmaBpPrm getErmaBpPrm(boolean logDomain) {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
         bpPrm.logDomain = logDomain;
@@ -50,4 +49,5 @@ public class ErmaObjectiveTest {
         bpPrm.maxIterations = 1;        
         return bpPrm;
     }
+    
 }

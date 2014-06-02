@@ -11,10 +11,12 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
+import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.eval.DepParseEvaluator;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.featurize.TemplateLanguage.AT;
@@ -29,8 +31,10 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
+import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.hlt.optimize.AdaDelta;
 import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.hlt.optimize.AdaGrad;
@@ -247,7 +251,17 @@ public class JointNlpRunner {
     public static Date stopTrainingBy = null;
     @Opt(hasArg=true, description="Whether to use the mean squared error instead of conditional log-likelihood when evaluating training quality.")
     public static boolean useMseForValue = false;
+    @Opt(hasArg=true, description="The type of trainer to use (e.g. conditional log-likelihood, ERMA).")
+    public static Trainer trainer = Trainer.CLL;
     
+    // Options for training a dependency parser with ERMA.
+    @Opt(hasArg=true, description="The start temperature for the softmax MBR decoder for dependency parsing.")
+    public static double dpStartTemp = 10;
+    @Opt(hasArg=true, description="The end temperature for the softmax MBR decoder for dependency parsing.")
+    public static double dpEndTemp = .1;
+    @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
+    public static boolean dpAnnealMse = true;
+
     public JointNlpRunner() {
     }
 
@@ -601,15 +615,15 @@ public class JointNlpRunner {
     }
     
     private static CrfTrainerPrm getCrfTrainerPrm() {
-        BeliefPropagationPrm bpPrm = getInfFactory();
-                
+        FgInferencerFactory infPrm = getInfFactory();
+        
         CrfTrainerPrm prm = new CrfTrainerPrm();
-        prm.infFactory = bpPrm;
+        prm.infFactory = infPrm;
         if (optimizer == Optimizer.LBFGS) {
-            prm.maximizer = getLbfgs();
-            prm.batchMaximizer = null;
+            prm.optimizer = getLbfgs();
+            prm.batchOptimizer = null;
         } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
-            prm.maximizer = null;
+            prm.optimizer = null;
             SGDPrm sgdPrm = getSgdPrm();
             if (optimizer == Optimizer.SGD){
                 BottouSchedulePrm boPrm = new BottouSchedulePrm();
@@ -627,13 +641,23 @@ public class JointNlpRunner {
                 sgdPrm.sched = new AdaDelta(adaDeltaPrm);
                 sgdPrm.autoSelectLr = false;
             }
-            prm.batchMaximizer = new SGD(sgdPrm);
+            prm.batchOptimizer = new SGD(sgdPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
         prm.regularizer = new L2(l2variance);
         prm.numThreads = threads;
-        prm.useMseForValue = useMseForValue;
+        prm.useMseForValue = useMseForValue;        
+        prm.trainer = trainer;                
+        
+        // TODO: add options for other loss functions.
+        if (prm.trainer == Trainer.ERMA && includeDp && !includeSrl) {
+            DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
+            lossPrm.annealMse = dpAnnealMse;
+            lossPrm.startTemp = dpStartTemp;
+            lossPrm.endTemp = dpEndTemp;
+            prm.dlFactory = lossPrm;
+        }
         
         return prm;
     }
@@ -657,9 +681,9 @@ public class JointNlpRunner {
         return prm;
     }
 
-    private static BeliefPropagationPrm getInfFactory() {
-        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = logDomain;        
+    private static FgInferencerFactory getInfFactory() {
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.logDomain = logDomain;
         bpPrm.schedule = bpSchedule;
         bpPrm.updateOrder = bpUpdateOrder;
         bpPrm.normalizeMessages = normalizeMessages;
