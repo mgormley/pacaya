@@ -9,8 +9,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.hlt.optimize.function.AbstractDifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
+import edu.jhu.hlt.optimize.function.NonstationaryFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
-import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Threads.TaskFactory;
@@ -30,7 +30,8 @@ import edu.jhu.util.Threads.TaskFactory;
  * 
  * @author mgormley
  */
-public class AvgBatchObjective extends AbstractDifferentiableBatchFunction implements DifferentiableBatchFunction {
+public class AvgBatchObjective extends AbstractDifferentiableBatchFunction implements DifferentiableBatchFunction,
+        NonstationaryFunction {
     
     /**
      * An objective function for a single example or instance. Calls to these
@@ -55,6 +56,9 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     private FgModel gradient;
     private ExecutorService pool;
     private ExampleObjective exObj;
+    // For nonstationary functions:
+    private int curIter;
+    private int maxIter;
     
     public AvgBatchObjective(ExampleObjective exObj, FgModel model, int numThreads) {
         this.exObj = exObj;
@@ -89,7 +93,9 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         // Get accumulator for value and gradient.
         final Accumulator ac = new Accumulator();
         ac.accumValue = addValue;
-        ac.accumGradient = addGradient;  
+        ac.accumGradient = addGradient; 
+        ac.curIter = curIter;
+        ac.maxIter = maxIter;
         accum(params, batch, ac);
         return new ValueGradient(ac.accumValue ? ac.value : Double.NaN, 
                 ac.accumGradient ? ac.gradient.getParams() : null);
@@ -191,6 +197,12 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
 
     public void shutdown() {
         Threads.shutdownSafelyOrDie(pool);
+    }
+
+    @Override
+    public void updatateIterAndMax(int curIter, int maxIter) {
+        this.curIter = curIter;
+        this.maxIter = maxIter;
     }
     
 }

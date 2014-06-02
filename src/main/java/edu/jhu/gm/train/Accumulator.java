@@ -19,6 +19,10 @@ public class Accumulator {
     public boolean accumTrainLoss;
     public boolean accumDevLoss;
 
+    // For nonstationary functions:
+    public int curIter = 0;
+    public int maxIter = 0;
+    
     public Accumulator() { }
     
     public void addAll(Accumulator other) {
@@ -36,7 +40,10 @@ public class Accumulator {
         this.accumGradient = other.accumGradient;
         this.accumWeight = other.accumWeight;
         this.accumTrainLoss = other.accumTrainLoss;
-        this.accumDevLoss = other.accumDevLoss;        
+        this.accumDevLoss = other.accumDevLoss;    
+        
+        this.curIter = other.curIter;
+        this.maxIter = other.maxIter;
     }
     
     /* ------ Gradient ------ */

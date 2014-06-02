@@ -29,7 +29,7 @@ public class MeanSquaredError extends AbstractTensorModule implements Module<Ten
     /** Factory for MSE loss without a decoder. */
     public static class ExpectedRecallFactory implements DlFactory {
         @Override
-        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s) {
+        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s, int curIter, int maxIter) {
             return new MeanSquaredError(inf, goldConfig);
         }
     }

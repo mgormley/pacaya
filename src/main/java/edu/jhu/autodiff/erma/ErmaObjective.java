@@ -19,9 +19,9 @@ import edu.jhu.util.semiring.RealAlgebra;
 public class ErmaObjective implements ExampleObjective {
     
     public interface DlFactory {
-        /** Get a module which decodes then evaluates the loss. 
-         * @param s TODO*/
-        Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s);
+        /** Get a module which decodes then evaluates the loss. */
+        Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s, int curIter,
+                int maxIter);
     }
     
     private static final Logger log = Logger.getLogger(ErmaObjective.class);
@@ -72,7 +72,7 @@ public class ErmaObjective implements ExampleObjective {
         ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
         inf.setEffm(effm);
         // Decoding and Loss.
-        Module<Tensor> dl = dlFactory.getDl(fg, goldConfig, inf, s);
+        Module<Tensor> dl = dlFactory.getDl(fg, goldConfig, inf, s, ac.curIter, ac.maxIter);
         t.stop(); initTimer.add(t);
         
         // Update the inferences with the current model parameters.
