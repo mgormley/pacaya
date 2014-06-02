@@ -67,9 +67,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=True, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False)
+        g.defaults.set_incl_name("pruneByModel", False)
+        g.defaults.set_incl_name("siblingFactors", False)
+        g.defaults.set_incl_name("grandparentFactors", False)
         
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
+                                   #bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                   #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
                                                   bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
