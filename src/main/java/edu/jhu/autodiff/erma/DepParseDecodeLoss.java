@@ -2,7 +2,6 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
 import edu.jhu.autodiff.ElemLinear;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
@@ -54,7 +53,9 @@ public class DepParseDecodeLoss extends AbstractTopoModule implements Module<Ten
 
         public double getTemperature(int curIter, int maxIter) {
             double prop = (double) curIter / maxIter;
-            return (1.0 - prop) * startTemp + prop * endTemp;
+            double temp = (1.0 - prop) * startTemp + prop * endTemp;
+            assert !Double.isNaN(temp);
+            return temp;
         }
     }
     

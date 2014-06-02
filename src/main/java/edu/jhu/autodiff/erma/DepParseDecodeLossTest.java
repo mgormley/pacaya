@@ -53,4 +53,6 @@ public class DepParseDecodeLossTest {
         BeliefsVecFn vecFn = new BeliefsVecFn(id1, dl);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-10, 1e-8);        
     }
+    
+    
 }
