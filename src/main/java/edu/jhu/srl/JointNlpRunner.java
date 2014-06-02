@@ -689,6 +689,7 @@ public class JointNlpRunner {
         bpPrm.normalizeMessages = normalizeMessages;
         bpPrm.maxIterations = bpMaxIterations;
         bpPrm.convergenceThreshold = bpConvergenceThreshold;
+        bpPrm.keepTape = (trainer == Trainer.ERMA);
         return bpPrm;
     }
 

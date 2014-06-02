@@ -54,6 +54,12 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         public boolean normalizeMessages = true;
         /** The maximum message residual for convergence testing. */
         public double convergenceThreshold = 0;
+        /** 
+         * Whether to keep a tape of messages to allow for a backwards pass.
+         * If this class is used only as a generic inference method, setting to 
+         * false can save memory. 
+         */
+        public boolean keepTape = true;
         
         public ErmaBpPrm() {
         }
@@ -351,9 +357,11 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
         if (prm.normalizeMessages) {
             msgSum = forwardNormalize(edge);
         }
-        // The tape stores the old message, the normalization constant of the new message, and the edge.
-        VarTensor oldMsg = new VarTensor(msgs[edge.getId()].message);
-        tape.add(edge, oldMsg, msgSum, created);
+        if (prm.keepTape) {
+            // The tape stores the old message, the normalization constant of the new message, and the edge.
+            VarTensor oldMsg = new VarTensor(msgs[edge.getId()].message);
+            tape.add(edge, oldMsg, msgSum, created);
+        }
     }
     
     private double forwardNormalize(FgEdge edge) {
