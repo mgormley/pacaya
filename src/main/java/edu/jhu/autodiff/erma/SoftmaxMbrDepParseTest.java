@@ -23,12 +23,20 @@ public class SoftmaxMbrDepParseTest {
 
     Algebra s = new RealAlgebra();
     
+    String expout = "Tensor (RealAlgebra) [\n"
+            + "    0    1  |  value\n"
+            + "    0    0  |  0.146341\n"
+            + "    0    1  |  0.146341\n"
+            + "    1    0  |  0.853659\n"
+            + "    1    1  |  0.853659\n"
+            + "]";
+    
     String expoutAdj = "Tensor (RealAlgebra) [\n"
             + "    0    1  |  value\n"
-            + "    0    0  |  15.4000\n"
-            + "    0    1  |  16.5000\n"
-            + "    1    0  |  82.5000\n"
-            + "    1    1  |  84.7000\n"
+            + "    0    0  |  2.85950e-16\n"
+            + "    0    1  |  2.85950e-16\n"
+            + "    1    0  |  1.66804e-15\n"
+            + "    1    1  |  1.66804e-15\n"
             + "]";
     
     @Test
@@ -37,7 +45,7 @@ public class SoftmaxMbrDepParseTest {
         //helpSimple(new RealAlgebra());
     }
     
-    @Test
+    @Test    
     public void testSimpleLogPosNeg() {    
         helpSimple(new LogPosNegAlgebra());              
     }
@@ -56,8 +64,7 @@ public class SoftmaxMbrDepParseTest {
         Tensor out = ea.forward();
         //System.out.println(out);        
         ea.report();
-        assertEquals(InsideOutsideDepParseTest.expout, out.toString());
-        assertEquals(6, out.getValue(0), 1e-13);
+        assertEquals(expout, out.toString());
         assertTrue(out == ea.getOutput());
 
         // Set the adjoint of the sum to be 1.
@@ -66,9 +73,53 @@ public class SoftmaxMbrDepParseTest {
         
         Tensor outAdj = id1.getOutputAdj();
         System.out.println(outAdj);
-        // Backward yields a different result from the test in HyperalgoModuleTest because of the
+        // Backward yields a different result from the test in InsideOutsideDepParse because of the
         // exp(x/T).
         assertEquals(expoutAdj, outAdj.toString());
+    }
+    
+    String expoutAdj2 = "Tensor (RealAlgebra) [\n"
+            + "    0    1  |  value\n"
+            + "    0    0  |  0.443426\n"
+            + "    0    1  |  0.443426\n"
+            + "    1    0  |  -0.443426\n"
+            + "    1    1  |  -0.443426\n"
+            + "]";
+    @Test    
+    public void testSimpleLogPosNeg2() {    
+        helpSimple2(new RealAlgebra());              
+    }
+
+    private void helpSimple2(Algebra tmpS) {
+        double T = 1;
+        Tensor t1 = new Tensor(s, 2,2);
+        t1.setValuesOnly(ModuleTestUtils.getVectorFromReals(s, .2, .3, .5, .7));
+        // Take the log and multiply by T so that forward yields the same result as the test 
+        // in InsideOutsideDepParseTest.
+        //t1.log();
+        //t1.multiply(100);
+        TensorIdentity id1 = new TensorIdentity(t1);
+        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, T, tmpS);
+
+        Tensor out = ea.forward();
+        //System.out.println(out);        
+        //assertEquals(expout, out.toString());
+        assertTrue(out == ea.getOutput());
+
+        // Set the adjoint of the sum to be 1.
+        ea.getOutputAdj().fill(s.zero());
+        ea.getOutputAdj().setValue(0, s.one());
+        ea.getOutputAdj().setValue(1, s.one());
+        ea.backward();
+
+        ea.report();
+
+        Tensor outAdj = id1.getOutputAdj();
+        System.out.println(outAdj);
+
+        // TODO: Note that in this case you can actually see how the exp seems to more evenly prefer
+        // the gold parse edges.
+        assertEquals(expoutAdj2, outAdj.toString());
     }
     
     @Test
