@@ -1,6 +1,6 @@
 package edu.jhu.autodiff.erma;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -20,7 +20,6 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
@@ -49,8 +48,8 @@ public class ErmaBpBackwardTest {
         Prng.seed(12345);
         fn.getGradient(ModuleTestUtils.getAbsZeroOneGaussian(fn.getNumDimensions()));
         
-        IntDoubleVector gradAd = testGradientByFiniteDifferences(fn);
-        //assertEquals(new double[]{-0.034560412986688674, 0.8756722814502975}, );
+        testGradientByFiniteDifferences(fn);
+        testGradientBySpsaApprox(fn);
     }
     
     // Tests ErmaBp and ExpectedRecall gradient by finite differences on a small chain factor graph.
@@ -199,14 +198,22 @@ public class ErmaBpBackwardTest {
         testGradientByFiniteDifferences(fn);
     }
 
-    private static IntDoubleVector testGradientByFiniteDifferences(ErmaErFn fn) {
+    private static void testGradientByFiniteDifferences(ErmaErFn fn) {
         Prng.seed(12345);
         int numParams = fn.getNumDimensions();
         IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         System.out.println("theta0 = " + theta0);
         Prng.seed(System.currentTimeMillis());
         
-        ModuleTestUtils.assertFdAndAdEqual(fn, theta0, 1e-5, 1e-8);
+        ModuleTestUtils.assertFdAndAdEqual(fn, theta0, 1e-5, 1e-7);
+    }
+    
+    private static IntDoubleVector testGradientBySpsaApprox(ErmaErFn fn) {
+        Prng.seed(12345);
+        int numParams = fn.getNumDimensions();
+        IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
+        System.out.println("theta0 = " + theta0);
+        Prng.seed(System.currentTimeMillis());
         
         IntDoubleVector gradFd0 = StochasticGradientApproximation.estimateGradientSpsa(fn, theta0, 1000);      
         IntDoubleVector gradFd1 = StochasticGradientApproximation.estimateGradientSpsa(fn, theta0, 1000);      
