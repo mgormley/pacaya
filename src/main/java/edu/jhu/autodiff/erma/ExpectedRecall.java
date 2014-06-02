@@ -13,7 +13,6 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.Algebra;
 
 /**
  * Loss function computing the expected recall from variable beliefs and an assignment to the
@@ -26,15 +25,13 @@ public class ExpectedRecall extends AbstractTensorModule implements Module<Tenso
     /** Factory for expected recall loss without a decoder. */
     public static class ExpectedRecallFactory implements DlFactory {
         @Override
-        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s, int curIter, int maxIter) {
+        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, int curIter, int maxIter) {
             return new ExpectedRecall(inf, goldConfig);
         }        
     }
     
     private Module<Beliefs> inf;
     private VarConfig vc;
-    // Output
-    private double expectedRecall;    
     
     public ExpectedRecall(Module<Beliefs> inf, VarConfig vc) {
         super(inf.getAlgebra());
@@ -45,7 +42,7 @@ public class ExpectedRecall extends AbstractTensorModule implements Module<Tenso
     /** Forward pass: y = \sum_{x_i \in x*} b(x_i), where x* is the gold variable assignment. */
     public Tensor forward() {
         VarTensor[] varBeliefs = inf.getOutput().varBeliefs;
-        expectedRecall = s.zero();
+        double expectedRecall = s.zero();
         for (Var var : vc.getVars()) {
             if (var.getType() == VarType.PREDICTED) {
                 VarTensor marg = varBeliefs[var.getId()];
@@ -67,10 +64,6 @@ public class ExpectedRecall extends AbstractTensorModule implements Module<Tenso
                 varBeliefsAdjs[var.getId()].addValue(vc.getState(var), expectedRecallAdj);
             }
         }
-    }
-    
-    public double getExpectedRecall() {
-        return expectedRecall;
     }
     
     @Override

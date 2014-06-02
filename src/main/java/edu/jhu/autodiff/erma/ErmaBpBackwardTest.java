@@ -326,9 +326,8 @@ public class ErmaBpBackwardTest {
             updateFactorGraphFromModel(theta);
             bp = new ErmaBp(fg, prm);
             bp.forward();            
-            er = new ExpectedRecall(bp, goldConfig);
-            er.forward();
-            return er.getExpectedRecall();
+            er = new ExpectedRecall(bp, goldConfig);            
+            return er.forward().getValue(0);
         }
 
         private void updateFactorGraphFromModel(IntDoubleVector theta) {
@@ -347,41 +346,5 @@ public class ErmaBpBackwardTest {
         }
         
     }
-
-//    @Test
-//    public void testCreateModule() {
-//        final FgModel model = new FgModel(10);
-//        final LFgExample ex = data.get(i);
-//        final VarConfig goldConfig = ex.getGoldConfig();
-//        final boolean logDomain = infFactory.isLogDomain(); // TODO: semiring
-//        assert !logDomain;
-//        final FactorGraph fg = ex.getFgLatPred();
-//        
-//        TopoOrder topo = new TopoOrder();
-//        
-//        // Model initialization.
-//        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, logDomain);
-//        topo.add(effm);
-//        
-//        // Inference.
-//        Module<Beliefs> inf = (Module<Beliefs>) infFactory.getInferencer(fg);
-//        topo.add(inf);
-//        
-//        // Decoding.
-//        DepTensorFromBeliefs b2d = new DepTensorFromBeliefs(inf, n);
-//        topo.add(b2d);
-//        SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, s);
-//        topo.add(mbr);
-//        DepTensorToBeliefs d2b = new DepTensorToBeliefs(mbr, inf);
-//        topo.add(d2b);
-//        
-//        // Loss.
-//        VarSet predVars = VarSet.getVarsOfType(goldConfig.getVars(), VarType.PREDICTED);
-//        VarConfig predConfig = goldConfig.getSubset(predVars);
-//        ExpectedRecall er = new ExpectedRecall(d2b, predConfig);
-//        topo.add(er);
-//        
-//        effm.getModelAdj();
-//    }
     
 }

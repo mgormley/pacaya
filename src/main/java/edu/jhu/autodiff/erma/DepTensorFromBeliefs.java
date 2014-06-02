@@ -18,18 +18,18 @@ import edu.jhu.util.collections.Lists;
 public class DepTensorFromBeliefs extends AbstractTensorModule implements Module<Tensor> {
 
     private Module<Beliefs> inf;
-    private int n;
+    private int n = -1;
     
-    public DepTensorFromBeliefs(Module<Beliefs> inf, int n) {
+    public DepTensorFromBeliefs(Module<Beliefs> inf) {
         super(inf.getAlgebra());
         this.inf = inf;
-        this.n = n;
     }
     
     @Override
     public Tensor forward() {
-        y = new Tensor(s, n, n);
         Beliefs b = inf.getOutput();
+        n = guessNumWords(b);
+        y = new Tensor(s, n, n);
         for (int v=0; v<b.varBeliefs.length; v++) {
             Var var = b.varBeliefs[v].getVars().get(0);
             if (var instanceof LinkVar) {
@@ -68,5 +68,20 @@ public class DepTensorFromBeliefs extends AbstractTensorModule implements Module
     public List<? extends Object> getInputs() {
         return Lists.getList(inf);
     }    
+
+    /** Gets the maximum index of a parent or child in a LinkVar, plus one. */ 
+    static int guessNumWords(Beliefs b) {
+        int n = -1;
+        for (int v=0; v<b.varBeliefs.length; v++) {
+            Var var = b.varBeliefs[v].getVars().get(0);
+            if (var instanceof LinkVar) {
+                LinkVar link = (LinkVar) var;
+                int p = link.getParent();
+                int c = link.getChild();
+                n = Math.max(n, Math.max(p, c));
+            }
+        }
+        return n+1;
+    }
 
 }

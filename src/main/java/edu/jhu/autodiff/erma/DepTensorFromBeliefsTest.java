@@ -19,9 +19,16 @@ public class DepTensorFromBeliefsTest {
     private static Algebra s = new RealAlgebra();
 
     @Test
+    public void testGuessNumWords() {
+        BeliefsIdentity id1 = getBeliefsModule();
+        Beliefs b = id1.getOutput();
+        assertEquals(2, DepTensorFromBeliefs.guessNumWords(b));
+    }
+    
+    @Test
     public void testSimple() {
         BeliefsIdentity id1 = getBeliefsModule();
-        DepTensorFromBeliefs s = new DepTensorFromBeliefs(id1, 2);
+        DepTensorFromBeliefs s = new DepTensorFromBeliefs(id1);
         
         Tensor out = s.forward();
         assertEquals(0.0, out.get(0,0), 1e-13); // -1, 0

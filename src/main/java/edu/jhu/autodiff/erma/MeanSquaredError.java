@@ -13,7 +13,6 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -27,17 +26,15 @@ import edu.jhu.util.semiring.RealAlgebra;
 public class MeanSquaredError extends AbstractTensorModule implements Module<Tensor> {
     
     /** Factory for MSE loss without a decoder. */
-    public static class ExpectedRecallFactory implements DlFactory {
+    public static class MeanSquaredErrorFactory implements DlFactory {
         @Override
-        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, Algebra s, int curIter, int maxIter) {
+        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, int curIter, int maxIter) {
             return new MeanSquaredError(inf, goldConfig);
         }
     }
     
     private Module<Beliefs> inf;
     private VarConfig vc;
-    // Output
-    private double mse;
     
     public MeanSquaredError(Module<Beliefs> inf, VarConfig vc) {
         super(inf.getAlgebra());
@@ -98,10 +95,6 @@ public class MeanSquaredError extends AbstractTensorModule implements Module<Ten
                 }
             }
         }
-    }
-    
-    public double getMse() {
-        return mse;
     }
     
     @Override
