@@ -20,17 +20,16 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class DepParseDecoderTest {
     
+    private int n;
+    private List<VarTensor> margs;
+    private List<Var> vars;
+
     @Before
     public void setUp() {
-        
-    }
-    
-    @Test
-    public void testGetParents() {
         boolean logDomain = true;
-        int n = 3;
-        List<VarTensor> margs = new ArrayList<VarTensor>();
-        List<Var> vars = new ArrayList<Var>();
+        n = 3;       
+        margs = new ArrayList<VarTensor>();
+        vars = new ArrayList<Var>();
         for (int p=-1; p<n; p++) {
             for (int c=0; c<n; c++) {
                 LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
@@ -49,53 +48,42 @@ public class DepParseDecoderTest {
                 vars.add(v);
             }
         }
-        
+    }
+    
+    @Test
+    public void testGetParents() {       
         int[] parents = DepParseDecoder.getParents(margs, vars, n);
         System.out.println(Arrays.toString(parents));
         Assert.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
     @Test
-    public void testGetDepEdgeMask() {
-        boolean logDomain = true;
-        int n = 3;
-        List<VarTensor> margs = new ArrayList<VarTensor>();
-        List<Var> vars = new ArrayList<Var>();
-        for (int p=-1; p<n; p++) {
-            for (int c=0; c<n; c++) {
-                LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
-                VarTensor f = new VarTensor(new VarSet(v));
-                if ((p == -1 && c == 1) || 
-                        (p == 1 && c == 0) || 
-                        (p == 1 && c == 2)) {
-                    f.setValue(LinkVar.TRUE, FastMath.log(0.7));
-                    f.setValue(LinkVar.FALSE, FastMath.log(0.3));
-                } else {
-                    f.setValue(LinkVar.TRUE, FastMath.log(0.3));
-                    f.setValue(LinkVar.FALSE, FastMath.log(0.7));
-                }
-                if (logDomain) { f.convertLogToReal(); }
-                margs.add(f);
-                vars.add(v);
-            }
-        }
-
+    public void testGetDepEdgeMaskPropMaxMarg() {
         double propMaxMarg = 0.1;
-        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg);
+        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, 99);
         System.out.println(mask);
-        assertEquals(n*n, mask.getCount());
-        for (int p=-1; p<n; p++) {
-            for (int c=0; c<n; c++) {
-                if (p == c) { continue; }
-                assertTrue("pc: "+p + " " + c, mask.isKept(p, c));
-                assertTrue("pc: "+p + " " + c, !mask.isPruned(p, c));
-            }
-        }
+        assertNoneArePruned(mask);
         
         propMaxMarg = 0.5;
-        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg);
+        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, 99);
         System.out.println(mask);
+        assertOnlyMostLikelyAreKept(mask);
+    }
+    
+    @Test
+    public void testGetDepEdgeMaskCount() {
+        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, 0, 99);
+        System.out.println(mask);
+        assertNoneArePruned(mask);
+        
+        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, 0, 1);
+        System.out.println(mask);
+        assertOnlyMostLikelyAreKept(mask);
+    }
+
+    private void assertOnlyMostLikelyAreKept(DepEdgeMask mask) {
         assertEquals(3, mask.getCount());
+
         for (int p=-1; p<n; p++) {
             for (int c=0; c<n; c++) {
                 if (p == c) { continue; }
@@ -108,6 +96,18 @@ public class DepParseDecoderTest {
                     assertTrue("pc: "+p + " " + c, !mask.isKept(p, c));
                     assertTrue("pc: "+p + " " + c, mask.isPruned(p, c));
                 }
+            }
+        }
+    }
+
+    private void assertNoneArePruned(DepEdgeMask mask) {
+        assertEquals(n*n, mask.getCount());
+
+        for (int p=-1; p<n; p++) {
+            for (int c=0; c<n; c++) {
+                if (p == c) { continue; }
+                assertTrue("pc: "+p + " " + c, mask.isKept(p, c));
+                assertTrue("pc: "+p + " " + c, !mask.isPruned(p, c));
             }
         }
     }

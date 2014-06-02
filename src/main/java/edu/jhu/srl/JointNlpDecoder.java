@@ -17,6 +17,7 @@ public class JointNlpDecoder {
     public static class JointNlpDecoderPrm {
         public MbrDecoderPrm mbrPrm = null;
         public double pruneMargProp = 0.0001;
+        public int maxPrunedHeads = 10;
     }
 
     private JointNlpDecoderPrm prm;    
@@ -72,7 +73,8 @@ public class JointNlpDecoder {
                 }
             }
         }
-        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, prm.pruneMargProp);
+        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n,
+                prm.pruneMargProp, prm.maxPrunedHeads);
     }
 
     public int[] getParents() {
