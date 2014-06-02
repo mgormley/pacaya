@@ -3,6 +3,7 @@ package edu.jhu.autodiff.erma;
 import java.util.List;
 
 import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.ElemLinear;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TopoOrder;
@@ -24,15 +25,31 @@ public class DepParseDecodeLoss extends AbstractTopoModule implements Module<Ten
     /**
      * This factory defines the decoder / loss module as non-stationary: the softmax parameter on
      * the MBR decoder is annealed linearly from a starting temperature to a small epsilon.
+     * 
+     * Optionally, this loss function can be annealed from MSE to softmax MBR with expected recall.
      */
     public static class DepParseDecodeLossFactory implements DlFactory {
-        public double startTemp = 100;
+        public double startTemp = 10;
         public double endTemp = .1;
+        public boolean annealMse = true;
         
         @Override
         public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, int curIter, int maxIter) {
-            double temperature = getTemperature(curIter, maxIter);
-            return new DepParseDecodeLoss(inf, goldConfig, temperature);
+            if (annealMse) {
+                Module<Tensor> mse = new MeanSquaredError(inf, goldConfig);
+                double temperature = getTemperature(curIter, maxIter);
+                Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temperature);
+                double prop = (double) curIter / maxIter;
+                Module<Tensor> lin = new ElemLinear(mse, dep, (1.0-prop), prop);
+                TopoOrder topo = new TopoOrder();
+                topo.add(mse);
+                topo.add(dep);
+                topo.add(lin);
+                return topo;   
+            } else {
+                double temperature = getTemperature(curIter, maxIter);
+                return new DepParseDecodeLoss(inf, goldConfig, temperature);
+            }
         }
 
         public double getTemperature(int curIter, int maxIter) {
