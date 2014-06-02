@@ -535,7 +535,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
         } else {
-            // Add adjoints on outgoing message modules at time (t+1).
+            // Get the adjoints on outgoing message modules at time (t+1).
             Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
             Pair<Tensor, Tensor> pairAdj = dep.getOutputAdj();
@@ -548,10 +548,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             dep.backward();
             
             // Increment adjoints of the incoming messages at time (t).
-            // TODO: Here we just set the outgoing messages, this shouldn't be a
-            // problem since they will never be nonzero.
-            setMsgs(parent, msgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
-            setMsgs(parent, msgsAdj, mFalseIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
+            addMsgs(parent, msgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
+            addMsgs(parent, msgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE, CUR_MSG, IN_MSG, s);
         }
     }
 
@@ -566,7 +564,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
      * @param parent The node for this factor.
      * @param msgs The input messages.
      * @param tf Whether to get TRUE or FALSE messages.
-     * @param isNew Whether to get messages from .newMessage or .message.
+     * @param isNew Whether to get messages in .newMessage or .message.
      * @param isIn Whether to get incoming or outgoing messages.
      * @param s The abstract algebra.
      * @return The output messages.
@@ -592,7 +590,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
      * @param msgs The output messages.
      * @param t The input messages.
      * @param tf Whether to set TRUE or FALSE messages.
-     * @param isNew Whether to set messages from .newMessage or .message.
+     * @param isNew Whether to set messages in .newMessage or .message.
      * @param isIn Whether to set incoming or outgoing messages.
      * @param s The abstract algebra.
      */
@@ -602,8 +600,30 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         for (FgEdge edge : edges) {
             LinkVar link = (LinkVar) edge.getVar();
             VarTensor msg = (isNew) ? msgs[edge.getId()].newMessage : msgs[edge.getId()].message;
-            double val = es.getScore(link.getParent(), link.getChild()); 
+            double val = es.getScore(link.getParent(), link.getChild());
             msg.setValue(tf, val);
+        }
+    }
+    
+    /**
+     * Adds to messages on a Messages[].
+     * 
+     * @param parent The node for this factor.
+     * @param msgs The output messages.
+     * @param t The input messages.
+     * @param tf Whether to set TRUE or FALSE messages.
+     * @param isNew Whether to add to messages in .newMessage or .message.
+     * @param isIn Whether to add to incoming or outgoing messages.
+     * @param s The abstract algebra.
+     */
+    private void addMsgs(FgNode parent, Messages[] msgs, Tensor t, int tf, boolean isNew, boolean isIn, Algebra s) {
+        EdgeScores es = EdgeScores.tensorToEdgeScores(t);
+        List<FgEdge> edges = (isIn) ? parent.getInEdges() : parent.getOutEdges();
+        for (FgEdge edge : edges) {
+            LinkVar link = (LinkVar) edge.getVar();
+            VarTensor msg = (isNew) ? msgs[edge.getId()].newMessage : msgs[edge.getId()].message;
+            double val = es.getScore(link.getParent(), link.getChild());
+            msg.addValue(tf, val);
         }
     }
     
