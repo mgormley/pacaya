@@ -141,7 +141,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         if (isFullDataset) {
             // Print out the likelihood if we're computing it on the entire dataset.
-            log.info(String.format("Summary: avg log-likelihood = %.2g train loss = %.2g dev loss = %.2g weight = %.2g",
+            log.info(String.format("Summary: avg value = %.2g train loss = %.2g dev loss = %.2g weight = %.2g",
                     ac.value, ac.trainLoss, ac.devLoss, ac.weight));
             exObj.report();            
         }

@@ -94,7 +94,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # Language specific parameters
         p.cx_langs_with_phead = ["bg", "en", "de", "es"]
-        #p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en"]
 
         # This is a map from language to number of sentences.
         l2var_map = {"ar" : 1500, "zh" : 57000, "cs" : 72700, "da" : 5200, "nl" : 13300,
@@ -155,6 +154,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
+            g.defaults.update(trainMaxNumSentences=100)
             for trainer in [g.erma, g.cll]:
                 for bpMaxIterations in [2, 3, 5, 10]:
                     for lang_short in ["bg", "es", "en"]:
@@ -180,7 +180,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.set_incl_name("l2variance", False)
             # Train a first-order pruning model for each language
             prune_exps = {}
-            languages = ["ar","bg"] #p.cx_lang_short_names
+            languages = p.cx_lang_short_names
             for lang_short in languages:
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
