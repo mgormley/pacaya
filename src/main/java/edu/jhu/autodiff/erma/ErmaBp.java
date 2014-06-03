@@ -336,6 +336,7 @@ public class ErmaBp implements Module<Beliefs>, FgInferencer {
             } else {
                 msg = prod.getMarginal(new VarSet(var), false);
             }
+            assert !msg.containsBadValues(prm.logDomain);
         }
         
         // Set the final message in case we created a new object.

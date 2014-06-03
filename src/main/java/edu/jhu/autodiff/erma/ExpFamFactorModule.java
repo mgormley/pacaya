@@ -47,6 +47,7 @@ public class ExpFamFactorModule implements Module<VarTensor[]> {
             Factor factor = fg.getFactor(a);
             if (!(factor instanceof GlobalFactor)) {
                 y[a] = BruteForceInferencer.safeGetVarTensor(factor);
+                assert !y[a].containsBadValues(logDomain);
             }
         }
         return y;

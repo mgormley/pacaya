@@ -70,8 +70,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 // where the predicted variables (might) have been clamped.
                 int config = (iter != null) ? iter.next() : c;
                 
-                double dot = getDotProd(config, model, logDomain);
-                assert !Double.isNaN(dot);
+                double dot = getDotProd(config, model, logDomain);                
+                assert !Double.isNaN(dot) && dot != Double.POSITIVE_INFINITY : "Invalid value for factor: " + dot;
                 f.setValue(c, dot);
             }
             assert(iter == null || !iter.hasNext());

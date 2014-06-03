@@ -261,6 +261,9 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
                 Tensor t = (mark.getValue(c) == s.zero()) ? leftAdj : rightAdj;
                 t.addValue(c, yAdj.getValue(c));
             }
+            // Get the mark's adjoint, but don't add to it. 
+            // TODO: The mark should really be a constant tensor.
+            markIn.getOutputAdj();
         }
 
         @Override
