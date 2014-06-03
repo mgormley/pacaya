@@ -24,19 +24,6 @@
           <useIncrementalCompilation>true</useIncrementalCompilation>
           <fork>true</fork>
           <!-- <compilerArgument>-verbose</compilerArgument> -->
-          <includes>
-                  <include>**/*.java</include>
-          </includes>
-          <excludes>
-            <!-- Skip anything depending on joptimizer. 
-            <exclude>**/*ResDmvDantzigWolfeRelaxation*.java</exclude>
-            <exclude>**/*ModelParamSubproblem*.java</exclude>
-            <exclude>**/ModelParamSubproblem.java</exclude>
-            <exclude>**/ModelParamSubproblemTest.java</exclude> -->
-            <!-- Skip CRF.
-            <exclude>**/edu/jhu/gm/*.java</exclude>
-            <exclude>**/edu/jhu/gm/**/*.java</exclude> -->
-          </excludes>
         </configuration>
         <version>3.0</version>
       </plugin>
@@ -58,29 +45,6 @@
           </descriptorRefs>
         </configuration>
       </plugin>
-      <!-- The following plugin includes alternate source directories in the compilation -->
-      <!--
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.1</version>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>/Users/mgormley/research/other_lib/cplex-decompiled/src</source>
-                <source>/Users/mgormley/research/ERMA/src</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
