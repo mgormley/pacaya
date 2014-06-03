@@ -112,6 +112,8 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
             } else if (module == weights && outS instanceof LogSemiring) {
                 // Check odds ratios for potential floating point precision errors.
                 checkLogOddsRatios(EdgeScores.tensorToEdgeScores(weights.getOutput()), tmpS);
+            } else if (module == root && root.getOutput().getValue(0) == tmpS.zero()) {
+                throw new IllegalStateException("Incoming messages disallowed all valid tree structures");
             }
         }
 
@@ -133,7 +135,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
                 Module<Tensor> inn = (Module<Tensor>) in;
                 assert !inn.getOutputAdj().containsNaN();
             }
-        } 
+        }
     }
 
     @Override
