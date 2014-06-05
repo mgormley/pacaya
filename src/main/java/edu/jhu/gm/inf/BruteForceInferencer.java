@@ -56,7 +56,7 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
     private FactorGraph fg;
     private VarTensor joint;
     
-    @Deprecated
+    //@Deprecated
     public BruteForceInferencer(FactorGraph fg, boolean logDomain) {
         this(fg, logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA);
     }
@@ -89,14 +89,10 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
     /** Gets this factor as a VarTensor. This will always return a new object. See also safeGetVarTensor(). */
     public static VarTensor safeNewVarTensor(Algebra s, Factor f) {
         VarTensor factor;
-        if (f instanceof VarTensor) {
-            factor = ((VarTensor) f).copyAndConvertAlgebra(s);
-        } else {
-            // Create a VarTensor which the values of this non-explicitly represented factor.
-            factor = new VarTensor(s, f.getVars());
-            for (int c=0; c<factor.size(); c++) {
-                factor.setValue(c, s.fromLogProb(f.getLogUnormalizedScore(c)));
-            }
+        // Create a VarTensor which the values of this non-explicitly represented factor.
+        factor = new VarTensor(s, f.getVars());
+        for (int c=0; c<factor.size(); c++) {
+            factor.setValue(c, s.fromLogProb(f.getLogUnormalizedScore(c)));
         }
         return factor;
     }
