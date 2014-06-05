@@ -827,7 +827,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         //
                 
         double bethe = 0.0;
-        Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
         for (int a=0; a<fg.getFactors().size(); a++) {
             Factor f = fg.getFactors().get(a);
             if (!(f instanceof GlobalFactor)) {
@@ -861,11 +860,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 }
             }
             bethe -= (numNeighbors - 1) * sum;
-        }
-        
-        for (Class<?> clazz : ignoredClasses) {
-            log.warn("Bethe free energy value is INVALID. Returning NaN instead. Ignoring factor for Bethe free energy computation: " + clazz);
-            return Double.NaN;
         }
         
         assert !Double.isNaN(bethe);        

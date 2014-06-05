@@ -277,13 +277,14 @@ public class ErmaBpForwardTest {
     @Test
     public void testCanHandleProbHardFactors() {
         //TODO: ErmaBp doesn't currently do factor belief caching. 
-        // testCanHandleProbHardFactorsHelper(true, false);
+        // testCanHandleHardFactorsHelper(true, false);
         testCanHandleHardFactorsHelper(false, false);
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
-        //TODO: testCanHandleProbHardFactorsHelper(true, true);
+        //TODO: ErmaBp doesn't currently do factor belief caching. 
+        // testCanHandleHardFactorsHelper(true, true);
         testCanHandleHardFactorsHelper(false, true);
     }    
     
@@ -356,20 +357,39 @@ public class ErmaBpForwardTest {
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             ErmaBp bp, double tolerance) {
         for (Var var : fg.getVars()) {
-            VarTensor bfm = bf.getMarginals(var);
-            VarTensor bpm = bp.getMarginals(var);
-            if (!bfm.equals(bpm, tolerance)) {
-                assertEquals(bfm, bpm);
+            {
+                VarTensor bfm = bf.getMarginals(var);
+                VarTensor bpm = bp.getMarginals(var);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
+            }
+            {
+                VarTensor bfm = bf.getLogMarginals(var);
+                VarTensor bpm = bp.getLogMarginals(var);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
             }
         }
         for (Factor f : fg.getFactors()) {
-            VarTensor bfm = bf.getMarginals(f);
-            VarTensor bpm = bp.getMarginals(f);
-            if (!bfm.equals(bpm, tolerance)) {
-                assertEquals(bfm, bpm);
+            {
+                VarTensor bfm = bf.getMarginals(f);
+                VarTensor bpm = bp.getMarginals(f);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
+            }
+            {
+                VarTensor bfm = bf.getLogMarginals(f);
+                VarTensor bpm = bp.getLogMarginals(f);
+                if (!bfm.equals(bpm, tolerance)) {
+                    assertEquals(bfm, bpm);
+                }
             }
         }
         assertEquals(bf.getPartition(), bp.getPartition(), tolerance);
+        assertEquals(bf.getLogPartition(), bp.getLogPartition(), tolerance);
     }
     
 }
