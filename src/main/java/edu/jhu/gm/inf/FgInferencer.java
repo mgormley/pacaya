@@ -99,10 +99,4 @@ public interface FgInferencer {
      */
     double getLogPartition();
 
-    /**
-     * Whether the inferencer treats the factors as containing the log of their
-     * values or not.
-     */
-    boolean isLogDomain();
-
 }

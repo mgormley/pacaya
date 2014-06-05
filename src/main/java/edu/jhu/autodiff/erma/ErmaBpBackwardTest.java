@@ -55,7 +55,7 @@ public class ErmaBpBackwardTest {
     // Tests ErmaBp and ExpectedRecall gradient by finite differences on a small chain factor graph.
     @Test
     public void testErmaGradientLinearChain() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars(logDomain);
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
         FactorGraph fg = fgv.fg;
         
         VarConfig goldConfig = new VarConfig();
@@ -72,7 +72,7 @@ public class ErmaBpBackwardTest {
     
     @Test
     public void testErmaGradientLinearChainWithLoops() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars(logDomain);
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
         FactorGraph fg = fgv.fg;
         
         ExplicitFactor loop0 = new ExplicitFactor(new VarSet(fgv.t0, fgv.t2)); 
@@ -107,7 +107,7 @@ public class ErmaBpBackwardTest {
     public void testErmaGradient1WordGlobalFactor() {
         double[] root = new double[]{ 1.0 };
         double[][] child = new double[][]{ { 0.0 } };
-        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child, logDomain);
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
@@ -160,7 +160,7 @@ public class ErmaBpBackwardTest {
     public void testErmaGradient2WordGlobalFactor() {
         double[] root = new double[]{ 1.0, 1.0 };
         double[][] child = new double[][]{ { 0.0, 1.0 }, { 1.0, 0.0 } };
-        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child, logDomain);
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;

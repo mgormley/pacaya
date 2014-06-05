@@ -31,11 +31,6 @@ public class BeliefPropagation implements FgInferencer {
     
     private static final Logger log = Logger.getLogger(BeliefPropagation.class);
 
-    public interface FgInferencerFactory {
-        FgInferencer getInferencer(FactorGraph fg);
-        boolean isLogDomain();
-    }
-    
     public static class BeliefPropagationPrm implements FgInferencerFactory {
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
@@ -114,7 +109,7 @@ public class BeliefPropagation implements FgInferencer {
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
-            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain, prm.normalizeMessages);
+            msgs[i] = new Messages(s, fg.getEdge(i), s.one());
         }
         // Reset the global factors.
         for (Factor factor : fg.getFactors()) {
@@ -127,10 +122,10 @@ public class BeliefPropagation implements FgInferencer {
             for(FgNode node : fg.getNodes()) {
             	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
                 	Factor f = node.getFactor();        		
-            		VarTensor fBel = new VarTensor(f.getVars());
+            		VarTensor fBel = new VarTensor(s, f.getVars());
                 	int c = f.getVars().calcNumConfigs();
                 	for(int i=0; i<c; i++)
-                		fBel.setValue(i, f.getUnormalizedScore(i));
+                		fBel.setValue(i, f.getLogUnormalizedScore(i));
                 	
                 	for(FgEdge v2f : node.getInEdges()) {
                 		VarTensor vBel = msgs[v2f.getId()].message;
@@ -211,7 +206,7 @@ public class BeliefPropagation implements FgInferencer {
             // create all the messages from this factor to its variables, but only 
             // once per iteration.
             GlobalFactor globalFac = (GlobalFactor) factor;
-            boolean created = globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, false, iter);
+            boolean created = globalFac.createMessages(edge.getParent(), msgs, iter);
             if (created && prm.normalizeMessages) {
                for (FgEdge e2 : edge.getParent().getOutEdges()) {
                    normalize(msgs[e2.getId()].newMessage);
@@ -250,14 +245,14 @@ public class BeliefPropagation implements FgInferencer {
             		if(prm.logDomain) prod.subBP(remove);
             		else prod.divBP(remove);
             		
-            		assert !prod.containsBadValues(prm.logDomain) : "prod from cached beliefs = " + prod;
+            		assert !prod.containsBadValues() : "prod from cached beliefs = " + prod;
             	}
             	else {	// fall back on normal way of computing messages without caching
-            		prod = new VarTensor(factor.getVars());
+            		prod = new VarTensor(s, factor.getVars());
                 	// Set the initial values of the product to those of the sending factor.
                 	int numConfigs = prod.getVars().calcNumConfigs();
                 	for (int c = 0; c < numConfigs; c++) {
-                		prod.setValue(c, factor.getUnormalizedScore(c));
+                		prod.setValue(c, factor.getLogUnormalizedScore(c));
                 	}
                 	getProductOfMessages(edge.getParent(), prod, edge.getChild());
             	}
@@ -290,7 +285,7 @@ public class BeliefPropagation implements FgInferencer {
             }
         } else { 
             // normalize and logNormalize already check for NaN
-            assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;
+            assert !msg.containsBadValues() : "msg = " + msg;
         }
     }
 
@@ -328,7 +323,7 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 prod.prod(nbMsg);
             }
-            assert !prod.containsBadValues(prm.logDomain) : "prod = " + prod;
+            assert !prod.containsBadValues() : "prod = " + prod;
         }
     }
 
@@ -370,13 +365,13 @@ public class BeliefPropagation implements FgInferencer {
         VarTensor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
-        assert !ec.message.containsBadValues(prm.logDomain) : "ec.message = " + ec.message;
+        assert !ec.message.containsBadValues() : "ec.message = " + ec.message;
 
         // Update factor beliefs
         if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
         	Factor f = edge.getFactor();
         	VarTensor update = factorBeliefCache[f.getId()];
-        	if(prm.isLogDomain()) {
+        	if(prm.logDomain) {
         		update.subBP(oldMessage);
         		update.add(ec.message);
         	}
@@ -419,7 +414,7 @@ public class BeliefPropagation implements FgInferencer {
     }
     
     protected VarTensor getVarBeliefs(Var var) {
-        VarTensor prod = new VarTensor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        VarTensor prod = new VarTensor(s, new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
         FgNode node = fg.getVarNode(var.getId());
         getProductOfMessagesNormalized(node, prod, null);
@@ -433,7 +428,7 @@ public class BeliefPropagation implements FgInferencer {
                     + " This should only be used for testing.");
         }
         
-        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetVarTensor(factor));
+        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetVarTensor(s, factor));
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessagesNormalized(node, prod, null);
@@ -499,14 +494,13 @@ public class BeliefPropagation implements FgInferencer {
         double semiringZero = prm.logDomain ? Double.NEGATIVE_INFINITY : 0.0;
         
         double bethe = 0.0;
-        Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
         for (int a=0; a<fg.getFactors().size(); a++) {
             Factor f = fg.getFactors().get(a);
             if (!(f instanceof GlobalFactor)) {
                 int numConfigs = f.getVars().calcNumConfigs();
                 VarTensor beliefs = getFactorBeliefs(a);
                 for (int c=0; c<numConfigs; c++) {                
-                    double chi_c = f.getUnormalizedScore(c);
+                    double chi_c = f.getLogUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
                     if (beliefs.getValue(c) != semiringZero) { 
                         if (prm.logDomain) {
@@ -517,7 +511,7 @@ public class BeliefPropagation implements FgInferencer {
                     }
                 }
             } else {
-                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getFactorNode(a), msgs, prm.logDomain);
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getFactorNode(a), msgs);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {
@@ -537,11 +531,6 @@ public class BeliefPropagation implements FgInferencer {
             bethe -= (numNeighbors - 1) * sum;
         }
         
-        for (Class<?> clazz : ignoredClasses) {
-            log.warn("Bethe free energy value is INVALID. Returning NaN instead. Ignoring factor for Bethe free energy computation: " + clazz);
-            return Double.NaN;
-        }
-        
         assert !Double.isNaN(bethe);        
         return bethe;
     }
@@ -557,7 +546,7 @@ public class BeliefPropagation implements FgInferencer {
             throw new IllegalArgumentException("Node must be a variable node.");
         }
         Var var = node.getVar();
-        VarTensor prod = new VarTensor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        VarTensor prod = new VarTensor(s, new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this node.
         getProductOfMessages(node, prod, null);
         if (prm.logDomain) {

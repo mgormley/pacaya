@@ -44,7 +44,7 @@ public class DepParseDecodeLossTest {
         b.varBeliefs = new VarTensor[3*3];
         b.facBeliefs = new VarTensor[0];
         for (int v=0; v<b.varBeliefs.length; v++) {
-            b.varBeliefs[v] = new VarTensor(new VarSet(fg.getVar(v)), 0.5);
+            b.varBeliefs[v] = new VarTensor(s, new VarSet(fg.getVar(v)), 0.5);
         }
         
         BeliefsIdentity id1 = new BeliefsIdentity(b);        

@@ -7,7 +7,7 @@ import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.hlt.optimize.MalletLBFGS;

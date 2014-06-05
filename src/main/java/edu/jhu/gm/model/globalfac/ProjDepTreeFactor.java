@@ -24,17 +24,13 @@ import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.parse.dep.EdgeScores;
-import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogPosNegAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
-import edu.jhu.util.semiring.Semiring;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -92,12 +88,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     private LinkVar[] rootVars;
     private LinkVar[][] childVars;
     
-    // Counters.
-    private static int unsafeLogSubtracts = 0;
-    private static int logSubtractCount = 0;
-    private static int extremeOddsRatios = 0;
-    private static int oddsRatioCount = 0;
-
+    // Constants for getMsgs() / setMsgs() / addMsgs().
+    private static final boolean NEW_MSG = true;
+    private static final boolean CUR_MSG = false;
+    private static final boolean IN_MSG = true;
+    private static final boolean OUT_MSG = false;
+    
     
     /**
      * Constructor.
@@ -159,255 +155,54 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
         
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
-        if (logDomain == false) {
-            forwardAndBackward(parent, msgs, null, new RealAlgebra(), true);
-            return;
-        }
-        
-        // Note on logDomain: all internal computation is done in the logDomain
-        // since (for example) pi the product of all incoming false messages
-        // would overflow.        
-        assert (this == parent.getFactor()); 
-        EdgeScores ratios = getLogOddsRatios(parent, msgs, logDomain);
-        double pi = getProductOfAllFalseMessages(parent, msgs, logDomain);
-
-        // Compute the dependency tree marginals, summing over all projective
-        // spanning trees via the inside-outside algorithm.
-        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(ratios.root, ratios.child);
-
-        // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
-        // Here we store the log partition.
-        double partition = pi + chart.getLogPartitionFunction();
-
-        if (log.isTraceEnabled()) {
-            log.trace(String.format("partition: %.2f", partition));
-        }
-        
-        // Create the messages and stage them in the Messages containers.
-        for (FgEdge outEdge : parent.getOutEdges()) {
-            LinkVar link = (LinkVar) outEdge.getVar();
-            
-            // The beliefs are computed as follows.
-            // beliefTrue = pi * FastMath.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
-            // beliefFalse = partition - beliefTrue;
-            // 
-            // Then the outgoing messages are computed as:
-            // outMsgTrue = beliefTrue / inMsgTrue
-            // outMsgFalse = beliefFalse / inMsgFalse
-            // 
-            // Here we compute the logs of these quantities.
-
-            double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
-            double beliefFalse = safeLogSubtract(partition, beliefTrue);
-            
-            if (log.isTraceEnabled()) {
-                // Detect numerical precision error.
-                if (beliefFalse == Double.NEGATIVE_INFINITY) {
-                    if (!DoubleArrays.contains(ratios.root, Double.NEGATIVE_INFINITY, 1e-13) && !EdgeScores.childContains(ratios.child, Double.NEGATIVE_INFINITY, 1e-13)) {
-                        log.trace("Found possible numerical precision error.");
-                        // For now don't try to fix anything. Just log that there might be a problem.
-                        //fixEdge(parent, msgs, logDomain, normalizeMessages, numericalPrecisionEdge);
-                        //continue;
-                    } else {
-                        //log.warn("Unable to account for possible numerical precision error.");
-                        //log.warn("Infs: " + Arrays.toString(root) + " " + Arrays.deepToString(child));
-                        // TODO: There could still be a numerical precision error. How do we detect it?
-                    }
-                }
-            }
-
-            // Get the incoming messages.
-            FgEdge inEdge = outEdge.getOpposing();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
-            double inMsgTrue, inMsgFalse;
-            if (logDomain) {
-                inMsgTrue = inMsg.getValue(LinkVar.TRUE);
-                inMsgFalse = inMsg.getValue(LinkVar.FALSE);
-            } else {
-                inMsgTrue = FastMath.log(inMsg.getValue(LinkVar.TRUE));
-                inMsgFalse = FastMath.log(inMsg.getValue(LinkVar.FALSE));                
-            }
-            
-            double outMsgTrue = beliefTrue - inMsgTrue;
-            double outMsgFalse = beliefFalse - inMsgFalse;
-            
-            if (inMsgTrue == Double.NEGATIVE_INFINITY || inMsgFalse == Double.NEGATIVE_INFINITY) {
-                // If the incoming message contained infinites, send back the same message.
-                outMsgTrue = inMsgTrue;
-                outMsgFalse = inMsgFalse;
-            }
-            
-            setOutMsgs(msgs, logDomain, outEdge, link, outMsgTrue, outMsgFalse);
-        }
-    }
-        
-    private void fixEdge(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, FgEdge outEdge) {
-        log.trace("Fixing edge: " + outEdge);
-
-        // Note on logDomain: all internal computation is done in the logDomain
-        // since (for example) pi the product of all incoming false messages
-        // would overflow.        
-        assert (this == parent.getFactor());        
-        EdgeScores ratios = getLogOddsRatios(parent, msgs, logDomain);
-        double pi = getProductOfAllFalseMessages(parent, msgs, logDomain);
-
-        // Get the incoming messages.
-        FgEdge inEdge = outEdge.getOpposing();
-        VarTensor inMsg = msgs[inEdge.getId()].message;
-        double inMsgTrue, inMsgFalse;
-        if (logDomain) {
-            inMsgTrue = inMsg.getValue(LinkVar.TRUE);
-            inMsgFalse = inMsg.getValue(LinkVar.FALSE);
-        } else {
-            inMsgTrue = FastMath.log(inMsg.getValue(LinkVar.TRUE));
-            inMsgFalse = FastMath.log(inMsg.getValue(LinkVar.FALSE));                
-        }
-        // Divide out the skipped edge ahead of time.
-        // This is equivalent to setting the odds ratio to 1.0.
-        LinkVar link = (LinkVar) outEdge.getVar();
-        if (link.parent == -1) {
-            ratios.root[link.child] = 0.0;
-        } else {
-            ratios.child[link.parent][link.child] = 0.0;
-        }
-        pi -= inMsgFalse;
-        
-        // Compute the dependency tree marginals, summing over all projective
-        // spanning trees via the inside-outside algorithm.
-        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(ratios.root, ratios.child);
-
-        // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
-        // Here we store the log partition.
-        double partition = pi + chart.getLogPartitionFunction();
-        if (log.isTraceEnabled()) {
-            log.trace(String.format("partition: %.2f", partition));
-        } 
-        
-        // Create the messages and stage them in the Messages containers.
-        // The beliefs are computed as follows.
-        double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
-        double beliefFalse = safeLogSubtract(partition, beliefTrue);        
-        // Don't divide out.
-        double outMsgTrue = beliefTrue;
-        double outMsgFalse = beliefFalse;        
-        setOutMsgs(msgs, logDomain, outEdge, link, outMsgTrue, outMsgFalse);
-    }
-    
-    private double safeLogSubtract(double partition, double beliefTrue) {
-        double outMsgFalse;
-        if (partition < beliefTrue) {
-            // This will happen very frequently if the log-add table is used
-            // instead of "exact" log-add.
-            if (log.isTraceEnabled()) {
-                log.trace(String.format("Partition function less than belief: partition=%.20f belief=%.20f", partition, beliefTrue));
-            }
-            // To get around the floating point error, we truncate the
-            // subtraction to log(0).
-            outMsgFalse = Double.NEGATIVE_INFINITY;
-            unsafeLogSubtracts++;
-        } else {
-            outMsgFalse = FastMath.logSubtractExact(partition, beliefTrue);
-        }
-        logSubtractCount++;
-        return outMsgFalse;
-    }
-    
-    /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
-    private EdgeScores getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain) {   
-        EdgeScores es = new EdgeScores(n, Double.NEGATIVE_INFINITY);
-        // Compute the odds ratios of the messages for each edge in the tree.
-        for (FgEdge inEdge : parent.getInEdges()) {
-            LinkVar link = (LinkVar) inEdge.getVar();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
-            double oddsRatio;
-            if (logDomain) {
-                oddsRatio = inMsg.getValue(LinkVar.TRUE) - inMsg.getValue(LinkVar.FALSE);
-            } else {
-                assert inMsg.getValue(LinkVar.TRUE) >= 0 : inMsg.getValue(LinkVar.TRUE);
-                assert inMsg.getValue(LinkVar.FALSE) >= 0 : inMsg.getValue(LinkVar.FALSE);
-                // We still need the log of this ratio since the parsing algorithm works in the log domain.
-                oddsRatio = FastMath.log(inMsg.getValue(LinkVar.TRUE)) - FastMath.log(inMsg.getValue(LinkVar.FALSE));
-            }
-            
-            if (link.getParent() == -1) {
-                es.root[link.getChild()] = oddsRatio;
-            } else {
-                es.child[link.getParent()][link.getChild()] = oddsRatio;
-            }
-        }
-        checkLogOddsRatios(es);
-        return es;
-    }
-
-    /** Computes pi = \prod_i \mu_i(0). */
-    private double getProductOfAllFalseMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
-        // Precompute the product of all the "false" messages.
-        // pi = \prod_i \mu_i(0)
-        // Here we store log pi.
-        double pi = 0.0;
-        for (FgEdge inEdge : parent.getInEdges()) {
-            VarTensor inMsg = msgs[inEdge.getId()].message;
-            if (logDomain) {
-                pi += inMsg.getValue(LinkVar.FALSE);
-            } else {
-                pi += FastMath.log(inMsg.getValue(LinkVar.FALSE));
-            }
-        }
-        return pi;
-    }
-
-    /** Sets the outgoing messages. */
-    private void setOutMsgs(Messages[] msgs, boolean logDomain, FgEdge outEdge, LinkVar link,
-            double outMsgTrue, double outMsgFalse) {
-        
-        // Set the outgoing messages.
-        VarTensor outMsg = msgs[outEdge.getId()].newMessage;
-        outMsg.setValue(LinkVar.FALSE, outMsgFalse);
-        outMsg.setValue(LinkVar.TRUE, outMsgTrue);
-        
-        if (log.isTraceEnabled()) {
-            log.trace(String.format("outMsgTrue: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.TRUE)));
-            log.trace(String.format("outMsgFalse: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.FALSE)));
-        }
-        
-        // Convert log messages to messages for output.
-        if (!logDomain) {
-            outMsg.convertLogToReal();
-        }
-        
-        //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
-        assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
+    protected void createMessages(FgNode parent, Messages[] msgs) {
+        forwardAndBackward(parent, msgs, null, true);
     }
 
     @Override
-    public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {
-        if (n == 0) {
-            return 0.0;
-        }
-        assert parent.getFactor() == this;
-        EdgeScores ratios = getLogOddsRatios(parent, msgs, logDomain);
-        double logPi = getProductOfAllFalseMessages(parent, msgs, logDomain);
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
+        forwardAndBackward(parent, msgs, msgsAdj, false);
+    }
+    
+    public void forwardAndBackward(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean isForward) {
+        Algebra s = msgs[0].message.getAlgebra();
 
-        Algebra s = new LogPosNegAlgebra();
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
-        FirstOrderDepParseHypergraph graph = pair.get1();
-        Scores scores = pair.get2();
+        // Get the incoming messages at time (t).
+        Tensor tmTrueIn = getMsgs(parent, msgs, LinkVar.TRUE, CUR_MSG, IN_MSG, s);        
+        Tensor tmFalseIn = getMsgs(parent, msgs, LinkVar.FALSE, CUR_MSG, IN_MSG, s);
         
-        int rt = graph.getRoot().getId();        
-        double Z = scores.beta[rt];
-        double rbar = scores.betaFoe[rt];
-        double pi = s.fromLogProb(logPi);
-        double partition = s.times(pi, Z);
-        double expectation = s.toLogProb(s.divide(pi, partition)) + s.toReal(s.divide(rbar, Z));
-        if (log.isTraceEnabled()) {
-            log.trace(String.format("Z=%g rbar=%g pi=%g part=%g E=%g", Z, rbar, pi, partition, expectation));
+        // Construct the circuit.
+        TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
+        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
+        Algebra tmpS = (isForward) ? new LogSemiring() : new LogPosNegAlgebra();
+        ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
+        dep.forward();
+        
+        if (isForward) {
+            Pair<Tensor, Tensor> pair = dep.getOutput();
+            Tensor tmTrueOut = pair.get1();
+            Tensor tmFalseOut = pair.get2();
+            
+            // Set the outgoing messages at time (t+1).
+            setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
+            setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
+        } else {
+            // Get the adjoints on outgoing message modules at time (t+1).
+            Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
+            Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
+            Pair<Tensor, Tensor> pairAdj = dep.getOutputAdj();
+            Tensor tmTrueOutAdj = pairAdj.get1();
+            Tensor tmFalseOutAdj = pairAdj.get2();
+            tmTrueOutAdj.elemAdd(tTrue);
+            tmFalseOutAdj.elemAdd(tFalse);
+            
+            // Backward pass.
+            dep.backward();
+            
+            // Increment adjoints of the incoming messages at time (t).
+            addMsgs(parent, msgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
+            addMsgs(parent, msgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE, CUR_MSG, IN_MSG, s);
         }
-        if (Double.isNaN(expectation)) {
-            log.warn("Expected log belief was NaN. Returning zero instead.");
-            return 0.0;
-        }
-        return expectation;
     }
 
     public LinkVar[] getRootVars() {
@@ -438,15 +233,15 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
 
     @Override
-    public double getUnormalizedScore(int configId) {
+    public double getLogUnormalizedScore(int configId) {
         VarConfig vc = vars.getVarConfig(configId);
         // TODO: This would be faster: int[] cfg = vars.getVarConfigAsArray(configId);
-        return getUnormalizedScore(vc);
+        return getLogUnormalizedScore(vc);
     }
 
     @Override
-    public double getUnormalizedScore(VarConfig vc) {
-        Semiring s = logDomain ? new LogSemiring() : new RealAlgebra();  
+    public double getLogUnormalizedScore(VarConfig vc) {
+        LogSemiring s = Algebras.LOG_SEMIRING;
         if (!hasOneParentPerToken(n, vc)) {
             log.warn("Tree has more than one arc to root.");
             return s.zero();
@@ -509,55 +304,6 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return parents;
     }
 
-    @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
-        forwardAndBackward(parent, msgs, msgsAdj, s, false);
-    }
-    
-    public void forwardAndBackward(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s, boolean isForward) {
-        // Get the incoming messages at time (t).
-        Tensor tmTrueIn = getMsgs(parent, msgs, LinkVar.TRUE, CUR_MSG, IN_MSG, s);        
-        Tensor tmFalseIn = getMsgs(parent, msgs, LinkVar.FALSE, CUR_MSG, IN_MSG, s);
-        
-        // Construct the circuit.
-        TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
-        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
-        Algebra tmpS = (isForward) ? new LogSemiring() : new LogPosNegAlgebra();
-        ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
-        dep.forward();
-        
-        if (isForward) {
-            Pair<Tensor, Tensor> pair = dep.getOutput();
-            Tensor tmTrueOut = pair.get1();
-            Tensor tmFalseOut = pair.get2();
-            
-            // Set the outgoing messages at time (t+1).
-            setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-            setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-        } else {
-            // Get the adjoints on outgoing message modules at time (t+1).
-            Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-            Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-            Pair<Tensor, Tensor> pairAdj = dep.getOutputAdj();
-            Tensor tmTrueOutAdj = pairAdj.get1();
-            Tensor tmFalseOutAdj = pairAdj.get2();
-            tmTrueOutAdj.elemAdd(tTrue);
-            tmFalseOutAdj.elemAdd(tFalse);
-            
-            // Backward pass.
-            dep.backward();
-            
-            // Increment adjoints of the incoming messages at time (t).
-            addMsgs(parent, msgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
-            addMsgs(parent, msgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE, CUR_MSG, IN_MSG, s);
-        }
-    }
-
-    private static final boolean NEW_MSG = true;
-    private static final boolean CUR_MSG = false;
-    private static final boolean IN_MSG = true;
-    private static final boolean OUT_MSG = false;
-    
     /**
      * Gets messages from the Messages[].
      * 
@@ -626,50 +372,67 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             msg.addValue(tf, val);
         }
     }
-    
-    private void checkAndFixOutMsgs(Tensor tmTrueIn, Tensor tmFalseIn, Tensor tmTrueOut, Tensor tmFalseOut, Algebra s) {
-        // TODO: Should this in some way impact the backward pass?
-        for (int c=0; c<tmTrueOut.size(); c++) {
-            double inMsgTrue = tmTrueIn.getValue(c);
-            double inMsgFalse = tmFalseIn.getValue(c);
-            if (inMsgTrue == s.zero() || inMsgFalse == s.zero()) {
-                // If the incoming message contained zeros, send back the same message.
-                tmTrueOut.setValue(c, inMsgTrue);
-                tmFalseOut.setValue(c, inMsgFalse);
+
+    @Override
+    public double getExpectedLogBelief(FgNode parent, Messages[] msgs) {
+        if (n == 0) {
+            return 0.0;
+        }
+        assert parent.getFactor() == this;
+        EdgeScores ratios = getLogOddsRatios(parent, msgs);
+        double logPi = getLogProductOfAllFalseMessages(parent, msgs);
+
+        Algebra s = new LogPosNegAlgebra();
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
+        FirstOrderDepParseHypergraph graph = pair.get1();
+        Scores scores = pair.get2();
+        
+        int rt = graph.getRoot().getId();        
+        double Z = scores.beta[rt];
+        double rbar = scores.betaFoe[rt];
+        double pi = s.fromLogProb(logPi);
+        double partition = s.times(pi, Z);
+        double expectation = s.toLogProb(s.divide(pi, partition)) + s.toReal(s.divide(rbar, Z));
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("Z=%g rbar=%g pi=%g part=%g E=%g", Z, rbar, pi, partition, expectation));
+        }
+        if (Double.isNaN(expectation)) {
+            log.warn("Expected log belief was NaN. Returning zero instead.");
+            return 0.0;
+        }
+        return expectation;
+    }
+          
+    /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
+    private EdgeScores getLogOddsRatios(FgNode parent, Messages[] msgs) {  
+        EdgeScores es = new EdgeScores(n, Double.NEGATIVE_INFINITY);
+        Algebra s = msgs[0].message.getAlgebra();
+        // Compute the odds ratios of the messages for each edge in the tree.
+        for (FgEdge inEdge : parent.getInEdges()) {
+            LinkVar link = (LinkVar) inEdge.getVar();
+            VarTensor inMsg = msgs[inEdge.getId()].message;
+            double logOdds = s.toLogProb(inMsg.getValue(LinkVar.TRUE)) - s.toLogProb(inMsg.getValue(LinkVar.FALSE));            
+            if (link.getParent() == -1) {
+                es.root[link.getChild()] = logOdds;
+            } else {
+                es.child[link.getParent()][link.getChild()] = logOdds;
             }
         }
+        return es;
     }
 
-    private void checkLogOddsRatios(EdgeScores es) {       
-        // Keep track of the minimum and maximum odds ratios, in order to detect
-        // possible numerical precision issues.        
-        double minOddsRatio = Double.POSITIVE_INFINITY;
-        double maxOddsRatio = Double.NEGATIVE_INFINITY;
-
-        for (int p = -1; p < n; p++) {
-            for (int c = 0; c < n; c++) {
-                double oddsRatio = es.getScore(p, c);
-                // Check min/max.
-                if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
-                    // Don't count *negative* infinities when logging extreme odds ratios.
-                    minOddsRatio = oddsRatio;
-                }
-                if (oddsRatio > maxOddsRatio) {
-                    maxOddsRatio = oddsRatio;
-                }
-            }
+    /** Computes pi = \prod_i \mu_i(0). */
+    private double getLogProductOfAllFalseMessages(FgNode parent, Messages[] msgs) {
+        // Precompute the product of all the "false" messages.
+        // pi = \prod_i \mu_i(0)
+        // Here we store log pi.
+        Algebra s = msgs[0].message.getAlgebra();
+        double logPi = 0.0;
+        for (FgEdge inEdge : parent.getInEdges()) {
+            VarTensor inMsg = msgs[inEdge.getId()].message;
+            logPi += s.toLogProb(inMsg.getValue(LinkVar.FALSE));
         }
-
-        // Check whether the max/min odds ratios (if added) would result in a
-        // floating point error.
-        oddsRatioCount++;
-        if (FastMath.logSubtractExact(FastMath.logAdd(maxOddsRatio, minOddsRatio), maxOddsRatio) == Double.NEGATIVE_INFINITY) {
-            extremeOddsRatios++;            
-            log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
-            log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
-            // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
-            log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
-        }
+        return logPi;
     }
 
 }

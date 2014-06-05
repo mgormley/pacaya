@@ -34,6 +34,7 @@ import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.IntIntDenseVector;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
+import edu.jhu.util.semiring.Algebras;
 
 /**
  * Wrapper of ObsFeatureExtractor which returns feature vectors which conjoin
@@ -176,11 +177,8 @@ public class ObsFeatureConjoiner implements Serializable {
         
         @Override
         public VarTensor getMarginalsForFactorId(int factorId) { 
-            return new VarTensor(fg.getFactor(factorId).getVars()); 
+            return new VarTensor(Algebras.REAL_ALGEBRA, fg.getFactor(factorId).getVars()); 
         }
-
-        @Override
-        public boolean isLogDomain() { return true; }
         
         @Override
         public void run() { throw new RuntimeException("This method should never be called."); }
@@ -230,7 +228,7 @@ public class ObsFeatureConjoiner implements Serializable {
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
             // Create a "no-op" inferencer, which returns arbitrary marginals.
-            FgInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
+            NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {

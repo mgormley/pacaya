@@ -298,9 +298,9 @@ public class JointNlpFactorGraphTest {
         // Init the ClampFactors.
         for (Factor f : sfg.getFactors()) {
             if (f instanceof ClampFactor) {
-                f.updateFromModel(null, true);
+                f.updateFromModel(null);
             }
-            f.updateFromModel(new FgModel(1000), true);
+            f.updateFromModel(new FgModel(1000));
         }
         
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();

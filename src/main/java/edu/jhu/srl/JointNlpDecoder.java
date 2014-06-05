@@ -40,20 +40,18 @@ public class JointNlpDecoder {
      * @param ex The example to decode.
      */
     public void decode(FgModel model, UFgExample ex) {
-        boolean logDomain = prm.mbrPrm.infFactory.isLogDomain();
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(model, ex);
-        decode(ex, logDomain, mbrDecoder);
+        decode(ex, mbrDecoder);
     }
     
     public void decode(FgInferencer infLatPred, UFgExample ex) {
-        boolean logDomain = prm.mbrPrm.infFactory.isLogDomain();
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(infLatPred, ex);
-        decode(ex, logDomain, mbrDecoder);
+        decode(ex, mbrDecoder);
     }
 
-    private void decode(UFgExample ex, boolean logDomain, MbrDecoder mbrDecoder) {
+    private void decode(UFgExample ex, MbrDecoder mbrDecoder) {
         JointNlpFactorGraph srlFg = (JointNlpFactorGraph) ex.getOriginalFactorGraph();
         int n = srlFg.getSentenceLength();
         mbrVarConfig = mbrDecoder.getMbrVarConfig();

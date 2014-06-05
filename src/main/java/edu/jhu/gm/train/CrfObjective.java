@@ -6,8 +6,8 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.eval.MseMarginalEvaluator;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -58,20 +58,22 @@ public class CrfObjective implements ExampleObjective {
         Timer t0 = new Timer(); t0.start();        
         LFgExample ex = data.get(i);
         Timer t = new Timer();
-        
-        // Get the inferencers.
-        t.reset(); t.start();
-        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
-        FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
-        t.stop(); infTimer.add(t);
-        
+
         // Update the inferences with the current model parameters.
         // (This is usually where feature extraction happens.)
         t.reset(); t.start();
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        t.stop(); updTimer.add(t);
+        FactorGraph fgLat = ex.getFgLat();
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        fgLat.updateFromModel(model);
+        fgLatPred.updateFromModel(model);
+        t.stop(); updTimer.add(t);        
         
+        // Get the inferencers.
+        t.reset(); t.start();
+        FgInferencer infLat = infFactory.getInferencer(fgLat);
+        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
+        t.stop(); infTimer.add(t);
+                
         t.reset(); t.start();
         // Run inference to compute Z(y,x) by summing over the latent variables w.
         infLat.run();        
@@ -145,30 +147,26 @@ public class CrfObjective implements ExampleObjective {
                 if (isNumeratorClamped) {
                     // These are the factors which do not include any latent variables. 
                     VarConfig goldConfig = ex.getGoldConfig().getIntersection(fgLatPred.getFactor(a).getVars());
-                    numerator += infLat.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
-                            : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                    numerator += gf.getLogUnormalizedScore(goldConfig);
                     numFullyClamped++;
                     
                     if (isDenominatorClamped) {
                         // These are the factors which do not include any latent or predicted variables.
                         // This is a bit of an edge case, but required for correctness.
-                        denominator += infLatPred.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
-                                : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                        denominator += gf.getLogUnormalizedScore(goldConfig);
                     }
                 }
             } else {
                 if (isNumeratorClamped) {
                     // These are the factors which do not include any latent variables. 
                     int goldConfig = ex.getGoldConfig().getConfigIndexOfSubset(f.getVars());
-                    numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
-                            : FastMath.log(f.getUnormalizedScore(goldConfig));
+                    numerator += f.getLogUnormalizedScore(goldConfig);
                     numFullyClamped++;
 
                     if (isDenominatorClamped) {
                         // These are the factors which do not include any latent or predicted variables.
                         // This is a bit of an edge case, but required for correctness.
-                        denominator += infLatPred.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
-                                : FastMath.log(f.getUnormalizedScore(goldConfig));
+                        denominator += f.getLogUnormalizedScore(goldConfig);
                     }
                 }
             }
@@ -235,8 +233,9 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
-            FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
+            FactorGraph fgLat = ex.getFgLat();
+            fgLat.updateFromModel(model);
+            FgInferencer infLat = infFactory.getInferencer(fgLat);
             infLat.run();
             addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), feats);
         }
@@ -252,8 +251,9 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
-            FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+            FactorGraph fgLatPred = ex.getFgLatPred();
+            fgLatPred.updateFromModel(model);
+            FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
             infLatPred.run();
             addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0 * ex.getWeight(), feats);
         }

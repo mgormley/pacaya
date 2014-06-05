@@ -34,7 +34,7 @@ public class BeliefPropagationTest {
 		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
 		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
 		
-		VarTensor df = new VarTensor(new VarSet(x0, x1));
+		VarTensor df = new VarTensor(s, new VarSet(x0, x1));
 		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
 			VarConfig vCfg = df.getVars().getVarConfig(cfg);
 			int v0 = vCfg.getState(x0);
@@ -70,13 +70,13 @@ public class BeliefPropagationTest {
         assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
 				
 		// check again once we've added some unary factors on x0 and x1
-		df = new VarTensor(new VarSet(x0));
+		df = new VarTensor(s, new VarSet(x0));
 		df.setValue(0, 3d);
 		df.setValue(1, 2d);
 		ExplicitFactor f0 = new ExplicitFactor(df);
 		fg.addFactor(f0);
 		
-		df = new VarTensor(new VarSet(x0));
+		df = new VarTensor(s, new VarSet(x0));
 		df.setValue(0, 5d);
 		df.setValue(1, 1d);
 		ExplicitFactor f1 = new ExplicitFactor(df);
@@ -103,7 +103,7 @@ public class BeliefPropagationTest {
 		
 		// add a hard xor factor
 		// this shouldn't move the marginals away from uniform
-		VarTensor df = new VarTensor(new VarSet(x0, x1));
+		VarTensor df = new VarTensor(s, new VarSet(x0, x1));
 		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
 			VarConfig vCfg = df.getVars().getVarConfig(cfg);
 			int v0 = vCfg.getState(x0);
@@ -139,13 +139,13 @@ public class BeliefPropagationTest {
         assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
 				
 		// check again once we've added some unary factors on x0 and x1
-		df = new VarTensor(new VarSet(x0));
+		df = new VarTensor(s, new VarSet(x0));
 		df.setValue(0, -2d);
 		df.setValue(1, -3d);
 		ExplicitFactor f0 = new ExplicitFactor(df);
 		fg.addFactor(f0);
 		
-		df = new VarTensor(new VarSet(x0));
+		df = new VarTensor(s, new VarSet(x0));
 		df.setValue(0, -1d);
 		df.setValue(1, -5d);
 		ExplicitFactor f1 = new ExplicitFactor(df);
@@ -182,10 +182,8 @@ public class BeliefPropagationTest {
 
         fg.addFactor(emit0);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -222,10 +220,8 @@ public class BeliefPropagationTest {
         fg.addFactor(emit0);
         fg.addFactor(tran0);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -245,7 +241,7 @@ public class BeliefPropagationTest {
         
         boolean logDomain = true;
         
-        FactorGraph fg = getThreeConnectedComponentsFactorGraph(logDomain);
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
@@ -264,7 +260,7 @@ public class BeliefPropagationTest {
         assertEqualMarginals(fg, bf, bp);
     }
 
-    public static FactorGraph getThreeConnectedComponentsFactorGraph(boolean logDomain) {
+    public static FactorGraph getThreeConnectedComponentsFactorGraph() {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
@@ -288,10 +284,8 @@ public class BeliefPropagationTest {
         fg.addFactor(emit1);
         fg.addFactor(emit2);
 
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
         return fg;
     }

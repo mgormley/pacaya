@@ -38,7 +38,7 @@ public class ExpFamFactorModuleTest {
         model.getParams().set(0, 2);
         model.getParams().set(1, 3);
         
-        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, s);
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(fg, model, s);
         effm.forward();
         VarTensor[] y = effm.getOutput();
         System.out.println(Arrays.deepToString(y));

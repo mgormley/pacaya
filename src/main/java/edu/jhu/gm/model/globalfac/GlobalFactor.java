@@ -24,13 +24,10 @@ public interface GlobalFactor extends Factor {
      * 
      * @param parent The node for this global factor.
      * @param msgs The message containers.
-     * @param logDomain Whether the resulting messages should be represented in
-     *            the log-domain.
-     * @param normalizeMessages TODO
      * @param iter The current belief propagation iteration.
      * @return Whether the messages were created.
      */
-    boolean createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter);
+    boolean createMessages(FgNode parent, Messages[] msgs, int iter);
 
     /**
      * Resets this global factor for a new run of belief propagation.
@@ -38,13 +35,15 @@ public interface GlobalFactor extends Factor {
     void reset();
 
     /**
-     * Gets the expected log beliefs for this factor. We include factor's
-     * potential function in the expectation since for most constraint factors
-     * \chi(x_a) \in \{0,1\}.
+     * Gets the expected log beliefs for this factor. We include factor's potential function in the
+     * expectation since for most constraint factors \chi(x_a) \in \{0,1\}.
      * 
      * E[ln(b(x_a) / \chi(x_a)) ] = \sum_{x_a} b(x_a) ln (b(x_a) / \chi(x_a))
+     * 
+     * Note: The value should be returned as a real, though the messages may be in a different
+     * semiring.
      */
-    double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain);
+    double getExpectedLogBelief(FgNode parent, Messages[] msgs);
     
     /**
      * Computes all the message adjoints. This method will only be called once

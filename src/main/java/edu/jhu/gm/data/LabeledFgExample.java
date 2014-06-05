@@ -3,12 +3,10 @@ package edu.jhu.gm.data;
 import java.io.Serializable;
 import java.util.List;
 
-
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -91,17 +89,6 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
         return fgLat;
     }
     
-    /**
-     * Updates the factor graph with the OBSERVED and PREDICTED variables clamped
-     * to their values from the training example.
-     * @param params The parameters with which to update.
-     * @param logDomain TODO
-     */
-    public FactorGraph updateFgLat(FgModel model, boolean logDomain) {
-        fgLat.updateFromModel(model, logDomain);
-        return fgLat;
-    }
-
     /** Gets the gold configuration of the variables. */
     public VarConfig getGoldConfig() {
         return goldConfig;

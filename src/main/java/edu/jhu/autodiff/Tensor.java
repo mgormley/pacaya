@@ -6,6 +6,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -16,10 +17,10 @@ import edu.jhu.util.semiring.RealAlgebra;
  */
 public class Tensor {
 
-    private int[] dims;
-    private int[] strides;
-    private double[] values;
-    private final Algebra s;
+    protected int[] dims;
+    protected int[] strides;
+    protected double[] values;
+    protected final Algebra s;
     
     /**
      * Standard constructor of multi-dimensional array.
@@ -384,20 +385,6 @@ public class Tensor {
         checkEqualSize(this, other);
         DoubleArrays.copy(other.values, this.values);
     }
-    
-    public Tensor copy() {
-        return new Tensor(this);
-    }
-
-    public Tensor zeroedCopy() {
-        return copyAndFill(0);
-    }
-
-    public Tensor copyAndFill(double val) {
-        Tensor other = this.copy();
-        other.fill(val);
-        return other;
-    }
 
     /**
      * Selects a sub-tensor from this one. This can be though of as fixing a particular dimension to
@@ -448,7 +435,7 @@ public class Tensor {
     }
 
     public static void checkSameAlgebra(Tensor t1, Tensor t2) {
-        if (t1.s.getClass() != t2.s.getClass()) {
+        if (! t1.s.equals(t2.s)) {
             throw new IllegalArgumentException("Input tensors must have the same abstract algebra: " + t1.s + " " + t2.s);
         }
     }
@@ -493,7 +480,7 @@ public class Tensor {
     }
     
     /** Gets the internal values array. For testing only. */
-    double[] getValues() {
+    public double[] getValues() {
         return values;
     }
 
@@ -547,6 +534,20 @@ public class Tensor {
         er.setValue(0, val);
         return er;
     }
+    
+    public Tensor copy() {
+        return new Tensor(this);
+    }
+
+    public Tensor zeroedCopy() {
+        return copyAndFill(0);
+    }
+
+    public Tensor copyAndFill(double val) {
+        Tensor other = this.copy();
+        other.fill(val);
+        return other;
+    }
 
     public Tensor copyAndConvertAlgebra(Algebra newS) {
         Tensor t = new Tensor(newS, this.getDims());
@@ -554,17 +555,17 @@ public class Tensor {
         return t;
     }
 
-    private void setFromDiffAlgebra(Tensor other) {       
+    protected void setFromDiffAlgebra(Tensor other) {       
         for (int c=0; c<this.values.length; c++) {
-            if (this.s.getClass() == other.s.getClass()) {
+            if (this.s.equals(other.s)) {
                 this.values[c] = other.values[c];
-            } else if (other.s.getClass() == RealAlgebra.class) {
+            } else if (other.s.equals(Algebras.REAL_ALGEBRA)) {
                 this.values[c] = this.s.fromReal(other.values[c]);
-            } else if (other.s.getClass() == LogSemiring.class) {
+            } else if (other.s.equals(Algebras.LOG_SEMIRING)) {
                 this.values[c] = this.s.fromLogProb(other.values[c]);
-            } else if (this.s.getClass() == RealAlgebra.class) {
+            } else if (this.s.equals(Algebras.REAL_ALGEBRA)) {
                 this.values[c] = other.s.toReal(other.values[c]);
-            } else if (this.s.getClass() == LogSemiring.class) {
+            } else if (this.s.equals(Algebras.LOG_SEMIRING)) {
                 this.values[c] = other.s.toLogProb(other.values[c]);
             } else {
                 throw new RuntimeException("Unable to convert from " + other.s + " to " + this.s);

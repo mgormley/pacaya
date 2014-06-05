@@ -11,6 +11,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -19,35 +20,33 @@ import edu.jhu.util.semiring.RealAlgebra;
  * 
  * @author mgormley
  */
-public class ExpFamFactorModule implements Module<VarTensor[]> {
+public class ExpFamFactorsModule implements Module<VarTensor[]> {
 
     private FgModel model;
     private FgModel modelAdj;
     private FactorGraph fg;
-    private boolean logDomain;
     private VarTensor[] y;
     private VarTensor[] yAdj;
     private Algebra s;
     
-    public ExpFamFactorModule(FactorGraph fg, FgModel model, Algebra s) {
-        if (!(s.getClass() == LogSemiring.class || s.getClass() == RealAlgebra.class)) {
+    public ExpFamFactorsModule(FactorGraph fg, FgModel model, Algebra s) {
+        if (!(s.equals(Algebras.LOG_SEMIRING) || s.equals(Algebras.REAL_ALGEBRA))) {
             throw new IllegalArgumentException("Unsupported algebra: " + s);
         }
         this.fg = fg;
         this.model = model;
         this.s = s;
-        this.logDomain = (s.getClass() == LogSemiring.class);
     }
     
     @Override
     public VarTensor[] forward() {
-        fg.updateFromModel(model, logDomain);
+        fg.updateFromModel(model);
         y = new VarTensor[fg.getNumFactors()];
         for (int a = 0; a < y.length; a++) {
             Factor factor = fg.getFactor(a);
             if (!(factor instanceof GlobalFactor)) {
-                y[a] = BruteForceInferencer.safeGetVarTensor(factor);
-                assert !y[a].containsBadValues(logDomain);
+                y[a] = BruteForceInferencer.safeNewVarTensor(s, factor);
+                assert !y[a].containsBadValues();
             }
         }
         return y;
@@ -61,7 +60,7 @@ public class ExpFamFactorModule implements Module<VarTensor[]> {
             if (!(factor instanceof GlobalFactor)) {
                 VarTensor factorMarginal = new VarTensor(yAdj[a]);
                 factorMarginal.prod(y[a]);
-                assert s.getClass() == RealAlgebra.class : "addExpectedFeatureCounts() currently only supports the real semiring";
+                assert s.equals(Algebras.REAL_ALGEBRA) : "addExpectedFeatureCounts() currently only supports the real semiring";
                 factor.addExpectedFeatureCounts(modelAdj, factorMarginal, s.one());
             }
         }
@@ -78,7 +77,7 @@ public class ExpFamFactorModule implements Module<VarTensor[]> {
             yAdj = new VarTensor[y.length];
             for (int a = 0; a < yAdj.length; a++) {
                 if (y[a] != null) {
-                    yAdj[a] = new VarTensor(y[a].getVars(), s.zero());
+                    yAdj[a] = new VarTensor(s, y[a].getVars(), s.zero());
                 }
             }
         }

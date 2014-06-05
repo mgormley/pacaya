@@ -9,8 +9,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -58,7 +58,8 @@ public class MbrDecoder {
      */
     public FgInferencer decode(FgModel model, UFgExample ex) {
         // Run inference.
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        fgLatPred.updateFromModel(model);
         FgInferencer infLatPred = prm.infFactory.getInferencer(fgLatPred);
         infLatPred.run();        
         decode(infLatPred, ex);

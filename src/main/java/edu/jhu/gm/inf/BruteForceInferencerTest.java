@@ -129,7 +129,7 @@ public class BruteForceInferencerTest {
     }
     
     public static FactorGraph getLinearChainGraph(boolean logDomain) {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph(logDomain);
+        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
         return fg;
     }
 

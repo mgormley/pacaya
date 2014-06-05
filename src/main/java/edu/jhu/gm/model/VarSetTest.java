@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.util.semiring.Algebras;
 
 public class VarSetTest {
 
@@ -148,7 +149,7 @@ public class VarSetTest {
         vars2.add(v0);
         vars2.add(v2);
         
-        System.out.println(new VarTensor(vars1));
+        System.out.println(new VarTensor(Algebras.REAL_ALGEBRA, vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = vars1.getConfigArr(vars2);

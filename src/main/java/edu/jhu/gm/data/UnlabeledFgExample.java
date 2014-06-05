@@ -7,13 +7,11 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.Timer;
 
 /**
@@ -113,17 +111,6 @@ public class UnlabeledFgExample implements LFgExample, Serializable {
         return fgLatPred;
     }
 
-    /**
-     * Updates the factor graph with the OBSERVED variables clamped to their values
-     * from the training example.
-     * @param params The parameters with which to update.
-     * @param logDomain TODO
-     */
-    public FactorGraph updateFgLatPred(FgModel model, boolean logDomain) {
-        fgLatPred.updateFromModel(model, logDomain);
-        return fgLatPred;
-    }
-
     public boolean hasLatentVars() {
         return hasLatentVars;
     }
@@ -142,8 +129,6 @@ public class UnlabeledFgExample implements LFgExample, Serializable {
     private static final String DO_NOT_CALL = "Cannot call a labeled factor graph method on an unlabeled factor graph.";
     @Override
     public FactorGraph getFgLat() { throw new RuntimeException(DO_NOT_CALL); }
-    @Override
-    public FactorGraph updateFgLat(FgModel model, boolean logDomain) { throw new RuntimeException(DO_NOT_CALL); }
     @Override
     public VarConfig getGoldConfig() { throw new RuntimeException(DO_NOT_CALL); }
     @Override

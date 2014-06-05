@@ -14,7 +14,7 @@ public class FactorGraphTest {
 
     @Test
     public void testIsUndirectedTree() throws IOException {
-        FactorGraph fg = getLinearChainGraph(false);        
+        FactorGraph fg = getLinearChainGraph();        
         for (int i=0; i<fg.getNumNodes(); i++) {
             assertEquals(true, fg.isUndirectedTree(fg.getNode(i)));
         }
@@ -56,7 +56,7 @@ public class FactorGraphTest {
     
     @Test
     public void testGetClamped() {
-        FgAndVars fgv = getLinearChainFgWithVars(false);
+        FgAndVars fgv = getLinearChainFgWithVars();
         
         VarConfig clmpConfig = new VarConfig();
         clmpConfig.put(fgv.w0, 0);
@@ -77,7 +77,7 @@ public class FactorGraphTest {
     
     @Test
     public void testConstruction() {
-        FactorGraph fg = getLinearChainGraph(false);
+        FactorGraph fg = getLinearChainGraph();
         
         assertEquals(5, fg.getNumFactors());
         assertEquals(3, fg.getNumVars());
@@ -87,7 +87,7 @@ public class FactorGraphTest {
     }
 
     /** Gets a simple linear chain CRF consisting of 3 words and 3 tags. */
-    public static FactorGraph getLinearChainGraph(boolean logDomain) {
+    public static FactorGraph getLinearChainGraph() {
         FactorGraph fg = new FactorGraph();
 
         // Create three words.
@@ -133,10 +133,8 @@ public class FactorGraphTest {
         fg.addFactor(tran0);
         fg.addFactor(tran1);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((ExplicitFactor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((ExplicitFactor)f).convertRealToLog();
         }
         
         return fg;
@@ -162,7 +160,7 @@ public class FactorGraphTest {
         public Var t2;
     }
 
-    public static FgAndVars getLinearChainFgWithVars(boolean logDomain) {
+    public static FgAndVars getLinearChainFgWithVars() {
 
         FactorGraph fg = new FactorGraph();
 
@@ -209,10 +207,8 @@ public class FactorGraphTest {
         fg.addFactor(tran0);
         fg.addFactor(tran1);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((ExplicitFactor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((ExplicitFactor)f).convertRealToLog();
         }
 
         FgAndVars fgv = new FgAndVars();

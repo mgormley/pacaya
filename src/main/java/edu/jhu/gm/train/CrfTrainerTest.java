@@ -165,7 +165,7 @@ public class CrfTrainerTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
 
         // Create the factor graph.
-        FgAndVars fgv = getLinearChainFgWithVars(true, ofc, obsFe);
+        FgAndVars fgv = getLinearChainFgWithVars(ofc, obsFe);
 
         // Create a "gold" assignment of the variables.
         VarConfig trainConfig = new VarConfig();
@@ -213,7 +213,7 @@ public class CrfTrainerTest {
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
-        FgAndVars fgv = getLinearChainFgWithVarsLatent(true, ofc, obsFe);
+        FgAndVars fgv = getLinearChainFgWithVarsLatent(ofc, obsFe);
 
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
@@ -336,7 +336,7 @@ public class CrfTrainerTest {
         return model;
     }
 
-    public static FgAndVars getLinearChainFgWithVars(boolean logDomain, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
+    public static FgAndVars getLinearChainFgWithVars(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
 
         FactorGraph fg = new FactorGraph();
 
@@ -383,10 +383,8 @@ public class CrfTrainerTest {
         fg.addFactor(tran0);
         fg.addFactor(tran1);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((ExpFamFactor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((ExpFamFactor)f).convertRealToLog();
         }
 
         FgAndVars fgv = new FgAndVars();
@@ -400,7 +398,7 @@ public class CrfTrainerTest {
         return fgv;
     }
     
-    public static FgAndVars getLinearChainFgWithVarsLatent(boolean logDomain, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
+    public static FgAndVars getLinearChainFgWithVarsLatent(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
 
         FactorGraph fg = new FactorGraph();
 
@@ -467,10 +465,8 @@ public class CrfTrainerTest {
         fg.addFactor(tran0);
         fg.addFactor(tran1);
 
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((ExpFamFactor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((ExpFamFactor)f).convertRealToLog();
         }
         
         FgAndVars fgv = new FgAndVars();

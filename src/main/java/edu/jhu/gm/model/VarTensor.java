@@ -3,21 +3,19 @@ package edu.jhu.gm.model;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import edu.jhu.prim.Primitives;
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.iter.IntIter;
-import edu.jhu.prim.util.Lambda;
-import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.AlgebraLambda;
 
 /**
- * A multivariate Multinomial distribution. 
+ * A multivariate Multinomial distribution.
  * 
  * @author mgormley
  *
  */
-public class VarTensor implements Serializable {
+public class VarTensor extends Tensor implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -26,68 +24,56 @@ public class VarTensor implements Serializable {
   
     /** The set of variables in this factor. */
     private VarSet vars;
-    /**
-     * The values of each entry in this factor. These could be probabilities
-     * (normalized or unormalized), in the real or log domain.
-     */
-    private double[] values;
     
-    /** Constructs a factor initializing the values to 0.0. */
-    public VarTensor(VarSet vars) {
-        this(vars, 0.0);
+    /** Constructs a factor initializing the values to 0.0. 
+     * @param s TODO*/
+    public VarTensor(Algebra s, VarSet vars) {
+        this(s, vars, s.zero());
     }
     
     /**
      * Constructs a factor where each value is set to some initial value.
+     * @param s TODO
      * @param vars The variable set.
      * @param initialValue The initial value.
      */
-    public VarTensor(VarSet vars, double initialValue) {
+    public VarTensor(Algebra s, VarSet vars, double initialValue) {
+        super(s, getDims(vars));
         this.vars = vars;
-        int numConfigs = vars.calcNumConfigs();
-        this.values = new double[numConfigs];
-        Arrays.fill(values, initialValue);
+        this.fill(initialValue);
     }
-    
+
     /** Copy constructor. */
-    public VarTensor(VarTensor f) {
-        this.vars = f.vars;
-        this.values = DoubleArrays.copyOf(f.values);
-        // We don't want to copy the node id since it uniquely refers to the
-        // node of the input factor.
+    public VarTensor(VarTensor other) {
+        super(other);
+        this.vars = other.vars;
+    }
+
+    /**
+     * Gets the tensor dimensions: dimension i corresponds to the i'th variable, and the size of
+     * that dimension is the number of states for the variable.
+     */
+    private static int[] getDims(VarSet vars) {
+        int[] dims = new int[vars.size()];
+        for (int i=0; i<vars.size(); i++) {
+            dims[i] = vars.get(i).getNumStates();
+        }
+        return dims;
     }
 
     /**
      * Gets the marginal distribution over a subset of the variables in this
-     * factor, optionally normalized. This method assumes the values are reals
-     * (i.e. not in the log domain).
+     * factor, optionally normalized.
      * 
      * @param vars The subset of variables for the marginal distribution. This will sum over all variables not in this set.
      * @param normalize Whether to normalize the resulting distribution.
-     * @return The marginal distribution represented as log-probabilities.
+     * @return The marginal distribution.
      */
     public VarTensor getMarginal(VarSet vars, boolean normalize) {
-        return getMarginal(vars, normalize, false);
-    }
-
-    /**
-     * Gets the marginal distribution over a subset of the variables in this
-     * factor, optionally normalized. This method assumes the values are 
-     * in the log domain.
-     * 
-     * @param vars The subset of variables for the marginal distribution. This will sum over all variables not in this set.
-     * @param normalize Whether to normalize the resulting distribution.
-     * @return The marginal distribution represented as log-probabilities.
-     */
-    public VarTensor getLogMarginal(VarSet vars, boolean normalize) {
-        return getMarginal(vars, normalize, true);
-    }
-    
-    private VarTensor getMarginal(VarSet vars, boolean normalize, boolean logDomain) {
         VarSet margVars = new VarSet(this.vars);
         margVars.retainAll(vars);
         
-        VarTensor marg = new VarTensor(margVars, logDomain ? Double.NEGATIVE_INFINITY : 0.0);
+        VarTensor marg = new VarTensor(s, margVars, s.zero());
         if (margVars.size() == 0) {
             return marg;
         }
@@ -95,19 +81,11 @@ public class VarTensor implements Serializable {
         IntIter iter = margVars.getConfigIter(this.vars);
         for (int i=0; i<this.values.length; i++) {
             int j = iter.next();
-            if (logDomain) {
-                marg.values[j] = FastMath.logAdd(marg.values[j], this.values[i]);
-            } else {
-                marg.values[j] += this.values[i];
-            }
+            marg.values[j] = s.plus(marg.values[j], this.values[i]);
         }
         
         if (normalize) {
-            if (logDomain) {
-                marg.logNormalize();
-            } else {
-                marg.normalize();
-            }
+            marg.normalize();
         }
         
         return marg;
@@ -121,7 +99,7 @@ public class VarTensor implements Serializable {
         VarSet unclmpVars = new VarSet(this.vars);
         unclmpVars.removeAll(clmpVars); 
 
-        VarTensor clmp = new VarTensor(unclmpVars);
+        VarTensor clmp = new VarTensor(s, unclmpVars);
         IntIter iter = IndexForVc.getConfigIter(this.vars, clmpVarConfig);
         
         if (clmp.values.length > 0) {
@@ -137,67 +115,30 @@ public class VarTensor implements Serializable {
     public VarSet getVars() {
         return vars;
     }
-
-    /**
-     * Gets the value of the c'th configuration of the variables.
-     */
-    public double getValue(int c) {
-        return values[c];
-    }
-
-    /** Sets the value of the c'th configuration of the variables. */
-    public void setValue(int c, double value) {
-        values[c] = value;
-    }
-
-    /** Adds the value to the c'th configuration of the variables. */
-    public void addValue(int c, double value) {
-        values[c] += value;
-    }
-    
-    /** Set all the values to the given value. */
-    public void fill(double value) {
-        Arrays.fill(values, value);
-    }
-    
-    /** Add the addend to each value. */
-    public void add(double addend) {
-        DoubleArrays.add(values, addend);
-    }
-    
-    /** Scale each value by lambda. */
-    public void multiply(double lambda) {
-        DoubleArrays.scale(values, lambda);
-    }
-    
+        
     /** Normalizes the values. */
     public double normalize() {
-        return Multinomials.normalizeProps(values);
-    }
-
-    /** Normalizes the values. */
-    public double logNormalize() {
-        return Multinomials.normalizeLogProps(values);
-    }
-    
-    /** Takes the log of each value. */
-    public void convertRealToLog() {
-        DoubleArrays.log(values);
-    }
-    
-    /** Takes the exp of each value. */
-    public void convertLogToReal() {
-        DoubleArrays.exp(values);
-    }
-
-    /** Gets the sum of the values for this factor. */
-    public double getSum() {
-        return DoubleArrays.sum(values);
-    }
-    
-    /** Gets the log of the sum of the values for this factor. */
-    public double getLogSum() {
-        return DoubleArrays.logSum(values);
+        double propSum = this.getSum();
+        if (propSum == 0) {
+            this.fill(s.divide(s.one(), s.fromReal(values.length)));
+        } else if (propSum == s.posInf()) {
+            int count = DoubleArrays.count(values, s.posInf());
+            if (count == 0) {
+                throw new RuntimeException("Unable to normalize since sum is infinite but contains no infinities: " + Arrays.toString(values));
+            }
+            double constant = s.divide(s.one(), s.fromReal(count));
+            for (int d=0; d<values.length; d++) {
+                if (values[d] == s.posInf()) {
+                    values[d] = constant;
+                } else {
+                    values[d] = s.zero();
+                }
+            }
+        } else {
+            this.divide(propSum);
+            assert !this.containsNaN();
+        }
+        return propSum;
     }
     
     /**
@@ -209,9 +150,8 @@ public class VarTensor implements Serializable {
      *  \f[f+g : \prod_{l\in L\cup M} X_l \to [0,\infty) : x \mapsto f(x_L) + g(x_M).\f]
      */
     public void add(VarTensor f) {
-        VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleAdd());
-        this.vars = newFactor.vars;
-        this.values = newFactor.values;      
+        VarTensor newFactor = applyBinOp(this, f, new AlgebraLambda.Add());
+        internalSet(newFactor);      
     }
 
     /**
@@ -223,9 +163,8 @@ public class VarTensor implements Serializable {
      *  \f[fg : \prod_{l\in L\cup M} X_l \to [0,\infty) : x \mapsto f(x_L) g(x_M).\f]
      */
     public void prod(VarTensor f) {
-        VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleProd());
-        this.vars = newFactor.vars;
-        this.values = newFactor.values;  
+        VarTensor newFactor = applyBinOp(this, f, new AlgebraLambda.Prod());
+        internalSet(newFactor);  
     }
     
     /**
@@ -233,33 +172,18 @@ public class VarTensor implements Serializable {
      * indices matching 0 /= 0 are set to 0.
      */
     public void divBP(VarTensor f) {
-    	VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleDivBP());
+    	VarTensor newFactor = applyBinOp(this, f, new AlgebraLambda.DivBP());
+        internalSet(newFactor);
+    }
+
+    /** This set method is used to internally update ALL the fields. */
+    private void internalSet(VarTensor newFactor) {
         this.vars = newFactor.vars;
+        this.dims = newFactor.dims;
+        this.strides = newFactor.strides;
         this.values = newFactor.values;
     }
-    
-    /**
-     * this -= f
-     * indices matching (-Infinity) -= (-Infinity) are set to 0.
-     */
-    public void subBP(VarTensor f) {
-    	VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleSubtractBP());
-        this.vars = newFactor.vars;
-        this.values = newFactor.values;
-    }
-    
-    /**
-     * Log-adds a factor to this one.
-     * 
-     * This is analogous to factor addition, except that the logAdd operator
-     * is used instead.
-     */
-    public void logAdd(VarTensor f) {
-        VarTensor newFactor = applyBinOp(this, f, new Lambda.DoubleLogAdd());
-        this.vars = newFactor.vars;
-        this.values = newFactor.values;  
-    }
-    
+        
     /**
      * Applies the binary operator to factors f1 and f2.
      * 
@@ -273,7 +197,9 @@ public class VarTensor implements Serializable {
      * @param op The binary operator.
      * @return The new factor.
      */
-    private static VarTensor applyBinOp(final VarTensor f1, final VarTensor f2, final LambdaBinOpDouble op) {
+    private static VarTensor applyBinOp(final VarTensor f1, final VarTensor f2, final AlgebraLambda.LambdaBinOp op) {
+        checkSameAlgebra(f1, f2);
+        Algebra s = f1.s;
         if (f1.vars.size() == 0) {
             // Return a copy of f2.
             return new VarTensor(f2);
@@ -284,7 +210,7 @@ public class VarTensor implements Serializable {
             // Special case where the factors have identical variable sets.
             assert (f1.values.length == f2.values.length);
             for (int c = 0; c < f1.values.length; c++) {
-                f1.values[c] = op.call(f1.values[c], f2.values[c]);
+                f1.values[c] = op.call(s, f1.values[c], f2.values[c]);
             }
             return f1;
         } else if (f1.vars.isSuperset(f2.vars)) {
@@ -292,19 +218,19 @@ public class VarTensor implements Serializable {
             IntIter iter2 = f2.vars.getConfigIter(f1.vars);
             int n = f1.vars.calcNumConfigs();
             for (int c = 0; c < n; c++) {
-                f1.values[c] = op.call(f1.values[c], f2.values[iter2.next()]);
+                f1.values[c] = op.call(s, f1.values[c], f2.values[iter2.next()]);
             }
             assert(!iter2.hasNext());
             return f1;
         } else {
             // The union of the two variable sets must be created.
             VarSet union = new VarSet(f1.vars, f2.vars);
-            VarTensor out = new VarTensor(union);
+            VarTensor out = new VarTensor(s, union);
             IntIter iter1 = f1.vars.getConfigIter(union);
             IntIter iter2 = f2.vars.getConfigIter(union);
             int n = out.vars.calcNumConfigs();
             for (int c = 0; c < n; c++) {
-                out.values[c] = op.call(f1.values[iter1.next()], f2.values[iter2.next()]);
+                out.values[c] = op.call(s, f1.values[iter1.next()], f2.values[iter2.next()]);
             }
             assert(!iter1.hasNext());
             assert(!iter2.hasNext());
@@ -316,20 +242,24 @@ public class VarTensor implements Serializable {
      * Sets each entry in this factor to that of the given factor.
      * @param factor
      */
+    // TODO: Is this called, if so, it should become setValuesOnly.
     public void set(VarTensor f) {
         if (!this.vars.equals(f.vars)) {
             throw new IllegalStateException("The varsets must be equal.");
         }
-        
-        for (int i=0; i<values.length; i++) {
-            values[i] = f.values[i];
-        }
+        super.setValuesOnly(f);
+    }
+
+    public VarTensor copyAndConvertAlgebra(Algebra newS) {
+        VarTensor t = new VarTensor(newS, this.vars);
+        t.setFromDiffAlgebra(this);
+        return t;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Factor [\n");
+        sb.append("VarTensor [\n");
         for (Var var : vars) {
             sb.append(String.format("%5s", var.getName()));
         }
@@ -345,34 +275,21 @@ public class VarTensor implements Serializable {
         sb.append("]");
         return sb.toString();
     }
-
-    /** For testing only. */
-    public double[] getValues() {
-        return values;
-    }
-    
-    /** Returns true if this tensor contains any NaNs. */
-    public boolean containsNaN() {
-        for (int i = 0; i < values.length; i++) {
-            if (Double.isNaN(values[i])) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
+        
     // TODO: Move this to BeliefPropagation.java.
-    public boolean containsBadValues(boolean logDomain) {
+    public boolean containsBadValues() {
     	for(int i=0; i<values.length; i++) {
-    		if(Double.isNaN(values[i]))
+    		if(s.isNaN(values[i])) {
     			return true;
-    		if(!logDomain && (values[i] < 0d || Double.isInfinite(values[i])))
+    		}
+    		if (s.lt(values[i], s.zero()) || values[i] == s.posInf()) {
     			return true;
+    		}
     	}
     	return false;
     }
     
-    /* Note that Factors do not implement the standard hashCode() or equals() methods. */
+    /* Note that VarTensors do not implement the standard hashCode() or equals() methods. */
     
     /** Special equals with a tolerance. */
     public boolean equals(VarTensor other, double delta) {
@@ -380,12 +297,8 @@ public class VarTensor implements Serializable {
             return true;
         if (other == null)
             return false;
-        if (this.values.length != other.values.length)
+        if (!super.equals(other, delta)) 
             return false;
-        for (int i=0; i<values.length; i++) {
-            if (!Primitives.equals(values[i], other.values[i], delta))
-                return false;
-        }
         if (vars == null) {
             if (other.vars != null)
                 return false;
@@ -394,40 +307,9 @@ public class VarTensor implements Serializable {
         return true;
     }
 
-    /** Gets the ID of the configuration with the maximum value. */
-    public int getArgmaxConfigId() {
-        return DoubleArrays.argmax(values);
-    }    
-    
-    public int size() {
-        return values.length;
-    }
-
-    /**
-     * Gets the infinity norm of this tensor. Defined as the maximum absolute
-     * value of the entries.
-     */
-    public double getInfNorm() {
-        double maxAbs = Double.NEGATIVE_INFINITY;
-        for (int c=0; c<values.length; c++) {
-            double abs = Math.abs(values[c]);
-            if (abs > maxAbs) {
-                maxAbs = abs;
-            }
-        }
-        return maxAbs;
-    }
-
-    /** Computes the sum of the entries of the pointwise product of two tensors with identical domains. */
-    public double dotProduct(VarTensor other) {
-        if (!this.vars.equals(other.vars)) {
-            throw new IllegalArgumentException("Tensors must have identical domains");
-        }
-        double sum = 0;
-        for (int c=0; c<this.values.length; c++) {
-            sum += this.values[c] * other.values[c];
-        }
-        return sum;
+    /** Takes the log of each value. */
+    public void convertRealToLog() {
+        this.log();
     }
     
 }

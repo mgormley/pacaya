@@ -38,8 +38,8 @@ public class MeanSquaredErrorTest {
         Beliefs b = new Beliefs(s);
         b.varBeliefs = new VarTensor[2];
         b.facBeliefs = new VarTensor[0];
-        b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.0);
-        b.varBeliefs[1] = new VarTensor(new VarSet(t1), 0.0);
+        b.varBeliefs[0] = new VarTensor(s, new VarSet(t0), 0.0);
+        b.varBeliefs[1] = new VarTensor(s, new VarSet(t1), 0.0);
         
         b.varBeliefs[0].setValue(0, 0.3); // Gold value
         b.varBeliefs[0].setValue(1, 0.7);

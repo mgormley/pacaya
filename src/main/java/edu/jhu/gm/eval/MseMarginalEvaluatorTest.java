@@ -13,6 +13,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarSetTest;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.util.semiring.Algebras;
 
 public class MseMarginalEvaluatorTest {
 
@@ -27,7 +28,7 @@ public class MseMarginalEvaluatorTest {
         }
         
         public VarTensor getMarginals(Var var) {
-            VarTensor marg = new VarTensor(new VarSet(var));
+            VarTensor marg = new VarTensor(Algebras.REAL_ALGEBRA, new VarSet(var));
             if (var == v1) {
                 marg.setValue(0, 0.4);
                 marg.setValue(1, 0.6);

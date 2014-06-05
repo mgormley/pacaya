@@ -30,10 +30,10 @@ import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
@@ -98,16 +98,10 @@ public class CrfObjectiveTest {
 			x.add(xi);
 			
 			// factor
-			double v = infFactory.isLogDomain()
-					? Math.sqrt(i + 1)
-					: 1d / Math.sqrt(i + 1);
-			VarTensor df = new VarTensor(new VarSet(xi), v);
-			df.setValue(0, infFactory.isLogDomain()
-					? 1d
-					: 2d + v);
-			Factor f = new ExplicitFactor(df);
-//			if(!infFactory.isLogDomain())
-//				assertEquals(1d, df.getSum(), 1e-8);
+			ExplicitFactor f = new ExplicitFactor(new VarSet(xi));
+			f.fill(Math.sqrt(i + 1));
+			f.setValue(0,  1d);
+			assertEquals(1d, f.getSum(), 1e-8);
 			fg.addFactor(f);
 		}
 		
@@ -177,8 +171,9 @@ public class CrfObjectiveTest {
         FgInferencerFactory infFactory = getInfFactory(logDomain);        
         LFgExample ex = data.get(0);
         
+        FactorGraph fgLat = ex.getFgLat();
+        fgLat.updateFromModel(model);
         FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();        
         assertEquals(2, infLat.getPartition(), 2);
         // Check that the partition function is computed identically for each variable.
@@ -189,8 +184,9 @@ public class CrfObjectiveTest {
         
         System.out.println("-------- Running LatPred Inference-----------");
         
-        FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        fgLatPred.updateFromModel(model);
+        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
         infLatPred.run();        
         // 2 trees, and 3 different roles (including argUNK)
         assertEquals(2*3, infLatPred.getPartition(), 1e-3);         

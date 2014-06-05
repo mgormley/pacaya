@@ -2,8 +2,6 @@ package edu.jhu.gm.model;
 
 import java.io.Serializable;
 
-import edu.jhu.gm.inf.FgInferencer;
-
 
 public interface Factor extends Serializable {
     
@@ -19,18 +17,14 @@ public interface Factor extends Serializable {
     /**
      * If this factor depends on the model, this method will updates this
      * factor's internal representation accordingly.
-     * 
-     * @param model The model.
-     * @param logDomain Whether to store values in the probability or
-     *            log-probability domain.
      */
-    void updateFromModel(FgModel model, boolean logDomain);
+    void updateFromModel(FgModel model);
     
     /** Gets the unnormalized numerator value contributed by this factor. */
-    double getUnormalizedScore(VarConfig goldConfig);
+    double getLogUnormalizedScore(VarConfig goldConfig);
     
     /** Gets the unnormalized numerator value contributed by this factor. */
-    double getUnormalizedScore(int goldConfig);
+    double getLogUnormalizedScore(int goldConfig);
 
     /**
      * Adds the expected feature counts for this factor, given the marginal distribution.

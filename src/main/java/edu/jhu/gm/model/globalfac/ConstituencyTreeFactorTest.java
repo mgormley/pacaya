@@ -58,16 +58,16 @@ public class ConstituencyTreeFactorTest {
         fg.addFactor(ctFact);
         
         SpanVar johnLoves = ctFact.getSpanVar(0, 2);
-        VarTensor doesntLikeSpan = new VarTensor(new VarSet(johnLoves));
+        ExplicitExpFamFactor doesntLikeSpan = new ExplicitExpFamFactor(new VarSet(johnLoves));
         doesntLikeSpan.setValue(SpanVar.TRUE, -1d);
         doesntLikeSpan.setValue(SpanVar.FALSE, 1d);
-        fg.addFactor(new ExplicitExpFamFactor(doesntLikeSpan));
+        fg.addFactor(doesntLikeSpan);
 
         SpanVar lovesMary = ctFact.getSpanVar(1, 3);
-        VarTensor likesSpan = new VarTensor(new VarSet(lovesMary));
+        ExplicitExpFamFactor likesSpan = new ExplicitExpFamFactor(new VarSet(lovesMary));
         likesSpan.setValue(SpanVar.TRUE, 1d);
         likesSpan.setValue(SpanVar.FALSE, -1d);
-        fg.addFactor(new ExplicitExpFamFactor(likesSpan));
+        fg.addFactor(likesSpan);
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.logDomain = true;

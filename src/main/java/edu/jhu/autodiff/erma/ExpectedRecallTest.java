@@ -36,8 +36,8 @@ public class ExpectedRecallTest {
         Beliefs b = new Beliefs(s);
         b.varBeliefs = new VarTensor[2];
         b.facBeliefs = new VarTensor[0];
-        b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.5);
-        b.varBeliefs[1] = new VarTensor(new VarSet(t1), 0.5);
+        b.varBeliefs[0] = new VarTensor(s, new VarSet(t0), 0.5);
+        b.varBeliefs[1] = new VarTensor(s, new VarSet(t1), 0.5);
         
         id1 = new BeliefsIdentity(b);
     }

@@ -1,6 +1,7 @@
 package edu.jhu.gm.model;
 
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.util.semiring.Algebras;
 
 
 /**
@@ -15,7 +16,7 @@ public class ExplicitFactor extends VarTensor implements Factor {
     private int id = -1;
     
     public ExplicitFactor(VarSet vars) {
-        super(vars);
+        super(Algebras.REAL_ALGEBRA, vars);
     }
     
     public ExplicitFactor(ExplicitFactor other) {
@@ -31,16 +32,16 @@ public class ExplicitFactor extends VarTensor implements Factor {
         return new ExplicitFactor(df);
     }
     
-    public void updateFromModel(FgModel model, boolean logDomain) {
+    public void updateFromModel(FgModel model) {
         // No op since this type of factor doesn't depend on the model.
     }
     
-    public double getUnormalizedScore(int configId) {
+    public double getLogUnormalizedScore(int configId) {
         return this.getValue(configId);
     }
 
-    public double getUnormalizedScore(VarConfig vc) {
-        return getUnormalizedScore(vc.getConfigIndex());
+    public double getLogUnormalizedScore(VarConfig vc) {
+        return getLogUnormalizedScore(vc.getConfigIndex());
     }
 
     public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {

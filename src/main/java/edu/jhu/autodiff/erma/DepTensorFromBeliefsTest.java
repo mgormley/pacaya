@@ -61,10 +61,10 @@ public class DepTensorFromBeliefsTest {
         Beliefs b = new Beliefs(s);
         b.varBeliefs = new VarTensor[4];
         b.facBeliefs = new VarTensor[0];
-        b.varBeliefs[0] = new VarTensor(new VarSet(t0), 0.5);
-        b.varBeliefs[1] = new VarTensor(new VarSet(t1), 0.5);
-        b.varBeliefs[2] = new VarTensor(new VarSet(l0), 0.5);
-        b.varBeliefs[3] = new VarTensor(new VarSet(l1), 0.5);
+        b.varBeliefs[0] = new VarTensor(s, new VarSet(t0), 0.5);
+        b.varBeliefs[1] = new VarTensor(s, new VarSet(t1), 0.5);
+        b.varBeliefs[2] = new VarTensor(s, new VarSet(l0), 0.5);
+        b.varBeliefs[3] = new VarTensor(s, new VarSet(l1), 0.5);
         
         BeliefsIdentity id1 = new BeliefsIdentity(b);
         return id1;

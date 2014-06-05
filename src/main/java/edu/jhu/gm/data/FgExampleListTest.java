@@ -12,7 +12,7 @@ public class FgExampleListTest {
 
     // TODO: Move this test. It doesn't really belong here. @Test
     public void testUpdatingOfTemplates() {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph(true);
+        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
         VarConfig vc = new VarConfig();
         for (Var v : fg.getVars()) {
             vc.put(v, 0);

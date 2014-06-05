@@ -6,7 +6,7 @@ import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.VarConfig;
@@ -59,14 +59,13 @@ public class ErmaObjective implements ExampleObjective {
         final LFgExample ex = data.get(i);
         final FactorGraph fg = ex.getFgLatPred();
         final VarConfig goldConfig = ex.getGoldConfig();
-        final boolean logDomain = infFactory.isLogDomain(); // TODO: semiring
-        assert !logDomain;
-        Algebra s = new RealAlgebra();
+
+        Algebra s = infFactory.getAlgebra();
         
         // Get the modules.
         t.reset(); t.start();
         // Model initialization.
-        ExpFamFactorModule effm = new ExpFamFactorModule(fg, model, s);
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(fg, model, s);
         // Inference.
         ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
         inf.setEffm(effm);

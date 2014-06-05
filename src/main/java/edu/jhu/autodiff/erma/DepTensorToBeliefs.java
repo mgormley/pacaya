@@ -45,7 +45,7 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
                 assert p < n && c < n;
                 
                 // Initialize the belief tensor.
-                b.varBeliefs[v] = new VarTensor(origB.varBeliefs[v].getVars(), 0.0);
+                b.varBeliefs[v] = new VarTensor(s, origB.varBeliefs[v].getVars(), 0.0);
                 // Set the marginal p(e_{p,c} = True) and p(e_{p,c} = False).
                 b.varBeliefs[v].setValue(LinkVar.TRUE, dep.get(pp, c));
                 b.varBeliefs[v].setValue(LinkVar.FALSE, 1.0 - dep.get(pp, c));

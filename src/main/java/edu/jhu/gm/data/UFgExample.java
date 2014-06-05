@@ -3,7 +3,6 @@ package edu.jhu.gm.data;
 import java.io.Serializable;
 
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.VarConfig;
 
 /**
@@ -19,14 +18,6 @@ public interface UFgExample extends Serializable {
      * from the training example.
      */
     public FactorGraph getFgLatPred();
-
-    /**
-     * Updates the factor graph with the OBSERVED variables clamped to their values
-     * from the training example.
-     * @param params The parameters with which to update.
-     * @param logDomain TODO
-     */
-    public FactorGraph updateFgLatPred(FgModel model, boolean logDomain);
 
     public boolean hasLatentVars();
 

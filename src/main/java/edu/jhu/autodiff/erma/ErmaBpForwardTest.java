@@ -26,146 +26,6 @@ import edu.jhu.util.collections.Lists;
 
 public class ErmaBpForwardTest {
 	
-	@Test
-	public void testCanHandleProbHardFactors() {
-		//TODO: ErmaBp doesn't currently do factor belief caching. 
-	    // testCanHandleProbHardFactorsHelper(true);
-		testCanHandleProbHardFactorsHelper(false);
-	}
-	
-	public void testCanHandleProbHardFactorsHelper(boolean cacheFactorBeliefs) {
-		boolean logDomain = false;
-		
-		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
-		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
-		
-		VarTensor df = new VarTensor(new VarSet(x0, x1));
-		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
-			VarConfig vCfg = df.getVars().getVarConfig(cfg);
-			int v0 = vCfg.getState(x0);
-			int v1 = vCfg.getState(x1);
-			if(v0 != v1)
-				df.setValue(cfg, 0d);
-			else
-				df.setValue(cfg, 1d);
-		}
-		ExplicitFactor xor = new ExplicitFactor(df);
-		
-		FactorGraph fg = new FactorGraph();
-		fg.addVar(x0);
-		fg.addVar(x1);
-		fg.addFactor(xor);
-		
-		// should have uniform mass
-		BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        //TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
-        ErmaBp bp = new ErmaBp(fg, prm);
-        bp.run();
-        System.out.println(bp.isConverged());
-        assertEqualMarginals(fg, bf, bp);
-        
-        VarTensor x0_marg = bp.getMarginals(x0);
-        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
-        VarTensor x1_marg = bp.getMarginals(x1);
-        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
-				
-		// check again once we've added some unary factors on x0 and x1
-		df = new VarTensor(new VarSet(x0));
-		df.setValue(0, 3d);
-		df.setValue(1, 2d);
-		ExplicitFactor f0 = new ExplicitFactor(df);
-		fg.addFactor(f0);
-		
-		df = new VarTensor(new VarSet(x0));
-		df.setValue(0, 5d);
-		df.setValue(1, 1d);
-		ExplicitFactor f1 = new ExplicitFactor(df);
-		fg.addFactor(f1);
-		
-		bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        bp = new ErmaBp(fg, prm);
-        bp.run();
-        System.out.println(bp.isConverged());
-		assertEqualMarginals(fg, bf, bp);
-	}
-	
-	@Test
-	public void testCanHandleLogHardFactors() {
-		//TODO: testCanHandleLogHardFactorsHelper(true);
-		testCanHandleLogHardFactorsHelper(false);
-	}
-	
-	public void testCanHandleLogHardFactorsHelper(boolean cacheFactorBeliefs) {
-		boolean logDomain = true;
-		
-		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
-		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
-		
-		// add a hard xor factor
-		// this shouldn't move the marginals away from uniform
-		VarTensor df = new VarTensor(new VarSet(x0, x1));
-		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
-			VarConfig vCfg = df.getVars().getVarConfig(cfg);
-			int v0 = vCfg.getState(x0);
-			int v1 = vCfg.getState(x1);
-			if(v0 != v1)
-				df.setValue(cfg, Double.NEGATIVE_INFINITY);
-			else
-				df.setValue(cfg, 0d);
-		}
-		ExplicitFactor xor = new ExplicitFactor(df);
-		
-		FactorGraph fg = new FactorGraph();
-		fg.addVar(x0);
-		fg.addVar(x1);
-		fg.addFactor(xor);
-		
-		// should have uniform mass
-		BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        // TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
-        ErmaBp bp = new ErmaBp(fg, prm);
-        bp.run();
-        assertEqualMarginals(fg, bf, bp);
-        
-    	VarTensor x0_marg = bp.getLogMarginals(x0);
-        assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
-        assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
-        VarTensor x1_marg = bp.getLogMarginals(x1);
-        assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
-        assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
-				
-		// check again once we've added some unary factors on x0 and x1
-		df = new VarTensor(new VarSet(x0));
-		df.setValue(0, -2d);
-		df.setValue(1, -3d);
-		ExplicitFactor f0 = new ExplicitFactor(df);
-		fg.addFactor(f0);
-		
-		df = new VarTensor(new VarSet(x0));
-		df.setValue(0, -1d);
-		df.setValue(1, -5d);
-		ExplicitFactor f1 = new ExplicitFactor(df);
-		fg.addFactor(f1);
-		
-		bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        bp = new ErmaBp(fg, prm);
-        bp.run();
-		assertEqualMarginals(fg, bf, bp);
-	}
-	
-    
     @Test
     public void testOnOneVarProb() {
         boolean logDomain = false;
@@ -189,10 +49,8 @@ public class ErmaBpForwardTest {
 
         fg.addFactor(emit0);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -229,10 +87,8 @@ public class ErmaBpForwardTest {
         fg.addFactor(emit0);
         fg.addFactor(tran0);
         
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -252,7 +108,7 @@ public class ErmaBpForwardTest {
         
         boolean logDomain = true;
         
-        FactorGraph fg = getThreeConnectedComponentsFactorGraph(logDomain);
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
@@ -271,7 +127,7 @@ public class ErmaBpForwardTest {
         assertEqualMarginals(fg, bf, bp);
     }
 
-    public static FactorGraph getThreeConnectedComponentsFactorGraph(boolean logDomain) {
+    public static FactorGraph getThreeConnectedComponentsFactorGraph() {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
@@ -295,11 +151,10 @@ public class ErmaBpForwardTest {
         fg.addFactor(emit1);
         fg.addFactor(emit2);
 
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
+        
         return fg;
     }
     
@@ -418,6 +273,80 @@ public class ErmaBpForwardTest {
         }
         assertTrue(bp.isConverged());
     }
+    
+    @Test
+    public void testCanHandleProbHardFactors() {
+        //TODO: ErmaBp doesn't currently do factor belief caching. 
+        // testCanHandleProbHardFactorsHelper(true, false);
+        testCanHandleHardFactorsHelper(false, false);
+    }
+    
+    @Test
+    public void testCanHandleLogHardFactors() {
+        //TODO: testCanHandleProbHardFactorsHelper(true, true);
+        testCanHandleHardFactorsHelper(false, true);
+    }    
+    
+    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {     
+        Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
+        Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
+        
+        ExplicitFactor xor = new ExplicitFactor(new VarSet(x0, x1));
+        for(int cfg=0; cfg < xor.getVars().calcNumConfigs(); cfg++) {
+            VarConfig vCfg = xor.getVars().getVarConfig(cfg);
+            int v0 = vCfg.getState(x0);
+            int v1 = vCfg.getState(x1);
+            if(v0 != v1)
+                xor.setValue(cfg, 0d);
+            else
+                xor.setValue(cfg, 1d);
+        }
+        xor.convertRealToLog();
+        
+        FactorGraph fg = new FactorGraph();
+        fg.addVar(x0);
+        fg.addVar(x1);
+        fg.addFactor(xor);
+        
+        // should have uniform mass
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        //TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
+        ErmaBp bp = new ErmaBp(fg, prm);
+        bp.run();
+        System.out.println(bp.isConverged());
+        assertEqualMarginals(fg, bf, bp);
+        
+        VarTensor x0_marg = bp.getMarginals(x0);
+        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
+        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
+        VarTensor x1_marg = bp.getMarginals(x1);
+        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
+        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
+                
+        // check again once we've added some unary factors on x0 and x1
+        ExplicitFactor f0 = new ExplicitFactor(new VarSet(x0));
+        f0.setValue(0, 3d);
+        f0.setValue(1, 2d);
+        f0.convertRealToLog();
+        fg.addFactor(f0);
+        
+        ExplicitFactor f1 = new ExplicitFactor(new VarSet(x0));
+        f1.setValue(0, 5d);
+        f1.setValue(1, 1d);
+        f1.convertRealToLog();
+        fg.addFactor(f1);
+        
+        bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        bp = new ErmaBp(fg, prm);
+        bp.run();
+        System.out.println(bp.isConverged());
+        assertEqualMarginals(fg, bf, bp);
+    }    
 
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             ErmaBp bp) {

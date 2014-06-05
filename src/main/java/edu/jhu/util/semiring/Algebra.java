@@ -36,6 +36,5 @@ public interface Algebra extends Semiring {
     double posInf();
     double negInf();
     double minValue();
-
     
 }

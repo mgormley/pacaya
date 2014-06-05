@@ -92,15 +92,15 @@ public class ErmaProjDepTreeFactorTest {
         assertEquals(vc.getVars(), vc2.getVars());
         assertEquals(vc, vc2);
         // Not log domain.
-        treeFac.updateFromModel(null, false);
-        assertEquals(1.0, treeFac.getUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        treeFac.updateFromModel(null);
+        assertEquals(1.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
         // Add two parents for token 3.
         vc.put(treeFac.getLinkVar(1, 3), LinkVar.TRUE);
-        assertEquals(0.0, treeFac.getUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
         // No parents for token 3.
         vc.put(treeFac.getLinkVar(1, 3), LinkVar.FALSE);
         vc.put(treeFac.getLinkVar(1, 2), LinkVar.FALSE);
-        assertEquals(0.0, treeFac.getUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
     }
     
     @Test
@@ -136,7 +136,7 @@ public class ErmaProjDepTreeFactorTest {
 
     private double getNumberOfTreesByBruteForce(int n, boolean logDomain) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
@@ -147,7 +147,7 @@ public class ErmaProjDepTreeFactorTest {
 
     private double getNumberOfTreesByBp(int n, boolean logDomain) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
@@ -165,7 +165,7 @@ public class ErmaProjDepTreeFactorTest {
 
     private double getNumberOfTreesByLoopyBp(int n, boolean logDomain) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
@@ -202,7 +202,7 @@ public class ErmaProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
                 
@@ -220,9 +220,7 @@ public class ErmaProjDepTreeFactorTest {
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
+                    f.convertRealToLog();
                     fg.addFactor(f);
                 }
             }
@@ -305,7 +303,7 @@ public class ErmaProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
                 
@@ -323,9 +321,7 @@ public class ErmaProjDepTreeFactorTest {
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
+                    f.convertRealToLog();
                     fg.addFactor(f);
                 }
             }
@@ -342,9 +338,7 @@ public class ErmaProjDepTreeFactorTest {
         roleFac.setValue(2, 5);
         roleFac.setValue(3, 7);
         System.out.println(roleFac);
-        if (logDomain) {
-            roleFac.convertRealToLog();
-        }
+        roleFac.convertRealToLog();
         fg.addFactor(roleFac);
         
         ErmaBpPrm prm = new ErmaBpPrm();
@@ -402,7 +396,7 @@ public class ErmaProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
               
@@ -420,9 +414,7 @@ public class ErmaProjDepTreeFactorTest {
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
+                    f.convertRealToLog();
                     fg.addFactor(f);
                 }
             }
@@ -438,15 +430,11 @@ public class ErmaProjDepTreeFactorTest {
         roleLinkFac.setValue(2, 1);
         roleLinkFac.setValue(3, 1);
         System.out.println(roleLinkFac);
-        if (logDomain) {
-            roleLinkFac.convertRealToLog();
-        }
+        roleLinkFac.convertRealToLog();
         fg.addFactor(roleLinkFac);
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar));
         roleFac.fill(1.0);
-        if (logDomain) {
-            roleFac.convertRealToLog();
-        }
+        roleFac.convertRealToLog();
         fg.addFactor(roleFac);
         
         ErmaBpPrm prm = new ErmaBpPrm();
@@ -512,7 +500,7 @@ public class ErmaProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
               
@@ -530,9 +518,7 @@ public class ErmaProjDepTreeFactorTest {
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
-                    if (logDomain) {
-                        f.convertRealToLog();
-                    }
+                    f.convertRealToLog();
                     fg.addFactor(f);
                 }
             }
@@ -763,7 +749,7 @@ public class ErmaProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null, logDomain);
+        treeFac.updateFromModel(null);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
         
@@ -781,9 +767,6 @@ public class ErmaProjDepTreeFactorTest {
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 0.0);
                     }
-                    if (!logDomain) {
-                        f.convertLogToReal();
-                    }
                     //f.scale(0.01);
                     fg.addFactor(f);
                 }
@@ -795,9 +778,6 @@ public class ErmaProjDepTreeFactorTest {
             f.setValue(3, -97.786518);
             fg.addFactor(f);
             //f.scale(0.01);
-            if (!logDomain) {
-                f.convertLogToReal();
-            }
         }
         
         if (useExplicitTreeFactor) {
@@ -816,9 +796,6 @@ public class ErmaProjDepTreeFactorTest {
             vc.put(childVars[1][0], LinkVar.TRUE);
             f.setValue(vc.getConfigIndex(), 0.0);
             fg.addFactor(f);
-            if (!logDomain) {
-                f.convertLogToReal();
-            }
         } else {
             fg.addFactor(treeFac);
         }

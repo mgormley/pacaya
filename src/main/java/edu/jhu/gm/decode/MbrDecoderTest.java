@@ -43,7 +43,7 @@ public class MbrDecoderTest {
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
-        FactorGraph fg = getThreeConnectedComponentsFactorGraph(useLogDomain, ofc, obsFe);
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph(ofc, obsFe);
         MbrDecoder decoder = new MbrDecoder(new MbrDecoderPrm());
         
         // Make a dummy train config.
@@ -78,7 +78,7 @@ public class MbrDecoderTest {
         System.out.println(mbrVc);
     }
 
-    public static FactorGraph getThreeConnectedComponentsFactorGraph(boolean logDomain, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
+    public static FactorGraph getThreeConnectedComponentsFactorGraph(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
@@ -102,11 +102,10 @@ public class MbrDecoderTest {
         fg.addFactor(emit1);
         fg.addFactor(emit2);
 
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
+
         return fg;
     }
 

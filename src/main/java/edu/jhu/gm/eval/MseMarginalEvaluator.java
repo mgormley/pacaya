@@ -21,7 +21,7 @@ public class MseMarginalEvaluator {
      * @return The UNORMALIZED mean squared error.
      */
     public double evaluate(VarConfig goldConfig, FgInferencer inf) {
-        Algebra s = (inf.isLogDomain()) ? new LogSemiring() : new RealAlgebra();
+        Algebra s = new RealAlgebra();
         double sum = s.zero();
 
         for (Var v : goldConfig.getVars()) {

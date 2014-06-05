@@ -42,11 +42,11 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     public abstract FeatureVector getFeatures(int config);
         
     /** Gets the unnormalized numerator value contributed by this factor. */
-    public double getUnormalizedScore(int configId) {
+    public double getLogUnormalizedScore(int configId) {
         if (!initialized) {
             throw new IllegalStateException("Factor cannot be queried until updateFromModel() has been called.");
         }
-        return super.getUnormalizedScore(configId);
+        return super.getLogUnormalizedScore(configId);
     }
 
     /**
@@ -54,10 +54,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      * factor's internal representation accordingly.
      * 
      * @param model The model.
-     * @param logDomain Whether to store values in the probability or
-     *            log-probability domain.
      */
-    public void updateFromModel(FgModel model, boolean logDomain) {
+    public void updateFromModel(FgModel model) {
         initialized = true;
         if (iter != null) { iter.reset(); }
         
@@ -70,7 +68,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 // where the predicted variables (might) have been clamped.
                 int config = (iter != null) ? iter.next() : c;
                 
-                double dot = getDotProd(config, model, logDomain);                
+                double dot = getDotProd(config, model);                
                 assert !Double.isNaN(dot) && dot != Double.POSITIVE_INFINITY : "Invalid value for factor: " + dot;
                 f.setValue(c, dot);
             }
@@ -83,18 +81,16 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      * (make sure to exp that value if !logDomain).
      * 
      * Note that this method can be overridden for an efficient product of an ExpFamFactor
-     * and a hard factor (that rules out some configurations). Just return 0/-infinity
+     * and a hard factor (that rules out some configurations). Just return -infinity
      * here before extracting features for configurations that are eliminated by the
      * hard factor. If you do this, the corresponding (by config) implementation of
      * getFeatures should return an empty vector. This is needed because addExpectedFeatureCounts
      * expects to be able to call getFeatures, regardless of whether or not getDotProd has
      * ruled it out as having any mass.
      */
-    protected double getDotProd(int config, FgModel model, boolean logDomain) {
+    protected double getDotProd(int config, FgModel model) {
     	 FeatureVector fv = getFeatures(config);
-         double dot = model.dot(fv);
-         if (logDomain) { return dot; }
-         else { return FastMath.exp(dot); }
+         return model.dot(fv);
     }
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
@@ -165,8 +161,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         }
         
         @Override
-        public double getDotProd(int config, FgModel model, boolean logDomain) {
-        	return unclmpFactor.getDotProd(config, model, logDomain);
+        public double getDotProd(int config, FgModel model) {
+        	return unclmpFactor.getDotProd(config, model);
         }
 
         @Override

@@ -30,11 +30,6 @@ public class BayesNetReaderTest {
         
         BayesNetReader bnr = new BayesNetReader();
         FactorGraph fg = bnr.readBnAsFg(networkIs, cpdIs);
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((VarTensor)f).convertRealToLog();
-            }
-        }
         return fg;
     }
 

@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.Sentence;
 import edu.jhu.gm.inf.Messages;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
@@ -17,6 +16,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.CnfGrammar;
@@ -30,9 +30,8 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
-import edu.jhu.util.semiring.Semiring;
 
 /**
  * Global factor which constrains O(n^2) variables to form a constituency tree,
@@ -160,7 +159,13 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
         
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
+    protected void createMessages(FgNode parent, Messages[] msgs) {
+        Algebra s = msgs[0].message.getAlgebra();
+        if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
+            throw new IllegalStateException("ConstituencyTreeFactor only supports log and real semirings as input.");
+        }
+        boolean logDomain = s.equals(Algebras.LOG_SEMIRING);
+        
         // Note on logDomain: all internal computation is done in the logDomain
         // since (for example) pi the product of all incoming false messages
         // would overflow.
@@ -211,14 +216,8 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             // Get the incoming messages.
             FgEdge inEdge = outEdge.getOpposing();
             VarTensor inMsg = msgs[inEdge.getId()].message;
-            double inMsgTrue, inMsgFalse;
-            if (logDomain) {
-                inMsgTrue = inMsg.getValue(SpanVar.TRUE);
-                inMsgFalse = inMsg.getValue(SpanVar.FALSE);
-            } else {
-                inMsgTrue = FastMath.log(inMsg.getValue(SpanVar.TRUE));
-                inMsgFalse = FastMath.log(inMsg.getValue(SpanVar.FALSE));                
-            }
+            double inMsgTrue = s.toLogProb(inMsg.getValue(SpanVar.TRUE));
+            double inMsgFalse = s.toLogProb(inMsg.getValue(SpanVar.FALSE));
             
             double outMsgTrue = beliefTrue - inMsgTrue;
             double outMsgFalse = beliefFalse - inMsgFalse;
@@ -246,34 +245,36 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
 
     /** Computes the log odds ratio for each edge. w_{ij} = \mu_{ij}(1) / \mu_{ij}(0) */
     private void getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[][] spanWeights) {
-        // Keep track of the minimum and maximum odds ratios, in order to detect
-        // possible numerical precision issues.
-        double minOddsRatio = Double.POSITIVE_INFINITY;
-        double maxOddsRatio = Double.NEGATIVE_INFINITY;
+        Algebra s = msgs[0].message.getAlgebra();
         
         // Compute the odds ratios of the messages for each edge in the tree.
         DoubleArrays.fill(spanWeights, Double.NEGATIVE_INFINITY);
         for (FgEdge inEdge : parent.getInEdges()) {
             SpanVar span = (SpanVar) inEdge.getVar();
             VarTensor inMsg = msgs[inEdge.getId()].message;
-            double oddsRatio;
-            if (logDomain) {
-                oddsRatio = inMsg.getValue(SpanVar.TRUE) - inMsg.getValue(SpanVar.FALSE);
-            } else {
-                assert inMsg.getValue(SpanVar.TRUE) >= 0 : inMsg.getValue(SpanVar.TRUE);
-                assert inMsg.getValue(SpanVar.FALSE) >= 0 : inMsg.getValue(SpanVar.FALSE);
-                // We still need the log of this ratio since the parsing algorithm works in the log domain.
-                oddsRatio = FastMath.log(inMsg.getValue(SpanVar.TRUE)) - FastMath.log(inMsg.getValue(SpanVar.FALSE));
-            }
-            
-            spanWeights[span.getStart()][span.getEnd()] = oddsRatio;
-                        
-            // Check min/max.
-            if (oddsRatio < minOddsRatio) {
-                minOddsRatio = oddsRatio;
-            }
-            if (oddsRatio > maxOddsRatio) {
-                maxOddsRatio = oddsRatio;
+            double oddsRatio = s.toLogProb(inMsg.getValue(SpanVar.TRUE)) - s.toLogProb(inMsg.getValue(SpanVar.FALSE));
+            spanWeights[span.getStart()][span.getEnd()] = oddsRatio;                
+        }
+
+        checkSpanWeights(spanWeights);
+    }
+
+    private void checkSpanWeights(double[][] spanWeights) {
+        // Keep track of the minimum and maximum odds ratios, in order to detect
+        // possible numerical precision issues.
+        double minOddsRatio = Double.POSITIVE_INFINITY;
+        double maxOddsRatio = Double.NEGATIVE_INFINITY;
+        
+        for (int i=0; i<spanWeights.length; i++) {
+            for (int j=0; j<spanWeights[i].length; j++) {
+                double oddsRatio = spanWeights[i][j];
+                // Check min/max.
+                if (oddsRatio < minOddsRatio) {
+                    minOddsRatio = oddsRatio;
+                }
+                if (oddsRatio > maxOddsRatio) {
+                    maxOddsRatio = oddsRatio;
+                }
             }
         }
 
@@ -292,16 +293,13 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         // Precompute the product of all the "false" messages.
         // pi = \prod_i \mu_i(0)
         // Here we store log pi.
-        double pi = 0.0;
+        Algebra s = msgs[0].message.getAlgebra();
+        double logPi = 0.0;
         for (FgEdge inEdge : parent.getInEdges()) {
             VarTensor inMsg = msgs[inEdge.getId()].message;
-            if (logDomain) {
-                pi += inMsg.getValue(LinkVar.FALSE);
-            } else {
-                pi += FastMath.log(inMsg.getValue(LinkVar.FALSE));
-            }
+            logPi += s.toLogProb(inMsg.getValue(SpanVar.FALSE));
         }
-        return pi;
+        return logPi;
     }
 
     /** Sets the outgoing messages. */
@@ -310,21 +308,17 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         
         // Set the outgoing messages.
         VarTensor outMsg = msgs[outEdge.getId()].newMessage;
-        outMsg.setValue(SpanVar.FALSE, outMsgFalse);
-        outMsg.setValue(SpanVar.TRUE, outMsgTrue);
+        Algebra s = outMsg.getAlgebra();
+        outMsg.setValue(SpanVar.FALSE, s.fromLogProb(outMsgFalse));
+        outMsg.setValue(SpanVar.TRUE, s.fromLogProb(outMsgTrue));
                 
         if (log.isTraceEnabled()) {
             log.trace(String.format("outMsgTrue: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.TRUE)));
             log.trace(String.format("outMsgFalse: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.FALSE)));
         }
-                
-        // Convert log messages to messages for output.
-        if (!logDomain) {
-            outMsg.convertLogToReal();
-        }
         
         //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
-        assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
+        assert !outMsg.containsBadValues() : "message = " + outMsg;
     }
 
     public static void boundToSafeValues(double[] values) {
@@ -336,7 +330,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     @Override
-    public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {
+    public double getExpectedLogBelief(FgNode parent, Messages[] msgs) {
         if (n == 0) {
             return 0.0;
         }
@@ -370,15 +364,15 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     @Override
-    public double getUnormalizedScore(int configId) {
+    public double getLogUnormalizedScore(int configId) {
         VarConfig vc = vars.getVarConfig(configId);
         // TODO: This would be faster: int[] cfg = vars.getVarConfigAsArray(configId);
-        return getUnormalizedScore(vc);
+        return getLogUnormalizedScore(vc);
     }
 
     @Override
-    public double getUnormalizedScore(VarConfig vc) {
-        Semiring s = logDomain ? new LogSemiring() : new RealAlgebra(); 
+    public double getLogUnormalizedScore(VarConfig vc) {
+        LogSemiring s = Algebras.LOG_SEMIRING;
         boolean[][] chart = getChart(n, vc);
         if (chart == null || !isTree(n, chart)) {
             log.warn("Tree is not a valid constituency tree.");

@@ -17,6 +17,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.semiring.Algebras;
 
 public class DepParseDecoderTest {
     
@@ -33,17 +34,16 @@ public class DepParseDecoderTest {
         for (int p=-1; p<n; p++) {
             for (int c=0; c<n; c++) {
                 LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
-                VarTensor f = new VarTensor(new VarSet(v));
+                VarTensor f = new VarTensor(Algebras.REAL_ALGEBRA, new VarSet(v));
                 if ((p == -1 && c == 1) || 
                         (p == 1 && c == 0) || 
                         (p == 1 && c == 2)) {
-                    f.setValue(LinkVar.TRUE, FastMath.log(0.7));
-                    f.setValue(LinkVar.FALSE, FastMath.log(0.3));
+                    f.setValue(LinkVar.TRUE, 0.7);
+                    f.setValue(LinkVar.FALSE, 0.3);
                 } else {
-                    f.setValue(LinkVar.TRUE, FastMath.log(0.3));
-                    f.setValue(LinkVar.FALSE, FastMath.log(0.7));
+                    f.setValue(LinkVar.TRUE, 0.3);
+                    f.setValue(LinkVar.FALSE, 0.7);
                 }
-                if (logDomain) { f.convertLogToReal(); }
                 margs.add(f);
                 vars.add(v);
             }

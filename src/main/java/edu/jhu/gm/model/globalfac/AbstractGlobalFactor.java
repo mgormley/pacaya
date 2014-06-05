@@ -13,16 +13,15 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
     private static final long serialVersionUID = 1L;
     private int id = -1;
     private int iterAtLastCreateMessagesCall = Integer.MIN_VALUE;
-    protected boolean logDomain;
     
     public AbstractGlobalFactor() {
         reset();
     }
         
     @Override
-    public boolean createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter) {
+    public boolean createMessages(FgNode parent, Messages[] msgs, int iter) {
         if (iterAtLastCreateMessagesCall < iter) {
-            createMessages(parent, msgs, logDomain);            
+            createMessages(parent, msgs);            
             iterAtLastCreateMessagesCall = iter;
             return true;
         }
@@ -34,11 +33,10 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
         iterAtLastCreateMessagesCall = Integer.MIN_VALUE;
     }
 
-    public void updateFromModel(FgModel model, boolean logDomain) {
+    public void updateFromModel(FgModel model) {
         // Currently, global factors do not support features, and
         // therefore have no model parameters.
-        this.logDomain = logDomain;
-    }   
+    }
 
     public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         // No op since this type of factor doesn't have any features.
@@ -58,6 +56,6 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
         this.id = id;
     }
     
-    protected abstract void createMessages(FgNode parent, Messages[] msgs, boolean logDomain);
+    protected abstract void createMessages(FgNode parent, Messages[] msgs);
 
 }
