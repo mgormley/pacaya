@@ -5,7 +5,15 @@ public class Algebras {
     private Algebras() {
         // private constructor.
     }
-
+    
+    // Algebras.
+    public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra(); 
+    public static final LogPosNegAlgebra LOG_POS_NEG_ALGEBRA = new LogPosNegAlgebra(); 
+    // Semirings.
+    public static final LogSemiring LOG_SEMIRING = new LogSemiring(); 
+    public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring(); 
+    public static final TropicalSemiring TROPICAL_SEMIRING = new TropicalSemiring(); 
+    
     public static double[] getToReal(double[] compacted, Algebra s) {
         double[] reals = new double[compacted.length];
         for (int i=0; i<compacted.length; i++) {
