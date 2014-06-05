@@ -1,25 +1,25 @@
 package edu.jhu.gm.inf;
 
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.ExplicitFactor;
+import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.erma.AbstractFgInferencer;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
-import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 /**
  * Loopy belief propagation inference algorithm.
@@ -27,7 +27,7 @@ import edu.jhu.util.Timer;
  * @author mgormley
  *
  */
-public class BeliefPropagation implements FgInferencer {
+public class BeliefPropagation extends AbstractFgInferencer implements FgInferencer {
     
     private static final Logger log = Logger.getLogger(BeliefPropagation.class);
 
@@ -36,8 +36,8 @@ public class BeliefPropagation implements FgInferencer {
         public int maxIterations = 100;
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
-        //public final FactorGraph fg;
         public boolean logDomain = true;
+        public Algebra s = null;
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;        
         public boolean cacheFactorBeliefs = false;
@@ -48,9 +48,16 @@ public class BeliefPropagation implements FgInferencer {
         public FgInferencer getInferencer(FactorGraph fg) {
             return new BeliefPropagation(fg, this);
         }
-        public boolean isLogDomain() {
-            return logDomain;
+        
+        @Override
+        public Algebra getAlgebra() {
+            if (s == null) {
+                return logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+            } else {
+                return s;
+            }
         }
+        
     }
     
     public enum BpScheduleType {
@@ -68,18 +75,19 @@ public class BeliefPropagation implements FgInferencer {
     };
     
     private final BeliefPropagationPrm prm;
+    private final Algebra s;
     private final FactorGraph fg;
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
     private final Messages[] msgs;
     private BpSchedule sched;
-    private List<FgEdge> order;
     
     private VarTensor[] factorBeliefCache;
     // The number of messages that have converged.
     private int numConverged = 0;
 
-    public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
+    public BeliefPropagation(final FactorGraph fg, BeliefPropagationPrm prm) {
         this.prm = prm;
+        this.s = prm.getAlgebra();
         this.fg = fg;
         this.msgs = new Messages[fg.getNumEdges()];
         this.factorBeliefCache = new VarTensor[fg.getNumFactors()];
@@ -92,6 +100,13 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
+        } else {
+            sched = new BpSchedule() {
+                @Override
+                public List<FgEdge> getOrder() {
+                    return fg.getEdges();
+                }
+            };
         }
     }
     
@@ -125,12 +140,11 @@ public class BeliefPropagation implements FgInferencer {
             		VarTensor fBel = new VarTensor(s, f.getVars());
                 	int c = f.getVars().calcNumConfigs();
                 	for(int i=0; i<c; i++)
-                		fBel.setValue(i, f.getLogUnormalizedScore(i));
+                		fBel.setValue(i, s.fromLogProb(f.getLogUnormalizedScore(i)));
                 	
                 	for(FgEdge v2f : node.getInEdges()) {
                 		VarTensor vBel = msgs[v2f.getId()].message;
-                		if(prm.logDomain) fBel.add(vBel);
-                		else fBel.prod(vBel);
+                		fBel.prod(vBel);
                 	}
                 	
                 	factorBeliefCache[f.getId()] = fBel;
@@ -140,16 +154,15 @@ public class BeliefPropagation implements FgInferencer {
         
         
         // Message passing.
-        List<FgEdge> order = (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) ?
-            order = sched.getOrder() : null;
+        //
+        // At iteration -1, we send all the constant messages. Then we never send them again.
+        List<FgEdge> order = null;
         for (int iter=0; iter < prm.maxIterations; iter++) {
             if (timer.totSec() > prm.timeoutSeconds) {
                 break;
             }
+            order = updateOrder(order, iter);
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-                if (prm.schedule == BpScheduleType.RANDOM) {
-                    order = sched.getOrder();
-                }
                 for (FgEdge edge : order) {
                     createMessage(edge, iter);
                     sendMessage(edge);
@@ -159,10 +172,10 @@ public class BeliefPropagation implements FgInferencer {
                     }
                 }
             } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-                for (FgEdge edge : fg.getEdges()) {
+                for (FgEdge edge : order) {
                     createMessage(edge, iter);
                 }
-                for (FgEdge edge : fg.getEdges()) {
+                for (FgEdge edge : order) {
                     sendMessage(edge);
                 }
             } else {
@@ -184,6 +197,52 @@ public class BeliefPropagation implements FgInferencer {
         timer.stop();
     }
 
+    private List<FgEdge> updateOrder(List<FgEdge> order, int iter) {
+        if (iter >= 1 && !(prm.updateOrder == BpUpdateOrder.SEQUENTIAL || prm.schedule == BpScheduleType.RANDOM)) {
+            // Just re-use the same order.
+            return order;
+        }
+        // Get the initial order for the edges.
+        order = sched.getOrder();
+        if (iter == -1) {   
+            // Keep only the messages from the leaves for iteration -1. Then never send these again.
+            order = filterNonConstantMsgs(order);
+        } else {
+            // Filter out the messages from the leaves.
+            order = filterConstantMsgs(order);
+        }
+        return order;
+    }
+    
+    /** Filters edges from a leaf node. */
+    private List<FgEdge> filterConstantMsgs(List<FgEdge> order) {
+        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
+        for (FgEdge edge : order) {
+            // If the parent node is not a leaf.
+            if (!isConstantMsg(edge)) {
+                filt.add(edge);
+            }
+        }
+        return filt;
+    }
+    
+    /** Filters edges not from a leaf node. */
+    private List<FgEdge> filterNonConstantMsgs(List<FgEdge> order) {
+        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
+        for (FgEdge edge : order) {
+            // If the parent node is not a leaf.
+            if (isConstantMsg(edge)) {
+                filt.add(edge);
+            }
+        }
+        return filt;
+    }
+
+    /** Returns true iff the edge corresponds to a message which is constant (i.e. sent from a leaf node). */
+    private boolean isConstantMsg(FgEdge edge) {
+        return edge.getParent().getOutEdges().size() == 1;
+    }
+    
     public boolean isConverged() {
         return numConverged == msgs.length;
     }
@@ -221,7 +280,7 @@ public class BeliefPropagation implements FgInferencer {
             VarTensor msg = msgs[edgeId].newMessage;
             
             // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-            msg.fill(prm.logDomain ? 0.0 : 1.0);
+            msg.fill(s.one());
             
             if (edge.isVarToFactor()) {
                 // Message from variable v* to factor f*.
@@ -242,29 +301,20 @@ public class BeliefPropagation implements FgInferencer {
             		VarTensor remove = msgs[edge.getOpposing().getId()].message;
             		VarTensor from = factorBeliefCache[factor.getId()];
             		prod = new VarTensor(from);
-            		if(prm.logDomain) prod.subBP(remove);
-            		else prod.divBP(remove);
+            		prod.divBP(remove);
             		
             		assert !prod.containsBadValues() : "prod from cached beliefs = " + prod;
             	}
             	else {	// fall back on normal way of computing messages without caching
-            		prod = new VarTensor(s, factor.getVars());
-                	// Set the initial values of the product to those of the sending factor.
-                	int numConfigs = prod.getVars().calcNumConfigs();
-                	for (int c = 0; c < numConfigs; c++) {
-                		prod.setValue(c, factor.getLogUnormalizedScore(c));
-                	}
+                    // Set the initial values of the product to those of the sending factor.
+            		prod = BruteForceInferencer.safeNewVarTensor(s, factor);
                 	getProductOfMessages(edge.getParent(), prod, edge.getChild());
             	}
 
             	
                 // Marginalize over all the assignments to variables for f*, except
                 // for v*.
-                if (prm.logDomain) { 
-                    msg = prod.getLogMarginal(new VarSet(var), false);
-                } else {
-                    msg = prod.getMarginal(new VarSet(var), false);
-                }
+                msg = prod.getMarginal(new VarSet(var), false);
             }
             
             assert (msg.getVars().equals(new VarSet(var)));
@@ -278,11 +328,7 @@ public class BeliefPropagation implements FgInferencer {
 
     private void normalize(VarTensor msg) {
         if (prm.normalizeMessages) {
-            if (prm.logDomain) { 
-                msg.logNormalize();
-            } else {
-                msg.normalize();
-            }
+            msg.normalize();
         } else { 
             // normalize and logNormalize already check for NaN
             assert !msg.containsBadValues() : "msg = " + msg;
@@ -316,13 +362,9 @@ public class BeliefPropagation implements FgInferencer {
             // Get message from neighbor to factor.
             VarTensor nbMsg = msgs[nbEdge.getId()].message;
             
-            // The neighbor messages have a different domain, but addition
-            // should still be well defined.
-            if (prm.logDomain) {
-                prod.add(nbMsg);
-            } else {
-                prod.prod(nbMsg);
-            }
+            // If the node is a variable, this is an element-wise product. 
+            // If the node is a factor, this an an outer product.
+            prod.prod(nbMsg);
             assert !prod.containsBadValues() : "prod = " + prod;
         }
     }
@@ -330,11 +372,7 @@ public class BeliefPropagation implements FgInferencer {
     /** Gets the product of messages (as in getProductOfMessages()) and then normalizes. */
     protected void getProductOfMessagesNormalized(FgNode node, VarTensor prod, FgNode exclNode) {
         getProductOfMessages(node, prod, exclNode);
-        if (prm.logDomain) { 
-            prod.logNormalize();
-        } else {
-            prod.normalize();
-        }
+        prod.normalize();
     }
     
     /**
@@ -350,7 +388,7 @@ public class BeliefPropagation implements FgInferencer {
         Messages ec = msgs[edgeId];
         // Update the residual
         double oldResidual = ec.residual;
-        ec.residual = getResidual(ec.message, ec.newMessage);
+        ec.residual = smartResidual(ec.message, ec.newMessage, edge);
         if (oldResidual > prm.convergenceThreshold && ec.residual <= prm.convergenceThreshold) {
             // This message has (newly) converged.
             numConverged ++;
@@ -371,14 +409,8 @@ public class BeliefPropagation implements FgInferencer {
         if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
         	Factor f = edge.getFactor();
         	VarTensor update = factorBeliefCache[f.getId()];
-        	if(prm.logDomain) {
-        		update.subBP(oldMessage);
-        		update.add(ec.message);
-        	}
-        	else {
-        		update.divBP(oldMessage);
-        		update.prod(ec.message);
-        	}
+        	update.divBP(oldMessage);
+        	update.prod(ec.message);
         }
         
         if (log.isTraceEnabled()) {
@@ -386,23 +418,33 @@ public class BeliefPropagation implements FgInferencer {
         }
     }
 
+    /** Returns the "converged" residual for constant messages, and the actual residual otherwise. */
+    private double smartResidual(VarTensor message, VarTensor newMessage, FgEdge edge) {
+        // This is intentionally NOT the semiring zero.
+        return isConstantMsg(edge) ? 0.0 : getResidual(message, newMessage);
+    }
+
     /**
-     * Gets the residual for a new message, as the maximum error over all
-     * assignments.
+     * Gets the residual for a new message, as the maximum error over all assignments.
      * 
-     * Following the definition of Sutton & McCallum (2007), we compute the
-     * residual as the infinity norm of the difference of the log of the message
-     * vectors.
+     * Following the definition of Sutton & McCallum (2007), we compute the residual as the infinity
+     * norm of the difference of the log of the message vectors.
+     * 
+     * Note: the returned value is NOT in the semiring / abstract algebra. It is the actual value
+     * described above.
      */
-    private double getResidual(VarTensor message, VarTensor newMessage) {
-        VarTensor logRatio = new VarTensor(newMessage);
-        if (prm.logDomain) {
-            logRatio.subBP(message);
-        } else {
-            logRatio.divBP(message);
-            logRatio.convertRealToLog();
+    private double getResidual(VarTensor t1, VarTensor t2) {
+        assert s == t1.getAlgebra() && s == t2.getAlgebra();
+        Tensor.checkEqualSize(t1, t2);
+        Tensor.checkSameAlgebra(t1, t2);
+        double residual = Double.NEGATIVE_INFINITY;
+        for (int c=0; c<t1.size(); c++) {
+            double abs = Math.abs(s.toLogProb(t1.get(c)) - s.toLogProb(t2.get(c)));
+            if (abs > residual) {
+                residual = abs;
+            }
         }
-        return logRatio.getInfNorm();
+        return residual;
     }
     
     protected VarTensor getVarBeliefs(int varId) {
@@ -414,7 +456,7 @@ public class BeliefPropagation implements FgInferencer {
     }
     
     protected VarTensor getVarBeliefs(Var var) {
-        VarTensor prod = new VarTensor(s, new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        VarTensor prod = new VarTensor(s, new VarSet(var), s.one());
         // Compute the product of all messages sent to this variable.
         FgNode node = fg.getVarNode(var.getId());
         getProductOfMessagesNormalized(node, prod, null);
@@ -428,7 +470,7 @@ public class BeliefPropagation implements FgInferencer {
                     + " This should only be used for testing.");
         }
         
-        VarTensor prod = new VarTensor(BruteForceInferencer.safeGetVarTensor(s, factor));
+        VarTensor prod = new VarTensor(BruteForceInferencer.safeNewVarTensor(s, factor));
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessagesNormalized(node, prod, null);
@@ -442,7 +484,7 @@ public class BeliefPropagation implements FgInferencer {
             // 
             // The factor graph's overall partition function is the product of the
             // partition functions for each connected component. 
-            double partition = prm.logDomain ? 0.0 : 1.0;
+            double partition = s.one();
             for (FgNode node : fg.getConnectedComponents()) {
                 if (!node.isVar()) {
                     if (node.getOutEdges().size() == 0) {
@@ -456,21 +498,13 @@ public class BeliefPropagation implements FgInferencer {
                 }
                 
                 double nodePartition = getPartitionBeliefAtVarNode(node);
-                if (prm.logDomain) {
-                    partition += nodePartition;
-                } else {
-                    partition *= nodePartition;   
-                }
+                partition = s.times(partition, nodePartition);
             }
-            assert !Double.isNaN(partition);
+            assert !s.isNaN(partition);
             return partition;
         }
         
-        if (!prm.logDomain) {
-            return Math.exp(-getBetheFreeEnergy());
-        } else {
-            return - getBetheFreeEnergy();
-        }
+        return s.fromReal(- getBetheFreeEnergy());
     }
     
     /**
@@ -490,9 +524,7 @@ public class BeliefPropagation implements FgInferencer {
         //     b(x_a) and b(x_i) are normalized distributions and x_a is 
         //     the set of variables participating in factor a. 
         //
-        
-        double semiringZero = prm.logDomain ? Double.NEGATIVE_INFINITY : 0.0;
-        
+                
         double bethe = 0.0;
         for (int a=0; a<fg.getFactors().size(); a++) {
             Factor f = fg.getFactors().get(a);
@@ -500,14 +532,13 @@ public class BeliefPropagation implements FgInferencer {
                 int numConfigs = f.getVars().calcNumConfigs();
                 VarTensor beliefs = getFactorBeliefs(a);
                 for (int c=0; c<numConfigs; c++) {                
-                    double chi_c = f.getLogUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
-                    if (beliefs.getValue(c) != semiringZero) { 
-                        if (prm.logDomain) {
-                            bethe += FastMath.exp(beliefs.getValue(c)) * (beliefs.getValue(c) - chi_c);
-                        } else {
-                            bethe += beliefs.getValue(c) * FastMath.log(beliefs.getValue(c) / chi_c);
-                        }
+                    double b_c = beliefs.getValue(c);
+                    if (b_c != s.zero()) {
+                        double r_b_c = s.toReal(b_c);
+                        double log_b_c = s.toLogProb(b_c);
+                        double log_chi_c = f.getLogUnormalizedScore(c);
+                        bethe += r_b_c * (log_b_c - log_chi_c);
                     }
                 }
             } else {
@@ -520,12 +551,11 @@ public class BeliefPropagation implements FgInferencer {
             VarTensor beliefs = getVarBeliefs(i);
             double sum = 0.0;
             for (int c=0; c<v.getNumStates(); c++) {
-                if (beliefs.getValue(c) != semiringZero) { 
-                    if (prm.logDomain) {
-                        sum += FastMath.exp(beliefs.getValue(c)) * beliefs.getValue(c);
-                    } else {
-                        sum += beliefs.getValue(c) * FastMath.log(beliefs.getValue(c));
-                    }
+                double b_c = beliefs.getValue(c);
+                if (b_c != s.zero()) {
+                    double r_b_c = s.toReal(b_c);
+                    double log_b_c = s.toLogProb(b_c);
+                    sum += r_b_c * log_b_c;
                 }
             }
             bethe -= (numNeighbors - 1) * sum;
@@ -546,109 +576,18 @@ public class BeliefPropagation implements FgInferencer {
             throw new IllegalArgumentException("Node must be a variable node.");
         }
         Var var = node.getVar();
-        VarTensor prod = new VarTensor(s, new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        VarTensor prod = new VarTensor(s, new VarSet(var), s.one());
         // Compute the product of all messages sent to this node.
         getProductOfMessages(node, prod, null);
-        if (prm.logDomain) {
-            return prod.getLogSum();
-        } else {
-            return prod.getSum();
-        }
+        return prod.getSum();
+    }
+
+    public FactorGraph getFactorGraph() {
+        return fg;
     }
     
-    /* ------------------------- FgInferencer Methods -------------------- */
-    
-    /** @inheritDoc
-     */
-    @Override
-    public VarTensor getMarginals(Var var) {
-        VarTensor marg = getVarBeliefs(var);
-        if (prm.logDomain) {
-            marg.convertLogToReal();
-        }
-        return marg;
-    }
-    
-    /** @inheritDoc
-     */
-    @Override
-    public VarTensor getMarginals(Factor factor) {
-        VarTensor marg = getFactorBeliefs(factor);
-        if (prm.logDomain) {
-            marg.convertLogToReal();
-        }
-        return marg;
-    }
-        
-    /** @inheritDoc */
-    @Override
-    public VarTensor getMarginalsForVarId(int varId) {
-        return getMarginals(fg.getVar(varId));
-    }
-
-    /** @inheritDoc */
-    @Override
-    public VarTensor getMarginalsForFactorId(int factorId) {
-        return getMarginals(fg.getFactor(factorId));
-    }
-
-    /** @inheritDoc */
-    @Override
-    public double getPartition() {
-        double pb = getPartitionBelief();
-        if (prm.logDomain) {
-            pb = FastMath.exp(pb);
-        }
-        return pb; 
-    }    
-
-    /** @inheritDoc
-     */
-    @Override
-    public VarTensor getLogMarginals(Var var) {
-        VarTensor marg = getVarBeliefs(var);
-        if (!prm.logDomain) {
-            marg.convertRealToLog();
-        }
-        return marg;
-    }
-    
-    /** @inheritDoc
-     */
-    @Override
-    public VarTensor getLogMarginals(Factor factor) {
-        VarTensor marg = getFactorBeliefs(factor);
-        if (!prm.logDomain) {
-            marg.convertRealToLog();
-        }
-        return marg;
-    }
-        
-    /** @inheritDoc */
-    @Override
-    public VarTensor getLogMarginalsForVarId(int varId) {
-        return getLogMarginals(fg.getVar(varId));
-    }
-
-    /** @inheritDoc */
-    @Override
-    public VarTensor getLogMarginalsForFactorId(int factorId) {
-        return getLogMarginals(fg.getFactor(factorId));
-    }
-
-    /** @inheritDoc */
-    @Override
-    public double getLogPartition() {
-        double pb = getPartitionBelief();
-        if (!prm.logDomain) {
-            pb = FastMath.log(pb);
-        }
-        return pb; 
-    }
-        
-    @Override
-    public boolean isLogDomain() {
-        return prm.logDomain;
+    public Algebra getAlgebra() {
+        return s;
     }
     
 }

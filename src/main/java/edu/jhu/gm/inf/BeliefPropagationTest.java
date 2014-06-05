@@ -21,144 +21,7 @@ import edu.jhu.util.collections.Lists;
 
 
 public class BeliefPropagationTest {
-	
-	@Test
-	public void testCanHandleProbHardFactors() {
-		testCanHandleProbHardFactorsHelper(true);
-		testCanHandleProbHardFactorsHelper(false);
-	}
-	
-	public void testCanHandleProbHardFactorsHelper(boolean cacheFactorBeliefs) {
-		boolean logDomain = false;
-		
-		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
-		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
-		
-		VarTensor df = new VarTensor(s, new VarSet(x0, x1));
-		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
-			VarConfig vCfg = df.getVars().getVarConfig(cfg);
-			int v0 = vCfg.getState(x0);
-			int v1 = vCfg.getState(x1);
-			if(v0 != v1)
-				df.setValue(cfg, 0d);
-			else
-				df.setValue(cfg, 1d);
-		}
-		ExplicitFactor xor = new ExplicitFactor(df);
-		
-		FactorGraph fg = new FactorGraph();
-		fg.addVar(x0);
-		fg.addVar(x1);
-		fg.addFactor(xor);
-		
-		// should have uniform mass
-		BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        prm.cacheFactorBeliefs = cacheFactorBeliefs;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
-        assertEqualMarginals(fg, bf, bp);
-        
-        VarTensor x0_marg = bp.getMarginals(x0);
-        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
-        VarTensor x1_marg = bp.getMarginals(x1);
-        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
-				
-		// check again once we've added some unary factors on x0 and x1
-		df = new VarTensor(s, new VarSet(x0));
-		df.setValue(0, 3d);
-		df.setValue(1, 2d);
-		ExplicitFactor f0 = new ExplicitFactor(df);
-		fg.addFactor(f0);
-		
-		df = new VarTensor(s, new VarSet(x0));
-		df.setValue(0, 5d);
-		df.setValue(1, 1d);
-		ExplicitFactor f1 = new ExplicitFactor(df);
-		fg.addFactor(f1);
-		
-		bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        bp = new BeliefPropagation(fg, prm);
-        bp.run();
-		assertEqualMarginals(fg, bf, bp);
-	}
-	
-	@Test
-	public void testCanHandleLogHardFactors() {
-		testCanHandleLogHardFactorsHelper(true);
-		testCanHandleLogHardFactorsHelper(false);
-	}
-	
-	public void testCanHandleLogHardFactorsHelper(boolean cacheFactorBeliefs) {
-		boolean logDomain = true;
-		
-		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
-		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
-		
-		// add a hard xor factor
-		// this shouldn't move the marginals away from uniform
-		VarTensor df = new VarTensor(s, new VarSet(x0, x1));
-		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
-			VarConfig vCfg = df.getVars().getVarConfig(cfg);
-			int v0 = vCfg.getState(x0);
-			int v1 = vCfg.getState(x1);
-			if(v0 != v1)
-				df.setValue(cfg, Double.NEGATIVE_INFINITY);
-			else
-				df.setValue(cfg, 0d);
-		}
-		ExplicitFactor xor = new ExplicitFactor(df);
-		
-		FactorGraph fg = new FactorGraph();
-		fg.addVar(x0);
-		fg.addVar(x1);
-		fg.addFactor(xor);
-		
-		// should have uniform mass
-		BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        prm.cacheFactorBeliefs = cacheFactorBeliefs;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
-        assertEqualMarginals(fg, bf, bp);
-        
-    	VarTensor x0_marg = bp.getLogMarginals(x0);
-        assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
-        assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
-        VarTensor x1_marg = bp.getLogMarginals(x1);
-        assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
-        assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
-				
-		// check again once we've added some unary factors on x0 and x1
-		df = new VarTensor(s, new VarSet(x0));
-		df.setValue(0, -2d);
-		df.setValue(1, -3d);
-		ExplicitFactor f0 = new ExplicitFactor(df);
-		fg.addFactor(f0);
-		
-		df = new VarTensor(s, new VarSet(x0));
-		df.setValue(0, -1d);
-		df.setValue(1, -5d);
-		ExplicitFactor f1 = new ExplicitFactor(df);
-		fg.addFactor(f1);
-		
-		bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        bp = new BeliefPropagation(fg, prm);
-        bp.run();
-		assertEqualMarginals(fg, bf, bp);
-	}
-	
-    
+	    
     @Test
     public void testOnOneVarProb() {
         boolean logDomain = false;
@@ -287,6 +150,7 @@ public class BeliefPropagationTest {
         for (Factor f : fg.getFactors()) {
             ((VarTensor)f).convertRealToLog();
         }
+        
         return fg;
     }
     
@@ -362,8 +226,8 @@ public class BeliefPropagationTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(true, 0, 7);
-        testConvergenceHelper(false, 0, 7);
+        testConvergenceHelper(true, 0, 6);
+        testConvergenceHelper(false, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
         testConvergenceHelper(true, 1e-3, 5);
         testConvergenceHelper(false, 1e-3, 5);
@@ -380,7 +244,6 @@ public class BeliefPropagationTest {
         prm.logDomain = logDomain;
         prm.normalizeMessages = true;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
-        // Enforce exact convergence.
         prm.convergenceThreshold = convergenceThreshold;        
         
         BeliefPropagation bp = null;
@@ -406,7 +269,81 @@ public class BeliefPropagationTest {
         }
         assertTrue(bp.isConverged());
     }
+    
 
+    @Test
+    public void testCanHandleProbHardFactors() {
+        testCanHandleHardFactorsHelper(true, false);
+        testCanHandleHardFactorsHelper(false, false);
+    }
+    
+    @Test
+    public void testCanHandleLogHardFactors() {
+        testCanHandleHardFactorsHelper(true, true);
+        testCanHandleHardFactorsHelper(false, true);
+    }
+    
+    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {     
+        Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
+        Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
+        
+        ExplicitFactor xor = new ExplicitFactor(new VarSet(x0, x1));
+        for(int cfg=0; cfg < xor.getVars().calcNumConfigs(); cfg++) {
+            VarConfig vCfg = xor.getVars().getVarConfig(cfg);
+            int v0 = vCfg.getState(x0);
+            int v1 = vCfg.getState(x1);
+            if(v0 != v1)
+                xor.setValue(cfg, 0d);
+            else
+                xor.setValue(cfg, 1d);
+        }
+        xor.convertRealToLog();
+        
+        FactorGraph fg = new FactorGraph();
+        fg.addVar(x0);
+        fg.addVar(x1);
+        fg.addFactor(xor);
+        
+        // should have uniform mass
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        prm.cacheFactorBeliefs = cacheFactorBeliefs;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        System.out.println(bp.isConverged());
+        assertEqualMarginals(fg, bf, bp);
+        
+        VarTensor x0_marg = bp.getMarginals(x0);
+        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
+        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
+        VarTensor x1_marg = bp.getMarginals(x1);
+        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
+        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
+                
+        // check again once we've added some unary factors on x0 and x1
+        ExplicitFactor f0 = new ExplicitFactor(new VarSet(x0));
+        f0.setValue(0, 3d);
+        f0.setValue(1, 2d);
+        f0.convertRealToLog();
+        fg.addFactor(f0);
+        
+        ExplicitFactor f1 = new ExplicitFactor(new VarSet(x0));
+        f1.setValue(0, 5d);
+        f1.setValue(1, 1d);
+        f1.convertRealToLog();
+        fg.addFactor(f1);
+        
+        bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        System.out.println(bp.isConverged());
+        assertEqualMarginals(fg, bf, bp);
+    }
+    
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             BeliefPropagation bp) {
         assertEqualMarginals(fg, bf, bp, 1e-13);
