@@ -110,9 +110,11 @@ public class Tensor {
     private static int[] getStrides(int[] dims) {
         int rightmost = dims.length - 1;
         int[] strides = new int[dims.length];
-        strides[rightmost] = 1;
-        for (int i=rightmost-1; i >= 0; i--) {
-            strides[i] = dims[i+1]*strides[i+1];
+        if (dims.length > 0) {          
+            strides[rightmost] = 1;
+            for (int i=rightmost-1; i >= 0; i--) {
+                strides[i] = dims[i+1]*strides[i+1];
+            }
         }
         return strides;      
     }
