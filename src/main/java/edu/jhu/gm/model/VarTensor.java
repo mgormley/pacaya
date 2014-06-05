@@ -119,7 +119,7 @@ public class VarTensor extends Tensor implements Serializable {
     /** Normalizes the values. */
     public double normalize() {
         double propSum = this.getSum();
-        if (propSum == 0) {
+        if (propSum == s.zero()) {
             this.fill(s.divide(s.one(), s.fromReal(values.length)));
         } else if (propSum == s.posInf()) {
             int count = DoubleArrays.count(values, s.posInf());
