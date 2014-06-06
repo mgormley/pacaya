@@ -43,8 +43,13 @@ public class ErmaBpBackwardTest {
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
         fg.addFactor(emit0);
 
-        emit0.setValue(0, FastMath.log(1.1));
-        emit0.setValue(1, FastMath.log(1.9));      
+        if (logDomain) {
+            emit0.setValue(0, FastMath.log(1.1));
+            emit0.setValue(1, FastMath.log(1.9));
+        } else {
+            emit0.setValue(0, 1.1);
+            emit0.setValue(1, 1.9);
+        }
         
         VarConfig goldConfig = new VarConfig();
         goldConfig.put(t0, 1);
@@ -62,8 +67,8 @@ public class ErmaBpBackwardTest {
             Messages adj0 = bp.getMessagesAdj()[0];
             assertEquals(0, adj0.message.getValue(0), 1e-3);
             assertEquals(0, adj0.message.getValue(1), 1e-3);
-            assertEquals(1.181, adj0.newMessage.getValue(0), 1e-3);
-            assertEquals(-0.175, adj0.newMessage.getValue(1), 1e-3);
+            assertEquals(0.211, adj0.newMessage.getValue(0), 1e-3);
+            assertEquals(-0.122, adj0.newMessage.getValue(1), 1e-3);
             
             Messages adj1 = bp.getMessagesAdj()[1];
             assertEquals(0, adj1.message.getValue(0), 1e-3);
@@ -74,8 +79,8 @@ public class ErmaBpBackwardTest {
         {
             assertEquals(1, bp.getPotentialsAdj().length);
             VarTensor adj = bp.getPotentialsAdj()[0];
-            assertEquals(1.181, adj.getValue(0), 1e-3);
-            assertEquals(-0.175, adj.getValue(1), 1e-3);
+            assertEquals(0.211, adj.getValue(0), 1e-3);
+            assertEquals(-0.122, adj.getValue(1), 1e-3);
         }
     }
     
