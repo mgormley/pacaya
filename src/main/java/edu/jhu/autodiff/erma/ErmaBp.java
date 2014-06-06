@@ -137,7 +137,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         this.s = prm.getAlgebra();
         this.prm = prm;
         this.effm = effm;
-        if (!s.equals(effm.getAlgebra())) {
+        if (effm != null && !s.equals(effm.getAlgebra())) {
             throw new IllegalArgumentException("Algebras must be the same for ExpFamFactorModule and this class: " + s + " " + effm.getAlgebra());
         }
         
@@ -805,7 +805,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             return partition;
         }
         
-        return s.fromReal(- getBetheFreeEnergy());
+        return s.fromLogProb(- getBetheFreeEnergy());
     }
     
     /**
