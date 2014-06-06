@@ -140,5 +140,13 @@ public class TensorTest {
         
         JUnitUtils.assertArrayEquals(new double[]{3.0, 3.0, 7.0, 5.0, 3.0, 8.0}, f1.getValues(), 1e-13);                
     }
+    
+    @Test
+    public void testDotProduct() {
+        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t2 = ModuleTestUtils.getVector(s, -4, 6, 7);
+        
+        assertEquals(2*-4 + 3*6 + 5*7, t1.getDotProduct(t2), 1e-13);
+    }
 
 }

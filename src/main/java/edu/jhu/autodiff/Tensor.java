@@ -364,7 +364,7 @@ public class Tensor {
     /** Computes the sum of the entries of the pointwise product of two tensors with identical domains. */
     public double getDotProduct(Tensor other) {
         checkEqualSize(this, other);
-        double dot = s.negInf();
+        double dot = s.zero();
         for (int c = 0; c < this.values.length; c++) {
             dot = s.plus(dot, s.times(this.values[c], other.values[c]));
         }

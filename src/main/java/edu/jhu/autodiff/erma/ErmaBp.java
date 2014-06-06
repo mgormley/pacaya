@@ -509,6 +509,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         msgsAdj[i].newMessage = msgsAdj[i].message; // The adjoint at time (t+1)
         msgsAdj[i].message = tmp;                   // The adjoint at time (t)
         
+        if (log.isTraceEnabled()) {
+            log.trace("Backward send:" + msgsAdj[i].newMessage);
+        }
         assert !msgsAdj[i].newMessage.containsNaN() : "msgsAdj[i].newMessage = " + msgsAdj[i].newMessage + "\n" + "edge: " + edge;
     }
 
@@ -549,11 +552,22 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         assert !msgsAdj[i].message.containsNaN() : "msgsAdj[i].message = " + msgsAdj[i].message + "\n" + "edge: " + edge;
     }
 
+    private void logTraceMsgUpdate(String name, VarTensor msg, FgEdge edge) {
+        if (log.isTraceEnabled()) {
+            if (edge != null) {
+                log.trace(name+" "+edge+"\n"+msg);
+            } else {
+                log.trace(name+"\n"+msg);
+            }
+        }     
+    }
+
     private void unnormalizeAdjInPlace(VarTensor dist, VarTensor distAdj, double unormSum) {
         VarTensor unormAdj = distAdj;
         double dotProd = dist.getDotProduct(distAdj);       
         unormAdj.subtract(dotProd);
         unormAdj.divide(unormSum);
+        logTraceMsgUpdate("unnormalizeAdjInPlace", distAdj, null);
     }
 
     private void initVarToFactorAdj(int i, VarTensor[] facBeliefsAdj, int varId, int facId, FgEdge edge) {
@@ -562,17 +576,20 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         prod.prod(facBeliefsAdj[facId]);
         getProductOfMessages(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
         msgsAdj[i].message = prod.getMarginal(new VarSet(edge.getVar()), false);
+        logTraceMsgUpdate("initVarToFactorAdj", msgsAdj[i].message, edge);
     }
 
     private void initFactorToVarAdj(int i, VarTensor[] varBeliefsAdj, int varId, int facId) {
         msgsAdj[i].message = new VarTensor(varBeliefsAdj[varId]);
         getProductOfMessages(fg.getVarNode(varId), msgsAdj[i].message, fg.getFactorNode(facId));
+        logTraceMsgUpdate("initFactorToVarAdj", msgsAdj[i].message, fg.getEdge(i));
     }
 
     private void initPotentialsAdj(int a, VarTensor[] facBeliefsAdj) {
         VarTensor tmp = new VarTensor(facBeliefsAdj[a]);
         getProductOfMessages(fg.getFactorNode(a), tmp, null);
         potentialsAdj[a].add(tmp);
+        logTraceMsgUpdate("initPotentialsAdj", potentialsAdj[a], null);
         assert !potentialsAdj[a].containsNaN() : "potentialsAdj[a] = " + potentialsAdj[a];
     }
 
@@ -585,6 +602,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 getProductOfMessages(edgeIA.getParent(), prod, edgeIA.getChild(), edgeBI.getParent());
                 msgsAdj[edgeBI.getId()].message.add(prod);
                 // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
+                logTraceMsgUpdate("backwardVarToFactor", msgsAdj[edgeBI.getId()].message, edgeBI);
             }
         }
     }
@@ -598,6 +616,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             VarTensor prod = new VarTensor(msgsAdj[i].newMessage);
             getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild());
             potentialsAdj[facId].add(prod);
+            logTraceMsgUpdate("backwardFactorToVar", potentialsAdj[facId], null);
         }
         
         // Increment the adjoint for each variable to factor message.
@@ -609,6 +628,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
                 msgsAdj[edgeJA.getId()].message.add(prod.getMarginal(varJ, false)); // TODO: semiring
                 // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
+                logTraceMsgUpdate("backwardFactorToVar", msgsAdj[edgeJA.getId()].message, edgeJA);
             }
         }
     }

@@ -50,7 +50,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(t0, 1);
                 
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 10;
+        prm.maxIterations = 1;
         prm.logDomain = logDomain;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.forward();        
