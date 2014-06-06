@@ -40,10 +40,10 @@ public class ErmaBpBackwardTest {
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
         fg.addFactor(emit0);
-                
+        
         VarConfig goldConfig = new VarConfig();
         goldConfig.put(t0, 1);
-                
+        
         ErmaErFn fn = new ErmaErFn(fg, goldConfig); 
         Prng.seed(12345);
         fn.getGradient(ModuleTestUtils.getAbsZeroOneGaussian(fn.getNumDimensions()));

@@ -16,17 +16,19 @@ import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.Messages;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
@@ -192,43 +194,14 @@ public class ErmaProjDepTreeFactorTest {
         inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
         inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
     }
-
+        
     private void inferAndCheckMarginalsAndPartitionFunction(boolean logDomain, boolean normalizeMessages, boolean useBetheFreeEnergy) {
-        double[] root = new double[] {1, 2, 3}; 
-        double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
+        FgAndLinks fgl = getFgl(logDomain);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
         
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-                
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    f.convertRealToLog();
-                    fg.addFactor(f);
-                }
-            }
-        }
-        
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
-                
         ErmaBpPrm prm = new ErmaBpPrm();        
         prm.logDomain = logDomain;
         if (useBetheFreeEnergy) {
@@ -296,39 +269,13 @@ public class ErmaProjDepTreeFactorTest {
     
     public void testPartitionWithAdditionalVariableHelper(boolean logDomain, boolean normalizeMessages) {
         double[] root = new double[] {1, 2}; 
-        double[][] child = new double[][]{ {0, 3}, {4, 0} };
+        double[][] child = new double[][]{ {0, 3}, {4, 0} };   
         
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-                
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    f.convertRealToLog();
-                    fg.addFactor(f);
-                }
-            }
-        }
-        
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
+        FgAndLinks fgl = getFgl(root, child);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
                 
         // Add an extra variable over which we will marginalize.        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
@@ -389,39 +336,13 @@ public class ErmaProjDepTreeFactorTest {
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
 
+        FgAndLinks fgl = getFgl(root, child);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
+        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Lists.getList("arg0", "_"));
-
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-              
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    f.convertRealToLog();
-                    fg.addFactor(f);
-                }
-            }
-        }
-
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
                 
         // Add an extra variable over which we will marginalize.        
         ExplicitFactor roleLinkFac = new ExplicitFactor(new VarSet(childVars[1][0], roleVar));
@@ -474,7 +395,7 @@ public class ErmaProjDepTreeFactorTest {
         for (Var v : fg.getVars()) {
             double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-            assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
+            assertEquals(Z, partition, 1e-3);
         }
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
@@ -487,7 +408,6 @@ public class ErmaProjDepTreeFactorTest {
         ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
     }
     
-
     @Test
     public void testMarginalsAndPartitionWithAllOnes() {
         boolean logDomain = false;        
@@ -495,37 +415,11 @@ public class ErmaProjDepTreeFactorTest {
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
 
-        // Create an edge factored dependency tree factor graph.
-        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
-        FactorGraph fg = new FactorGraph();
-        int n = root.length;
-        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        treeFac.updateFromModel(null);
-        LinkVar[] rootVars = treeFac.getRootVars();
-        LinkVar[][] childVars = treeFac.getChildVars();
-              
-        // Add unary factors to each edge.
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i != j) {
-                    ExplicitFactor f;
-                    if (i == -1) {
-                        f = new ExplicitFactor(new VarSet(rootVars[j]));
-                        f.setValue(LinkVar.TRUE, root[j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    } else {
-                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
-                        f.setValue(LinkVar.TRUE, child[i][j]);
-                        f.setValue(LinkVar.FALSE, 1.0);
-                    }
-                    f.convertRealToLog();
-                    fg.addFactor(f);
-                }
-            }
-        }
-
-        // Add this at the end, just to exercise the BFS schedule a bit more.
-        fg.addFactor(treeFac);
+        FgAndLinks fgl = getFgl(root, child);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        int n = fgl.n;
                 
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
@@ -554,7 +448,7 @@ public class ErmaProjDepTreeFactorTest {
         
         double Z = 2;
         // Check partition function.
-        assertEquals(Z, bp.getPartition(), 1e-3);
+        assertEquals(Z,  bp.getPartition(), 1e-3);
         if (prm.normalizeMessages == false) {
             for (Var v : fg.getVars()) {
                 double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
@@ -574,13 +468,16 @@ public class ErmaProjDepTreeFactorTest {
     }
 
     // This test fails because of a known floating point precision limitation of the ProjDepTreeFactor.
+    // Currently, the values in get2WordSentFactorGraph() are scaled to avoid the floating point error.
     @Test
-    public void testCompareMessagesWithExplicitTreeFactor() {
-        compareMessagesWithExplicitTreeFactor(true, true, false);
-        compareMessagesWithExplicitTreeFactor(true, true, true);
+    public void testBpCompareMessagesWithExplicitTreeFactor() {
+        compareBpMessagesWithExplicitTreeFactor(false, true, false);
+        compareBpMessagesWithExplicitTreeFactor(false, true, true);
+        compareBpMessagesWithExplicitTreeFactor(true, true, false);
+        compareBpMessagesWithExplicitTreeFactor(true, true, true);
     }
 
-    public void compareMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+    public void compareBpMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.logDomain = logDomain;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
@@ -598,9 +495,63 @@ public class ErmaProjDepTreeFactorTest {
         //printMessages(fgDp, bpDp);
         
         System.out.println("Messages");
-        Messages[] msgsExpl = bpExpl.getMessages();
-        Messages[] msgsDp = bpDp.getMessages();
-        for (int i=0; i<fgExpl.getNumEdges(); i++) {
+        assertEqualMessages(fgExpl, bpExpl.getMessages(), bpDp.getMessages());
+        System.out.println("Partition: " + bpExpl.getPartition());
+        System.out.println("Partition: " + bpDp.getPartition());
+        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
+    }
+    
+    @Test
+    public void testErmaCompareMessagesWithExplicitTreeFactor() {
+        compareErmaMessagesWithExplicitTreeFactor(false, true, false);
+        compareErmaMessagesWithExplicitTreeFactor(false, true, true);
+    }
+
+    public void compareErmaMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.logDomain = logDomain;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        prm.maxIterations = 3;
+        prm.normalizeMessages = normalizeMessages;
+        
+        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
+        ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
+        bpExpl.forward();
+        //printMessages(fgExpl, bpExpl);
+        
+        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
+        ErmaBp bpDp = new ErmaBp(fgDp, prm);
+        bpDp.forward();
+        //printMessages(fgDp, bpDp);
+        
+        System.out.println("Messages");
+        assertEqualMessages(fgExpl, bpExpl.getMessages(), bpDp.getMessages());
+        System.out.println("Beliefs");
+        assertEqualVarTensors(bpExpl.getOutput().varBeliefs, bpDp.getOutput().varBeliefs);
+        assertEqualVarTensors(bpExpl.getOutput().facBeliefs, bpDp.getOutput().facBeliefs);
+        System.out.println("Partition: " + bpExpl.getPartition());
+        System.out.println("Partition: " + bpDp.getPartition());
+        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
+        
+        for (int v=0; v<fgDp.getNumVars(); v++) {
+            LinkVar link = (LinkVar) fgDp.getVar(v);
+            double adj = 0.0;
+            if ((link.getParent() == -1 && link.getChild() == 1) || 
+                    (link.getParent() == 1 && link.getChild() == 0)) {
+                adj = 1.0;
+            }
+            bpExpl.getOutputAdj().varBeliefs[v].setValue(LinkVar.TRUE, adj);
+            bpDp.getOutputAdj().varBeliefs[v].setValue(LinkVar.TRUE, adj);
+        }
+        bpExpl.backward();
+        bpDp.backward();
+        System.out.println("Adjoints");
+        assertEqualMessages(fgExpl, bpExpl.getMessagesAdj(), bpDp.getMessagesAdj());
+        assertEqualVarTensors(bpExpl.getPotentialsAdj(), bpDp.getPotentialsAdj());
+    }
+
+    private void assertEqualMessages(FactorGraph fgExpl, Messages[] msgsExpl, Messages[] msgsDp) {
+        for (int i=0; i<msgsExpl.length; i++) {
             VarTensor msgExpl = msgsExpl[i].message;
             VarTensor msgDp = msgsDp[i].message;
             assertEquals(msgExpl.size(), msgDp.size());
@@ -610,26 +561,52 @@ public class ErmaProjDepTreeFactorTest {
                     //continue;
                 }
 
-                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-8)) {
+                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
                     System.out.println("NOT EQUAL:");
                     System.out.println(fgExpl.getEdge(i));
                     System.out.println(msgExpl);
                     System.out.println(msgDp);
                 } 
-                // TODO: This assertion exposes a very subtle problem with the dynamic programming
-                // calculation of the messages from a PTREE factor. Because it computes the belief about being false 
                 assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
             }
-            //assertTrue(msgExpl.equals(msgDp, 1e-5));
+            // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
         }
-        System.out.println("Partition: " + bpExpl.getPartition());
-        System.out.println("Partition: " + bpDp.getPartition());
-        assertEquals(bpExpl.getLogPartition(), bpDp.getLogPartition(), 1e-10);
+    }
+
+    private void assertEqualVarTensors(VarTensor[] msgsExpl, VarTensor[] msgsDp) {
+        for (int i=0; i<msgsExpl.length; i++) {
+            if (msgsExpl[i] == null || msgsDp[i] == null) {
+                // Don't compare the potentials for the projective dependency tree factor.
+                continue;
+            }
+            VarTensor msgExpl = msgsExpl[i];
+            VarTensor msgDp = msgsDp[i];
+            assertEquals(msgExpl.size(), msgDp.size());
+            for (int c=0; c<msgExpl.size(); c++) {
+                if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
+                        || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
+                    //continue;
+                }
+
+                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
+                    System.out.println("NOT EQUAL:");
+                    System.out.println(msgExpl);
+                    System.out.println(msgDp);
+                } 
+                assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
+            }
+            // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
+        }
     }
 
     private void printMessages(FactorGraph fg, ErmaBp bp) {
         System.out.println("Messages");
         Messages[] msgs = bp.getMessages();
+        printMessages(fg, msgs);
+        System.out.println("Partition: " + bp.getPartition());
+    }
+
+    private void printMessages(FactorGraph fg, Messages[] msgs) {
         for (int i=0; i<fg.getNumEdges(); i++) {            
             FgEdge edge = fg.getEdge(i);
             //if (edge.isVarToFactor() && edge.getFactor().getVars().size() == 4) {
@@ -638,7 +615,6 @@ public class ErmaProjDepTreeFactorTest {
                 System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
             //}
         }
-        System.out.println("Partition: " + bp.getPartition());
     }
 
     // This test used to fail when the number of iterations was too low. But
@@ -686,7 +662,7 @@ public class ErmaProjDepTreeFactorTest {
         printBeliefs(fg, bf);
 
         assertEquals(bf.getLogPartition(), bp.getLogPartition(), 1e-1);
-        //ErmaBpTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        //ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
     
     @Test
@@ -728,18 +704,79 @@ public class ErmaProjDepTreeFactorTest {
         }
         
     }
+    
+    @Test
+    public void testBackwardPass2WordGlobalFactor() {
+        boolean logDomain = false;        
+        double[] root = new double[]{ 1.0, 1.0 };
+        double[][] child = new double[][]{ { 0.0, 1.0 }, { 1.0, 0.0 } };
+        testBackwardPassGlobalFactor(logDomain, root, child);
+    }
+    
+    @Test
+    public void testBackwardPass2WordGlobalFactorWithPruning() {
+        boolean logDomain = false;        
+        double[] root = new double[]{ 1.0, 1.0 };
+        // We prune the edge from 1 --> 0.
+        double[][] child = new double[][]{ { 0.0, 1.0 }, { 0.0, 0.0 } };
+        testBackwardPassGlobalFactor(logDomain, root, child);
+    }
 
-    private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
+    private void testBackwardPassGlobalFactor(boolean logDomain, double[] root, double[][] child) {
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child);
+        FactorGraph fg = fgl.fg;
+        LinkVar[] rootVars = fgl.rootVars;
+        LinkVar[][] childVars = fgl.childVars;
+        
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.logDomain = logDomain;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.maxIterations = 2;
+        prm.normalizeMessages = true;
+        ErmaBp bp = new ErmaBp(fg, prm);
+
+        bp.forward();
+        bp.getOutputAdj().fill(1.0);
+        bp.backward();
+
+        System.out.println("Messages:");
+        printMessages(fg, bp.getMessages());
+        System.out.println("\nMessage Adjoints:");
+        printMessages(fg, bp.getMessagesAdj());
+        System.out.println("\nPotential Adjoints:");
+        for (VarTensor adj : bp.getPotentialsAdj()) {
+            if (adj != null) {
+                System.out.println(adj);
+                assertTrue(!adj.containsNaN());
+            }
+        }
+    }
+
+    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
         return get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, false);
     }
     
-    private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+        return get2WordSentFgAndLinks(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight).fg;
+    }
+    
+    public static FgAndLinks get2WordSentFgAndLinks(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
-
+        // TODO: These scaling factors are added to avoid the floating point error in some of the
+        // tests above. This should really have multiple tests with and without the floating point
+        // error.
         DoubleArrays.scale(root, .1);
         DoubleArrays.scale(child, .1);
+        
+        // For random values:
+        //        Prng.seed(14423444);
+        //        root = DoubleArrays.getLog(ModuleTestUtils.getAbsZeroOneGaussian(2).toNativeArray());
+        //        child[0] = DoubleArrays.getLog(ModuleTestUtils.getAbsZeroOneGaussian(2).toNativeArray());
+        //        child[1] = DoubleArrays.getLog(ModuleTestUtils.getAbsZeroOneGaussian(2).toNativeArray());
+        
         if (negInfEdgeWeight) {
             child[0][1] = Double.NEGATIVE_INFINITY;
         }
@@ -775,7 +812,7 @@ public class ErmaProjDepTreeFactorTest {
         
         if (makeLoopy) {
             ExplicitFactor f = new ExplicitFactor(new VarSet(rootVars[0], rootVars[1]));
-            f.setValue(3, -97.786518);
+            f.setValue(3, -DoubleArrays.sum(root));
             fg.addFactor(f);
             //f.scale(0.01);
         }
@@ -799,7 +836,7 @@ public class ErmaProjDepTreeFactorTest {
         } else {
             fg.addFactor(treeFac);
         }
-        return fg;
+        return new FgAndLinks(fg, rootVars, childVars, 2);
     }
 
     private void printBeliefs(FactorGraph fg, FgInferencer bp) {
@@ -824,6 +861,49 @@ public class ErmaProjDepTreeFactorTest {
             marg = bp.getMarginals(childVars[i][j]);
         }        
         return marg.getValue(LinkVar.TRUE);
+    }
+
+    public static FgAndLinks getFgl(boolean logDomain) {
+        double[] root = new double[] {1, 2, 3}; 
+        double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };        
+        return getFgl(root, child);
+    }
+
+    public static FgAndLinks getFgl(double[] root, double[][] child) {
+        // Create an edge factored dependency tree factor graph.
+        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
+        FactorGraph fg = new FactorGraph();
+        int n = root.length;
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null);
+
+        LinkVar[] rootVars = treeFac.getRootVars();
+        LinkVar[][] childVars = treeFac.getChildVars();
+        
+        // Add unary factors to each edge.
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i != j) {
+                    ExplicitFactor f;
+                    if (i == -1) {
+                        f = new ExplicitFactor(new VarSet(rootVars[j]));
+                        f.setValue(LinkVar.TRUE, root[j]);
+                        f.setValue(LinkVar.FALSE, 1.0);
+                    } else {
+                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
+                        f.setValue(LinkVar.TRUE, child[i][j]);
+                        f.setValue(LinkVar.FALSE, 1.0);
+                    }
+                    f.convertRealToLog();
+                    fg.addFactor(f);
+                }
+            }
+        }
+        
+        // Add this at the end, just to exercise the BFS schedule a bit more.
+        fg.addFactor(treeFac);
+        
+        return new FgAndLinks(fg, rootVars, childVars, n);
     }
     
 }
