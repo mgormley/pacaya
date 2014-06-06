@@ -120,7 +120,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     public void run() {
         Timer timer = new Timer();
         timer.start();
-        
+                
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
@@ -157,7 +157,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         //
         // At iteration -1, we send all the constant messages. Then we never send them again.
         List<FgEdge> order = null;
-        for (int iter=0; iter < prm.maxIterations; iter++) {
+        for (int iter=-1; iter < prm.maxIterations; iter++) {
             if (timer.totSec() > prm.timeoutSeconds) {
                 break;
             }
@@ -504,7 +504,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
             return partition;
         }
         
-        return s.fromReal(- getBetheFreeEnergy());
+        return s.fromLogProb(- getBetheFreeEnergy());
     }
     
     /**
