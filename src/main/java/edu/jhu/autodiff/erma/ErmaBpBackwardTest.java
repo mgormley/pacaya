@@ -9,6 +9,7 @@ import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -25,6 +26,7 @@ import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
@@ -33,6 +35,49 @@ import edu.jhu.util.Prng;
 public class ErmaBpBackwardTest {
 
     private static boolean logDomain = false;
+    
+    @Test
+    public void testErmaGradientOneVarAssertions() {
+        FactorGraph fg = new FactorGraph();
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
+        fg.addFactor(emit0);
+
+        emit0.setValue(0, FastMath.log(1.1));
+        emit0.setValue(1, FastMath.log(1.9));      
+        
+        VarConfig goldConfig = new VarConfig();
+        goldConfig.put(t0, 1);
+                
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        ErmaBp bp = new ErmaBp(fg, prm);
+        bp.forward();        
+        bp.getOutputAdj().varBeliefs[0].setValue(0, 1.0);
+        bp.getOutputAdj().varBeliefs[0].setValue(1, 0.0);
+        bp.backward();        
+        {
+            assertEquals(2, bp.getMessagesAdj().length);
+            Messages adj0 = bp.getMessagesAdj()[0];
+            assertEquals(0, adj0.message.getValue(0), 1e-3);
+            assertEquals(0, adj0.message.getValue(1), 1e-3);
+            assertEquals(1.181, adj0.newMessage.getValue(0), 1e-3);
+            assertEquals(-0.175, adj0.newMessage.getValue(1), 1e-3);
+            
+            Messages adj1 = bp.getMessagesAdj()[1];
+            assertEquals(0, adj1.message.getValue(0), 1e-3);
+            assertEquals(0, adj1.message.getValue(1), 1e-3);
+            assertEquals(0, adj1.newMessage.getValue(0), 1e-3);
+            assertEquals(0, adj1.newMessage.getValue(1), 1e-3);
+        }
+        {
+            assertEquals(1, bp.getPotentialsAdj().length);
+            VarTensor adj = bp.getPotentialsAdj()[0];
+            assertEquals(1.181, adj.getValue(0), 1e-3);
+            assertEquals(-0.175, adj.getValue(1), 1e-3);
+        }
+    }
     
     @Test
     public void testErmaGradientOneVar() {
