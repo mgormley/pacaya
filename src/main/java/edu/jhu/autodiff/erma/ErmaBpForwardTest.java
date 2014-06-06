@@ -187,7 +187,7 @@ public class ErmaBpForwardTest {
     }
 
     private void testOnSimpleHelper(boolean logDomain) throws IOException {
-        FactorGraph fg = BruteForceInferencerTest.readSimpleFg(logDomain);
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
@@ -207,7 +207,7 @@ public class ErmaBpForwardTest {
     }
 
     private void testOnChainHelper(boolean logDomain) {
-        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph(logDomain);
+        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
@@ -222,7 +222,7 @@ public class ErmaBpForwardTest {
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
 
-        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp, logDomain);
+        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
                     
         assertEqualMarginals(fg, bf, bp);
     }
@@ -238,7 +238,7 @@ public class ErmaBpForwardTest {
     }
 
     private void testConvergenceHelper(boolean logDomain, double convergenceThreshold, int expectedConvergenceIterations) {
-        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph(logDomain);
+        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
 
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();

@@ -91,16 +91,16 @@ public class ErmaProjDepTreeFactorTest {
         assertEquals(vcid1, vcid2);
         assertEquals(vc.getVars(), vc2.getVars());
         assertEquals(vc, vc2);
-        // Not log domain.
+
         treeFac.updateFromModel(null);
-        assertEquals(1.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
         // Add two parents for token 3.
         vc.put(treeFac.getLinkVar(1, 3), LinkVar.TRUE);
-        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(Double.NEGATIVE_INFINITY, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
         // No parents for token 3.
         vc.put(treeFac.getLinkVar(1, 3), LinkVar.FALSE);
         vc.put(treeFac.getLinkVar(1, 2), LinkVar.FALSE);
-        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(Double.NEGATIVE_INFINITY, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
     }
     
     @Test

@@ -21,27 +21,27 @@ public class BruteForceInferencerTest {
     public void testOnChainProb() {
         // Test in the probability domain.
         boolean logDomain = false;
-        FactorGraph fg = getLinearChainGraph(logDomain);
+        FactorGraph fg = getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        testInfOnLinearChainGraph(fg, bf, logDomain);
+        testInfOnLinearChainGraph(fg, bf);
     }
     
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
         boolean logDomain = true;
-        FactorGraph fg = getLinearChainGraph(logDomain);
+        FactorGraph fg = getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        testInfOnLinearChainGraph(fg, bf, logDomain);
+        testInfOnLinearChainGraph(fg, bf);
     }
 
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
         boolean logDomain = false;
-        FactorGraph fg = readSimpleFg(logDomain);
+        FactorGraph fg = readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        testInfOnSimpleGraph(fg, bf, logDomain);
+        testInfOnSimpleGraph(fg, bf);
     }
 
     // TODO: This test passes when run by itself, but fails when run together with other tests!
@@ -49,13 +49,13 @@ public class BruteForceInferencerTest {
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
         boolean logDomain = true;
-        FactorGraph fg = readSimpleFg(logDomain);
+        FactorGraph fg = readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        testInfOnSimpleGraph(fg, bf, logDomain);
+        testInfOnSimpleGraph(fg, bf);
     }
 
     public static void testInfOnLinearChainGraph(FactorGraph fg,
-            FgInferencer bp, boolean logDomain) {        
+            FgInferencer bp) {        
         bp.run();
 
         VarTensor marg;
@@ -70,17 +70,17 @@ public class BruteForceInferencerTest {
         
         marg = bp.getMarginals(fg.getFactor(3));
         goldMarg = new double[] { 0.013146806000337095, 0.1774818810045508, 0.06607112759143771, 0.7433001854036744 };
-        JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), logDomain ? 1e-2 : 1e-4);
+        JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), 1e-4);
         marg = bp.getLogMarginals(fg.getFactor(3));
         goldMarg = DoubleArrays.getLog(goldMarg);
-        JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), logDomain ? 1e-2 : 1e-4);
+        JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), 1e-4);
         
         double goldPartition = 0.5932;
         assertEquals(goldPartition, bp.getPartition(), 1e-2);
         assertEquals(FastMath.log(goldPartition), bp.getLogPartition(), 1e-2);
     }
     
-    public static void testInfOnSimpleGraph(FactorGraph fg, FgInferencer bp, boolean logDomain) {
+    public static void testInfOnSimpleGraph(FactorGraph fg, FgInferencer bp) {
         bp.run();
 
         // System.out.println(bp.getJointFactor());
@@ -128,14 +128,14 @@ public class BruteForceInferencerTest {
         assertEquals(FastMath.log(goldPartition), bp.getLogPartition(), 1e-2);
     }
     
-    public static FactorGraph getLinearChainGraph(boolean logDomain) {
+    public static FactorGraph getLinearChainGraph() {
         FactorGraph fg = FactorGraphTest.getLinearChainGraph();
         return fg;
     }
 
     
-    public static FactorGraph readSimpleFg(boolean logDomain) throws IOException {
-        FactorGraph fg = BayesNetReaderTest.readSimpleFg(logDomain);
+    public static FactorGraph readSimpleFg() throws IOException {
+        FactorGraph fg = BayesNetReaderTest.readSimpleFg();
         return fg;
     }
 }

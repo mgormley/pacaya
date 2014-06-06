@@ -51,12 +51,15 @@ public class BeliefPropagationTest {
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
-
+        
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
+
+        assertEquals(3.0, bf.getPartition(), 1e-13);
+        assertEquals(3.0, bp.getPartition(), 1e-13);
 
         assertEqualMarginals(fg, bf, bp);
     }
@@ -183,7 +186,7 @@ public class BeliefPropagationTest {
     }
 
     private void testOnSimpleHelper(boolean logDomain) throws IOException {
-        FactorGraph fg = BruteForceInferencerTest.readSimpleFg(logDomain);
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
@@ -203,7 +206,7 @@ public class BeliefPropagationTest {
     }
 
     private void testOnChainHelper(boolean logDomain) {
-        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph(logDomain);
+        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
@@ -212,13 +215,17 @@ public class BeliefPropagationTest {
         prm.logDomain = logDomain;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        
+        //prm.updateOrder = BpUpdateOrder.PARALLEL;
+        //prm.maxIterations = 10;
+        
         // Don't normalize the messages, so that the partition function is the
         // same as in the brute force approach.
-        prm.normalizeMessages = false;
+        prm.normalizeMessages = true;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
-        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp, logDomain);
+        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
                     
         assertEqualMarginals(fg, bf, bp);
     }
@@ -226,15 +233,15 @@ public class BeliefPropagationTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(true, 0, 6);
         testConvergenceHelper(false, 0, 6);
+        testConvergenceHelper(true, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
-        testConvergenceHelper(true, 1e-3, 5);
         testConvergenceHelper(false, 1e-3, 5);
+        testConvergenceHelper(true, 1e-3, 5);
     }
 
     private void testConvergenceHelper(boolean logDomain, double convergenceThreshold, int expectedConvergenceIterations) {
-        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph(logDomain);
+        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
 
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
@@ -273,14 +280,14 @@ public class BeliefPropagationTest {
 
     @Test
     public void testCanHandleProbHardFactors() {
-        testCanHandleHardFactorsHelper(true, false);
         testCanHandleHardFactorsHelper(false, false);
+        testCanHandleHardFactorsHelper(true, false);
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
-        testCanHandleHardFactorsHelper(true, true);
         testCanHandleHardFactorsHelper(false, true);
+        testCanHandleHardFactorsHelper(true, true);
     }
     
     public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {     

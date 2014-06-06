@@ -18,7 +18,7 @@ public class FactorGraphTest {
         for (int i=0; i<fg.getNumNodes(); i++) {
             assertEquals(true, fg.isUndirectedTree(fg.getNode(i)));
         }
-        fg = BayesNetReaderTest.readSimpleFg(false);
+        fg = BayesNetReaderTest.readSimpleFg();
         for (int i=0; i<fg.getNumNodes(); i++) {
             assertEquals(false, fg.isUndirectedTree(fg.getNode(i)));
         }

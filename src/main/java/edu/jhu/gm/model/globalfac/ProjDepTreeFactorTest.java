@@ -96,16 +96,16 @@ public class ProjDepTreeFactorTest {
         assertEquals(vcid1, vcid2);
         assertEquals(vc.getVars(), vc2.getVars());
         assertEquals(vc, vc2);
-        // Not log domain.
+
         treeFac.updateFromModel(null);
-        assertEquals(1.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
         // Add two parents for token 3.
         vc.put(treeFac.getLinkVar(1, 3), LinkVar.TRUE);
-        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(Double.NEGATIVE_INFINITY, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
         // No parents for token 3.
         vc.put(treeFac.getLinkVar(1, 3), LinkVar.FALSE);
         vc.put(treeFac.getLinkVar(1, 2), LinkVar.FALSE);
-        assertEquals(0.0, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        assertEquals(Double.NEGATIVE_INFINITY, treeFac.getLogUnormalizedScore(vc.getConfigIndex()), 1e-13);
     }
     
     @Test
@@ -367,9 +367,7 @@ public class ProjDepTreeFactorTest {
         roleLinkFac.setValue(2, 1);
         roleLinkFac.setValue(3, 1);
         System.out.println(roleLinkFac);
-        if (logDomain) {
-            roleLinkFac.convertRealToLog();
-        }
+        roleLinkFac.convertRealToLog();
         fg.addFactor(roleLinkFac);
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar));
         roleFac.fill(1.0);
@@ -413,7 +411,7 @@ public class ProjDepTreeFactorTest {
         for (Var v : fg.getVars()) {
             double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-            assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
+            assertEquals(Z, partition, 1e-3);
         }
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));

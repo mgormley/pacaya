@@ -18,13 +18,13 @@ public class BayesNetReaderTest {
     
     @Test
     public void testReadSimple() throws IOException {
-        FactorGraph fg = readSimpleFg(false);
+        FactorGraph fg = readSimpleFg();
         
         assertEquals(2, fg.getNumFactors());
         assertEquals(3, fg.getNumVars());
     }
 
-    public static FactorGraph readSimpleFg(boolean logDomain) throws IOException {
+    public static FactorGraph readSimpleFg() throws IOException {
         InputStream cpdIs = BayesNetReaderTest.class.getResourceAsStream(cpdSimpleResource);
         InputStream networkIs = BayesNetReaderTest.class.getResourceAsStream(networkSimpleResource);
         
