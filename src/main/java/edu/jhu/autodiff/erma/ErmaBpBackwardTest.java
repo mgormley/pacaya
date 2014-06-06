@@ -30,10 +30,13 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 
 public class ErmaBpBackwardTest {
 
+    private static Algebra s = Algebras.REAL_ALGEBRA;
     private static boolean logDomain = false;
     
     @Test
@@ -43,14 +46,9 @@ public class ErmaBpBackwardTest {
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
         fg.addFactor(emit0);
 
-        if (logDomain) {
-            emit0.setValue(0, FastMath.log(1.1));
-            emit0.setValue(1, FastMath.log(1.9));
-        } else {
-            emit0.setValue(0, 1.1);
-            emit0.setValue(1, 1.9);
-        }
-        
+        emit0.setValue(0, FastMath.log(1.1));
+        emit0.setValue(1, FastMath.log(1.9));
+            
         VarConfig goldConfig = new VarConfig();
         goldConfig.put(t0, 1);
                 
@@ -305,7 +303,7 @@ public class ErmaBpBackwardTest {
             this.fg = fg;
             this.goldConfig = goldConfig;
             this.prm = prm;
-            cacheNumParams();
+            numParams = getNumParams(fg);
         }
 
         private static ErmaBpPrm getDefaultErmaBpPrm() {
@@ -317,21 +315,18 @@ public class ErmaBpBackwardTest {
             prm.normalizeMessages = true;
             return prm;
         }
-
-        private void cacheNumParams() {
-            numParams = 0;
-            for (Factor f : fg.getFactors()) {
-                if (f instanceof GlobalFactor || f.getVars().size() == 4) {
-                    System.out.println("Skipping factor: " + f);
-                    continue;
-                }
-                numParams += f.getVars().calcNumConfigs();
-            }
-        }
         
         @Override
         public double getValue(IntDoubleVector theta) {
             return runForward(theta);
+        }
+
+        private double runForward(IntDoubleVector theta) {
+            updateFactorGraphFromModel(theta, fg);
+            bp = new ErmaBp(fg, prm);
+            bp.forward();            
+            er = new ExpectedRecall(bp, goldConfig);            
+            return er.forward().getValue(0);
         }
         
         @Override
@@ -343,28 +338,11 @@ public class ErmaBpBackwardTest {
         @Override
         public IntDoubleVector getGradient(IntDoubleVector theta) {
             runForward(theta);
-            er.getOutputAdj().fill(1);
+            er.getOutputAdj().fill(s.one());
             er.backward();
             bp.backward();
             
-            VarTensor[] potentialsAdj = bp.getPotentialsAdj();
-            IntDoubleVector grad = new IntDoubleDenseVector(numParams);
-            int i=0;
-            for (int a=0; a<potentialsAdj.length; a++) {
-                Factor f = fg.getFactor(a);
-                if (f instanceof GlobalFactor || f.getVars().size() == 4) {
-                    System.out.println("Skipping factor: " + f);
-                    continue;
-                }
-                // Skip GlobalFactors.
-                if (potentialsAdj[a] != null) {
-                    for (int c=0; c<potentialsAdj[a].size(); c++) {
-                        grad.set(i++, potentialsAdj[a].getValue(c));
-                    }
-                }
-            }
-            assert i == numParams;
-            return grad;
+            return getGradientFromPotentialsAdj(bp, fg, numParams);
         }
 
         @Override
@@ -372,27 +350,62 @@ public class ErmaBpBackwardTest {
             return new ValueGradient(getValue(point), getGradient(point));
         }
 
-        private double runForward(IntDoubleVector theta) {
-            updateFactorGraphFromModel(theta);
-            bp = new ErmaBp(fg, prm);
-            bp.forward();            
-            er = new ExpectedRecall(bp, goldConfig);            
-            return er.forward().getValue(0);
+        private static int getNumParams(FactorGraph fg) {
+            int numParams = 0;
+            for (Factor f : fg.getFactors()) {
+                if (isGlobalFactor(f)) {
+                    System.out.println("Skipping factor: " + f);
+                    continue;
+                }
+                numParams += f.getVars().calcNumConfigs();
+            }
+            return numParams;
         }
-
-        private void updateFactorGraphFromModel(IntDoubleVector theta) {
+        
+        /** Assumes that theta is in the real semiring. */
+        private static void updateFactorGraphFromModel(IntDoubleVector theta, FactorGraph fg) {
             // Update factors from the model in params array.
             int i=0;
             for (Factor f : fg.getFactors()) {
-                if (f instanceof GlobalFactor || f.getVars().size() == 4) {
+                if (isGlobalFactor(f)) {
                     System.out.println("Skipping factor: " + f);
                     continue;
                 }
                 ExplicitFactor factor = (ExplicitFactor) f;
                 for (int c=0; c<factor.size(); c++) {
-                    factor.setValue(c, theta.get(i++));
+                    double logValue = FastMath.log(theta.get(i++));
+                    // IMPORTANT NOTE: we set the factor to be the log of the score.
+                    factor.setValue(c, logValue);
                 }
             }
+        }
+
+        /** Gets the gradient in the real semiring. */
+        private static IntDoubleVector getGradientFromPotentialsAdj(ErmaBp bp, FactorGraph fg, int numParams) {
+            VarTensor[] potentialsAdj = bp.getPotentialsAdj();
+            IntDoubleVector grad = new IntDoubleDenseVector(numParams);
+            int i=0;
+            for (int a=0; a<potentialsAdj.length; a++) {
+                Factor f = fg.getFactor(a);
+                if (isGlobalFactor(f)) {
+                    System.out.println("Skipping factor: " + f);
+                    continue;
+                }
+                if (potentialsAdj[a] != null) {
+                    for (int c=0; c<potentialsAdj[a].size(); c++) {
+                        grad.set(i++, s.toReal(potentialsAdj[a].getValue(c)));
+                    }
+                }
+            }
+            assert i == numParams;
+            return grad;
+        }
+
+        private static boolean isGlobalFactor(Factor f) {
+            // TODO: || f.getVars().size() == 4; This was used for the explicit tree factor. Is
+            // there some way to incorporate something that marks a factor as global without making
+            // BP treat it as one.
+            return f instanceof GlobalFactor; 
         }
         
     }

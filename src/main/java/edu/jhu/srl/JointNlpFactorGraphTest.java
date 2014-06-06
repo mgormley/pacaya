@@ -12,6 +12,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import edu.jhu.data.DepEdgeMask;
+import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -20,15 +21,16 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.model.ClampFactor;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
+import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.prim.Primitives;
@@ -295,13 +297,7 @@ public class JointNlpFactorGraphTest {
         // This pruned version is a tree.
         assertTrue(sfg.isUndirectedTree(sfg.getFactorNode(0)));
         
-        // Init the ClampFactors.
-        for (Factor f : sfg.getFactors()) {
-            if (f instanceof ClampFactor) {
-                f.updateFromModel(null);
-            }
-            f.updateFromModel(new FgModel(1000));
-        }
+        sfg.updateFromModel(new FgModel(1000));
         
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         BeliefPropagation bp = new BeliefPropagation(sfg, bpPrm);
@@ -315,12 +311,12 @@ public class JointNlpFactorGraphTest {
                 LinkVar link = (LinkVar) v;
                 if (link.getParent() + 1 == link.getChild()) {
                     // Is left-branching edge.
-                    assertTrue(!Primitives.equals(0.0, marg.getValue(LinkVar.FALSE), 1e-13)); 
-                    assertTrue(!Primitives.equals(Double.NEGATIVE_INFINITY, marg.getValue(LinkVar.TRUE), 1e-13)); 
+                    assertTrue(!Primitives.equals(1.0, marg.getValue(LinkVar.FALSE), 1e-13)); 
+                    assertTrue(!Primitives.equals(0.0, marg.getValue(LinkVar.TRUE), 1e-13)); 
                 } else {
                     // Not left-branching edge.
-                    assertEquals(0.0, marg.getValue(LinkVar.FALSE), 1e-13); 
-                    assertEquals(Double.NEGATIVE_INFINITY, marg.getValue(LinkVar.TRUE), 1e-13); 
+                    assertEquals(1.0, marg.getValue(LinkVar.FALSE), 1e-13); 
+                    assertEquals(0.0, marg.getValue(LinkVar.TRUE), 1e-13); 
                 }
             }
             System.out.println(marg);
@@ -349,7 +345,9 @@ public class JointNlpFactorGraphTest {
         for (int c=0; c<words.size(); c++) {
             depEdgeMask.setIsKept(c-1, c, true);
         }
-        return new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc, fe);
+        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc, fe);
+        fe.init(new UnlabeledFgExample(fg, new VarConfig()));
+        return fg;
     }
     
 }
