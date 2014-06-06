@@ -191,7 +191,7 @@ public class LogPosNegAlgebra implements Semiring, Algebra {
     }
     
     // Two Algebras / Semirings are equal if they are of the same class.
-    public boolean equal(Object other) {
+    public boolean equals(Object other) {
         if (this == other) { return true; }
         if (other == null) { return false; }
         if (this.getClass() == other.getClass()) { return true; }
