@@ -196,7 +196,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         // Keep track of the minimum and maximum odds ratios, in order to detect
         // possible numerical precision issues.        
         double minOddsRatio = s.posInf();
-        double maxOddsRatio = s.negInf();
+        double maxOddsRatio = s.minValue();
 
         for (int p = -1; p < n; p++) {
             for (int c = 0; c < n; c++) {
