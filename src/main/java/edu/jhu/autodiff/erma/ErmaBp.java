@@ -329,25 +329,19 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // variable configurations.
         VarTensor msg = msgs[edge.getId()].newMessage;
         
-        if (factor.getVars().size() == 1 && factor instanceof VarTensor) {
-            // Special case for unary factors. We copy the factor so that we can normalize it.
-            // TODO: Only send from unary factors once.
-            msg = new VarTensor((VarTensor) factor);
-        } else {
-            // Message from factor f* to variable v*.
-            //
-            // Set the initial values of the product to those of the sending factor.
-            VarTensor prod = BruteForceInferencer.safeNewVarTensor(s, factor);
-            // Compute the product of all messages received by f* (each
-            // of which will have a different domain) with the factor f* itself.
-            // Exclude the message going out to the variable, v*.
-            getProductOfMessages(edge.getParent(), prod, edge.getChild());
-            
-            // Marginalize over all the assignments to variables for f*, except
-            // for v*.
-            msg = prod.getMarginal(new VarSet(var), false);
-            assert !msg.containsBadValues();
-        }
+        // Message from factor f* to variable v*.
+        //
+        // Set the initial values of the product to those of the sending factor.
+        VarTensor prod = BruteForceInferencer.safeNewVarTensor(s, factor);
+        // Compute the product of all messages received by f* (each
+        // of which will have a different domain) with the factor f* itself.
+        // Exclude the message going out to the variable, v*.
+        getProductOfMessages(edge.getParent(), prod, edge.getChild());
+        
+        // Marginalize over all the assignments to variables for f*, except
+        // for v*.
+        msg = prod.getMarginal(new VarSet(var), false);
+        assert !msg.containsBadValues();
         
         // Set the final message in case we created a new object.
         msgs[edge.getId()].newMessage = msg;
