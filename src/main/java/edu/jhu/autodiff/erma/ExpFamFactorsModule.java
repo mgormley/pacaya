@@ -30,9 +30,6 @@ public class ExpFamFactorsModule implements Module<VarTensor[]> {
     private Algebra s;
     
     public ExpFamFactorsModule(FactorGraph fg, FgModel model, Algebra s) {
-        if (!(s.equals(Algebras.LOG_SEMIRING) || s.equals(Algebras.REAL_ALGEBRA))) {
-            throw new IllegalArgumentException("Unsupported algebra: " + s);
-        }
         this.fg = fg;
         this.model = model;
         this.s = s;
@@ -60,8 +57,9 @@ public class ExpFamFactorsModule implements Module<VarTensor[]> {
             if (!(factor instanceof GlobalFactor)) {
                 VarTensor factorMarginal = new VarTensor(yAdj[a]);
                 factorMarginal.prod(y[a]);
-                assert s.equals(Algebras.REAL_ALGEBRA) : "addExpectedFeatureCounts() currently only supports the real semiring";
-                factor.addExpectedFeatureCounts(modelAdj, factorMarginal, s.one());
+                // addExpectedFeatureCounts() currently only supports the real semiring
+                factorMarginal = factorMarginal.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
+                factor.addExpectedFeatureCounts(modelAdj, factorMarginal, Algebras.REAL_ALGEBRA.one());
             }
         }
     }
