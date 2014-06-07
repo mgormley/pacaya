@@ -149,12 +149,24 @@ public class LogPosNegAlgebra implements Semiring, Algebra {
 
     @Override
     public boolean gt(double x, double y) {
-        throw new RuntimeException("not yet implemented");
+        long sx = sign(x);
+        long sy = sign(y);
+        double lx = natlog(x);
+        double ly = natlog(y);
+        if (sx == POSITIVE && sy == POSITIVE) {
+            return lx > ly;
+        } else if (sx == POSITIVE && sy == NEGATIVE) {
+            return true;
+        } else if (sx == NEGATIVE && sy == POSITIVE) {
+            return false;
+        } else {
+            return lx < ly;
+        }
     }
 
     @Override
     public boolean lt(double x, double y) {
-        throw new RuntimeException("not yet implemented");
+        return gt(y, x);
     }
 
     @Override
@@ -176,7 +188,7 @@ public class LogPosNegAlgebra implements Semiring, Algebra {
 
     @Override
     public boolean lte(double x, double y) {
-        throw new RuntimeException("not yet implemented");
+        return gte(y, x);
     }
 
     @Override
