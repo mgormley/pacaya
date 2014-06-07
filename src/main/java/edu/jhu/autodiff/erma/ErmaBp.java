@@ -563,6 +563,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
 
     private void unnormalizeAdjInPlace(VarTensor dist, VarTensor distAdj, double unormSum) {
+        if (unormSum == s.zero()) {
+            throw new IllegalArgumentException("Unable to unnormalize when sum is 0.0\n"+dist+"\n"+distAdj+"\n"+unormSum);
+        }
         VarTensor unormAdj = distAdj;
         double dotProd = dist.getDotProduct(distAdj);       
         unormAdj.subtract(dotProd);
