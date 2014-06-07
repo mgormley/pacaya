@@ -81,12 +81,13 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         FgExampleList data = builder.getData(sents);
         
 
-        log.info("Initializing model.");        
         if (model == null) {
             model = new JointNlpFgModel(cs, ofc, prm.buPrm.fePrm);
             if (prm.initParams == InitParams.RANDOM) {
+                log.info("Initializing model with zero-one Gaussian.");
                 model.setRandomStandardNormal();
             } else if (prm.initParams == InitParams.UNIFORM) {
+                log.info("Initializing model to all zeros.");
                 // Do nothing.
             } else {
                 throw new RuntimeException("Parameter initialization method not implemented: " + prm.initParams);

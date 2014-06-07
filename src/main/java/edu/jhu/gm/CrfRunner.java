@@ -256,7 +256,7 @@ public class CrfRunner {
     private MbrDecoder getDecoder() {
         MbrDecoderPrm decoderPrm = new MbrDecoderPrm();
         decoderPrm.infFactory = getInfFactory();
-        decoderPrm.loss = Loss.ACCURACY;
+        decoderPrm.loss = Loss.L1;
         MbrDecoder decoder = new MbrDecoder(decoderPrm);
         return decoder;
     }

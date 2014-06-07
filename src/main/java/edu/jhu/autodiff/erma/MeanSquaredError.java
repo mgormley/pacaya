@@ -87,8 +87,8 @@ public class MeanSquaredError extends AbstractTensorModule implements Module<Ten
                 for (int c=0; c<marg.size(); c++) {
                     double goldMarg = (c == goldState) ? s.one() : s.zero();
                     double predMarg = marg.getValue(c);
-                    double diff = s.minus(predMarg, goldMarg);
                     // dG/db(x_i) = dG/dy 2(b(x_i) - b*(x_i))
+                    double diff = s.minus(predMarg, goldMarg);
                     double adj_b = s.times(mseAdj, s.plus(diff, diff));
                     // Increment adjoint of the belief.
                     varBeliefsAdjs[v.getId()].addValue(c, adj_b);

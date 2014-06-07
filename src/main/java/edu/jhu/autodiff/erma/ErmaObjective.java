@@ -102,6 +102,7 @@ public class ErmaObjective implements ExampleObjective {
             dl.backward();
             inf.backward();
             effm.backward();
+            // Currently, model adj is always returned in the real semiring.
             ac.gradient.add(effm.getModelAdj());
             t.stop(); gradTimer.add(t);
         }

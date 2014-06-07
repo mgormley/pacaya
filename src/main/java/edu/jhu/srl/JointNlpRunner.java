@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
+import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
@@ -28,7 +30,6 @@ import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
-import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.FgInferencerFactory;
@@ -65,6 +66,8 @@ import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 /**
  * Pipeline runner for SRL experiments.
@@ -74,7 +77,23 @@ import edu.jhu.util.collections.Lists;
 public class JointNlpRunner {
 
     public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
-    
+
+    public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
+
+    public enum AlgebraType {
+        REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_POS_NEG_ALGEBRA);
+
+        private Algebra s;
+        
+        private AlgebraType(Algebra s) {
+            this.s = s;
+        }
+        
+        public Algebra getAlgebra() {
+            return s;
+        }
+    }
+
     private static final Logger log = Logger.getLogger(JointNlpRunner.class);
 
     // Options not specific to the model
@@ -98,6 +117,8 @@ public class JointNlpRunner {
     public static InitParams initParams = InitParams.UNIFORM;
     
     // Options for inference.
+    @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
+    public static AlgebraType algebra = AlgebraType.REAL;
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
     @Opt(hasArg = true, description = "The BP schedule type.")
@@ -261,14 +282,15 @@ public class JointNlpRunner {
     public static double dpEndTemp = .1;
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
     public static boolean dpAnnealMse = true;
-
+    @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
+    public static ErmaLoss dpLoss = ErmaLoss.DP_DECODE_LOSS;
+    
     public JointNlpRunner() {
     }
 
     public void run() throws ParseException, IOException {  
-        if (logDomain) {
-            FastMath.useLogAddTable = useLogAddTable;
-        }
+        FastMath.useLogAddTable = useLogAddTable;
+        
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
             log.warn("Ignoring stopTrainingBy by setting it to null.");
@@ -305,7 +327,8 @@ public class JointNlpRunner {
             addPruneMask(inputSents, ptdPruner, name);
             // Ensure that the gold data is annotated with the pruning mask as well.
             AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
-
+            printOracleAccuracyAfterPruning(inputSents, goldSents, name);
+            
             // Train a model.
             jointAnno.train(goldSents);
             
@@ -652,11 +675,17 @@ public class JointNlpRunner {
         
         // TODO: add options for other loss functions.
         if (prm.trainer == Trainer.ERMA && includeDp && !includeSrl) {
-            DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
-            lossPrm.annealMse = dpAnnealMse;
-            lossPrm.startTemp = dpStartTemp;
-            lossPrm.endTemp = dpEndTemp;
-            prm.dlFactory = lossPrm;
+            if (dpLoss == ErmaLoss.DP_DECODE_LOSS) {
+                DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
+                lossPrm.annealMse = dpAnnealMse;
+                lossPrm.startTemp = dpStartTemp;
+                lossPrm.endTemp = dpEndTemp;
+                prm.dlFactory = lossPrm;
+            } else if (dpLoss == ErmaLoss.MSE) {
+                prm.dlFactory = new MeanSquaredErrorFactory();
+            } else if (dpLoss == ErmaLoss.EXPECTED_RECALL) {
+                prm.dlFactory = new ExpectedRecallFactory();
+            }
         }
         
         return prm;
@@ -684,6 +713,7 @@ public class JointNlpRunner {
     private static FgInferencerFactory getInfFactory() {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
         bpPrm.logDomain = logDomain;
+        bpPrm.s = algebra.getAlgebra();
         bpPrm.schedule = bpSchedule;
         bpPrm.updateOrder = bpUpdateOrder;
         bpPrm.normalizeMessages = normalizeMessages;
@@ -696,7 +726,7 @@ public class JointNlpRunner {
     private static JointNlpDecoderPrm getDecoderPrm() {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
-        mbrPrm.loss = Loss.ACCURACY;
+        mbrPrm.loss = Loss.L1;
         JointNlpDecoderPrm prm = new JointNlpDecoderPrm();
         prm.mbrPrm = mbrPrm;
         return prm;

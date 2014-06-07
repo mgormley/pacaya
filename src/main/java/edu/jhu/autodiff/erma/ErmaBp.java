@@ -509,10 +509,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         msgsAdj[i].newMessage = msgsAdj[i].message; // The adjoint at time (t+1)
         msgsAdj[i].message = tmp;                   // The adjoint at time (t)
         
-        if (log.isTraceEnabled()) {
-            log.trace("Backward send:" + msgsAdj[i].newMessage);
-        }
-        assert !msgsAdj[i].newMessage.containsNaN() : "msgsAdj[i].newMessage = " + msgsAdj[i].newMessage + "\n" + "edge: " + edge;
+        logTraceMsgUpdate("backwardSendMessage", msgsAdj[i].newMessage, edge);
     }
 
     private void backwardNormalize(int t) {
@@ -560,6 +557,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 log.trace(name+"\n"+msg);
             }
         }     
+        assert !msg.containsNaN() : "msg = " + msg + "\n" + "edge: " + edge;
     }
 
     private void unnormalizeAdjInPlace(VarTensor dist, VarTensor distAdj, double unormSum) {

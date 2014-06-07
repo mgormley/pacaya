@@ -137,9 +137,7 @@ public class FgModelTest {
     }
 
     public static double[] getParams(FgModel model) {
-        double[] params = new double[model.getNumParams()];
-        model.updateDoublesFromModel(params);
-        return params;
+        return model.getParams().toNativeArray();
     }
     
 }

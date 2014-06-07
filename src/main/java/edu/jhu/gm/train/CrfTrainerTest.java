@@ -1,15 +1,19 @@
 package edu.jhu.gm.train;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
+import edu.jhu.autodiff.erma.ErmaObjectiveTest;
+import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
+import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
-import edu.jhu.gm.data.erma.ErmaReader;
-import edu.jhu.gm.data.erma.ErmaReaderTest;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
@@ -35,17 +39,23 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
+import edu.jhu.gm.train.CrfTrainer.Trainer;
+import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.function.Regularizer;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.srl.DepParseFactorGraph.DepParseFactorTemplate;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebras;
 
 public class CrfTrainerTest {
 
@@ -142,7 +152,7 @@ public class CrfTrainerTest {
         exs.addEx(10, "solid");
         exs.addEx(5);
 
-        double[] params = new double[]{3.0, 2.0};
+        double[] params = new double[]{-3.0, 2.0};
         FgModel model = new FgModel(params.length);
         model.updateModelFromDoubles(params);
         
@@ -154,6 +164,72 @@ public class CrfTrainerTest {
         // Note: this used to be 1.093.
         JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, FgModelTest.getParams(model), 1e-3);
     }
+    
+    @Test 
+    public void testLogLinearModelShapesErma() {
+        LogLinearXYData xyData = new LogLinearXYData();
+        List<String>[] fvs;
+        fvs = new List[]{ Lists.getList("x=A,y=A"), Lists.getList("x=A,y=B") };
+        xyData.addExStrFeats(1.0, "x=A", "y=A", fvs);
+        fvs = new List[]{ Lists.getList("x=B,y=A"), Lists.getList("x=B,y=B") };
+        xyData.addExStrFeats(1.0, "x=B", "y=B", fvs);        
+        LogLinearXY xy = new LogLinearXY(new LogLinearXYPrm());
+        FgExampleList data = xy.getData(xyData);
+          
+        
+        //double[] params = new double[]{-3., -2., -1.0};
+        double[] params = new double[]{0, 0, 0, 0};
+        
+        FgModel model = new FgModel(params.length);
+        
+        Regularizer r = null; //new L2(100);
+
+        model.updateModelFromDoubles(params);
+        model = train(model, data, r, true);        
+        double[] params1 = FgModelTest.getParams(model);
+        
+        // ERMA should get the same answer as the CLL training in this case.
+        model.updateModelFromDoubles(params);
+        model = trainErma(model, data, r, true);  
+        double[] params2 = FgModelTest.getParams(model);
+        
+        System.out.println(DoubleArrays.toString( params1, "%.3f"));
+        System.out.println(DoubleArrays.toString( params2, "%.3f"));
+        
+        JUnitUtils.assertArrayEquals(new double[]{0.166, -0.166, -0.166, 0.166}, params1, 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{0.253, -0.253, -0.253, 0.253}, params2, 1e-3);
+        //MSE: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
+    }
+    
+    @Test 
+    public void testLogLinearModelDpDataErma() throws IOException {
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        FgExampleList data = ErmaObjectiveTest.getDpData(ofc, 5);
+        
+        //double[] params = new double[]{-3., -2., -1.0};
+        double[] params = new double[ofc.getNumParams()];
+        
+        FgModel model = new FgModel(params.length);
+        
+        Regularizer r = new L2(100);
+
+        model.updateModelFromDoubles(params);
+        model = train(model, data, r, true);        
+        double[] params1 = FgModelTest.getParams(model);
+        
+        // ERMA should get the same answer as the CLL training in this case.
+        model.updateModelFromDoubles(params);
+        model = trainErma(model, data, r, true);  
+        double[] params2 = FgModelTest.getParams(model);
+        
+        System.out.println(DoubleArrays.toString( params1, "%.3f"));
+        System.out.println(DoubleArrays.toString( params2, "%.3f"));
+        
+        JUnitUtils.assertArrayEquals(new double[]{0.000, -0.000, -0.515, 0.374, 0.646, 0.710, -0.400}, params1, 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{-0.000, 0.000, -1.323, 0.471, 0.515, 0.495, -0.649}, params2, 1e-3);
+    }
+
     
     @Test
     public void testTrainNoLatentVars() {
@@ -298,23 +374,11 @@ public class CrfTrainerTest {
 
     }
     
-    // This is slow and relies on hard-coded paths.
-    //TODO: @Test
-    public void testTrainErmaInput() {
-        ErmaReader er = new ErmaReader();
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExampleList data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, alphabet);
-        
-        FgModel model = new FgModel(alphabet.size());
-        model = train(model, data);
-        
-        // ERMA achieves the following log-likelihood: 0.5802548014360731.
-        // Our CRF obtains LL: -0.0013527881300134936.
-        
-        // Note: This doesn't test the result, just that nothing throws an exception.
+    private static FgModel train(FgModel model, FgExampleList data) {
+        return train(model, data, null, false);
     }
     
-    private static FgModel train(FgModel model, FgExampleList data) {
+    private static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
@@ -324,12 +388,48 @@ public class CrfTrainerTest {
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
         
-        // To run with SGD, uncomment these lines.
-        //        SGDPrm optPrm = new SGDPrm();
-        //        optPrm.iterations = 100;
-        //        optPrm.lrAtMidpoint = 0.1;
-        //        prm.maximizer = new SGD(optPrm);
-        prm.regularizer = null;
+        if (sgd) {
+            // Run with SGD
+            SGDPrm optPrm = new SGDPrm();
+            optPrm.numPasses = 10;
+            optPrm.batchSize = 2;
+            optPrm.autoSelectLr = false;
+            optPrm.sched.setEta0(0.1);
+            prm.batchOptimizer = new SGD(optPrm);
+            prm.optimizer = null;
+        }
+        prm.regularizer = r;
+        
+        CrfTrainer trainer = new CrfTrainer(prm);
+        trainer.train(model, data);
+        return model;
+    }
+    
+    private static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.logDomain = true;
+        bpPrm.schedule = BpScheduleType.TREE_LIKE;
+        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        bpPrm.normalizeMessages = false;
+        bpPrm.s = Algebras.REAL_ALGEBRA;
+        
+        CrfTrainerPrm prm = new CrfTrainerPrm();
+        prm.infFactory = bpPrm;
+        prm.dlFactory = new MeanSquaredErrorFactory();
+        //prm.dlFactory = new ExpectedRecallFactory();
+        prm.trainer = Trainer.ERMA;
+             
+        if (sgd) {
+            // Run with SGD
+            SGDPrm optPrm = new SGDPrm();
+            optPrm.numPasses = 10;
+            optPrm.batchSize = 2;
+            optPrm.autoSelectLr = false;
+            optPrm.sched.setEta0(0.2);
+            prm.batchOptimizer = new SGD(optPrm);
+            prm.optimizer = null;
+        }
+        prm.regularizer = r;
         
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
