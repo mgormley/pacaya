@@ -47,7 +47,7 @@ public class ExpectedRecallTest {
         ExpectedRecall s = new ExpectedRecall(id1, goldConfig);
         
         Tensor out = s.forward();
-        assertEquals(0.5, out.getValue(0), 1e-13);
+        assertEquals(-0.5, out.getValue(0), 1e-13);
         
         s.getOutputAdj().setValue(0, 1);
         s.backward();
@@ -55,13 +55,13 @@ public class ExpectedRecallTest {
         assertEquals(0, inAdj.varBeliefs[0].getValue(0), 1e-13);
         assertEquals(0, inAdj.varBeliefs[0].getValue(1), 1e-13);
         assertEquals(0, inAdj.varBeliefs[1].getValue(0), 1e-13);
-        assertEquals(1, inAdj.varBeliefs[1].getValue(1), 1e-13);        
+        assertEquals(-1, inAdj.varBeliefs[1].getValue(1), 1e-13);        
     }
     
     @Test
     public void testGradByFiniteDiffs() {
         Algebra s = new RealAlgebra();
-        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);        
+        ExpectedRecall mse = new ExpectedRecall(id1, goldConfig);        
         BeliefsVecFn vecFn = new BeliefsVecFn(id1, mse);
         ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
     }
