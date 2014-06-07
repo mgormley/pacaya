@@ -57,7 +57,7 @@ public class CrfTrainer {
     public CrfTrainer(CrfTrainerPrm prm) {
         this.prm = prm;
         if (prm.optimizer != null && prm.batchOptimizer != null) {
-            throw new IllegalStateException("Only one of maximizer and batchMaximizer may be set in CrfTrainerPrm.");
+            throw new IllegalStateException("Only one of optimizer and batchOptimizer may be set in CrfTrainerPrm.");
         }
     }
     
@@ -72,11 +72,14 @@ public class CrfTrainer {
             isMinimize = false;
         }
         AvgBatchObjective objective = new AvgBatchObjective(exObj, model, prm.numThreads);
+        
+        Regularizer reg = prm.regularizer;
         if (prm.optimizer != null) {
             DifferentiableFunction fn = objective;
-            if (prm.regularizer != null) {
-                prm.regularizer.setNumDimensions(model.getNumParams());
-                fn = new DifferentiableFunctionOpts.AddFunctions(objective, prm.regularizer);
+            if (reg != null) {
+                reg.setNumDimensions(model.getNumParams());
+                DifferentiableFunction nbr = isMinimize ? DifferentiableFunctionOpts.negate(reg) : reg;
+                fn = new DifferentiableFunctionOpts.AddFunctions(objective, nbr);
             }
             if (isMinimize == true) {
                 prm.optimizer.minimize(fn, model.getParams());
@@ -86,12 +89,13 @@ public class CrfTrainer {
             log.info("Final objective value: " + fn.getValue(model.getParams()));
         } else {
             DifferentiableBatchFunction fn = objective;
-            if (prm.regularizer != null) {
+            if (reg != null) {
                 // We don't need to rescale the regularizer because the CRF
                 // objective is the average log-likelihood.
-                prm.regularizer.setNumDimensions(model.getNumParams());
-                DifferentiableBatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
-                fn = new BatchFunctionOpts.AddFunctions(objective, br);
+                reg.setNumDimensions(model.getNumParams());
+                DifferentiableBatchFunction br = new FunctionAsBatchFunction(reg, objective.getNumExamples());
+                DifferentiableBatchFunction nbr = isMinimize ? new BatchFunctionOpts.NegateFunction(br) : br;
+                fn = new BatchFunctionOpts.AddFunctions(objective, nbr);
             }
             if (isMinimize == true) {
                 prm.batchOptimizer.minimize(fn, model.getParams());   
