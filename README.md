@@ -8,6 +8,7 @@ from CLSP's internal maven repository, or they can be installed
 locally.
 * Prim: a Java primitives library
 * Optimize: a Java optimization library
+* Erma: used only for the ERMA file format
 
 ### Using CLSP's internal maven repository
 
@@ -33,6 +34,10 @@ Bitbucket usernames.
 2. Checkout and install Optimize locally
 	git clone git@bitbucket.org:minyans/optimize.git
 	cd optimize
+	mvn install -DskipTests
+3. Checkout and install Erma locally
+	git clone git@github.com:jeisner/erma.git
+	cd erma
 	mvn install -DskipTests
 
 ## Build:
