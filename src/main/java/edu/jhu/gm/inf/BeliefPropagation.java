@@ -16,7 +16,6 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
@@ -548,17 +547,19 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         for (int i=0; i<fg.getVars().size(); i++) {
             Var v = fg.getVars().get(i);
             int numNeighbors = fg.getVarNode(i).getOutEdges().size();
-            VarTensor beliefs = getVarBeliefs(i);
-            double sum = 0.0;
-            for (int c=0; c<v.getNumStates(); c++) {
-                double b_c = beliefs.getValue(c);
-                if (b_c != s.zero()) {
-                    double r_b_c = s.toReal(b_c);
-                    double log_b_c = s.toLogProb(b_c);
-                    sum += r_b_c * log_b_c;
+            if (numNeighbors > 1) {
+                VarTensor beliefs = getVarBeliefs(i);
+                double sum = 0.0;
+                for (int c=0; c<v.getNumStates(); c++) {
+                    double b_c = beliefs.getValue(c);
+                    if (b_c != s.zero()) {
+                        double r_b_c = s.toReal(b_c);
+                        double log_b_c = s.toLogProb(b_c);
+                        sum += r_b_c * log_b_c;
+                    }
                 }
+                bethe -= (numNeighbors - 1) * sum;
             }
-            bethe -= (numNeighbors - 1) * sum;
         }
         
         assert !Double.isNaN(bethe);        
