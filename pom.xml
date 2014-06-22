@@ -7,7 +7,47 @@
   <version>2.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>edu.jhu.pacaya</name>
+  <name>${project.groupId}:${project.artifactId}</name>
+  <description>Graphical Models and NLP Library.</description>
+  <url>https://github.com/mgormley/pacaya</url>
+
+  <developers>
+    <developer>
+      <email>mrg@cs.jhu.edu</email>
+      <name>Matt Gormley</name>
+      <url>https://github.com/mgormley</url>
+      <id>mgormley</id>
+    </developer>
+    <developer>
+      <email>margarmitchell@gmail.com</email>
+      <name>Meg Mitchell</name>
+      <url>http://www.m-mitchell.com</url>
+      <id>mmitchell</id>
+    </developer>
+    <developer>
+      <email>travis@cs.jhu.edu</email>
+      <name>Travis Wolfe</name>
+      <url>https://github.com/twolfe18</url>
+      <id>twolfe18</id>
+    </developer>
+  </developers>
+
+  <prerequisites>
+    <maven>3.0.4</maven>
+  </prerequisites>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:mgormley/prim.git</connection>
+    <url>scm:git:git@github.com:mgormley/prim.git</url>
+    <developerConnection>scm:git:git@github.com:mgormley/prim.git</developerConnection>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,30 +67,15 @@
           <includes>
                   <include>**/*.java</include>
           </includes>
-          <excludes>
-            <!-- Skip anything depending on joptimizer. 
-            <exclude>**/*ResDmvDantzigWolfeRelaxation*.java</exclude>
-            <exclude>**/*ModelParamSubproblem*.java</exclude>
-            <exclude>**/ModelParamSubproblem.java</exclude>
-            <exclude>**/ModelParamSubproblemTest.java</exclude> -->
-            <!-- Skip CRF.
-            <exclude>**/edu/jhu/gm/*.java</exclude>
-            <exclude>**/edu/jhu/gm/**/*.java</exclude> -->
-          </excludes>
         </configuration>
         <version>3.0</version>
       </plugin>
-      <!-- For use with: mvn clean compile assembly:single 
-
-	   Compile goal should be added before assembly:single or
-	   otherwise the code on your own project is not included.
-    	   -->
+      <!-- For use with: mvn clean compile assembly:single -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <archive>
             <manifest>
-              <mainClass>edu.jhu.PipelineRunner</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
@@ -58,60 +83,78 @@
           </descriptorRefs>
         </configuration>
       </plugin>
-      <!-- The following plugin includes alternate source directories in the compilation -->
-      <!--
+      <!-- Nexus Staging Maven plugin for deploying to Maven Central -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.1</version>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>/Users/mgormley/research/other_lib/cplex-decompiled/src</source>
-                <source>/Users/mgormley/research/ERMA/src</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>2.2.1</version>        
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>        
-	<!-- Uncomment the executions section below to deploy javadocs. -->
-	<!-- 
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-	-->
+	<groupId>org.sonatype.plugins</groupId>
+	<artifactId>nexus-staging-maven-plugin</artifactId>
+	<version>1.6.1</version>
+	<extensions>true</extensions>
+	<configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+	</configuration>
       </plugin>
     </plugins>
   </build>
+
+
+  <profiles>
+    <profile> 
+      <id>release</id>
+      <build>
+	<plugins>
+	  <!-- These plugins will only run at release time -->
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-source-plugin</artifactId>
+	    <executions>
+	      <execution>
+		<id>attach-sources</id>
+		<phase>verify</phase>
+		<goals>
+		  <goal>jar-no-fork</goal>
+		</goals>
+	      </execution>
+	    </executions>
+	    <version>2.2.1</version>
+	  </plugin>
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-javadoc-plugin</artifactId>
+	    <configuration>
+	      <quiet />
+	    </configuration>
+	    <executions>
+	      <execution>
+		<id>attach-javadoc</id>
+		<phase>verify</phase>
+		<goals>
+		  <goal>jar</goal>
+		</goals>
+	      </execution>
+	    </executions>
+	    <version>2.9.1</version>
+	  </plugin>
+	  <!-- GPG signing plugin for deploying to Maven Central -->
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-gpg-plugin</artifactId>
+	    <version>1.5</version>
+	    <executions>
+              <execution>
+		<id>sign-artifacts</id>
+		<phase>verify</phase>
+		<goals>
+		  <goal>sign</goal>
+		</goals>
+              </execution>
+	    </executions>
+	  </plugin>
+	</plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -176,27 +219,5 @@
       <version>16.0.1</version>
     </dependency>
   </dependencies>
-
-<!-- For deploying to COE. -->
-<!--
-  <parent>
-    <groupId>edu.jhu.hlt.parent</groupId>
-    <artifactId>parent</artifactId>
-    <version>1.0.0</version>
-  </parent>
--->
-<!-- For deploying to CLSP. -->
-  <distributionManagement>
-    <repository>
-      <id>checker</id>
-      <name>checker-releases</name>
-      <url>http://localhost:8081/artifactory/libs-release-local</url>
-    </repository>
-    <snapshotRepository>
-      <id>checker</id>
-      <name>checker-snapshots</name>
-      <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
 
 </project>
