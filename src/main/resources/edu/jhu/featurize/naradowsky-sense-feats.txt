@@ -1,0 +1,8 @@
+# Naradowsky et al. (2012) Sense feature set.
+#
+
+p.word
+p.lemma
+p.pos
+p.word+p.pos
+p.capitalized

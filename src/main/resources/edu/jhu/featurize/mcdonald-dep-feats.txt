@@ -1,0 +1,119 @@
+# - Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers."
+#   - All features in Table 1 were conjoined with *direction* of
+#     attachment and *distance*.
+#   - These features are added for both the entire words as well as the
+#     5-gram prefix if the word is longer than 5 characters.
+#   - The system also used back-off features to various tri- grams where
+#     one of the local context POS tags was removed.
+#   - Table 1:
+#     - Basic Unigram Features
+#       - p-word, p-pos
+#       - p-word
+#       - p-pos
+#       - c-word, c-pos
+#       - c-word
+#       - c-pos
+#     - Basic Bigram Features
+#       - p-word, p-pos, c-word, c-pos
+#       - p-pos, c-word, c-pos
+#       - p-word, c-word, c-pos
+#       - p-word, p-pos, c-pos
+#       - p-word, p-pos, c-word
+#       - p-word, c-word
+#       - p-pos, c-pos
+#     - In Between POS Features
+#       - p-pos, b-pos, c-pos
+#     - Surrounding Word POS Features
+#       - p-pos, p-pos+1, c-pos-1, c-pos
+#       - p-pos-1, p-pos, c-pos-1, c-pos
+#       - p-pos, p-pos+1, c-pos, c-pos+1
+#       - p-pos-1, p-pos, c-pos, c-pos+1
+#     - Where:
+#       - b-pos: POS of a word in between parent and child nodes.
+
+# Basic Unigram Features
+p.word + p.pos
+p.word
+p.pos
+c.word + c.pos
+c.word
+c.pos
+
+# Basic Bigram Features
+p.word + p.pos + c.word + c.pos
+p.pos + c.word + c.pos
+p.word + c.word + c.pos
+p.word + p.pos + c.pos
+p.word + p.pos + c.word
+p.word + c.word
+p.pos + c.pos
+
+# In Between POS Features
+p.pos + btwn(p,c).pos.1gram + c.pos
+
+# Surrounding Word POS Features
+p.pos + p.1.pos + c.-1.pos + c.pos
+p.-1.pos + p.pos + c.-1.pos + c.pos
+p.pos + p.1.pos + c.pos + c.1.pos
+p.-1.pos + p.pos + c.pos + c.1.pos
+
+# Backed-off versions of Surrounding Word POS Features
+p.-1.pos + p.pos + c.pos
+p.pos + c.-1.pos + c.pos
+p.pos + c.pos + c.1.pos
+p.pos + p.1.pos + c.pos
+
+# TODO: It's not clear whether these were included in McDonald et al. (2005), 
+# but Koo et al. (2008) had them.
+relative(p,c)
+distance(p,c)
+relative(p,c) + distance(p,c)
+
+# All features in Table 1 were conjoined with *direction* of attachment and *distance*.
+relative(p,c) + distance(p,c) + p.word + p.pos
+relative(p,c) + distance(p,c) + p.word
+relative(p,c) + distance(p,c) + p.pos
+relative(p,c) + distance(p,c) + c.word + c.pos
+relative(p,c) + distance(p,c) + c.word
+relative(p,c) + distance(p,c) + c.pos
+relative(p,c) + distance(p,c) + p.word + p.pos + c.word + c.pos
+relative(p,c) + distance(p,c) + p.pos + c.word + c.pos
+relative(p,c) + distance(p,c) + p.word + c.word + c.pos
+relative(p,c) + distance(p,c) + p.word + p.pos + c.pos
+relative(p,c) + distance(p,c) + p.word + p.pos + c.word
+relative(p,c) + distance(p,c) + p.word + c.word
+relative(p,c) + distance(p,c) + p.pos + c.pos
+relative(p,c) + distance(p,c) + p.pos + btwn(p,c).pos.1gram + c.pos
+relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.-1.pos + c.pos
+relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.-1.pos + c.pos
+relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.pos + c.1.pos
+relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.pos + c.1.pos
+relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.pos
+relative(p,c) + distance(p,c) + p.pos + c.-1.pos + c.pos
+relative(p,c) + distance(p,c) + p.pos + c.pos + c.1.pos
+relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.pos
+
+# These features are added for both the entire words as well as the
+# 5-gram prefix if the word is longer than 5 characters.
+p.chpre5 + p.pos
+p.chpre5
+c.chpre5 + c.pos
+c.chpre5
+p.chpre5 + p.pos + c.chpre5 + c.pos
+p.pos + c.chpre5 + c.pos
+p.chpre5 + c.chpre5 + c.pos
+p.chpre5 + p.pos + c.pos
+p.chpre5 + p.pos + c.chpre5
+p.chpre5 + c.chpre5
+relative(p,c) + distance(p,c) + p.chpre5 + p.pos
+relative(p,c) + distance(p,c) + p.chpre5
+relative(p,c) + distance(p,c) + c.chpre5 + c.pos
+relative(p,c) + distance(p,c) + c.chpre5
+relative(p,c) + distance(p,c) + p.chpre5 + p.pos + c.chpre5 + c.pos
+relative(p,c) + distance(p,c) + p.pos + c.chpre5 + c.pos
+relative(p,c) + distance(p,c) + p.chpre5 + c.chpre5 + c.pos
+relative(p,c) + distance(p,c) + p.chpre5 + p.pos + c.pos
+relative(p,c) + distance(p,c) + p.chpre5 + p.pos + c.chpre5
+relative(p,c) + distance(p,c) + p.chpre5 + c.chpre5
+
+

@@ -1,0 +1,223 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>edu.jhu.pacaya</groupId>
+  <artifactId>pacaya</artifactId>
+  <version>2.0.1</version>
+  <packaging>jar</packaging>
+
+  <name>${project.groupId}:${project.artifactId}</name>
+  <description>Graphical Models and NLP Library.</description>
+  <url>https://github.com/mgormley/pacaya</url>
+
+  <developers>
+    <developer>
+      <email>mrg@cs.jhu.edu</email>
+      <name>Matt Gormley</name>
+      <url>https://github.com/mgormley</url>
+      <id>mgormley</id>
+    </developer>
+    <developer>
+      <email>margarmitchell@gmail.com</email>
+      <name>Meg Mitchell</name>
+      <url>http://www.m-mitchell.com</url>
+      <id>mmitchell</id>
+    </developer>
+    <developer>
+      <email>travis@cs.jhu.edu</email>
+      <name>Travis Wolfe</name>
+      <url>https://github.com/twolfe18</url>
+      <id>twolfe18</id>
+    </developer>
+  </developers>
+
+  <prerequisites>
+    <maven>3.0.4</maven>
+  </prerequisites>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:mgormley/prim.git</connection>
+    <url>scm:git:git@github.com:mgormley/prim.git</url>
+    <developerConnection>scm:git:git@github.com:mgormley/prim.git</developerConnection>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+          <useIncrementalCompilation>true</useIncrementalCompilation>
+          <fork>true</fork>
+          <!-- <compilerArgument>-verbose</compilerArgument> -->
+          <includes>
+                  <include>**/*.java</include>
+          </includes>
+        </configuration>
+        <version>3.0</version>
+      </plugin>
+      <!-- For use with: mvn clean compile assembly:single -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+      <!-- Nexus Staging Maven plugin for deploying to Maven Central -->
+      <plugin>
+	<groupId>org.sonatype.plugins</groupId>
+	<artifactId>nexus-staging-maven-plugin</artifactId>
+	<version>1.6.1</version>
+	<extensions>true</extensions>
+	<configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+	</configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+  <profiles>
+    <profile> 
+      <id>release</id>
+      <build>
+	<plugins>
+	  <!-- These plugins will only run at release time -->
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-source-plugin</artifactId>
+	    <executions>
+	      <execution>
+		<id>attach-sources</id>
+		<phase>verify</phase>
+		<goals>
+		  <goal>jar-no-fork</goal>
+		</goals>
+	      </execution>
+	    </executions>
+	    <version>2.2.1</version>
+	  </plugin>
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-javadoc-plugin</artifactId>
+	    <configuration>
+	      <quiet />
+	    </configuration>
+	    <executions>
+	      <execution>
+		<id>attach-javadoc</id>
+		<phase>verify</phase>
+		<goals>
+		  <goal>jar</goal>
+		</goals>
+	      </execution>
+	    </executions>
+	    <version>2.9.1</version>
+	  </plugin>
+	  <!-- GPG signing plugin for deploying to Maven Central -->
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-gpg-plugin</artifactId>
+	    <version>1.5</version>
+	    <executions>
+              <execution>
+		<id>sign-artifacts</id>
+		<phase>verify</phase>
+		<goals>
+		  <goal>sign</goal>
+		</goals>
+              </execution>
+	    </executions>
+	  </plugin>
+	</plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8</version>
+      <!-- <scope>test</scope> -->
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.prim</groupId>
+      <artifactId>prim</artifactId>
+      <version>2.0.5</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.hlt.optimize</groupId>
+      <artifactId>optimize</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.uncommons.maths</groupId>
+      <artifactId>uncommons-maths</artifactId>
+      <version>1.2.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>jfree</groupId>
+          <artifactId>jcommon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jfree</groupId>
+          <artifactId>jfreechart</artifactId>
+        </exclusion>
+      </exclusions> 
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>16.0.1</version>
+    </dependency>
+  </dependencies>
+
+</project>

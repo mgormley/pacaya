@@ -1,0 +1,20 @@
+# p.lm.pos 
+p.lmc.pos
+# p.rm.pos
+p.rmc.pos 
+# p.lemma 
+p.lemma
+# p.lemma + p.lemma_1
+p.lemma + p.1.lemma 
+# p.lemma + p.children.dprel.noDup 
+p.lemma + children(p).deprel.noDup
+
+# p.lemma + p.currentSense          << NOT SUPPORTED. 
+# p.currentSense also doesn't make much sense. Shouldn't all features be conjoined with the sense?
+
+# p.form 
+p.word
+# p.form_{-1} + p.form
+p.word.-1 + p.word
+# p.form + p.form_{1}
+p.word + p.word.1

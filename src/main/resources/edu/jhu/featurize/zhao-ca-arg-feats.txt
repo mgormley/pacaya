@@ -1,0 +1,106 @@
+# p.currentSense + p.lemma  << Not supported (sense)
+# p.currentSense + p.pos    << Not supported (sense)
+# p.currentSense + a.pos    << Not supported (sense)
+# p_{-1}.FEAT1
+p.-1.morpho1
+# p.FEAT2
+p.morpho2 
+# p .FEAT3
+p.1.morpho3 
+# p.semrm.semdprel          << Not supported (pipeline required)
+# p.lm.dprel
+p.lmc.deprel 
+# p.form + p.children.dprel.bag
+p.word + children(p).deprel.bag 
+# p.lemma_{n} (for n=-1, n=0)
+p.lemma
+p.-1.lemma 
+# p.lemma + p.lemma_{1}
+p.lemma + p.1.lemma
+# p.pos_{-1} + p.pos
+p.-1.pos + p.pos
+# p.pos
+p.pos
+# p.pos + p.children.dprel.bag
+p.pos + children(p).deprel.bag
+
+# -----------------------------------
+# a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6
+c.morpho 
+# a_{-1}.FEAT2 + a.FEAT2
+c.-1.morpho2 + c.morpho2 
+# a.FEAT3 + a_{1}.FEAT3
+c.morpho3 + c.1.morpho3 
+# a.FEAT3 + a.h.FEAT3 
+c.morpho3 + c.head.morpho3
+# a.children.FEAT1.noDup 
+children(c).morpho1.noDup
+# a.children.FEAT3.bag
+children(c).morpho3.bag 
+# a.h.lemma 
+c.head.lemma
+# a.lm.dprel + a.form 
+c.lmc.deprel + c.word
+# a.lm.form 
+c.lmc.word
+# a.lm_{-1}.lemma              << Not supported (double position modifier) 
+c.lmc.-1.lemma
+# a.lm_{n}.pos (n=0,1)         << Not supported (double position modifier)     
+c.lmc.pos
+c.lmc.1.pos
+# a.noFarChildren.pos.bag + a.rm.form      << Not supported (noFarChildren(c))
+noFarChildren(c).pos.bag + c.rmc.word 
+# a.pphead.lemma               << Not supported: "pphead" is not described in Zhao. 
+# (Our other implementation used the syntactic head, so we use that here.)
+c.head.lemma
+#a.rm.dprel + a.form 
+c.rmc.deprel + c.word
+# a.rm_{-1}.form               << Not supported (double position modifier) 
+c.rmc.-1.word
+# a.rm.lemma
+c.rmc.lemma 
+# a.rn.dprel + a.form
+c.rnc.deprel + c.word 
+# a.lowSupportVerb.lemma 
+c.lowsv.lemma
+#a_{-1}.form 
+c.-1.word
+# a.form + a_{1}.form 
+c.word + c.1.word
+# a.form + a.children.pos      << Not supported (children(c))
+c.word + children(c).pos
+# a.lemma + a.h.form 
+c.lemma + c.head.word
+# a.lemma + a.pphead.form       << Not supported: "pphead" is not described in Zhao. Would be identical to above with syntactic head.
+# a_{1}.lemma 
+c.1.lemma
+# a_{1}.pos + a.pos.seq        << Invalid pattern from Zhao, can't apply seq to a singleton position. 
+c.1.pos + c.pos
+# a.pos + a.children.dprel.bag
+c.pos + children(c).deprel.bag
+
+# -----------------------------------
+
+#a.lemma + p.lemma 
+c.lemma + p.lemma
+# (a:p dpPath.dprel) + p.FEAT1 
+path(p,c).deprel + p.morpho1
+# a:p linePath.distance 
+distance(p,c)
+# a:p linePath.FEAT1.bag 
+line(p,c).morpho1.bag
+# a:p linePath.form.seq 
+line(p,c).word.seq
+# a:p linePath.lemma.seq 
+line(p,c).lemma.seq
+# a:p linePath.dprel.seq 
+line(p,c).deprel.seq
+# a:p dpPath.lemma.seq 
+path(p,c).lemma.seq
+# a:p dpPath.lemma.bag 
+path(p,c).lemma.bag
+# a:p dpPathArgu.lemma.seq 
+path(c,lca(p,c)).lemma.seq
+# a:p dpPathArgu.lemma.bag
+path(c,lca(p,c)).lemma.bag
+

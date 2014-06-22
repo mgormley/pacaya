@@ -1,0 +1,22 @@
+*.pyc
+*~
+.#*
+\#*\#
+~$*
+ 
+# Specific directories
+/target
+/exp
+/remote_exp
+/data
+
+# Specific files
+.project
+.classpath
+.pydevproject
+.settings
+java.hprof.txt
+warn.log
+tmp
+/scripts/plot/.Rhistory
+.DS_Store

@@ -1,0 +1,39 @@
+# Bjorklund Spanish features.
+#
+# Create original list: 
+# cat ../other_lib/mate-tools-read-only/srl/featuresets/spa/a*.feats  | awk '{print $1;}' | sort | uniq
+# 
+# Make a sed script:
+# cat src/main/resources/edu/jhu/featurize/bjorkelund-arg-feats.txt | perl -pe "s/# (.*)\n/s\/\1\//" | perl -pe "s/$/\//" | tail -n 31 > tmp.sed
+# 
+# Run sed to produce final output:
+# grep -v "#" src/main/resources/edu/jhu/featurize/bjorkelund-es-arg-feats.txt |   sed -f ./tmp.sed
+
+c.deprel
+c.morpho
+c.pos
+c.pos + p.lemma
+c.word
+c.word + children(p).deprel.bag
+c.word + c.rmc.word
+children(p).deprel.bag
+children(p).deprel.seq + path(p,c).dir.deprel.seq
+path(p,c).dir.deprel.seq
+path(p,c).dir.deprel.seq + relative(p,c)
+c.lmc.morpho
+c.lns.word
+c.lmc.word
+c.lmc.word + path(p,c).dir.pos.seq
+path(p,c).dir.pos.seq
+path(p,c).dir.pos.seq + c.rns.morpho
+relative(p,c)
+p.morpho # NOT SUPPORTED: + p.lemmaSense
+p.lemma
+# NOT SUPPORTED: p.lemmaSense
+c.rmc.morpho
+c.rmc.pos
+c.rns.word
+c.rmc.word
+
+
+

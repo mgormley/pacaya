@@ -1,0 +1,21 @@
+# Grammar for the sentence: time flies like an arrow
+S
+S -> NP VP -1
+S -> VP -2
+VP -> V NP -1
+VP -> V PP -2
+PP -> IN NP -1
+NP -> DT N -1
+NP -> N -1
+NP -> N N -2
+NP -> N PP -3
+===
+N -> time -1
+V -> time -2
+V -> flies -1
+N -> flies -2
+IN -> like -1
+V -> like -2
+N -> like -3
+DT -> an -1
+N -> arrow -1

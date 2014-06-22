@@ -1,0 +1,12 @@
+# Grammar for the sentence: she eats pizza without anchovies
+S
+S -> N V -1
+V -> V N -1
+N -> N P -1
+P -> PP N -1
+===
+N -> she -1
+V -> eats -1
+N -> pizza -1
+PP -> without -1
+N -> anchovies -1
