@@ -1,4 +1,0 @@
-# Echos the classpath to stdout.
-#
-mvn exec:exec -q -Dexec.executable="echo" -Dexec.args="%classpath"
-
