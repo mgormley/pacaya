@@ -8,7 +8,6 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
@@ -29,6 +28,7 @@ import edu.jhu.featurize.TemplateLanguage.RulePiece;
 import edu.jhu.featurize.TemplateLanguage.SymbolProperty;
 import edu.jhu.featurize.TemplateLanguage.TokPropList;
 import edu.jhu.featurize.TemplateLanguage.TokProperty;
+import edu.jhu.gm.feat.SrlSignatureBuilder;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
@@ -140,7 +140,7 @@ public class TemplateFeatureExtractor {
     private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
 
     private final CorpusStatistics cs;
-    private final SrlBerkeleySignatureBuilder sig;
+    private final SrlSignatureBuilder sig;
     private final FeaturizedSentence fSent; 
 
     /**

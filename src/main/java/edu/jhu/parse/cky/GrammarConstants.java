@@ -2,13 +2,15 @@ package edu.jhu.parse.cky;
 
 import java.util.regex.Pattern;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+import org.apache.log4j.Logger;
+
 import edu.jhu.util.Alphabet;
 
 public class GrammarConstants {
     
+    private static final Logger log = Logger.getLogger(GrammarConstants.class);
+
     private static final String NULL_ELEMENT_TAG = "-NONE-";
-    private static int unknownLevel = 5;
     
     public static boolean isBinarized(String symbolStr) {
         return symbolStr.charAt(0) == '@';
@@ -46,9 +48,8 @@ public class GrammarConstants {
 
     // Hard-coded to Berkeley OOV signatures.
     public static String getSignature(String word, int loc, Alphabet<String> lexAlphabet) {
-        BerkeleySignatureBuilder bsb = new BerkeleySignatureBuilder(lexAlphabet);
-        String signature = bsb.getSignature(word, loc, unknownLevel);
-        return signature;
+        log.warn("Berkeley signature builder not supported in public release");
+        return word;
     }
     
 }

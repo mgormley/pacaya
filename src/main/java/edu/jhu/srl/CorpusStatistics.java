@@ -14,10 +14,10 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.gm.feat.SrlSignatureBuilder;
 import edu.jhu.prim.tuple.ComparablePair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -71,7 +71,7 @@ public class CorpusStatistics implements Serializable {
 
     public int maxSentLength = 0;
 
-    public SrlBerkeleySignatureBuilder sig;
+    public SrlSignatureBuilder sig;
     public Normalizer normalize;
 
     public CorpusStatisticsPrm prm;
@@ -80,7 +80,7 @@ public class CorpusStatistics implements Serializable {
     public CorpusStatistics(CorpusStatisticsPrm prm) {
         this.prm = prm;
         this.normalize = new Normalizer(prm.normalizeWords);
-        this.sig = new SrlBerkeleySignatureBuilder(new Alphabet<String>());
+        this.sig = new SrlSignatureBuilder(new Alphabet<String>());
         initialized = false;
     }
 

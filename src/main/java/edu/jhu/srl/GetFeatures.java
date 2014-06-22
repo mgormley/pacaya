@@ -17,11 +17,11 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.gm.feat.SrlSignatureBuilder;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
@@ -78,7 +78,7 @@ public class GetFeatures {
     private Map<Set<String>,MutableInt> bigrams = new HashMap<Set<String>,MutableInt>();
     
     private static Alphabet<String> lexAlphabet = new Alphabet<String>();
-    private static SrlBerkeleySignatureBuilder sig = new SrlBerkeleySignatureBuilder(lexAlphabet);
+    private static SrlSignatureBuilder sig = new SrlSignatureBuilder(lexAlphabet);
     
     private String trainingOut = new String();
     private String testingOut = new String();
