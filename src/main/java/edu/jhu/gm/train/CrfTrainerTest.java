@@ -8,8 +8,6 @@ import org.junit.Test;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
-import edu.jhu.gm.data.erma.ErmaReader;
-import edu.jhu.gm.data.erma.ErmaReaderTest;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
@@ -296,23 +294,7 @@ public class CrfTrainerTest {
         JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 2.60, 1.90, -4.51}, FgModelTest.getParams(model), 1e-2);
 
     }
-    
-    // This is slow and relies on hard-coded paths.
-    //TODO: @Test
-    public void testTrainErmaInput() {
-        ErmaReader er = new ErmaReader();
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExampleList data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, alphabet);
         
-        FgModel model = new FgModel(alphabet.size());
-        model = train(model, data);
-        
-        // ERMA achieves the following log-likelihood: 0.5802548014360731.
-        // Our CRF obtains LL: -0.0013527881300134936.
-        
-        // Note: This doesn't test the result, just that nothing throws an exception.
-    }
-    
     private static FgModel train(FgModel model, FgExampleList data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;

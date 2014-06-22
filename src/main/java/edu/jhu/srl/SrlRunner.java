@@ -58,8 +58,6 @@ import edu.jhu.hlt.optimize.AdaGrad;
 import edu.jhu.hlt.optimize.AdaGrad.AdaGradPrm;
 import edu.jhu.hlt.optimize.BottouSchedule;
 import edu.jhu.hlt.optimize.BottouSchedule.BottouSchedulePrm;
-import edu.jhu.hlt.optimize.MalletLBFGS;
-import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
@@ -777,9 +775,7 @@ public class SrlRunner {
     }
 
     private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getLbfgs() {
-        MalletLBFGSPrm prm = new MalletLBFGSPrm();
-        prm.maxIterations = maxLbfgsIterations;
-        return new MalletLBFGS(prm);
+        throw new IllegalStateException("LBFGS is currently not supported in the public release due to licensing restrictions.");
     }
     
     private static SGDPrm getSgdPrm() {

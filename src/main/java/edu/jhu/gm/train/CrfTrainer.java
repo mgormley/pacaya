@@ -6,9 +6,9 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.hlt.optimize.MalletLBFGS;
-import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.Optimizer;
+import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
@@ -30,8 +30,8 @@ public class CrfTrainer {
 
     public static class CrfTrainerPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
-        public Optimizer<DifferentiableFunction> maximizer = new MalletLBFGS(new MalletLBFGSPrm());
-        public Optimizer<DifferentiableBatchFunction> batchMaximizer = null;//new SGD(new SGDPrm());
+        public Optimizer<DifferentiableFunction> maximizer = null;
+        public Optimizer<DifferentiableBatchFunction> batchMaximizer = new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
         public int numThreads = 1;
     }
