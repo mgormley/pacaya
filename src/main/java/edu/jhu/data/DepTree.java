@@ -36,7 +36,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         this.parents = parents;
         nodes.add(new WallDepTreeNode());
         for (int i=0; i<sentence.size(); i++) {
-            Label label = sentence.get(i);
+            String label = sentence.get(i);
             nodes.add(new NonprojDepTreeNode(label, i));
         }
         // Add parent/child links to DepTreeNodes
@@ -115,6 +115,36 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
     }
 
+    /**
+     * Returns whether this is a valid depedency tree: a directed acyclic graph
+     * with a single root which covers all the tokens.
+     */
+    public static boolean isDepTree(int[] parents, boolean isProjective) {
+        // Check that there is exactly one node with the WALL as its parent
+        int emptyCount = countChildrenOf(parents, EMPTY_POSITION);
+        if (emptyCount != 0) {
+            return false;
+        }
+        int wallCount = countChildrenOf(parents, WallDepTreeNode.WALL_POSITION);
+        if (wallCount != 1) {
+            return false;
+        }
+        
+        // Check that there are no cyles
+        if (containsCycle(parents)) {
+            return false;
+        }
+        
+        // Check for projectivity if necessary
+        if (isProjective) {
+            if (!checkIsProjective(parents)) {
+                return false;
+            }
+        }
+        // Is a valid dependency tree.
+        return true;
+    }
+
     @Override
     public String toString() {
         return nodes.toString();
@@ -144,7 +174,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         return parents.length;
     }
 
-    public Sentence getSentence(Alphabet<Label> alphabet) {
+    public Sentence getSentence(Alphabet<String> alphabet) {
         return new Sentence(alphabet, this);
     }
 

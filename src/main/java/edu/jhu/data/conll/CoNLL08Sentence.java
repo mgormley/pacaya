@@ -160,10 +160,21 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
     public SrlGraph getSrlGraph() {
         return new SrlGraph(this);
     }
-    
+
+    // Note: CoNLL-2008 doesn't have the FILLPRED column like CoNLL-2009.
     public void setColsFromSrlGraph(SrlGraph srlGraph) {
+        if (srlGraph == null) {
+            // There are no predicates.
+            for (int i=0; i<size(); i++) {
+                CoNLL08Token tok = tokens.get(i);
+                tok.setPred(null);
+                List<String> emptyList = Collections.emptyList();
+                tok.setApreds(emptyList);
+            }
+            return;
+        }
         int numPreds = srlGraph.getNumPreds();
-        // Set the FILLPRED and PRED column.
+        // Set the PRED column.
         for (int i=0; i<size(); i++) {
             CoNLL08Token tok = tokens.get(i);
             SrlPred pred = srlGraph.getPredAt(i);
@@ -339,14 +350,15 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
             CoNLL08Token tok = new CoNLL08Token();
             tok.setId(i+1);
             tok.setForm(sent.getWord(i));
-            tok.setLemma(sent.getLemma(i));
-            tok.setGpos(sent.getPosTag(i));
-            tok.setPpos(sent.getPosTag(i));
+            
+            if (sent.getLemmas() != null) { tok.setLemma(sent.getLemma(i)); }
+            if (sent.getPosTags() != null) { tok.setGpos(sent.getPosTag(i)); }
+            if (sent.getPosTags() != null) { tok.setPpos(sent.getPosTag(i)); }
             tok.setSplitForm(sent.getWord(i));
-            tok.setSplitLemma(sent.getLemma(i));
-            tok.setSplitPpos(sent.getPosTag(i));
-            tok.setHead(sent.getParent(i) + 1);
-            tok.setDeprel(sent.getDeprel(i));            
+            if (sent.getLemmas() != null) { tok.setSplitLemma(sent.getLemma(i)); }
+            if (sent.getPosTags() != null) { tok.setSplitPpos(sent.getPosTag(i)); }
+            if (sent.getParents() != null) { tok.setHead(sent.getParent(i) + 1); }
+            if (sent.getDeprels() != null) { tok.setDeprel(sent.getDeprel(i)); }            
             toks.add(tok);
         }
         
@@ -354,6 +366,7 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
         CoNLL08Sentence updatedSentence = new CoNLL08Sentence(toks);
         
         // Update SRL columns from the SRL graph.
+        // (This correctly handles null SRL graphs.)
         updatedSentence.setColsFromSrlGraph(sent.getSrlGraph());
         
         return updatedSentence;

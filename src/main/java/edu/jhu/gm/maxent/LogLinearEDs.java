@@ -3,20 +3,7 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.data.FgExampleMemoryStore;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FactorTemplate;
-import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.ExpFamFactor;
-import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
 
@@ -24,7 +11,6 @@ import edu.jhu.util.Alphabet;
  * A factor for FgExamples constructed from LogLinearExDesc objects.
  * @author mgormley
  */
-@Deprecated
 public class LogLinearEDs {
 
     /**
@@ -48,14 +34,13 @@ public class LogLinearEDs {
         }
     }
     
-    private static final Object TEMPLATE_KEY = "loglin";
-    private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
+    private final Alphabet<String> alphabet = new Alphabet<String>();
     private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();
 
     public void addEx(int count, String... featNames) {
         FeatureVector features = new FeatureVector();
         for (String featName : featNames) {
-            features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
+            features.add(alphabet.lookupIndex(featName), 1.0);
         }
         LogLinearExDesc ex = new LogLinearExDesc(count, features);
         descList.add(ex);
@@ -74,48 +59,21 @@ public class LogLinearEDs {
         return names;
     }
     
-    public FgExampleList getData() {
-        FactorTemplateList fts = new FactorTemplateList();
-        Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-        fts.add(new FactorTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
-        
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        int state=0;
-        for (final LogLinearExDesc desc : descList) {
-            for (int i=0; i<desc.getCount(); i++) {
-                final VarConfig trainConfig = new VarConfig();
-                trainConfig.put(v0, state);
-                
-                FactorGraph fg = new FactorGraph();
-                v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-                ExpFamFactor f0 = new ExpFamFactor(new VarSet(v0), TEMPLATE_KEY);
-                fg.addFactor(f0);
-                ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
-                    @Override
-                    public FeatureVector calcObsFeatureVector(int factorId) {
-                        // TODO: This doesn't do the right thing...we
-                        // actually want features of the predicted state,
-                        // which isn't possible to set when only looking at
-                        // the observations.
-                        // Instead we need to be aware of the VarConfig of the predicted vars.
-                        return desc.getFeatures();
-                    }
-                    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
-                            VarConfig goldConfig, FactorTemplateList fts) {             
-                        // Do nothing.               
-                    }
-                    public void clear() {
-                        // Do nothing.
-                    }
-                };
-                data.add(new FgExample(fg, trainConfig, featExtractor, fts));
-            }
-            state++;
+    public LogLinearXYData getData() {
+        int numYs = descList.size();
+        LogLinearXYData data = new LogLinearXYData(numYs, alphabet);
+        FeatureVector[] fvs = new FeatureVector[numYs];
+        for (int y=0; y<numYs; y++) {
+            fvs[y] = descList.get(y).getFeatures();            
+        }
+        for (int y=0; y<numYs; y++) {
+            LogLinearExDesc desc = descList.get(y);
+            data.addEx(desc.getCount(), "x=0", "y="+y, fvs);
         }
         return data;
     }
 
-    public Alphabet<Feature> getAlphabet() {
+    public Alphabet<String> getAlphabet() {
         return alphabet;
     }
         

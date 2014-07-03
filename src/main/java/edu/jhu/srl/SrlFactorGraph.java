@@ -3,28 +3,27 @@ package edu.jhu.srl;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.ProjDepTreeFactor;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.iter.IntIter;
+import edu.jhu.prim.set.IntSet;
+import edu.jhu.util.collections.Lists;
 
 /**
- * A factor graph for SRL.
+ * A factor graph builder for SRL.
  * 
  * @author mmitchell
  * @author mgormley
  */
-// TODO: This should (maybe) be divided up into an SrlFactorGraph and a
-// DepParseFactorGraph, with a JointSrlFactorGraph that pulls the two together.
-public class SrlFactorGraph extends FactorGraph {
+public class SrlFactorGraph implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,26 +48,20 @@ public class SrlFactorGraph extends FactorGraph {
          */
         public boolean makeUnknownPredRolesLatent = true;
         
-        /** The type of the link variables. */
-        public VarType linkVarType = VarType.LATENT;
-        
-        /**
-         * Whether to include a global factor which constrains the Link
-         * variables to form a projective dependency tree.
-         */
-        public boolean useProjDepTreeFactor = false;
-        
         /** Whether to allow a predicate to assign a role to itself. (This should be turned on for English) */
         public boolean allowPredArgSelfLoops = false;
         
         /** Whether to include unary factors in the model. (Ignored if there are no Link variables.) */
         public boolean unaryFactors = true;
         
-        /** Whether to always include Link variables. For testing only. */
-        public boolean alwaysIncludeLinkVars = false;
+        /** Whether to include factors between the sense and role variables. */
+        public boolean binarySenseRoleFactors = false;
         
         /** Whether to predict the predicate sense. */
         public boolean predictSense = false;
+        
+        /** Whether to predict the predicate positions. */
+        public boolean predictPredPos = false;
     }
 
     public enum RoleStructure {
@@ -79,50 +72,9 @@ public class SrlFactorGraph extends FactorGraph {
     }
     
     public enum SrlFactorTemplate {
-        LINK_ROLE_BINARY,
         ROLE_UNARY,
-        LINK_UNARY,
-        SENSE_UNARY,
-    }
-    
-    /**
-     * An SRL factor, which includes its type (i.e. template).
-     * @author mgormley
-     */
-    public static class SrlFactor extends ExpFamFactor {
-
-        private static final long serialVersionUID = 1L;
-
-        SrlFactorTemplate type;
-        
-        public SrlFactor(VarSet vars, SrlFactorTemplate type) {
-            super(vars, type);
-            this.type = type;
-        }
-        
-        /**
-         * Constructs an SrlFactor.
-         * 
-         * This constructor allows us to differentiate between the "type" of
-         * factor (e.g. SENSE_UNARY) and its "templateKey" (e.g.
-         * SENSE_UNARY_satisfacer.a1). Using Sense factors as an example, this
-         * way we can use the type to determine which type of features should be
-         * extracted, and the templateKey to determine which independent
-         * classifier should be used.
-         * 
-         * @param vars The variables.
-         * @param type The type.
-         * @param templateKey The template key.
-         */
-        public SrlFactor(VarSet vars, SrlFactorTemplate type, Object templateKey) {
-            super(vars, templateKey);
-            this.type = type;
-        }        
-        
-        public SrlFactorTemplate getFactorType() {
-            return type;
-        }
-        
+        SENSE_UNARY, 
+        SENSE_ROLE_BINARY,
     }
     
     /**
@@ -135,7 +87,7 @@ public class SrlFactorGraph extends FactorGraph {
         private static final long serialVersionUID = 1L;
 
         private int parent;
-        private int child;     
+        private int child;
         
         public RoleVar(VarType type, int numStates, String name, List<String> stateNames, int parent, int child) {
             super(type, numStates, name, stateNames);
@@ -153,7 +105,6 @@ public class SrlFactorGraph extends FactorGraph {
         
     }
     
-
     /**
      * Sense variable. 
      * 
@@ -181,28 +132,49 @@ public class SrlFactorGraph extends FactorGraph {
 
     // Cache of the variables for this factor graph. These arrays may contain
     // null for variables we didn't include in the model.
-    private LinkVar[] rootVars;
-    private LinkVar[][] childVars;
     private RoleVar[][] roleVars;
     private SenseVar[] senseVars;
 
     // The sentence length.
-    private final int n;                
+    private int n;                
 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
-        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
+    public SrlFactorGraph(SrlFactorGraphPrm prm) {
+        this.prm = prm;
     }
 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
-            List<String> roleStateNames, Map<String,List<String>> psMap) {
-        this.prm = prm;
+    /**
+     * Adds factors and variables to the given factor graph.
+     */
+    public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
+            ObsFeatureConjoiner ofc, FactorGraph fg) {
+        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
+    }
+
+    /**
+     * Adds factors and variables to the given factor graph.
+     */
+    public void build(List<String> words, List<String> lemmas, IntSet knownPreds, List<String> roleStateNames,
+            Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FactorGraph fg) {
+        // Check for null arguments.
+        if (prm.roleStructure == RoleStructure.PREDS_GIVEN && knownPreds == null) {
+            throw new IllegalArgumentException("knownPreds must be non-null");
+        }
+        if (prm.predictSense && (lemmas == null || psMap == null)) {
+            throw new IllegalArgumentException("lemmas and psMap must be non-null");
+        }
+        if (prm.roleStructure == RoleStructure.PREDS_GIVEN && prm.predictPredPos) {
+            throw new IllegalStateException("PREDS_GIVEN assumes that the predicate positions are always observed.");
+        }
+        
         this.n = words.size();
 
         // Create the Role variables.
         roleVars = new RoleVar[n][n];
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN) {
             // CoNLL-friendly model; preds given
-            for (int i : knownPreds) {
+            IntIter iter = knownPreds.iterator();
+            while (iter.hasNext()) {
+                int i = iter.next();
                 for (int j = 0; j < n;j++) {
                     if (i==j && !prm.allowPredArgSelfLoops) {
                         continue;
@@ -226,87 +198,65 @@ public class SrlFactorGraph extends FactorGraph {
         
         // Create the Sense variables.
         senseVars = new SenseVar[n];
-        if (prm.predictSense) {
-            for (int i = 0; i < n; i++) {
-                if (knownPreds.contains(i)) {
-                    List<String> senseStateNames = psMap.get(lemmas.get(i));
-                    if (senseStateNames == null) {
-                        senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
-                    }
-                    senseVars[i] = createSenseVar(i, senseStateNames);
+        for (int i = 0; i < n; i++) {
+            // Only look at the knownPreds if the predicate positions are given.
+            if (prm.roleStructure == RoleStructure.PREDS_GIVEN && !knownPreds.contains(i)) {
+                // Skip non-predicate positions.
+                continue;
+            }
+            if (prm.roleStructure == RoleStructure.ALL_PAIRS && prm.predictSense && prm.predictPredPos) {
+                // Sense and position.
+                List<String> senseStateNames = psMap.get(lemmas.get(i));
+                if (senseStateNames == null) {
+                    senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
                 }
+                // Include the state of "no predicate".
+                senseStateNames = Lists.cons("_", senseStateNames);
+                senseVars[i] = createSenseVar(i, senseStateNames);
+            } else if (prm.predictSense) {
+                // Sense without positions.
+                List<String> senseStateNames = psMap.get(lemmas.get(i));
+                if (senseStateNames == null) {
+                    senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
+                }
+                senseVars[i] = createSenseVar(i, senseStateNames);
+            } else if (prm.predictPredPos) {
+                // Positions without sense.
+                senseVars[i] = createSenseVar(i, CorpusStatistics.PRED_POSITION_STATE_NAMES);
             }
         }
-        
-        // Create the Link variables.
-        if (prm.useProjDepTreeFactor && prm.linkVarType != VarType.OBSERVED) {
-            log.trace("Adding projective dependency tree global factor.");
-            ProjDepTreeFactor treeFactor = new ProjDepTreeFactor(n, prm.linkVarType);
-            rootVars = treeFactor.getRootVars();
-            childVars = treeFactor.getChildVars();
-            // Add the global factor.
-            addFactor(treeFactor);
-        } else if (prm.linkVarType == VarType.OBSERVED || prm.alwaysIncludeLinkVars) {
-            log.trace("Adding observed Link variables, without the global factor.");
-            rootVars = new LinkVar[n];
-            childVars = new LinkVar[n][n];
-            for (int i = -1; i < n; i++) {
-                for (int j = 0; j < n;j++) {
-                    if (prm.linkVarType == VarType.OBSERVED && (i == -1 || roleVars[i][j] == null)) {
-                        // Don't add observed Link vars when the corresponding
-                        // Role var doesn't exist.
-                        continue;
-                    }
-                    if (i != j) {
-                        if (i == -1) {
-                            rootVars[j] = createLinkVar(i, j);
-                        } else {
-                            childVars[i][j] = createLinkVar(i, j);
-                        }
-                    }
-                }
-            }
-        } else {
-            rootVars = new LinkVar[n];
-            childVars = new LinkVar[n][n];
-            log.trace("Not adding any Link variables.");
-            // IMPORTANT NOTE: Here we OVERRIDE prm.unaryFactors to make sure
-            // that the Role variables have /some/ factor to participate in.
-            prm.unaryFactors = true;
-        }
-        
+
+                
         // Add the factors.
         for (int i = -1; i < n; i++) {
-            // Add the unary factors for the sense variables.
-            if (prm.predictSense && i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED) {
-                // The template key must include the lemma appended, so that
-                // there is a unique set of model parameters for each predicate.
-                String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmas.get(i);
-                // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
-                if (psMap.get(lemmas.get(i)) == null) {
-                    templateKey = TEMPLATE_KEY_FOR_UNKNOWN_SENSE;
-                }
-                addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey));
-            }
-            // Add the role/link factors.
-            for (int j = 0; j < n; j++) {
-                if (i == -1) {
-                    // Add unary factors on child Links
-                    if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
-                        addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY));
-                    }
+            // Get the lemma or UNK if we don't know it.
+            String lemmaForTk = null;
+            if (i >= 0) {
+                if (prm.predictSense && psMap.get(lemmas.get(i)) != null) {
+                    // The template key must include the lemma appended, so that
+                    // there is a unique set of model parameters for each predicate.
+                    lemmaForTk = lemmas.get(i);
                 } else {
+                    // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
+                    lemmaForTk = CorpusStatistics.UNKNOWN_SENSE;
+                }
+            }
+            // Add the unary factors for the sense variables.
+            if (i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED) {
+                String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmaForTk;
+                fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey, ofc, obsFe));
+            }
+            // Add the role factors.
+            for (int j = 0; j < n; j++) {
+                if (i != -1) {
                     // Add unary factors on Roles.
                     if (prm.unaryFactors && roleVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
+                        fg.addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
                     }
-                    // Add unary factors on child Links
-                    if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY));
-                    }
-                    // Add binary factors between Roles and Links.
-                    if (roleVars[i][j] != null && childVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.LINK_ROLE_BINARY));
+                    // Add binary factors between Role and Sense variables.
+                    if (prm.binarySenseRoleFactors && senseVars[i] != null && roleVars[i][j] != null) {
+                        String templateKey = SrlFactorTemplate.SENSE_ROLE_BINARY + "_" + lemmaForTk;
+                        fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i], roleVars[i][j]), SrlFactorTemplate.SENSE_ROLE_BINARY, templateKey, ofc, obsFe));
                     }
                 }
             }
@@ -315,7 +265,7 @@ public class SrlFactorGraph extends FactorGraph {
 
     // ----------------- Creating Variables -----------------
 
-    private RoleVar createRoleVar(int parent, int child, Set<Integer> knownPreds, List<String> roleStateNames) {
+    private RoleVar createRoleVar(int parent, int child, IntSet knownPreds, List<String> roleStateNames) {
         RoleVar roleVar;
         String roleVarName = "Role_" + parent + "_" + child;
         if (!prm.makeUnknownPredRolesLatent || knownPreds.contains((Integer) parent)) {
@@ -325,11 +275,6 @@ public class SrlFactorGraph extends FactorGraph {
         }
         return roleVar;
     }
-
-    private LinkVar createLinkVar(int parent, int child) {
-        String linkVarName = LinkVar.getDefaultName(parent,  child);
-        return new LinkVar(prm.linkVarType, linkVarName, parent, child);
-    }
     
     private SenseVar createSenseVar(int parent, List<String> senseStateNames) {
         String senseVarName = "Sense_" + parent;
@@ -338,25 +283,6 @@ public class SrlFactorGraph extends FactorGraph {
     
     // ----------------- Public Getters -----------------
     
-    /**
-     * Get the link var corresponding to the specified parent and child position.
-     * 
-     * @param parent The parent word position, or -1 to indicate the wall node.
-     * @param child The child word position.
-     * @return The link variable or null if it doesn't exist.
-     */
-    public LinkVar getLinkVar(int parent, int child) {
-        if (! (-1 <= parent && parent < n && 0 <= child && child < n)) {
-            return null;
-        }
-        
-        if (parent == -1) {
-            return rootVars[child];
-        } else {
-            return childVars[parent][child];
-        }
-    }
-
     /**
      * Gets a Role variable.
      * @param i The parent position.
@@ -386,6 +312,10 @@ public class SrlFactorGraph extends FactorGraph {
 
     public int getSentenceLength() {
         return n;
+    }
+
+    public RoleVar[][] getRoleVars() {
+        return roleVars;
     }
     
 }

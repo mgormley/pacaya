@@ -30,7 +30,7 @@ def prep_project(name, mvn_command, check_local=True):
     with lcd("~/research/%s" % (name)):
         local("git push")
         if "nothing to commit, working directory clean" not in local("git status", capture=True):
-            print "\nERROR: prject requires git commit/git push: %s\n" % name
+            print "\nERROR: project requires git commit/git push: %s\n" % name
             if check_local:
                 sys.exit(1)
     with cd("~/working/%s" % (name)):
@@ -45,12 +45,14 @@ def run_srl(name, argv):
         
 def remote_srl(argv):
     env.gateway = "%s:%s" % ("external.hltcoe.jhu.edu", "22")
-    env.host_string = "%s:%s" % ("test4", "22")
+    env.host_string = "%s:%s" % ("test2", "22")
     run("uname -a")
-    prep_project("prim", "install", True)    
+    #prep_project("vector", "install", True)    
+    prep_project("prim", "install", True)
     #prep_project("erma", "install", True)
-    prep_project("pacaya2", "compile", False)
-    run_srl("pacaya2", argv)
+    prep_project("optimize", "install", True)    
+    prep_project("pacaya", "compile", False)
+    run_srl("pacaya", argv)
     
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"

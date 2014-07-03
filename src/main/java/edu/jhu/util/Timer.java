@@ -12,6 +12,10 @@ public class Timer implements Serializable {
     private boolean isRunning;
     
     public Timer() {
+        reset();
+    }
+
+    public void reset() {
         numStarts = 0;
         totMs = 0;
         startTime = 0;
@@ -39,8 +43,8 @@ public class Timer implements Serializable {
         stop();
         start();
     }
-
-    private long elapsedSinceLastStart() {
+    
+    public long elapsedSinceLastStart() {
         return System.currentTimeMillis() - startTime;
     }
 
@@ -99,6 +103,12 @@ public class Timer implements Serializable {
         timeInSeconds = timeInSeconds - (minutes * 60);
         seconds = timeInSeconds;
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    /** Adds the stats from the other timer to this one. (Threadsafe) */
+    public synchronized void add(Timer other) {
+        this.numStarts += other.numStarts;
+        this.totMs += other.totMs;
     }
 
 }

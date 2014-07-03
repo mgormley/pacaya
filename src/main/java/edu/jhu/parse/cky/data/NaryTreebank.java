@@ -10,9 +10,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import edu.jhu.data.Label;
-import edu.jhu.util.Alphabet;
-
 public class NaryTreebank extends ArrayList<NaryTree> {
 
     private static final long serialVersionUID = -8440401929408530783L;
@@ -20,11 +17,12 @@ public class NaryTreebank extends ArrayList<NaryTree> {
     /**
      * Reads a list of trees in Penn Treebank format.
      */
-    public static NaryTreebank readTreesInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
+    public static NaryTreebank readTreesInPtbFormat(Reader reader) throws IOException {
         NaryTreebank trees = new NaryTreebank();
         while (true) {
-            NaryTree tree = NaryTree.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            NaryTree tree = NaryTree.readTreeInPtbFormat(reader);
             if (tree != null) {
+                tree.intern();
                 trees.add(tree);
             }
             if (tree == null) {
@@ -65,26 +63,26 @@ public class NaryTreebank extends ArrayList<NaryTree> {
     public void writeSentencesInOneLineFormat(String outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
         for (NaryTree tree : this) {
-            List<Label> sent = tree.getSentence().getLabels();
+            List<String> sent = tree.getWords();
             writer.write(StringUtils.join(sent.toArray(), " "));
             writer.write("\n");
         }
         writer.close(); 
     } 
 
-    public BinaryTreebank leftBinarize(Alphabet<Label> ntAlphabet) {
+    public BinaryTreebank leftBinarize() {
         BinaryTreebank binaryTrees = new BinaryTreebank();
         for (NaryTree tree : this) {
-            binaryTrees.add(tree.leftBinarize(ntAlphabet));
+            binaryTrees.add(tree.leftBinarize());
         }
         return binaryTrees;
     }
 
-    public void resetAlphabets(Alphabet<Label> lexAlphabet,
-            Alphabet<Label> ntAlphabet) {
+    /** Intern all the strings. */
+    public void intern() {
         for (NaryTree tree : this) {
-            tree.resetAlphabets(lexAlphabet, ntAlphabet);
+            tree.intern();
         }
     }
-
+    
 }

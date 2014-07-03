@@ -34,9 +34,9 @@ public class TemplateLanguage {
     
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
-        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED, WORD_TOP_N,
+        INDEX, WORD, LEMMA, POS, CPOS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED, WORD_TOP_N,
         //
-        MORPHO1, MORPHO2, MORPHO3;
+        MORPHO1, MORPHO2, MORPHO3;        
     }
 
     /** Word property list expansion. A mapping from a position to a list of strings. */ 
@@ -64,7 +64,7 @@ public class TemplateLanguage {
     public enum PositionList {
         CHILDREN_P, NO_FAR_CHILDREN_P, CHILDREN_C, NO_FAR_CHILDREN_C,
         //
-        LINE_P_C, BTWN_P_C, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT;
+        LINE_P_C, LINE_RI_RK, BTWN_P_C, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT;
 
         public boolean isPath() {
             switch (this) {
@@ -76,7 +76,7 @@ public class TemplateLanguage {
 
     /** List Modifiers. Mapping of a list of strings to a new list of strings. */
     public enum ListModifier {
-        SEQ, BAG, NO_DUP, UNIGRAM;
+        SEQ, BAG, NO_DUP, UNIGRAM, BIGRAM, TRIGRAM;
     }
 
     /**
@@ -84,15 +84,31 @@ public class TemplateLanguage {
      * feature.
      */
     public enum OtherFeat {
-        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN
+        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN,
+        //
+        RULE_IS_UNARY;
         // TODO: Not implemented:
-        // PRED_VOICE_WORD_OR_POS,
+        // PRED_VOICE_WORD_OR_POS,        
     }
 
     /** Positions. */
     public enum Position {
-        PARENT, CHILD;
+        // Dependency parsing
+        PARENT, CHILD, MODIFIER,
+        // Constituency parsing
+        RULE_START, RULE_MID, RULE_END;
     }
+    
+    /** The pieces of a CNF rule. */
+    public enum RulePiece {
+        FULL_RULE, PARENT, LEFT_CHILD, RIGHT_CHILD
+    }
+    
+    /** Symbol property. A mapping from a rule piece to a string. */
+    public enum SymbolProperty {
+        TAG, BASE_TAG, PARENT_TAG, BASE_PARENT_TAG
+    }
+    
     
     /* -------------------- Descriptions of the Language Elements ---------------- */
 
@@ -101,7 +117,7 @@ public class TemplateLanguage {
      * be present in order to utilize each structure.
      */
     public enum AT {
-        WORD, LEMMA, POS, BROWN, MORPHO, DEP_TREE, DEPREL, SRL;
+        WORD, LEMMA, POS, CPOS, BROWN, MORPHO, DEP_TREE, DEPREL, DEP_EDGE_MASK, SRL_PRED_IDX, SRL, BINARY_TREE;
     }
         
     public static Description getDescByName(String name) {
@@ -137,11 +153,29 @@ public class TemplateLanguage {
         /** Positions. */
         desc(Position.PARENT, "p", "Parent");
         desc(Position.CHILD, "c", "Child");
+        desc(Position.MODIFIER, "m", "Modifier");
+        desc(Position.RULE_START, "ri", "Rule start");
+        desc(Position.RULE_MID, "rj", "Rule mid");
+        desc(Position.RULE_END, "rk", "Rule end");        
+
+        /** CNF Rule pieces. */
+        desc(RulePiece.FULL_RULE, "rule", "Entire rule");
+        desc(RulePiece.PARENT, "ruleP", "Rule parent");
+        desc(RulePiece.LEFT_CHILD, "ruleLc", "Rule left child");
+        desc(RulePiece.RIGHT_CHILD, "ruleRc", "Rule right child");
+        
+        /** Symbol property. A mapping from a rule piece to a string. */
+        desc(SymbolProperty.TAG, "tag", "Symbol");
+        // TODO: Add ATs
+        desc(SymbolProperty.BASE_TAG, "bTag", "Base symbol");
+        desc(SymbolProperty.PARENT_TAG, "pTag", "Parent symbol annotation");
+        desc(SymbolProperty.BASE_PARENT_TAG, "bpTag", "Base of parent symbol annotation");
         
         /** Word property. A mapping from a position to a string. */
         desc(TokProperty.WORD, "word", "Word", AT.WORD);
         desc(TokProperty.LEMMA, "lemma", "Lemma", AT.LEMMA);
         desc(TokProperty.POS, "pos", "POS Tag", AT.POS);
+        desc(TokProperty.CPOS, "cpos", "Coarse POS Tag", AT.CPOS);
         desc(TokProperty.BC0, "bc0", "Coarse-grained Brown cluster", AT.BROWN);
         desc(TokProperty.BC1, "bc1", "Fine-grained Brown cluster", AT.BROWN);
         desc(TokProperty.MORPHO, "morpho", "Morphological features", AT.MORPHO);
@@ -151,6 +185,7 @@ public class TemplateLanguage {
         desc(TokProperty.CHPRE5, "chpre5", "5-character prefix of a word", AT.WORD);
         desc(TokProperty.CAPITALIZED, "capitalized", "Whether this word starts with a capital letter", AT.WORD);
         desc(TokProperty.WORD_TOP_N, "wordTopN", "Word if it's in the top N", AT.WORD);
+        desc(TokProperty.INDEX, "index", "The position itself", AT.WORD);
         
         desc(TokProperty.MORPHO1, "morpho1", "Morphological feature 1", AT.MORPHO);
         desc(TokProperty.MORPHO2, "morpho2", "Morphological feature 2", AT.MORPHO);
@@ -191,6 +226,7 @@ public class TemplateLanguage {
 
         /** Position List. Mapping from one or two positions to a position list. */
         desc(PositionList.LINE_P_C, "line(p,c)", "horizontal path between p and c (inclusive)", AT.WORD);
+        desc(PositionList.LINE_RI_RK, "line(ri,rk)", "horizontal path between ri and rj (inclusive)", AT.WORD);
         desc(PositionList.BTWN_P_C, "btwn(p,c)", "Horizontal path between p and c (exclusive)", AT.WORD);
         desc(PositionList.CHILDREN_P, "children(p)", "Children of p", AT.DEP_TREE);
         desc(PositionList.NO_FAR_CHILDREN_P, "noFarChildren(p)", "Children without the leftmost or rightmost included", AT.DEP_TREE);
@@ -206,7 +242,9 @@ public class TemplateLanguage {
         desc(ListModifier.BAG, "bag", "List to set.");
         desc(ListModifier.NO_DUP, "noDup", "Unix “uniq” on original list.");
         desc(ListModifier.UNIGRAM, "1gram", "Creates a separate feature for each element of the list.");
-   
+        desc(ListModifier.BIGRAM, "2gram", "Creates a separate feature for each bigram in the list.");
+        desc(ListModifier.TRIGRAM, "3gram", "Creates a separate feature for each trigram in the list.");
+        
         /** Additional Features. Mapping from parent and child positions to a feature. */
         desc(OtherFeat.RELATIVE, "relative(p,c)", "Relative position of p and c: before, after, on.", AT.WORD);
         desc(OtherFeat.DISTANCE, "distance(p,c)", "Distance binned into greater than: 2, 5, 10, 20, 30, or 40", AT.WORD);
@@ -215,6 +253,7 @@ public class TemplateLanguage {
         desc(OtherFeat.PATH_GRAMS, "pathGrams", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
         desc(OtherFeat.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
         desc(OtherFeat.SENT_LEN, "sentlen", "Sentence length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
+        desc(OtherFeat.RULE_IS_UNARY, "ruleIsUnary", "Whether a rule is unary");
         // TODO:
         //desc(OtherFeat.PRED_VOICE_WORD_OR_POS, "p.voice+a.word / p.voice+a.t", "The predicate voice and the  word/POS of the argument.", AT.LABEL_DEP_TREE);
         
@@ -385,24 +424,44 @@ public class TemplateLanguage {
         public List<Enum<?>> getStructure() {
             return Lists.getList(pl, prop, eprop, lmod);
         }
-        private static String safeName(Enum<?> e) {
-            return e == null ? "" : e.name(); 
-        }
     }
     
     /**
      * For feature templates of the form: 
+     *     ruleP.tag
+     *     ruleLc.bTag
+     */
+    public static class FeatTemplate4 extends FeatTemplate {
+        private static final long serialVersionUID = 1L;
+        public RulePiece piece; 
+        public SymbolProperty prop;
+        /**
+         * Constructor.
+         * @param pos The piece of the rule to extract.
+         * @param prop Property to extract from the rule symbol.
+         */
+        public FeatTemplate4(RulePiece piece, SymbolProperty prop) {
+            this.piece = piece;
+            this.prop = prop;
+        }
+        public List<Enum<?>> getStructure() {
+            return Lists.getList(piece, prop);
+        }
+    }
+    
+    /**
+     * For standalone feature templates of the form: 
      *    DepSubCat
      *    geneology(p,c)
      */
-    public static class FeatTemplate4 extends FeatTemplate {
+    public static class FeatTemplate0 extends FeatTemplate {
         private static final long serialVersionUID = 1L;
         public OtherFeat feat;
         /**
          * Constructor. 
          * @param feat The special feature.
          */
-        public FeatTemplate4(OtherFeat feat) {
+        public FeatTemplate0(OtherFeat feat) {
             this.feat = feat;
         }
         public List<Enum<?>> getStructure() {
@@ -466,24 +525,7 @@ public class TemplateLanguage {
     }
     
     public static boolean hasRequiredAnnotationType(SimpleAnnoSentence sent, AT type) {
-        switch (type) {
-        case WORD:
-            return sent.getWords() != null;
-        case LEMMA:
-            return sent.getLemmas() != null;
-        case POS:
-            return sent.getPosTags() != null;
-        case BROWN:
-            return sent.getClusters() != null;
-        case DEP_TREE:
-            return sent.getParents() != null;
-        case DEPREL:
-            return sent.getParents() != null && sent.getDeprels() != null;
-        case MORPHO:
-            return sent.getFeats() != null;
-        default:
-            throw new IllegalStateException();
-        }
+        return sent.hasAt(type);
     }
 
 

@@ -1,9 +1,6 @@
 package edu.jhu.gm.data;
 
 import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
@@ -13,7 +10,7 @@ import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 
 public class FgExampleListTest {
 
-    @Test
+    // TODO: Move this test. It doesn't really belong here. @Test
     public void testUpdatingOfTemplates() {
         FactorGraph fg = FactorGraphTest.getLinearChainGraph(true);
         VarConfig vc = new VarConfig();
@@ -22,8 +19,8 @@ public class FgExampleListTest {
         }
         
         FactorTemplateList fts = new FactorTemplateList();
-        FgExample ex = new FgExample(fg, vc, new SimpleVCFeatureExtractor(fg, vc, fts), fts);
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
+        FgExample ex = new LabeledFgExample(fg, vc, new SimpleVCFeatureExtractor(fts), fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
         data.add(ex);
         
         System.out.println(fts);

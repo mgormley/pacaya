@@ -3,7 +3,7 @@ package edu.jhu.gm.model;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.iter.IntIter;
 
   /** Ported by hand from libDAI in C++.
    * Originally released under the BSD license.
@@ -111,6 +111,13 @@ public class IndexFor implements IntIter {
     /// Returns \c true if the current state is valid
     public boolean hasNext() {
         return( _index >= 0 );
+    }
+    
+    /**
+     * For each variable in forVars, the current state.
+     */
+    public int[] getState() {
+        return Arrays.copyOf(_state, _state.length);
     }
     
 }

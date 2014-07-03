@@ -7,9 +7,6 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import edu.jhu.data.Label;
-import edu.jhu.util.Alphabet;
-
 public class NaryTreeTest {
 
     @Test
@@ -22,11 +19,9 @@ public class NaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )) ))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
-        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
-        System.out.println(alphabet);
         System.out.println(newTreeStr);
         newTreeStr = canonicalizeTreeString(newTreeStr);
         origTreeStr = canonicalizeTreeString(origTreeStr);
@@ -44,11 +39,9 @@ public class NaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
-        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
-        System.out.println(alphabet);
         System.out.println(newTreeStr);
         newTreeStr = canonicalizeTreeString(newTreeStr);
         origTreeStr = canonicalizeTreeString(origTreeStr);
@@ -66,8 +59,7 @@ public class NaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
-        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
         System.out.println(newTreeStr);
@@ -99,15 +91,11 @@ public class NaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origNaryTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
-        NaryTree naryTree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
-        assertEquals(20, alphabet.size());
-        BinaryTree binaryTree = naryTree.leftBinarize(alphabet);
-        assertEquals(22, alphabet.size());
+        NaryTree naryTree = NaryTree.readTreeInPtbFormat(reader);
+        BinaryTree binaryTree = naryTree.leftBinarize();
 
         String newBinaryTreeStr = binaryTree.getAsPennTreebankString();
         
-        System.out.println(alphabet);
         System.out.println(newBinaryTreeStr);
         newBinaryTreeStr = canonicalizeTreeString(newBinaryTreeStr);
         origBinaryTreeStr = canonicalizeTreeString(origBinaryTreeStr);

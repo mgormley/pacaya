@@ -2,9 +2,7 @@ package edu.jhu.gm.data;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 
-import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.util.cache.CachedFastDiskStore;
 
 /**
@@ -17,12 +15,11 @@ public class FgExampleDiskStore extends AbstractFgExampleList implements FgExamp
 
     private CachedFastDiskStore<Integer, FgExample> examples;
 
-    public FgExampleDiskStore(FactorTemplateList fts) {
-        this(fts, new File("."), true, -1);
+    public FgExampleDiskStore() {
+        this(new File("."), true, -1);
     }
 
-    public FgExampleDiskStore(FactorTemplateList fts, File cacheDir, boolean gzipped, int maxEntriesInMemory) {
-        super(fts);
+    public FgExampleDiskStore(File cacheDir, boolean gzipped, int maxEntriesInMemory) {
         try {
             File cachePath = File.createTempFile("cache", ".binary.gz", cacheDir);
             this.examples = new CachedFastDiskStore<Integer, FgExample>(cachePath, gzipped, maxEntriesInMemory);

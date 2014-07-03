@@ -6,17 +6,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import edu.jhu.data.Label;
-import edu.jhu.util.Alphabet;
-
 public class BinaryTreebank extends ArrayList<BinaryTree> {
 
     private static final long serialVersionUID = -8440401929408530783L;
 
-    public NaryTreebank collapseToNary(Alphabet<Label> ntAlphabet) {
+    public NaryTreebank collapseToNary() {
         NaryTreebank naryTrees = new NaryTreebank();
         for (BinaryTree tree : this) {
-            naryTrees.add(tree.collapseToNary(ntAlphabet));
+            naryTrees.add(tree.collapseToNary());
         }
         return naryTrees;
     } 
@@ -49,11 +46,11 @@ public class BinaryTreebank extends ArrayList<BinaryTree> {
         writer.close();        
     }
 
-    public void resetAlphabets(Alphabet<Label> lexAlphabet,
-            Alphabet<Label> ntAlphabet) {
+    /** Intern all the strings. */
+    public void intern() {
         for (BinaryTree tree : this) {
-            tree.resetAlphabets(lexAlphabet, ntAlphabet);
+            tree.intern();
         }
-    } 
-
+    }
+    
 }

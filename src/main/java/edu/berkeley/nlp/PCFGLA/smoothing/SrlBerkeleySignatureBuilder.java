@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.jhu.data.Label;
-import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
 
 
@@ -22,20 +20,15 @@ import edu.jhu.util.Alphabet;
 public class SrlBerkeleySignatureBuilder implements Serializable {
 
     private static final long serialVersionUID = 7489745353488039306L;
-    private Alphabet<Label> lexAlphabet;
+    private Alphabet<String> lexAlphabet;
 
-    public SrlBerkeleySignatureBuilder(Alphabet<Label> lexAlphabet) {
-        this.lexAlphabet = new Alphabet<Label>(lexAlphabet);
+    public SrlBerkeleySignatureBuilder(Alphabet<String> lexAlphabet) {
+        this.lexAlphabet = new Alphabet<String>(lexAlphabet);
         this.lexAlphabet.stopGrowth();
     }
 
     private boolean isKnown(String lowered) {
-        return lexAlphabet.lookupIndex(new Word(lowered)) != -1;
-    }
-    
-    public Word getSignature(Word wordLabel, int loc, int unknownLevel) {
-        String word = wordLabel.getLabel();
-        return new Word(getSignature(word, loc, unknownLevel));
+        return lexAlphabet.lookupIndex(lowered) != -1;
     }
    
     public Set<String> getSimpleUnkFeatures(String word, int loc, String language) {

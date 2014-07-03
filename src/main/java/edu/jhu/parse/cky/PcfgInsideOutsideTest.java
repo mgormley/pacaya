@@ -6,10 +6,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.data.Tag;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;
@@ -48,7 +46,7 @@ public class PcfgInsideOutsideTest {
         // weights, since 3 is the weight of this NP.
         sum = FastMath.logAdd(-8, -9);
         sum = FastMath.logAdd(sum, -12);
-        assertEquals(sum, chart.getLogOutsideScore(grammar.getNtAlphabet().lookupIndex(new Tag("NP")), 3, 5), 1e-13);
+        assertEquals(sum, chart.getLogOutsideScore(grammar.getNtAlphabet().lookupIndex("NP"), 3, 5), 1e-6);
         
         System.out.println("");
         int numNonInfs = 0;
@@ -123,7 +121,7 @@ public class PcfgInsideOutsideTest {
     }
 
     private static Sentence getSentenceFromString(String sentStr,
-            Alphabet<Label> alphabet) {
+            Alphabet<String> alphabet) {
         SentenceCollection sentences = new SentenceCollection(alphabet);
         sentences.addSentenceFromString(sentStr);
         Sentence sentence = sentences.get(0);

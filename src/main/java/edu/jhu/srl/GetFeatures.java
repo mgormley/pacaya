@@ -18,7 +18,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
-import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
@@ -78,7 +77,7 @@ public class GetFeatures {
     private Map<String,MutableInt> unks = new HashMap<String,MutableInt>();
     private Map<Set<String>,MutableInt> bigrams = new HashMap<Set<String>,MutableInt>();
     
-    private static Alphabet<Label> lexAlphabet = new Alphabet<Label>();
+    private static Alphabet<String> lexAlphabet = new Alphabet<String>();
     private static SrlBerkeleySignatureBuilder sig = new SrlBerkeleySignatureBuilder(lexAlphabet);
     
     private String trainingOut = new String();

@@ -24,6 +24,7 @@ import edu.jhu.parse.cky.chart.ScoresSnapshot;
  * @author mgormley
  * 
  */
+// TODO: Remove Pcfg from the name. This is really a CRF parser.
 public class CkyPcfgParser {
 
     public static class CkyPcfgParserPrm {

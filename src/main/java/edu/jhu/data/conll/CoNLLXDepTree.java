@@ -1,7 +1,6 @@
 package edu.jhu.data.conll;
 
 import edu.jhu.data.DepTree;
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.util.Alphabet;
 
@@ -15,9 +14,9 @@ public class CoNLLXDepTree extends DepTree {
 
     private CoNLLXSentence sent;
     
-    public CoNLLXDepTree(CoNLLXSentence sent, Alphabet<Label> alphabet) {
+    public CoNLLXDepTree(CoNLLXSentence sent, Alphabet<String> alphabet) {
         // TODO: filter out punctuation.
-        super(new Sentence(sent, alphabet), sent.getParents(), false);
+        super(new Sentence(sent, alphabet), sent.getParentsFromHead(), false);
         this.sent = sent;
     }
 

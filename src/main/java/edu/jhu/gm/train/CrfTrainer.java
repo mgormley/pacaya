@@ -6,18 +6,16 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
-import edu.jhu.optimize.BatchFunction;
-import edu.jhu.optimize.BatchFunctionOpts;
-import edu.jhu.optimize.BatchMaximizer;
-import edu.jhu.optimize.Function;
-import edu.jhu.optimize.FunctionAsBatchFunction;
-import edu.jhu.optimize.FunctionOpts;
-import edu.jhu.optimize.L2;
-import edu.jhu.optimize.MalletLBFGS;
-import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.optimize.Maximizer;
-import edu.jhu.optimize.Regularizer;
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.Optimizer;
+import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
+import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
+import edu.jhu.hlt.optimize.function.DifferentiableFunction;
+import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
+import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
+import edu.jhu.hlt.optimize.function.Regularizer;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.sort.IntSort;
 
 /**
@@ -32,10 +30,10 @@ public class CrfTrainer {
 
     public static class CrfTrainerPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
-        public Maximizer maximizer = new MalletLBFGS(new MalletLBFGSPrm());
-        public BatchMaximizer batchMaximizer = null;//new SGD(new SGDPrm());
+        public Optimizer<DifferentiableFunction> maximizer = new MalletLBFGS(new MalletLBFGSPrm());
+        public Optimizer<DifferentiableBatchFunction> batchMaximizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
-        public CrfObjectivePrm crfObjPrm = new CrfObjectivePrm();
+        public int numThreads = 1;
     }
         
     private CrfTrainerPrm prm; 
@@ -48,31 +46,28 @@ public class CrfTrainer {
     }
     
     public FgModel train(FgModel model, FgExampleList data) {
-        double[] params = new double[model.getNumParams()];
-        model.updateDoublesFromModel(params);
 
-        CrfObjective objective = new CrfObjective(prm.crfObjPrm, model, data, prm.infFactory);
+        AvgBatchObjective objective = new AvgBatchObjective(new CrfObjective(data, prm.infFactory), model, prm.numThreads);
         if (prm.maximizer != null) {
-            Function fn = objective;
+            DifferentiableFunction fn = objective;
             if (prm.regularizer != null) {
                 prm.regularizer.setNumDimensions(model.getNumParams());
-                fn = new FunctionOpts.AddFunctions(objective, prm.regularizer);
+                fn = new DifferentiableFunctionOpts.AddFunctions(objective, prm.regularizer);
             }
-            prm.maximizer.maximize(fn, params);
-            log.info("Final objective value: " + fn.getValue());
+            prm.maximizer.maximize(fn, model.getParams());
+            log.info("Final objective value: " + fn.getValue(model.getParams()));
         } else {
-            BatchFunction fn = objective;
+            DifferentiableBatchFunction fn = objective;
             if (prm.regularizer != null) {
                 // We don't need to rescale the regularizer because the CRF
                 // objective is the average log-likelihood.
                 prm.regularizer.setNumDimensions(model.getNumParams());
-                BatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
+                DifferentiableBatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
                 fn = new BatchFunctionOpts.AddFunctions(objective, br);
             }
-            prm.batchMaximizer.maximize(fn, params);   
-            log.info("Final objective value: " + fn.getValue(IntSort.getIndexArray(fn.getNumExamples())));
+            prm.batchMaximizer.maximize(fn, model.getParams());   
+            log.info("Final objective value: " + fn.getValue(model.getParams(), IntSort.getIndexArray(fn.getNumExamples())));
         }
-        model.updateModelFromDoubles(params);
         objective.shutdown();
         return model;
     }

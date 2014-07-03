@@ -195,5 +195,10 @@ public class MurmurHash3 {
 
     return h1;
   }
-
+  
+  /** Simple access for Murmur Hash. */
+  public static int murmurhash3_x86_32(CharSequence data) {
+      return murmurhash3_x86_32(data, 0, data.length(), 12345789);
+  }
+  
 }

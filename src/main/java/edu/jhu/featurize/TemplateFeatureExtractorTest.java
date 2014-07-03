@@ -12,8 +12,10 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceTest;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
@@ -24,11 +26,15 @@ import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
 import edu.jhu.featurize.TemplateLanguage.PositionList;
 import edu.jhu.featurize.TemplateLanguage.PositionModifier;
+import edu.jhu.featurize.TemplateLanguage.RulePiece;
+import edu.jhu.featurize.TemplateLanguage.SymbolProperty;
 import edu.jhu.featurize.TemplateLanguage.TokPropList;
 import edu.jhu.featurize.TemplateLanguage.TokProperty;
+import edu.jhu.parse.cky.Rule;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -49,8 +55,17 @@ public class TemplateFeatureExtractorTest {
     }
     
     private List<String> extractAllUnigramFeats(int pidx, int cidx) {
+        int ri = 1;
+        int rj = 3;
+        int rk = 6;
+        int midx = 1;
+        Rule rule = getRule("NP", "Det", "N", 0);
+        LocalObservations local = new LocalObservations(pidx, cidx, midx, rule, ri, rj, rk);
+        
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
         addFakeBrownClusters(sent);
+        // Add fake coarse POS tags.
+        sent.setCposTags(sent.getPosTags());
         
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
@@ -58,7 +73,7 @@ public class TemplateFeatureExtractorTest {
         
         List<FeatTemplate> tpls = TemplateSets.getAllUnigramFeatureTemplates();
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpls, pidx, cidx, feats);
+        extr.addFeatures(tpls, local, feats);
         
         for (Object feat : feats) {
             System.out.println(feat);
@@ -275,6 +290,46 @@ public class TemplateFeatureExtractorTest {
         assertEquals(tpl.getName() + "_" + expectedVal, feats.get(0));
     }
     
+    @Test
+    public void testRuleLocalFeatures() {      
+        Rule rule = getRule("S", "NP", "VP", 0);
+        testRuleLocalFeaturesHelper(rule, RulePiece.PARENT, SymbolProperty.TAG, "S");
+        testRuleLocalFeaturesHelper(rule, RulePiece.LEFT_CHILD, SymbolProperty.TAG, "NP");
+        testRuleLocalFeaturesHelper(rule, RulePiece.RIGHT_CHILD, SymbolProperty.TAG, "VP");
+    }
+
+    private Rule getRule(String pStr, String lcStr, String rcStr, int type) {
+        Alphabet<String> lexAlphabet = new Alphabet<String>();
+        Alphabet<String> ntAlphabet = new Alphabet<String>();
+        int parent = ntAlphabet.lookupIndex(pStr);        
+        int leftChild;
+        int rightChild;
+        if (rcStr == null && type == Rule.LEXICAL_RULE) {
+            leftChild = lexAlphabet.lookupIndex(lcStr);
+            rightChild = type;
+        }else if (rcStr == null && type == Rule.UNARY_RULE) {
+            leftChild = ntAlphabet.lookupIndex(lcStr);
+            rightChild = type;        
+        } else {
+            leftChild = ntAlphabet.lookupIndex(lcStr);
+            rightChild = ntAlphabet.lookupIndex(rcStr);
+        }
+        double score = 1.234;
+        Rule rule = new Rule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet);
+        return rule;
+    }
+    
+    private void testRuleLocalFeaturesHelper(Rule rule, RulePiece piece, SymbolProperty prop, String expectedVal) {
+        FeatTemplate tpl = new FeatTemplate4(piece, prop);
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
+        ArrayList<String> feats = new ArrayList<String>();
+        extr.addFeatures(tpl, LocalObservations.newRule(rule), feats);
+        for (Object feat : feats) {
+            System.out.println(feat);
+        }
+        assertEquals(feats.size(), 1);
+        assertEquals(tpl.getName() + "_" + expectedVal, feats.get(0));
+    }
 
     @Test
     public void testOtherFeatures() {
@@ -304,7 +359,7 @@ public class TemplateFeatureExtractorTest {
     }
 
     private void testOtherFeaturesHelper(int pidx, int cidx, OtherFeat f, String expectedVal) {
-        FeatTemplate tpl = new FeatTemplate4(f);
+        FeatTemplate tpl = new FeatTemplate0(f);
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
@@ -327,7 +382,7 @@ public class TemplateFeatureExtractorTest {
     
     @Test
     public void testPathGramsFeature() {      
-        FeatTemplate tpl = new FeatTemplate4(OtherFeat.PATH_GRAMS);
+        FeatTemplate tpl = new FeatTemplate0(OtherFeat.PATH_GRAMS);
 
         String[] expectedPathGrams = new String[] { "pathGrams_the", "pathGrams_Det", "pathGrams_dog",
                 "pathGrams_N", "pathGrams_ate", "pathGrams_V", "pathGrams_food", "pathGrams_N",

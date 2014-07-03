@@ -4,7 +4,9 @@ import java.util.List;
 
 public interface DepTreeNode {
 
-    public Label getLabel();
+    public String getLabel();
+
+    public void setLabel(String label);
 
     public DepTreeNode getParent();
 

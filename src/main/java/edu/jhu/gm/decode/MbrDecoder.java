@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
@@ -49,15 +49,15 @@ public class MbrDecoder {
      * 
      * @param model The input model.
      * @param ex The input data.
+     * @return the FgInferencer that was used.
      */
-    public void decode(FgModel model, FgExample ex) {
+    public FgInferencer decode(FgModel model, UFgExample ex) {
         mbrVarConfig = new VarConfig();
         margs = new ArrayList<DenseFactor>();
         varMargMap = new HashMap<Var,Double>();
 
         // Add in the observed variables.
-        VarSet obsVars = VarSet.getVarsOfType(ex.getGoldConfig().getVars(), VarType.OBSERVED);
-        mbrVarConfig.put(ex.getGoldConfig().getSubset(obsVars));
+        mbrVarConfig.put(ex.getObsConfig());
 
         // Run inference.
         FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
@@ -79,6 +79,7 @@ public class MbrDecoder {
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
         }
+        return inf;
     }
     
     /** Gets the MBR variable configuration for the example that was decoded. */
@@ -100,4 +101,16 @@ public class MbrDecoder {
         return margs;
     }
 
+    /**
+     * Convenience wrapper around getVarMarginals().
+     * Does not memoize, so use sparingly.
+     */
+    public Map<Var, DenseFactor> getVarMarginalsIndexed() {
+    	Map<Var, DenseFactor> m = new HashMap<Var, DenseFactor>();
+    	for(DenseFactor df : margs) {
+    		assert df.getVars().size() == 1;
+    		m.put(df.getVars().get(0), df);
+    	}
+    	return m;
+    }
 }

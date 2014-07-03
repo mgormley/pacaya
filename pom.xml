@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>2.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>edu.jhu.pacaya</name>
@@ -19,22 +19,21 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-          
-	  <useIncrementalCompilation>true</useIncrementalCompilation>
-	  <fork>true</fork>
+          <source>1.7</source>
+          <target>1.7</target>
+          <useIncrementalCompilation>true</useIncrementalCompilation>
+          <fork>true</fork>
           <!-- <compilerArgument>-verbose</compilerArgument> -->
-	  <includes>
-            <include>**/*.java</include>
-	  </includes>
+          <includes>
+                  <include>**/*.java</include>
+          </includes>
           <excludes>
-	    <!-- Skip anything depending on joptimizer. 
+            <!-- Skip anything depending on joptimizer. 
             <exclude>**/*ResDmvDantzigWolfeRelaxation*.java</exclude>
             <exclude>**/*ModelParamSubproblem*.java</exclude>
             <exclude>**/ModelParamSubproblem.java</exclude>
             <exclude>**/ModelParamSubproblemTest.java</exclude> -->
-	    <!-- Skip CRF.
+            <!-- Skip CRF.
             <exclude>**/edu/jhu/gm/*.java</exclude>
             <exclude>**/edu/jhu/gm/**/*.java</exclude> -->
           </excludes>
@@ -85,6 +84,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>        
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -97,6 +97,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>        
+	<!-- Uncomment the executions section below to deploy javadocs. -->
+	<!-- 
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -105,6 +108,7 @@
             </goals>
           </execution>
         </executions>
+	-->
       </plugin>
     </plugins>
   </build>
@@ -115,6 +119,16 @@
       <artifactId>junit</artifactId>
       <version>4.8</version>
       <!-- <scope>test</scope> -->
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.prim</groupId>
+      <artifactId>prim</artifactId>
+      <version>2.0.5-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.hlt.optimize</groupId>
+      <artifactId>optimize</artifactId>
+      <version>2.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.erma</groupId>
@@ -168,9 +182,9 @@
       </exclusions> 
     </dependency>
     <dependency>
-      <groupId>edu.jhu.prim</groupId>
-      <artifactId>prim</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>16.0.1</version>
     </dependency>
   </dependencies>
 

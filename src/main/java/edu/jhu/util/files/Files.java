@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -184,9 +185,11 @@ public class Files {
 
     public static void serialize(Object obj, File stateFile) {
         try {
-            FileOutputStream fos = new FileOutputStream(stateFile);
-            GZIPOutputStream gos = new GZIPOutputStream(fos);
-            ObjectOutputStream out = new ObjectOutputStream(gos);
+            OutputStream os = new FileOutputStream(stateFile);
+            if (stateFile.getName().endsWith(".gz")) {
+                os = new GZIPOutputStream(os);
+            }
+            ObjectOutputStream out = new ObjectOutputStream(os);
             out.writeObject(obj);
             out.close();
         } catch (IOException e) {
@@ -200,9 +203,11 @@ public class Files {
     
     public static Object deserialize(File stateFile) {
         try {
-            FileInputStream fis = new FileInputStream(stateFile);
-            GZIPInputStream gis = new GZIPInputStream(fis);
-            ObjectInputStream in = new ObjectInputStream(gis);
+            InputStream is = new FileInputStream(stateFile);
+            if (stateFile.getName().endsWith(".gz")) {
+                is = new GZIPInputStream(is);
+            }
+            ObjectInputStream in = new ObjectInputStream(is);
             Object inObj = in.readObject();
             in.close();
             return inObj;
@@ -232,6 +237,18 @@ public class Files {
             }
         }
         return files;
+    }
+
+    /** CAUTION: This is equivalent to calling rm -r on file. */
+    public static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            for (File c : file.listFiles()) {
+                deleteRecursively(c);
+            }
+        }
+        if (!file.delete()) {
+            System.err.println("WARN: unable to delete file: " + file.getPath());
+        }
     }
     
 }

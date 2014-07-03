@@ -7,22 +7,17 @@ public class VerbTreeFilter implements TreeFilter {
         boolean hasVB = false;
         boolean hasMD = false;
         for (DepTreeNode node : tree) {
-            if (node.getLabel() instanceof TaggedWord) {
-                TaggedWord tw = (TaggedWord) node.getLabel();
+            String tw = node.getLabel();
                 
-                if (tw.getTag() == "VBP" || tw.getTag() == "VBD" || tw.getTag() == "VBZ") {
-                    return true;
-                } else if (tw.getTag() == "VB") {
-                    hasVB = true;
-                } else if (tw.getTag() == "MD") {
-                    hasMD = true;
-                }
-                
-                if (hasMD && hasVB) {
-                    return true;
-                }
-            } else {
-                // Always accept trees if we don't have tags
+            if (tw == "VBP" || tw == "VBD" || tw == "VBZ") {
+                return true;
+            } else if (tw == "VB") {
+                hasVB = true;
+            } else if (tw == "MD") {
+                hasMD = true;
+            }
+            
+            if (hasMD && hasVB) {
                 return true;
             }
         }

@@ -9,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -18,15 +17,13 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.conll.CoNLL08FileReader;
-import edu.jhu.data.conll.CoNLL08Sentence;
-import edu.jhu.data.conll.CoNLL08Writer;
-import edu.jhu.data.conll.CoNLL09FileReader;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Writer;
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.eval.DepParseEvaluator;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -36,6 +33,7 @@ import edu.jhu.featurize.TemplateWriter;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
@@ -43,40 +41,46 @@ import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.optimize.AdaDelta;
-import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
-import edu.jhu.optimize.AdaGrad;
-import edu.jhu.optimize.AdaGrad.AdaGradPrm;
-import edu.jhu.optimize.L2;
-import edu.jhu.optimize.MalletLBFGS;
-import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.optimize.Maximizer;
-import edu.jhu.optimize.SGD;
-import edu.jhu.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.AdaDelta;
+import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
+import edu.jhu.hlt.optimize.AdaGrad;
+import edu.jhu.hlt.optimize.AdaGrad.AdaGradPrm;
+import edu.jhu.hlt.optimize.BottouSchedule;
+import edu.jhu.hlt.optimize.BottouSchedule.BottouSchedulePrm;
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.function.DifferentiableFunction;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
+import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
-import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
+import edu.jhu.srl.JointNlpDecoder.JointNlpDecoderPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.tag.BrownClusterTagger;
-import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -99,61 +103,15 @@ public class SrlRunner {
     public static long seed = Prng.DEFAULT_SEED;
     @Opt(hasArg = true, description = "Number of threads for computation.")
     public static int threads = 1;
-    
-    // Options for train data
-    @Opt(hasArg = true, description = "Training data input file or directory.")
-    public static File train = null;
-    @Opt(hasArg = true, description = "Type of training data.")
-    public static DatasetType trainType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "ERMA feature file.")
-    public static File featureFileIn = null;
-    @Opt(hasArg = true, description = "Training data predictions output file.")
-    public static File trainPredOut = null;
-    @Opt(hasArg = true, description = "Training data gold output file.")
-    public static File trainGoldOut = null;
-    @Opt(hasArg = true, description = "Maximum sentence length for train.")
-    public static int trainMaxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
-    public static int trainMaxNumSentences = Integer.MAX_VALUE; 
-    
-    // Options for dev data
-    @Opt(hasArg = true, description = "Testing data input file or directory.")
-    public static File dev = null;
-    @Opt(hasArg = true, description = "Type of dev data.")
-    public static DatasetType devType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "Testing data predictions output file.")
-    public static File devPredOut = null;
-    @Opt(hasArg = true, description = "Testing data gold output file.")
-    public static File devGoldOut = null;
-    @Opt(hasArg = true, description = "Maximum sentence length for dev.")
-    public static int devMaxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in dev.")
-    public static int devMaxNumSentences = Integer.MAX_VALUE; 
-    
-    // Options for test data
-    @Opt(hasArg = true, description = "Testing data input file or directory.")
-    public static File test = null;
-    @Opt(hasArg = true, description = "Type of testing data.")
-    public static DatasetType testType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "Testing data predictions output file.")
-    public static File testPredOut = null;
-    @Opt(hasArg = true, description = "Testing data gold output file.")
-    public static File testGoldOut = null;
-    @Opt(hasArg = true, description = "Maximum sentence length for test.")
-    public static int testMaxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in test.")
-    public static int testMaxNumSentences = Integer.MAX_VALUE; 
-
-    // Options for train/test data
-    @Opt(hasArg = true, description = "Brown cluster file")
-    public static File brownClusters = null;    
+    @Opt(hasArg = true, description = "Whether to use a log-add table for faster computation.")
+    public static boolean useLogAddTable = true;
     
     // Options for model IO
-    @Opt(hasArg = true, description = "File from which we should read a serialized model.")
+    @Opt(hasArg = true, description = "File from which to read a serialized model.")
     public static File modelIn = null;
-    @Opt(hasArg = true, description = "File to which we should serialize the model.")
+    @Opt(hasArg = true, description = "File to which to serialize the model.")
     public static File modelOut = null;
-    @Opt(hasArg = true, description = "File to which we should print a human readable version of the model.")
+    @Opt(hasArg = true, description = "File to which to print a human readable version of the model.")
     public static File printModel = null;
 
     // Options for initialization.
@@ -163,24 +121,54 @@ public class SrlRunner {
     // Options for inference.
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
-
-    // Options for SRL factor graph structure.
-    @Opt(hasArg = true, description = "The structure of the Role variables.")
-    public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
-    @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
-    public static boolean makeUnknownPredRolesLatent = true;
+    @Opt(hasArg = true, description = "The BP schedule type.")
+    public static BpScheduleType bpSchedule = BpScheduleType.TREE_LIKE;
+    @Opt(hasArg = true, description = "The BP update order.")
+    public static BpUpdateOrder bpUpdateOrder = BpUpdateOrder.SEQUENTIAL;
+    @Opt(hasArg = true, description = "The max number of BP iterations.")
+    public static int bpMaxIterations = 1;
+    @Opt(hasArg = true, description = "Whether to normalize the messages.")
+    public static boolean normalizeMessages = false;
+    @Opt(hasArg = true, description = "The maximum message residual for convergence testing.")
+    public static double bpConvergenceThreshold = 1e-3;
+    
+    // Options for dependency parse factor graph structure.
+    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
+    public static boolean includeDp = true;
     @Opt(hasArg = true, description = "The type of the link variables.")
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
     public static boolean useProjDepTreeFactor = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
+    public static boolean grandparentFactors = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
+    public static boolean siblingFactors = false;
+    @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
+    public static boolean excludeNonprojectiveGrandparents = true;
+    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
+    public static File pruneModel = null;
+    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
+    public static boolean pruneEdges = false;
+    
+    // Options for SRL factor graph structure.
+    @Opt(hasArg = true, description = "Whether to model SRL.")
+    public static boolean includeSrl = true;
+    @Opt(hasArg = true, description = "The structure of the Role variables.")
+    public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
+    @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
+    public static boolean makeUnknownPredRolesLatent = true;
     @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
     public static boolean allowPredArgSelfLoops = false;
-    @Opt(hasArg = true, description = "Whether to include unary factors in the model. (Ignored if there are no Link variables.)")
-    public static boolean unaryFactors = false;
-    @Opt(hasArg = true, description = "Whether to always include Link variables. For testing only.")
-    public static boolean alwaysIncludeLinkVars = false;
+    @Opt(hasArg = true, description = "Whether to include factors between the sense and role variables.")
+    public static boolean binarySenseRoleFactors = false;
     @Opt(hasArg = true, description = "Whether to predict predicate sense.")
     public static boolean predictSense = false;
+    @Opt(hasArg = true, description = "Whether to predict predicate positions.")
+    public static boolean predictPredPos = false;
+
+    // Options for joint factor graph structure.
+    @Opt(hasArg = true, description = "Whether to include unary factors in the model.")
+    public static boolean unaryFactors = false;
 
     // Options for SRL feature selection.
     @Opt(hasArg = true, description = "Whether to do feature selection.")
@@ -190,15 +178,17 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "The max number of sentences to use for feature selection")
     public static int numSentsForFeatSelect = 1000;    
     
+    // Options for feature extraction.
+    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
+    public static boolean biasOnly = false;
+    @Opt(hasArg = true, description = "The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled.")
+    public static int featureHashMod = 524288; // 2^19
+    
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
     public static int cutoff = 3;
     @Opt(hasArg = true, description = "For preprocessing: Minimum feature count for caching.")
     public static int featCountCutoff = 4;
-    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
-    public static boolean biasOnly = false;
-    @Opt(hasArg = true, description = "The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled.")
-    public static int featureHashMod = 524288; // 2^19
     @Opt(hasArg = true, description = "Whether to include unsupported features.")
     public static boolean includeUnsupportedFeatures = false;
     @Opt(hasArg = true, description = "Whether to add the Simple features.")
@@ -221,26 +211,19 @@ public class SrlRunner {
     public static File senseFeatTplsOut = null;
     @Opt(hasArg = true, description = "Arg feature template output file.")
     public static File argFeatTplsOut = null;
-
-    // Options for SRL data munging.
-    @Opt(hasArg = true, description = "SRL language.")
-    public static String language = "es";
+    
+    // Options for Dependency parser feature extraction.
+    @Opt(hasArg = true, description = "1st-order factor feature templates.")
+    public static String dp1FeatTpls = TemplateSets.mcdonaldDepFeatsResource;
+    @Opt(hasArg = true, description = "2nd-order factor feature templates.")
+    public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
+    @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
+    public static final boolean acl14DepFeats = true;
     
     // Options for data munging.
-    @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldSyntax = false;    
+    @Deprecated
     @Opt(hasArg=true, description="Whether to normalize and clean words.")
     public static boolean normalizeWords = false;
-    @Opt(hasArg=true, description="Whether to normalize the role names (i.e. lowercase and remove themes).")
-    public static boolean normalizeRoleNames = false;
-    @Opt(hasArg = true, description = "Whether to remove the deprel and pdeprel columns from CoNLL-2009 data.")
-    public static boolean removeDeprel = false;
-    @Opt(hasArg = true, description = "Whether to remove the lemma and plemma columns from CoNLL-2009 data.")
-    public static boolean removeLemma = false;
-    @Opt(hasArg = true, description = "Whether to remove the feat and pfeat columns from CoNLL-2009 data.")
-    public static boolean removeFeat = false;
-    @Opt(hasArg = true, description = "Comma separated list of annotation types for restricting features/data.")
-    public static String removeAts = null;
 
     // Options for caching.
     @Opt(hasArg = true, description = "The type of cache/store to use for training/testing instances.")
@@ -264,7 +247,11 @@ public class SrlRunner {
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
     public static double sgdInitialLr = 0.1;
     @Opt(hasArg=true, description="Whether to sample with replacement for SGD.")
-    public static boolean sgdWithRepl = false;    
+    public static boolean sgdWithRepl = false;
+    @Opt(hasArg=true, description="Whether to automatically select the learning rate.")
+    public static boolean sgdAutoSelectLr = true;
+    @Opt(hasArg=true, description="How many epochs between auto-select runs.")
+    public static int sgdAutoSelecFreq = 5;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -281,7 +268,7 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            FastMath.useLogAddTable = true;
+            FastMath.useLogAddTable = useLogAddTable;
         }
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
@@ -289,65 +276,42 @@ public class SrlRunner {
             stopTrainingBy = null;
         }
         
+        // Initialize the data reader/writer.
+        CorpusHandler corpus = new CorpusHandler();
+        
         // Get a model.
-        SrlFgModel model = null;
+        JointNlpFgModel model = null;
+        ObsFeatureConjoiner ofc;
         FactorTemplateList fts;
         CorpusStatistics cs;
-        SrlFeatureExtractorPrm srlFePrm;
+        JointNlpFeatureExtractorPrm fePrm;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
-            model = (SrlFgModel) Files.deserialize(modelIn);
-            fts = model.getTemplates();
+            model = (JointNlpFgModel) Files.deserialize(modelIn);
+            ofc = model.getOfc();
+            fts = ofc.getTemplates();
             cs = model.getCs();
-            srlFePrm = model.getSrlFePrm();
-            
+            fePrm = model.getFePrm();            
             // TODO: use atList here.
         } else {
-            srlFePrm = getSrlFeatureExtractorPrm();
-            removeAts(srlFePrm);
+            fePrm = getJointNlpFeatureExtractorPrm();
+            removeAts(fePrm);
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
-            if (useTemplates && featureSelection) {
-                String name = "train";
-                SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, trainType, train,
-                        trainGoldOut, trainMaxNumSentences, trainMaxSentenceLength, name);
-                CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
-                
-                InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
-                prm.featureHashMod = featureHashMod;
-                prm.numThreads = threads;
-                prm.numToSelect = numFeatsToSelect;
-                prm.maxNumSentences = numSentsForFeatSelect;
-                prm.selectSense = predictSense;
-                SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
-                InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
-                sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
-                ig.shutdown();
-                srlFePrm.fePrm.soloTemplates = sft.srlSense;
-                srlFePrm.fePrm.pairTemplates = sft.srlArg;
-                removeAts(srlFePrm); // TODO: This probably isn't necessary, but just in case.
-            }
-            if (useTemplates) {
-                log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
-                log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
-                if (senseFeatTplsOut != null) {
-                    TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
-                }
-                if (argFeatTplsOut != null) {
-                    TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
-                }
-            }
+            featureSelection(corpus.getTrainGold(), cs, fePrm);
             fts = new FactorTemplateList();
+            ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm(), fts);
         }
-        
-        if (trainType != null && train != null) {
-            String name = "train";
+
+        if (corpus.hasTrain()) {
+            String name = "train";            
+            addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
             // Train a model.
-            FgExampleList data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
-                    trainMaxSentenceLength, name, srlFePrm);
+            SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
+            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm, true);
             
             if (model == null) {
-                model = new SrlFgModel(data, includeUnsupportedFeatures, cs, srlFePrm);
+                model = new JointNlpFgModel(cs, ofc, fePrm);
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
@@ -367,10 +331,12 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            VarConfigPair pair = decode(model, data, trainType, trainPredOut, name);        
-            eval(name, pair);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getTrainInput(), name);
+            corpus.writeTrainPreds(predSents);
+            eval(name, goldSents, predSents);
+            corpus.clearTrainCache();
         }
-                
+          
         if (modelOut != null) {
             // Write the model to a file.
             log.info("Serializing model to file: " + modelOut);
@@ -388,226 +354,225 @@ public class SrlRunner {
             writer.close();
         }
 
-
-        if (dev != null && devType != null) {
+        if (corpus.hasDev()) {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            FgExampleList data = getData(fts, cs, devType, dev, devGoldOut, devMaxNumSentences,
-                    devMaxSentenceLength, name, srlFePrm);
+            SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
+            SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
+            addPruneMask(inputSents, goldSents, name);
+            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the dev data.
-            VarConfigPair pair = decode(model, data, devType, devPredOut, name);
-            eval(name, pair);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);            
+            corpus.writeDevPreds(predSents);
+            eval(name, goldSents, predSents);
+            corpus.clearDevCache();
         }
         
-        if (test != null && testType != null) {
+        if (corpus.hasTest()) {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            FgExampleList data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
-                    testMaxSentenceLength, name, srlFePrm);
+            SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
+            SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
+            addPruneMask(inputSents, goldSents, name);
+            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the test data.
-            VarConfigPair pair = decode(model, data, testType, testPredOut, name);
-            eval(name, pair);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
+            corpus.writeTestPreds(predSents);
+            eval(name, goldSents, predSents);
+            corpus.clearTestCache();
         }
     }
 
-    private void removeAts(SrlFeatureExtractorPrm srlFePrm) {
-        for (AT at : getRemoveAts()) {
-            srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
-            srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
+    private void addPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents, String name) {
+        if (pruneEdges) {
+            if (pruneModel == null) {
+                throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
+            }
+            // Read a model from a file.
+            log.info("Reading pruning model from file: " + pruneModel);
+            JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
+            ObsFeatureConjoiner ofc = model.getOfc();
+            CorpusStatistics cs = model.getCs();
+            JointNlpFeatureExtractorPrm fePrm = model.getFePrm();            
+
+            // Get configuration for first-order pruning model.
+            JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);   
+            prm.fgPrm.includeSrl = false;
+            prm.fgPrm.dpPrm = new DepParseFactorGraphPrm();
+            prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
+            prm.fgPrm.dpPrm.grandparentFactors = false;
+            prm.fgPrm.dpPrm.siblingFactors = false;
+            prm.fgPrm.dpPrm.unaryFactors = true;
+            prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+            
+            // Get unlabeled data.
+            FgExampleList data =  getData(ofc, cs, name, inputSents, fePrm, prm, false);
+            
+            // Decode and create edge pruning mask.
+            log.info("Running the pruning decoder on " + name + " data.");
+            int numEdgesTot = 0;
+            int numEdgesKept = 0;
+            Timer timer = new Timer();
+            timer.start();
+            // Add the new predictions to the input sentences.
+            for (int i = 0; i < inputSents.size(); i++) {
+                FgExample ex = data.get(i);
+                SimpleAnnoSentence predSent = inputSents.get(i);
+                JointNlpDecoder decoder = getDecoder();
+                decoder.decode(model, ex);
+                
+                // Update the dependency tree on the sentence.
+                DepEdgeMask mask = decoder.getDepEdgeMask();
+                if (mask != null) {
+                    predSent.setDepEdgeMask(mask);
+                }
+                numEdgesKept += mask.getCount();
+                int n = predSent.getWords().size();
+                numEdgesTot += n*n;                
+            }
+            timer.stop();
+            log.info(String.format("Pruning decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
+            int numEdgesPruned = numEdgesTot - numEdgesKept;
+            log.info(String.format("Pruned %d / %d = %f edges", numEdgesPruned, numEdgesTot, (double) numEdgesPruned / numEdgesTot));
+            copyPruneMask(inputSents, goldSents);
         }
     }
 
-    private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
-            int maxNumSentences, int maxSentenceLength, String name, SrlFeatureExtractorPrm srlFePrm) throws ParseException, IOException {
-        SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, dataType, dataFile, goldFile, maxNumSentences,
-                maxSentenceLength, name);        
-        return getData(fts, cs, name, sents, srlFePrm);
+    private void copyPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents) {
+        for (int i=0; i<inputSents.size(); i++) {
+            SimpleAnnoSentence input = inputSents.get(i);
+            SimpleAnnoSentence gold = goldSents.get(i);
+            gold.setDepEdgeMask(input.getDepEdgeMask());
+        }        
+    }
+    
+    /**
+     * Do feature selection and update fePrm with the chosen feature templates.
+     */
+    private void featureSelection(SimpleAnnoSentenceCollection sents, CorpusStatistics cs, JointNlpFeatureExtractorPrm fePrm) throws IOException,
+            ParseException {
+        SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
+        if (useTemplates && featureSelection) {
+            CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
+            
+            InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
+            prm.featureHashMod = featureHashMod;
+            prm.numThreads = threads;
+            prm.numToSelect = numFeatsToSelect;
+            prm.maxNumSentences = numSentsForFeatSelect;
+            prm.selectSense = predictSense;
+            SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
+            InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
+            sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
+            ig.shutdown();
+            srlFePrm.fePrm.soloTemplates = sft.srlSense;
+            srlFePrm.fePrm.pairTemplates = sft.srlArg;
+            removeAts(fePrm); // TODO: This probably isn't necessary, but just in case.
+        }
+        if (includeSrl && acl14DepFeats) {
+            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;            
+        }
+        if (useTemplates) {
+            log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
+            log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
+            if (senseFeatTplsOut != null) {
+                TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
+            }
+            if (argFeatTplsOut != null) {
+                TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
+            }
+        }
     }
 
-    private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, SrlFeatureExtractorPrm srlFePrm) {
+    private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
+        for (AT at : Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts())) {
+            fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
+            fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
+            fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
+            fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
+        }
+    }
+
+    private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, boolean labeledExamples) {
+        JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);        
+        return getData(ofc, cs, name, sents, fePrm, prm, labeledExamples);
+    }
+
+    private static FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm,
+            boolean labeledExamples) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
         }
-
+        FactorTemplateList fts = ofc.getTemplates();
+        
         if (useTemplates) {
+            // Check that the first sentence has all the required annotation
+            // types for the specified feature templates.
             SimpleAnnoSentence sent = sents.get(0);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, srlFePrm.fePrm.soloTemplates);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, srlFePrm.fePrm.pairTemplates);
+            if (includeSrl) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
+            }
+            if (includeDp) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
+                if (grandparentFactors || siblingFactors) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
+                }
+            }
         }
+        printPredArgSelfLoopStats(sents);
         
         log.info("Building factor graphs and extracting features.");
-        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
         FgExampleList data = builder.getData(sents);
         
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
-        if (prm.fgPrm.predictSense) {
-            fts.startGrowth();
+        if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
             fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
-            fts.stopGrowth();
+        }
+        
+        if (!ofc.isInitialized()) {
+            log.info("Initializing the observation function conjoiner.");
+            ofc.init(data);
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
         // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
         // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num factor/clique templates: %d", data.getTemplates().size()));
-        log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
+        log.info(String.format("Num factor/clique templates: %d", fts.size()));
+        log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
     }
 
-    private SimpleAnnoSentenceCollection readSentences(boolean useGoldSyntax, DatasetType dataType, File dataFile,
-            File goldFile, int maxNumSentences, int maxSentenceLength, String name) throws IOException, ParseException {
-        log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
-        SimpleAnnoSentenceCollection sents;
-        int numTokens = 0;
-        
-        // Read the data and (optionally) write it to the gold file.
-        if (dataType == DatasetType.CONLL_2009 || dataType == DatasetType.CONLL_2008) {
-            if (normalizeRoleNames) {
-                log.info("Normalizing role names");
+    private static void printPredArgSelfLoopStats(SimpleAnnoSentenceCollection sents) {
+        int numPredArgSelfLoop = 0;
+        int numPredArgs = 0;
+        for (SimpleAnnoSentence sent : sents) {
+            if (sent.getSrlGraph() != null) {
+                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
+                    if (edge.getArg().getPosition() == edge.getPred().getPosition()) {
+                        numPredArgSelfLoop += 1;
+                    }
+                }
+                numPredArgs += sent.getSrlGraph().getEdges().size();
             }
-            
-            List<CoNLL09Sentence> conll09Sents = new ArrayList<CoNLL09Sentence>();
-            if (dataType == DatasetType.CONLL_2009) {
-                CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
-                for (CoNLL09Sentence sent : reader) {
-                    if (conll09Sents.size() >= maxNumSentences) {
-                        break;
-                    }
-                    if (sent.size() <= maxSentenceLength) {
-                        if (normalizeRoleNames) {
-                            sent.normalizeRoleNames();
-                        }
-                        sent.intern();
-                        conll09Sents.add(sent);
-                        numTokens += sent.size();
-                    }
-                }
-                reader.close();
-                
-                if (goldFile != null) {
-                    log.info("Writing gold data to file: " + goldFile);
-                    CoNLL09Writer cw = new CoNLL09Writer(goldFile);
-                    for (CoNLL09Sentence sent : conll09Sents) {
-                        cw.write(sent);
-                    }
-                    cw.close();
-                }
-            } else if (dataType == DatasetType.CONLL_2008) {
-                List<CoNLL08Sentence> conll08Sents = new ArrayList<CoNLL08Sentence>();
-                CoNLL08FileReader reader = new CoNLL08FileReader(dataFile);
-                for (CoNLL08Sentence sent : reader) {
-                    if (conll09Sents.size() >= maxNumSentences) {
-                        break;
-                    }
-                    if (sent.size() <= maxSentenceLength) {
-                        if (normalizeRoleNames) {
-                            sent.normalizeRoleNames();
-                        }
-                        // TODO: sent.removeNominalPreds();
-                        sent.intern();
-                        conll08Sents.add(sent);
-                        conll09Sents.add(sent.toCoNLL09Sent(true));
-                        numTokens += sent.size();
-                    }
-                }
-                reader.close();
-
-                if (goldFile != null) {
-                    log.info("Writing gold data to file: " + goldFile);
-                    CoNLL08Writer cw = new CoNLL08Writer(goldFile);
-                    for (CoNLL08Sentence sent : conll08Sents) {
-                        cw.write(sent);
-                    }
-                    cw.close();
-                }
-            }
-
-            // Data munging -- this must be done after we write the gold sentences to a file.
-            reduceSupervision(conll09Sents);
-                        
-            // TODO: We should clearly differentiate between the gold sentences and the input sentence.
-            // Convert CoNLL sentences to SimpleAnnoSentences.
-            sents = new SimpleAnnoSentenceCollection();
-            for (CoNLL09Sentence conllSent : conll09Sents) {
-                sents.add(conllSent.toSimpleAnnoSentence(useGoldSyntax));
-            }
-        } else {
-            throw new ParseException("Unsupported data type: " + dataType);
         }
-
-        // Brown clusters.
-        if (brownClusters != null) {
-            log.info("Adding Brown clusters.");
-            BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
-            prm.maxTagLength = Integer.MAX_VALUE;
-            prm.language = language;
-            BrownClusterTagger bct = new BrownClusterTagger(prm);
-            bct.read(brownClusters);
-            bct.addClusters(sents);
-            log.info("Brown cluster hit rate: " + bct.getHitRate());
-        } else {
-            log.warn("No Brown cluster file specified.");            
+        if (numPredArgs > 0) {
+            log.info(String.format("Proportion pred-arg self loops: %.4f (%d / %d)", (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
         }
-
-        // TODO: This must only be done on
-        // the "input" sentences, not the "gold" sentences against which we
-        // train and evaluate.
-        //
-        //        // Additional removal of supervision. 
-        //        if (useTemplates) {
-        //            List<AT> removeAts = getRemoveAts();            
-        //            if (removeAts.size() > 0) {
-        //                log.info("Removing annotation types: " + removeAts);
-        //                for (SimpleAnnoSentence sent : sents) {
-        //                    sent.removeAts(removeAts);
-        //                }
-        //            }
-        //        }
-        
-        log.info("Num " + name + " sentences: " + sents.size());   
-        log.info("Num " + name + " tokens: " + numTokens);
-
-        return sents;
     }
 
-    /** Remove various aspects of supervision from the data. */
-    private void reduceSupervision(List<CoNLL09Sentence> conllSents) {
-        if (useProjDepTreeFactor) {
-            // TODO: This should be a removeHead option, which is usually
-            // set to true whenever we have latent syntax.
-            log.info("Removing all dependency trees from the CoNLL data");
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeHeadAndPhead();
-                conllSent.removeDeprealAndPdeprel();
-            }
-        } else if (removeDeprel) {
-            log.info("Removing syntactic dependency labels from the CoNLL data");  
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeDeprealAndPdeprel();
-            }
-        } 
-        
-        if (removeLemma) {
-            log.info("Removing lemmas from the CoNLL data");  
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeLemmaAndPlemma();
-            }
-        }
-        
-        if (removeFeat) {
-            log.info("Removing morphological features from the CoNLL data");  
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeFeatAndPfeat();
-            }
-        }
+    private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
+        DepParseEvaluator eval = new DepParseEvaluator(name);
+        eval.evaluate(goldSents, predSents);        
     }
     
     private void eval(String name, VarConfigPair pair) {
@@ -616,108 +581,82 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
     
-    private VarConfigPair decode(FgModel model, FgExampleList data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
+    private SimpleAnnoSentenceCollection decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection inputSents, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
-        
-        SimpleAnnoSentenceCollection goldSents = (SimpleAnnoSentenceCollection) data.getSourceSentences();
-        // Predicted sentences
-        SimpleAnnoSentenceCollection predSents = new SimpleAnnoSentenceCollection();
-        List<VarConfig> predVcs = new ArrayList<VarConfig>();
-        List<VarConfig> goldVcs = new ArrayList<VarConfig>();
-        
-        for (int i=0; i< goldSents.size(); i++) {
-            FgExample ex = data.get(i);
-            SimpleAnnoSentence goldSent = goldSents.get(i);
-            SimpleAnnoSentence predSent = new SimpleAnnoSentence(goldSent);
-            SrlDecoder decoder = getDecoder();
+
+        Timer timer = new Timer();
+        timer.start();
+        // Add the new predictions to the input sentences.
+        for (int i = 0; i < inputSents.size(); i++) {
+            UFgExample ex = data.get(i);
+            SimpleAnnoSentence predSent = inputSents.get(i);
+            JointNlpDecoder decoder = getDecoder();
             decoder.decode(model, ex);
-            
-            // Get the MBR variable assignment.
-            VarConfig predVc = decoder.getMbrVarConfig();
-            predVcs.add(predVc);
-            
+                        
             // Update SRL graph on the sentence. 
             SrlGraph srlGraph = decoder.getSrlGraph();
-            predSent.setSrlGraph(srlGraph);
+            if (srlGraph != null) {
+                predSent.setSrlGraph(srlGraph);
+            }
             // Update the dependency tree on the sentence.
             int[] parents = decoder.getParents();
             if (parents != null) {
                 predSent.setParents(parents);
-            }            
-            predSents.add(predSent);
-            
-            // Get the gold variable assignment.
-            goldVcs.add(ex.getGoldConfig());
-        }
-        
-        if (predOut != null) {
-            log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
-            if (dataType == DatasetType.CONLL_2009) {
-                CoNLL09Writer cw = new CoNLL09Writer(predOut);
-                for (SimpleAnnoSentence sent : predSents) {
-                    CoNLL09Sentence conllSent = CoNLL09Sentence.fromSimpleAnnoSentence(sent);
-                    cw.write(conllSent);
-                }
-                cw.close();
-            } else if (dataType == DatasetType.CONLL_2008) {
-                CoNLL08Writer cw = new CoNLL08Writer(predOut);
-                for (SimpleAnnoSentence sent : predSents) {
-                    CoNLL08Sentence conllSent = CoNLL08Sentence.fromSimpleAnnoSentence(sent);
-                    cw.write(conllSent);
-                }
-                cw.close();
-            } else {
-                throw new ParseException("Unsupported data type: " + dataType);
             }
         }
+        timer.stop();
+        log.info(String.format("Decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
         
-        return new VarConfigPair(goldVcs, predVcs);
+        return inputSents;
     }
 
     
 
     /* --------- Factory Methods ---------- */
-
-    private static List<AT> getRemoveAts() {
-        if (removeAts == null) {
-            return Collections.emptyList();
-        }        
-        String[] splits = removeAts.split(",");
-        ArrayList<AT> ats = new ArrayList<AT>();
-        for (String s : splits) {
-            ats.add(AT.valueOf(s));
-        }
-        return ats;
-    }
     
-    private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm(SrlFeatureExtractorPrm srlFePrm) {
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+    private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpFeatureExtractorPrm fePrm) {
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         // Factor graph structure.
-        prm.fgPrm.linkVarType = linkVarType;
-        prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
-        prm.fgPrm.roleStructure = roleStructure;
-        prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
-        prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
-        prm.fgPrm.unaryFactors = unaryFactors;
-        prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
-        prm.fgPrm.predictSense = predictSense;
+        prm.fgPrm.dpPrm.linkVarType = linkVarType;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = useProjDepTreeFactor;
+        prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
+        prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
+        prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
+        prm.fgPrm.dpPrm.pruneEdges = pruneEdges;
+                
+        prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
+        prm.fgPrm.srlPrm.roleStructure = roleStructure;
+        prm.fgPrm.srlPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
+        prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.srlPrm.binarySenseRoleFactors = binarySenseRoleFactors;
+        prm.fgPrm.srlPrm.predictSense = predictSense;
+        prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
+        
+        prm.fgPrm.includeDp = includeDp;
+        prm.fgPrm.includeSrl = includeSrl;
         
         // Feature extraction.
-        prm.srlFePrm = srlFePrm;
+        prm.fePrm = fePrm;
         
         // Example construction and storage.
-        prm.exPrm.featCountCutoff = featCountCutoff;
         prm.exPrm.cacheType = cacheType;
         prm.exPrm.gzipped = gzipCache;
         prm.exPrm.maxEntriesInMemory = maxEntriesInMemory;
         
-        // SRL Feature Extraction.
-        prm.srlFePrm.featureHashMod = featureHashMod;
         return prm;
     }
     
-    private static SrlFeatureExtractorPrm getSrlFeatureExtractorPrm() {
+    private static ObsFeatureConjoinerPrm getObsFeatureConjoinerPrm() {
+        ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
+        prm.featCountCutoff = featCountCutoff;
+        prm.includeUnsupportedFeatures = includeUnsupportedFeatures;
+        return prm;
+    }
+    
+    private static JointNlpFeatureExtractorPrm getJointNlpFeatureExtractorPrm() {
+        // SRL Feature Extraction.
         SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
         srlFePrm.fePrm.biasOnly = biasOnly;
         srlFePrm.fePrm.useSimpleFeats = useSimpleFeats;
@@ -729,8 +668,25 @@ public class SrlRunner {
         
         srlFePrm.fePrm.soloTemplates = getFeatTpls(senseFeatTpls);
         srlFePrm.fePrm.pairTemplates = getFeatTpls(argFeatTpls);
+
+        srlFePrm.featureHashMod = featureHashMod;
+                
+        // Dependency parsing Feature Extraction
+        DepParseFeatureExtractorPrm dpFePrm = new DepParseFeatureExtractorPrm();
+        dpFePrm.biasOnly = biasOnly;
+        dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
+        dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
+        dpFePrm.featureHashMod = featureHashMod;
+        if (includeSrl && acl14DepFeats) {
+            // This special case is only for historical consistency.
+            dpFePrm.onlyTrueBias = false;
+            dpFePrm.onlyTrueEdges = false;
+        }
         
-        return srlFePrm;
+        JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
+        fePrm.srlFePrm = srlFePrm;
+        fePrm.dpFePrm = dpFePrm;
+        return fePrm;
     }
 
     /**
@@ -752,7 +708,7 @@ public class SrlRunner {
                 } else {
                     throw new IllegalStateException();
                 }
-                if (brownClusters == null) {
+                if (CorpusHandler.brownClusters == null) {
                     // Filter out the Brown cluster features.
                     log.warn("Filtering out Brown cluster features from coarse set.");
                     coarseUnigramSet = TemplateLanguage.filterOutRequiring(coarseUnigramSet, AT.BROWN);
@@ -778,8 +734,8 @@ public class SrlRunner {
     private static CorpusStatisticsPrm getCorpusStatisticsPrm() {
         CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
         prm.cutoff = cutoff;
-        prm.language = language;
-        prm.useGoldSyntax = useGoldSyntax;
+        prm.language = CorpusHandler.language;
+        prm.useGoldSyntax = CorpusHandler.useGoldSyntax;
         prm.normalizeWords = normalizeWords;
         return prm;
     }
@@ -792,31 +748,35 @@ public class SrlRunner {
         if (optimizer == Optimizer.LBFGS) {
             prm.maximizer = getLbfgs();
             prm.batchMaximizer = null;
-        } else if (optimizer == Optimizer.SGD){
+        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.maximizer = null;
-            prm.batchMaximizer = new SGD(getSgdPrm());
-        } else if (optimizer == Optimizer.ADAGRAD){
-            prm.maximizer = null;
-            AdaGradPrm adaGradPrm = new AdaGradPrm();
-            adaGradPrm.sgdPrm = getSgdPrm();
-            adaGradPrm.eta = adaGradEta;
-            prm.batchMaximizer = new AdaGrad(adaGradPrm);
-        } else if (optimizer == Optimizer.ADADELTA){
-            prm.maximizer = null;
-            AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
-            adaDeltaPrm.sgdPrm = getSgdPrm();
-            adaDeltaPrm.decayRate = adaDeltaDecayRate;
-            adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
-            prm.batchMaximizer = new AdaDelta(adaDeltaPrm);
+            SGDPrm sgdPrm = getSgdPrm();
+            if (optimizer == Optimizer.SGD){
+                BottouSchedulePrm boPrm = new BottouSchedulePrm();
+                boPrm.initialLr = sgdInitialLr;
+                boPrm.lambda = 1.0 / l2variance;
+                sgdPrm.sched = new BottouSchedule(boPrm);
+            } else if (optimizer == Optimizer.ADAGRAD){
+                AdaGradPrm adaGradPrm = new AdaGradPrm();
+                adaGradPrm.eta = adaGradEta;
+                sgdPrm.sched = new AdaGrad(adaGradPrm);
+            } else if (optimizer == Optimizer.ADADELTA){
+                AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
+                adaDeltaPrm.decayRate = adaDeltaDecayRate;
+                adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
+                sgdPrm.sched = new AdaDelta(adaDeltaPrm);
+                sgdPrm.autoSelectLr = false;
+            }
+            prm.batchMaximizer = new SGD(sgdPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
         prm.regularizer = new L2(l2variance);
-        prm.crfObjPrm.numThreads = threads;
+        prm.numThreads = threads;
         return prm;
     }
 
-    private static Maximizer getLbfgs() {
+    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getLbfgs() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         prm.maxIterations = maxLbfgsIterations;
         return new MalletLBFGS(prm);
@@ -826,37 +786,40 @@ public class SrlRunner {
         SGDPrm prm = new SGDPrm();
         prm.numPasses = sgdNumPasses;
         prm.batchSize = sgdBatchSize;
-        prm.initialLr = sgdInitialLr;
         prm.withReplacement = sgdWithRepl;
-        prm.lambda = 1.0 / l2variance;
         prm.stopBy = stopTrainingBy;
+        prm.autoSelectLr = sgdAutoSelectLr;
+        prm.autoSelectFreq = sgdAutoSelecFreq;
+        // Make sure we correctly set the schedule somewhere else.
+        prm.sched = null;
         return prm;
     }
 
     private static BeliefPropagationPrm getInfFactory() {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = logDomain;
-        bpPrm.schedule = BpScheduleType.TREE_LIKE;
-        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        // TODO: we need to figure out how to compute the log-likelihood AND normalize the marginals.
-        bpPrm.normalizeMessages = false;
-        bpPrm.maxIterations = 1;
+        bpPrm.logDomain = logDomain;        
+        bpPrm.schedule = bpSchedule;
+        bpPrm.updateOrder = bpUpdateOrder;
+        bpPrm.normalizeMessages = normalizeMessages;
+        bpPrm.maxIterations = bpMaxIterations;
+        bpPrm.convergenceThreshold = bpConvergenceThreshold;
         return bpPrm;
     }
 
-    private SrlDecoder getDecoder() {
+    private static JointNlpDecoder getDecoder() {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
         mbrPrm.loss = Loss.ACCURACY;
-        SrlDecoderPrm prm = new SrlDecoderPrm();
+        JointNlpDecoderPrm prm = new JointNlpDecoderPrm();
         prm.mbrPrm = mbrPrm;
-        return new SrlDecoder(prm);
+        return new JointNlpDecoder(prm);
     }
     
     public static void main(String[] args) {
         try {
             ArgParser parser = new ArgParser(SrlRunner.class);
             parser.addClass(SrlRunner.class);
+            parser.addClass(CorpusHandler.class);
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {

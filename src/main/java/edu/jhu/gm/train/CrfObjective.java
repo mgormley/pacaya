@@ -1,401 +1,240 @@
 package edu.jhu.gm.train;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
+import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.IFgModel;
-import edu.jhu.gm.model.IndexForVc;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.util.IntIter;
-import edu.jhu.optimize.BatchFunction;
-import edu.jhu.optimize.Function;
-import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.sort.IntSort;
+import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Threads;
-import edu.jhu.util.Threads.TaskFactory;
+import edu.jhu.util.Timer;
 
-public class CrfObjective implements Function, BatchFunction {
+public class CrfObjective implements ExampleObjective {
     
     private static final Logger log = Logger.getLogger(CrfObjective.class);
 
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
-    public static class CrfObjectivePrm {
-        public int numThreads = 1;
-    }
-    
-    private CrfObjectivePrm prm;
-    private int numParams;
     private FgExampleList data;
-    private FgModel model;
-    private FgModel gradient;
     private FgInferencerFactory infFactory;
-    private ExecutorService pool;
         
-    public CrfObjective(CrfObjectivePrm prm, FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
-        this.prm = prm;
-        this.numParams = model.getNumParams();
+    // Timer: update the model.
+    private Timer updTimer = new Timer();
+    // Timer: run inference.
+    private Timer infTimer = new Timer();
+    // Timer: compute the log-likelihood.
+    private Timer valTimer = new Timer();
+    // Timer: compute the gradient.
+    private Timer gradTimer = new Timer();
+    
+    public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
         this.data = data;
-        this.model = model;
         this.infFactory = infFactory;
-        this.gradient = model.getDenseCopy();
-        this.gradient.zero();
-        this.pool = Executors.newFixedThreadPool(prm.numThreads);
     }
+
+    /** @inheritDoc */
+    // Assumed by caller to be threadsafe.
+    @Override
+    public void addValueGradient(FgModel model, int i, MutableValueGradient vg) {
+        FgExample ex = data.get(i);
+        Timer t = new Timer();
         
-    public void setPoint(double[] params) {
-        log.trace("Updating model with new parameters");
-        model.updateModelFromDoubles(params);
+        // Get the inferencers.
+        t.reset(); t.start();
+        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
+        FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
+        t.stop(); infTimer.add(t);
+        
+        // Update the inferences with the current model parameters.
+        // (This is usually where feature extraction happens.)
+        t.reset(); t.start();
+        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
+        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+        t.stop(); updTimer.add(t);
+        
+        t.reset(); t.start();
+        // Run inference to compute Z(y,x) by summing over the latent variables w.
+        infLat.run();        
+        // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
+        infLatPred.run();
+        t.stop(); infTimer.add(t);
+
+        if (vg.hasValue()) {
+            // Compute the condition log-likelihood for this example.
+            t.reset(); t.start();
+            vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i));
+            t.stop(); valTimer.add(t);
+        }
+        if (vg.hasGradient()) {
+            // Compute the gradient for this example.
+            t.reset(); t.start();
+            addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
+            t.stop(); gradTimer.add(t);
+        }
+        
+        vg.addWeight(ex.getWeight());
+        
+        if (i == 0) {
+            report();
+        }
     }
     
     /**
-     * Gets the average marginal conditional log-likelihood of the model for the given model parameters.
+     * Gets the marginal conditional log-likelihood of the i'th example for the given model parameters.
      * 
      * We return:
-     * <p>
-     * \frac{1}{n} \sum_{i=1}^n \log p(y_i | x_i)
-     * </p>
-     * where:
      * <p>
      * \log p(y|x) = \log \sum_z p(y, z | x)
      * </p>
      * 
      * where y are the predicted variables, x are the observed variables, and z are the latent variables.
      * 
-     * @inheritDoc
-     */
-    @Override
-    public double getValue() {        
-        return getValue(IntSort.getIndexArray(data.size()));
-    }
-
-    /**
-     * Gets the average marginal conditional log-likelihood computed on a batch.
-     * @inheritDoc
-     */
-    @Override
-    public double getValue(int[] batch) {
-        // TODO: we shouldn't run inference again just to compute this!!
-        boolean isFullDataset = batch.length == data.size();
-        double ll = 0.0;
-        
-        if (prm.numThreads == 1) {
-            // Run serially.
-            for (int i=0; i<batch.length; i++) {
-                ll += getMarginalLogLikelihoodForExample(batch[i]);
-            }
-        } else {
-            // Run in parallel.
-            TaskFactory<Double> factory = new TaskFactory<Double>() {
-                public Callable<Double> getTask(int i) {
-                    return new LogLikelihoodOfExample(i);
-                }
-            };
-            List<Double> results = Threads.safelyParallelizeBatch(pool, batch, factory);
-            for (Double r : results) {
-                ll += r;
-            }
-        }
-        
-        
-        ll /= batch.length;
-        if (isFullDataset) {
-            // Print out the likelihood if we're computing it on the entire dataset.
-            log.info("Average marginal log-likelihood: " + ll);
-        }
-        if ( ll > MAX_LOG_LIKELIHOOD ) {
-            String name = isFullDataset ? "data" : "batch";
-            log.warn("Log-likelihood for " + name + " should be <= 0: " + ll);
-        }
-        return ll;
-    }
-    
-    private class LogLikelihoodOfExample implements Callable<Double> {
-
-        private int i;
-        
-        public LogLikelihoodOfExample(int i) {
-            this.i = i;
-        }
-
-        @Override
-        public Double call() throws Exception {
-            return getMarginalLogLikelihoodForExample(i);
-        }
-        
-    }
-        
-    private double getMarginalLogLikelihoodForExample(int i) {
-        FgExample ex = data.get(i);
-        FactorTemplateList fts = data.getTemplates();
-        
-        // Run inference to compute Z(y,x) by summing over the latent variables w.
-        FgInferencer infLat = getInfLat(ex);
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        infLat.run();
-
+     * @param model The current model parameters.
+     * @param i The data example.
+     * @param fgLat The factor graph with the predicted and observed variables clamped. 
+     * @param infLat The inferencer for fgLat.
+     * @param fgLatPred The factor graph with the observed variables clamped. 
+     * @param infLatPred The inferencer for fgLatPred.
+     */      
+    public double getValue(FgModel model, FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
+        // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
-
-        // "Multiply" in all the fully clamped factors. These are the
-        // factors which do not include any latent variables. 
-        for (int a=0; a<fgLat.getNumFactors(); a++) {
-            Factor f = fgLat.getFactor(a);
-            if (f.getVars().size() == 0) {
-                if (f instanceof ExpFamFactor) {
-                    int goldConfig = ex.getGoldConfigIdxPred(a);
-                    FeatureVector fv = ex.getObservationFeatures(a);
-                    numerator += model.dot(fts.getTemplateId(f), goldConfig, fv);
-                } else {
-                    throw new UnsupportedFactorTypeException(f);
-                }
-            }
-        }
-        infLat.clear();
         
-        // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        FgInferencer infLatPred = getInfLatPred(ex);
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        infLatPred.run();
+        // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
+        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());        
 
-        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());
-
-        // "Multiply" in all the fully clamped factors. These are the
-        // factors which do not include any latent or predicted variables.
-        // This is a bit of an edge case, but we do it anyway.
+        // "Multiply" in all the fully clamped factors to the numerator and denominator. 
+        int numFullyClamped = 0;
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
-            if (f.getVars().size() == 0) {
-                if (f instanceof ExpFamFactor) {
-                    int goldConfig = ex.getGoldConfigIdxPred(a);
-                    FeatureVector fv = ex.getObservationFeatures(a);
-                    denominator += model.dot(fts.getTemplateId(f), goldConfig, fv);
-                } else {
-                    throw new UnsupportedFactorTypeException(f);
+            boolean isNumeratorClamped = fgLat.getFactor(a).getVars().size() == 0;
+            boolean isDenominatorClamped = fgLatPred.getFactor(a).getVars().size() == 0;
+            if (f instanceof GlobalFactor) {
+                GlobalFactor gf = (GlobalFactor)f;
+                if (isNumeratorClamped) {
+                    // These are the factors which do not include any latent variables. 
+                    VarConfig goldConfig = ex.getGoldConfig().getIntersection(fgLatPred.getFactor(a).getVars());
+                    numerator += infLat.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
+                            : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                    numFullyClamped++;
+                    
+                    if (isDenominatorClamped) {
+                        // These are the factors which do not include any latent or predicted variables.
+                        // This is a bit of an edge case, but required for correctness.
+                        denominator += infLatPred.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
+                                : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                    }
+                }
+            } else {
+                if (isNumeratorClamped) {
+                    // These are the factors which do not include any latent variables. 
+                    int goldConfig = ex.getGoldConfig().getConfigIndexOfSubset(f.getVars());
+                    numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
+                            : FastMath.log(f.getUnormalizedScore(goldConfig));
+                    numFullyClamped++;
+
+                    if (isDenominatorClamped) {
+                        // These are the factors which do not include any latent or predicted variables.
+                        // This is a bit of an edge case, but required for correctness.
+                        denominator += infLatPred.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
+                                : FastMath.log(f.getUnormalizedScore(goldConfig));
+                    }
                 }
             }
         }
-        infLatPred.clear();
         
         double ll = numerator - denominator;
-
-        if ( ll > MAX_LOG_LIKELIHOOD ) {
-            log.warn("Log-likelihood for example should be <= 0: " + ll);
-        }
-        return ll;
-    }
-
-    /**
-     * Gets the gradient of the conditional log-likelihood.
-     * @inheritDoc
-     */
-    @Override
-    public void getGradient(double[] g) {
-        getGradient(IntSort.getIndexArray(data.size()), g);
-    }
-
-    /**
-     * Gets the gradient of the conditional log-likelihood on a batch of examples.
-     * @inheritDoc
-     */
-    @Override
-    public void getGradient(int[] batch, double[] g) {
-        this.gradient.zero();   
-        if (prm.numThreads == 1) {
-            // Run serially.
-            for (int i=0; i<batch.length; i++) {
-                log.trace("Computing gradient for example " + batch[i]);
-                addGradientForExample(batch[i], gradient);
-            }
-        } else {
-            // Run in parallel.
-            TaskFactory<Object> factory = new TaskFactory<Object>() {
-                public Callable<Object> getTask(int i) {
-                    return new AddGradientOfExample(gradient, i);
-                }
-            };
-            Threads.safelyParallelizeBatch(pool, batch, factory);
-        }     
-        this.gradient.scale(1.0 / batch.length);
-        gradient.updateDoublesFromModel(g);
-    }
-
-    private class AddGradientOfExample implements Callable<Object> {
-
-        private FgModel gradient;
-        private int i;
-
-        public AddGradientOfExample(FgModel gradient, int i) {
-            this.gradient = gradient;
-            this.i = i;
-        }
-
-        @Override
-        public Object call() {
-            log.trace("Computing gradient for example " + i);
-            FgModel sparseg;
-            synchronized (gradient) {
-                sparseg = gradient.getSparseZeroedCopy();
-            }
-            addGradientForExample(i, sparseg);
-            synchronized (gradient) {
-                gradient.add(sparseg);
-            }
-            return null;
-        }
+        log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
+        log.trace(String.format("numFullyClamped=%d numFactors=%d", numFullyClamped, fgLatPred.getFactors().size()));
         
+        if (ll > MAX_LOG_LIKELIHOOD) {
+            // Note: this can occur if the graph is loopy because the
+            // Bethe free energy has miss-estimated -log(Z) or because BP
+            // has not yet converged.
+            log.warn("Log-likelihood for example "+i+" should be <= 0: " + ll);
+        }
+        return ll * ex.getWeight();
     }
     
     /**
-     * Adds the gradient for a particular example to the gradient vector.
+     * Adds the gradient of the marginal conditional log-likelihood for a particular example to the gradient vector.
      * 
-     * @param params The model parameters.
-     * @param i The index of the data example.
+     * @param model The current model parameters.
+     * @param i The data example.
      * @param gradient The gradient vector to which this example's contribution
      *            is added.
+     * @param fgLat The factor graph with the predicted and observed variables clamped. 
+     * @param infLat The inferencer for fgLat.
+     * @param fgLatPred The factor graph with the observed variables clamped. 
+     * @param infLatPred The inferencer for fgLatPred.
      */
-    private void addGradientForExample(int i, IFgModel gradient) {
-        FgExample ex = data.get(i);
-        
+    public void addGradient(FgModel model, FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
-        FgInferencer infLat = getInfLat(ex);
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        infLat.run();
-        addExpectedFeatureCounts(fgLat, ex, infLat, data.getTemplates(), 1.0, gradient);
-        infLat.clear();
+        addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), gradient);
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        FgInferencer infLatPred = getInfLatPred(ex);
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        infLatPred.run();
-        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, data.getTemplates(), -1.0, gradient);
-        infLatPred.clear();
+        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0 * ex.getWeight(), gradient);
     }
 
     /** 
      * Computes the expected feature counts for a factor graph, and adds them to the gradient after scaling them.
      * @param ex 
      * @param inferencer The inferencer for a clamped factor graph, which has already been run.
-     * @param fts TODO
      * @param multiplier The value which the expected features will be multiplied by.
      * @param gradient The OUTPUT gradient vector to which the scaled expected features will be added.
      * @param factorId The id of the factor.
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, FactorTemplateList fts,
-            double multiplier, IFgModel gradient) {
+    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, double multiplier,
+            IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
-            if (f instanceof GlobalFactor) {
-                // Special case for global factors.
-                continue;
-            } else if (f instanceof ExpFamFactor) {            
-                DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
-                
-                int numConfigs = factorMarginal.getVars().calcNumConfigs();
-                if (numConfigs == 0) {
-                    // If there are no variables in this factor, we still need to get the cached features.
-                    // Update the gradient for each feature.
-                    FeatureVector fv = ex.getObservationFeatures(factorId);
-                    int config = ex.getGoldConfigIdxPred(factorId);
-                    // TODO: this iterator is slow.
-                    for (IntDoubleEntry entry : fv) {
-                        gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * entry.get());
-                    }
-                } else {
-                    IntIter iter = null;
-                    if (fg == ex.getFgLat()) {
-                        // If this is the numerator then we must clamp the predicted
-                        // variables to determine the correct set of model
-                        // parameters.
-                        VarConfig predVc = ex.getGoldConfigPred(factorId);
-                        iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(factorId).getVars(), predVc);
-                    }
-                    
-                    for (int c=0; c<numConfigs; c++) {       
-                        // Get the probability of the c'th configuration for this factor.
-                        double prob = factorMarginal.getValue(c);
-                        if (inferencer.isLogDomain()) {
-                            prob = FastMath.exp(prob);
-                        }
-                        // Get the feature counts when they are clamped to the c'th configuration for this factor.
-                        FeatureVector fv = ex.getObservationFeatures(factorId);
-    
-                        // The configuration of all the latent/predicted variables,
-                        // where the predicted variables (might) have been clamped.
-                        int config = (iter != null) ? iter.next() : c;
-
-                        // Scale the feature counts by the marginal probability of the c'th configuration.
-                        // Update the gradient for each feature.
-                        gradient.addIfParamExists(fts.getTemplateId(f), config, fv, multiplier * prob);
-                    }
-                    assert(iter == null || !iter.hasNext());
-                }
-            } else {
-                throw new UnsupportedFactorTypeException(f);
-            }
+            f.addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
         }
     }
 
     /** Gets the "observed" feature counts. */
-    public FeatureVector getObservedFeatureCounts(double[] params) {
+    public FeatureVector getObservedFeatureCounts(FgModel model, double[] params) {
         model.updateModelFromDoubles(params);
         FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FgInferencer infLat = getInfLat(ex);
+            FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
             FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
             infLat.run();
-            addExpectedFeatureCounts(fgLat, ex, infLat, data.getTemplates(), 1.0, feats);
+            addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), feats);
         }
-        double[] f = new double[numParams];
+        double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
         return new FeatureVector(f);
     }
     
     /** Gets the "expected" feature counts. */
-    public FeatureVector getExpectedFeatureCounts(double[] params) {
+    public FeatureVector getExpectedFeatureCounts(FgModel model, double[] params) {
         model.updateModelFromDoubles(params);
         FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FgInferencer infLatPred = getInfLatPred(ex);
+            FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
             FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
             infLatPred.run();
-            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, data.getTemplates(), 1.0, feats);
+            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0 * ex.getWeight(), feats);
         }
-        double[] f = new double[numParams];
+        double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
         return new FeatureVector(f);
-    }
-    
-    /**
-     * Gets the number of model parameters.
-     */
-    @Override
-    public int getNumDimensions() {
-        return numParams;
     }
 
     /** Gets the number of examples in the training dataset. */
@@ -404,18 +243,12 @@ public class CrfObjective implements Function, BatchFunction {
         return data.size();
     }
 
-    // The old way was to cache all the inferencers. This causes problems
-    // because the examples might be recreated on a call to data.get(i).
-    private FgInferencer getInfLat(FgExample ex) {
-        return infFactory.getInferencer(ex.getFgLat());
+    private void report() {
+        log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+        double sum = updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
+        double mult = 100.0 / sum;
+        log.debug(String.format("Timers total%% (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult));
     }
-
-    private FgInferencer getInfLatPred(FgExample ex) {
-        return infFactory.getInferencer(ex.getFgLatPred());
-    }
-
-    public void shutdown() {
-        Threads.shutdownSafelyOrDie(pool);
-    }
-    
 }

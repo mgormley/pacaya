@@ -10,14 +10,14 @@ import edu.jhu.util.Alphabet;
 public class SentenceCollection implements Iterable<Sentence> {
 
     private static final long serialVersionUID = 1L;
-    private Alphabet<Label> alphabet;
+    private Alphabet<String> alphabet;
     private ArrayList<Sentence> sents;
     private int numTokens;
     
     /**
      * Visible for testing only.
      */
-    public SentenceCollection(Alphabet<Label> alphabet) {
+    public SentenceCollection(Alphabet<String> alphabet) {
         this.alphabet = alphabet;
         this.sents = new ArrayList<Sentence>();
     }
@@ -26,7 +26,7 @@ public class SentenceCollection implements Iterable<Sentence> {
      * For testing only.
      */
     public SentenceCollection() {
-        this(new Alphabet<Label>());
+        this(new Alphabet<String>());
     }
     
     public SentenceCollection(Sentence sentence) {
@@ -66,7 +66,7 @@ public class SentenceCollection implements Iterable<Sentence> {
     }
     
     private void addSentenceToAlphabet(Sentence sentence) {
-        for (Label l : sentence) {
+        for (String l : sentence) {
             alphabet.lookupIndex(l);
         }
     }
@@ -82,10 +82,10 @@ public class SentenceCollection implements Iterable<Sentence> {
     /**
      * Vocabulary of the sentences including WALL_LABEL
      */
-    public Set<Label> getVocab() {
-        Set<Label> vocab = new HashSet<Label>();
+    public Set<String> getVocab() {
+        Set<String> vocab = new HashSet<String>();
         for (Sentence sent : this) {
-            for (Label label : sent) {
+            for (String label : sent) {
                 vocab.add(label);
             }
         }
@@ -94,7 +94,7 @@ public class SentenceCollection implements Iterable<Sentence> {
         return vocab;
     }
 
-    public Alphabet<Label> getLabelAlphabet() {
+    public Alphabet<String> getLabelAlphabet() {
         return alphabet;
     }
 
@@ -112,15 +112,18 @@ public class SentenceCollection implements Iterable<Sentence> {
 
         private static final long serialVersionUID = 1L;
         
-        public StringSentence(Alphabet<Label> alphabet, String string) {
+        public StringSentence(Alphabet<String> alphabet, String string) {
             super(alphabet);
             String[] splits = string.split("\\s");
             for (String tok : splits) {
                 String[] tw = tok.split("/");
                 if (tw.length == 1) {
-                    this.add(new Word(tw[0]));
+                    this.add(tw[0]);
                 } else if (tw.length == 2) {
-                    this.add(new TaggedWord(tw[0], tw[1]));
+                    // Note: here we use just the tag.
+                    // String word = tw[0];
+                    String tag = tw[1];
+                    this.add(tag);
                 } else {
                     throw new IllegalStateException("At most we should only have a tag and a word");
                 }

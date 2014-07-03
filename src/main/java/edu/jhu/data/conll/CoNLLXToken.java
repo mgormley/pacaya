@@ -56,7 +56,7 @@ public class CoNLLXToken {
     /** 8    DEPREL  Dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
     private String deprel;
     /** 9    PHEAD   Projective head of current token, which is either a value of ID or zero ('0'), or an underscore if not available. Note that depending on the original treebank annotation, there may be multiple tokens an with ID of zero. The dependency structure resulting from the PHEAD column is guaranteed to be projective (but is not available for all languages), whereas the structures resulting from the HEAD column will be non-projective for some sentences of some languages (but is always available). */
-    private String phead;
+    private int phead;
     /** 10   PDEPREL     Dependency relation to the PHEAD, or an underscore if not available. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
     private String pdeprel;
     
@@ -74,13 +74,13 @@ public class CoNLLXToken {
         feats = getFeats(fromUnderscoreString(splits[5]));
         head = Integer.parseInt(splits[6]);
         deprel = splits[7];
-        phead = fromUnderscoreString(splits[8]);
+        phead = intFromUnderscoreString(splits[8], -1);
         pdeprel = fromUnderscoreString(splits[9]);
     }
     
     public CoNLLXToken(int id, String form, String lemma, String cpostag,
             String postag, List<String> feats, int head, String deprel,
-            String phead, String pdeprel) {
+            int phead, String pdeprel) {
         this.id = id;
         this.form = form;
         this.lemma = lemma;
@@ -106,16 +106,23 @@ public class CoNLLXToken {
         this.phead = other.phead;
         this.pdeprel = other.pdeprel;
     }
+
+    /** Constructor which leaves all fields empty. */
+    CoNLLXToken() {
+        super();
+        this.id = -1;
+        this.head = -1;
+        this.phead = -1;
+    }
     
     public void intern() {
-        form = form.intern();
-        lemma = lemma.intern();
-        cpostag = cpostag.intern();
-        postag = postag.intern();
-        feats = Lists.getInternedList(feats);
-        deprel = deprel.intern();
-        phead = phead.intern();
-        pdeprel = pdeprel.intern();
+        if (form != null) { form = form.intern(); }
+        if (lemma != null) { lemma = lemma.intern(); }
+        if (cpostag != null) { cpostag = cpostag.intern(); }
+        if (postag != null) { postag = postag.intern(); }
+        if (feats != null) { Lists.intern(feats); }
+        if (deprel != null) { deprel = deprel.intern(); }
+        if (pdeprel != null) { pdeprel = pdeprel.intern(); }
     }
 
     /**
@@ -128,7 +135,17 @@ public class CoNLLXToken {
             return value;
         }
     }
-
+    
+    /**
+     * Convert from the underscore representation of an optional string to the null representation.
+     */
+    private static int intFromUnderscoreString(String value, int def) {
+        if (value.equals("_")) {
+            return def;
+        } else {
+            return Integer.parseInt(value);
+        }
+    }
 
     /**
      * Convert from the null representation of an optional string to the underscore representation.
@@ -138,6 +155,17 @@ public class CoNLLXToken {
             return "_";
         } else {
             return value;
+        }
+    }
+    
+    /**
+     * Convert from the null representation of an optional string to the underscore representation.
+     */
+    private static String intToUnderscoreString(int value, int def) {
+        if (value == def) {
+            return "_";
+        } else {
+            return Integer.toString(value);
         }
     }
 
@@ -187,7 +215,7 @@ public class CoNLLXToken {
         writer.write(sep);
         writer.write(String.format("%-7s", deprel));
         writer.write(sep);
-        writer.write(String.format("%-2s", toUnderscoreString(phead)));
+        writer.write(String.format("%-2s", intToUnderscoreString(phead, -1)));
         writer.write(sep);
         writer.write(String.format("%s", toUnderscoreString(pdeprel)));
     }
@@ -224,12 +252,48 @@ public class CoNLLXToken {
         return deprel;
     }
 
-    public String getPhead() {
+    public int getPhead() {
         return phead;
     }
 
     public String getPDepRel() {
         return pdeprel;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setForm(String form) {
+        this.form = form;
+    }
+
+    public void setLemma(String lemma) {
+        this.lemma = lemma;
+    }
+
+    public void setCpostag(String cpostag) {
+        this.cpostag = cpostag;
+    }
+
+    public void setPostag(String postag) {
+        this.postag = postag;
+    }
+
+    public void setFeats(List<String> feats) {
+        this.feats = feats;
+    }
+
+    public void setDeprel(String deprel) {
+        this.deprel = deprel;
+    }
+
+    public void setPhead(int phead) {
+        this.phead = phead;
+    }
+
+    public void setPdeprel(String pdeprel) {
+        this.pdeprel = pdeprel;
     }
 
     public void setHead(int head) {

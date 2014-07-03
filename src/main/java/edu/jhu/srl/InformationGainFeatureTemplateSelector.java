@@ -21,9 +21,9 @@ import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.TemplateFeatureExtractor;
-import edu.jhu.featurize.TemplateLanguage;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
 import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.feat.FeatureVector;
@@ -95,7 +95,7 @@ public class InformationGainFeatureTemplateSelector {
         int numUni = 45;
         List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, numUni).get(0);
         // Don't include PathGrams feature.
-        boolean removedPathGrams = selUnigrams.remove(new FeatTemplate4(OtherFeat.PATH_GRAMS));
+        boolean removedPathGrams = selUnigrams.remove(new FeatTemplate0(OtherFeat.PATH_GRAMS));
         if (removedPathGrams) { log.debug("Not allowing PathGrams feature in feature bigrams."); }
         assert selUnigrams.size() <= numUni : "selUnigrams.size(): " + selUnigrams.size();
         List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(selUnigrams);
@@ -227,7 +227,7 @@ public class InformationGainFeatureTemplateSelector {
                     
                     // Feature Extraction.
                     List<String> feats = new ArrayList<String>();
-                    featExt.addFeatures(Lists.getList(tpl), pidx, cidx, feats);
+                    featExt.addFeatures(Lists.getList(tpl), LocalObservations.newPidxCidx(pidx, cidx), feats);
                     if (feats.size() == 0) {
                         if (!tplsWithNoFeats.contains(tpl)) {
                             log.warn("No features extracted for template: " + tpl.getName());

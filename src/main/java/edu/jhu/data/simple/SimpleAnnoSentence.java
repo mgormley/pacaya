@@ -1,21 +1,28 @@
 package edu.jhu.data.simple;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.parse.cky.data.BinaryTree;
 import edu.jhu.prim.arrays.IntArrays;
+import edu.jhu.prim.set.IntHashSet;
+import edu.jhu.prim.set.IntSet;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 
 /**
  * Simple representation of a single sentence with many annotations.
  * 
- * This representation only uses strings, without Label objects or Alphabet objects.
+ * This representation only uses strings, without String objects or Alphabet objects.
  * 
  * @author mgormley
  * @author mmitchell
@@ -28,6 +35,7 @@ public class SimpleAnnoSentence {
     private List<String> words;
     private List<String> lemmas;
     private List<String> posTags;
+    private List<String> cposTags;
     private List<String> clusters;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
@@ -38,8 +46,15 @@ public class SimpleAnnoSentence {
      * with a head).
      */
     private int[] parents;
+    private DepEdgeMask depEdgeMask;
     private SrlGraph srlGraph;
-    // TODO: add constituency parse as NaryTree<String>
+    private IntHashSet knownPreds;    
+    /** Constituency parse. */    
+    private BinaryTree binaryTree;
+
+    // TODO: add NER
+    // TODO: add Relations (e.g. ACE relations)
+    // TODO: add Token offsets.
     
     /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
     private Object sourceSent;
@@ -50,30 +65,58 @@ public class SimpleAnnoSentence {
 
     /**
      * Fairly deep copy constructor. Everything is deeply copied except for the
-     * source sentence and the SRL graph, and the features.
+     * source sentence and the SRL graph, the features, and the constituency parse.
      */
     public SimpleAnnoSentence(SimpleAnnoSentence other) {
         this.words = Lists.copyOf(other.words);
         this.lemmas = Lists.copyOf(other.lemmas);
         this.posTags = Lists.copyOf(other.posTags);
+        this.cposTags = Lists.copyOf(other.cposTags);
         this.clusters = Lists.copyOf(other.clusters);
         this.deprels = Lists.copyOf(other.deprels);
         this.parents = IntArrays.copyOf(other.parents);
+        this.depEdgeMask = (other.depEdgeMask == null) ? null : new DepEdgeMask(other.depEdgeMask);
+        this.knownPreds = (other.knownPreds == null) ? null : new IntHashSet(other.knownPreds);
         this.sourceSent = other.sourceSent;
         // TODO: this should be a deep copy.
         this.feats = Lists.copyOf(other.feats);
         // TODO: this should be a deep copy.
         this.srlGraph = other.srlGraph;
+        // TODO: this should be a deep copy.
+        this.binaryTree = other.binaryTree;
+    }
+    
+    public SimpleAnnoSentence getShallowCopy() {
+        SimpleAnnoSentence newSent = new SimpleAnnoSentence();
+        newSent.words = this.words;
+        newSent.lemmas = this.lemmas;
+        newSent.posTags = this.posTags;
+        newSent.cposTags = this.cposTags;
+        newSent.clusters = this.clusters;
+        newSent.deprels = this.deprels;
+        newSent.parents = this.parents;
+        newSent.depEdgeMask = this.depEdgeMask;
+        newSent.knownPreds = this.knownPreds;
+        newSent.sourceSent = this.sourceSent;
+        newSent.feats = this.feats;
+        newSent.srlGraph = this.srlGraph;
+        newSent.binaryTree = this.binaryTree;
+        return newSent;
     }
     
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
         return words.get(i);
     }
-    
+
     /** Gets the i'th POS tag as a String. */
     public String getPosTag(int i) {
         return posTags.get(i);
+    }
+    
+    /** Gets the i'th Coarse POS tag as a String. */
+    public String getCposTag(int i) {
+        return cposTags.get(i);
     }
 
     /** Gets the i'th Distributional Similarity Cluster ID as a String. */
@@ -91,6 +134,11 @@ public class SimpleAnnoSentence {
         return parents[i];
     }
 
+    /** Returns whether the corresponding dependency arc should be pruned. */
+    public boolean isDepEdgePruned(int parent, int child) {
+        return depEdgeMask.isPruned(parent, child);
+    }
+    
     /** Gets the features (e.g. morphological features) of the i'th word. */
     public List<String> getFeats(int i) {
         return feats.get(i);
@@ -98,6 +146,8 @@ public class SimpleAnnoSentence {
 
     /** Gets the dependency relation label for the arc from the i'th word to its parent. */
     public String getDeprel(int i) {
+        // TODO: Decide whether we should always return null for these sorts of get calls.
+        if (deprels == null) { return null; }
         return deprels.get(i);
     }
         
@@ -114,13 +164,19 @@ public class SimpleAnnoSentence {
     public List<Integer> getParents(Span span) {
         return getSpan(parents, span);
     }
-       
-
+    
     /**
      * Gets a list of POS tags corresponding to a token span.
      */
     public List<String> getPosTags(Span span) {
         return getSpan(posTags, span);
+    }
+    
+    /**
+     * Gets a list of coarse POS tags corresponding to a token span.
+     */
+    public List<String> getCposTags(Span span) {
+        return getSpan(cposTags, span);
     }
     
     /**
@@ -165,6 +221,15 @@ public class SimpleAnnoSentence {
      */
     public String getPosTagsStr(Span span) {
         return getSpanStr(posTags, span);
+    }
+
+    /**
+     * Gets a single string representing the coarse POS tags in a given token span.
+     * 
+     * @param span
+     */
+    public String getCposTagsStr(Span span) {
+        return getSpanStr(cposTags, span);
     }
     
     /**
@@ -258,9 +323,24 @@ public class SimpleAnnoSentence {
     public List<Pair<Integer, Dir>> getDependencyPath(int start, int end) {
         return DepTree.getDependencyPath(start, end, parents);
     }
-
+    
     public Integer size() {
         return words.size();
+    }
+    
+    public boolean isKnownPred(int i) {
+        return knownPreds.contains(i);
+    }
+    
+    public void setKnownPredsFromSrlGraph() {
+        if (srlGraph == null) {
+            throw new IllegalStateException("This can only be called if srlGraph is non-null.");
+        }
+        knownPreds = new IntHashSet();
+        // All the "Y"s
+        for (SrlPred pred : srlGraph.getPreds()) {
+            knownPreds.add(pred.getPosition());
+        }
     }
     
     /* ----------- Getters/Setters for internal storage ------------ */
@@ -288,6 +368,14 @@ public class SimpleAnnoSentence {
     public void setPosTags(List<String> posTags) {
         this.posTags = posTags;
     }
+    
+    public List<String> getCposTags() {
+        return cposTags;
+    }
+
+    public void setCposTags(List<String> cposTags) {
+        this.cposTags = cposTags;
+    }
 
     public List<String> getClusters() {
         return clusters;
@@ -305,12 +393,30 @@ public class SimpleAnnoSentence {
         this.parents = parents;
     }
 
+    public DepEdgeMask getDepEdgeMask() {
+        return depEdgeMask;
+    }
+
+    public void setDepEdgeMask(DepEdgeMask depEdgeMask) {
+        this.depEdgeMask = depEdgeMask;
+    }
+
+    public IntHashSet getKnownPreds() {
+        return knownPreds;
+    }
+    
+    public void setKnownPreds(IntHashSet knownPreds) {
+        this.knownPreds = knownPreds;
+    }
+    
     public SrlGraph getSrlGraph() {
         return srlGraph;
     }
     
+    /** Sets the SRL graph and also the known predicate positions. */
     public void setSrlGraph(SrlGraph srlGraph) {
         this.srlGraph = srlGraph;
+        this.setKnownPredsFromSrlGraph();
     }
     
     public List<String> getDeprels() {
@@ -329,6 +435,14 @@ public class SimpleAnnoSentence {
         this.feats = feats;
     }
     
+    public BinaryTree getBinaryTree() {
+        return binaryTree;
+    }
+
+    public void setBinaryTree(BinaryTree binaryTree) {
+        this.binaryTree = binaryTree;
+    }
+    
     /** Gets the original object (e.g. CoNLL09Sentence) used to create this sentence. */
     public Object getSourceSent() {
         return sourceSent;
@@ -345,18 +459,58 @@ public class SimpleAnnoSentence {
         }
     }
 
-    private void removeAt(AT at) {
+    public void removeAt(AT at) {
         switch (at) {
         case WORD: this.words = null; break;
         case BROWN: this.clusters = null; break;
         case LEMMA: this.lemmas = null; break;
         case POS: this.posTags = null; break;
+        case CPOS: this.cposTags = null; break;
         case MORPHO: this.feats = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
+        case DEP_EDGE_MASK: this.depEdgeMask = null; break;
+        case SRL_PRED_IDX: this.knownPreds = null; break;
         case SRL: this.srlGraph = null; break;
+        case BINARY_TREE: this.binaryTree = null; break;
         default: throw new RuntimeException("not implemented for " + at);
         }
+    }
+    
+    public boolean hasAt(AT at) {
+        switch (at) {
+        case WORD: return this.words != null;
+        case BROWN: return this.clusters != null;
+        case LEMMA: return this.lemmas != null;
+        case POS: return this.posTags != null;
+        case CPOS: return this.cposTags != null;
+        case MORPHO: return this.feats != null;
+        case DEP_TREE: return this.parents != null;
+        case DEPREL: return this.deprels != null;
+        case DEP_EDGE_MASK: return this.depEdgeMask != null;
+        case SRL_PRED_IDX: return this.knownPreds != null;
+        case SRL: return this.srlGraph != null;
+        case BINARY_TREE: return this.binaryTree != null;
+        default: throw new RuntimeException("not implemented for " + at);
+        }
+    }
+    
+    public void intern() {
+        Lists.intern(words);
+        Lists.intern(lemmas);
+        Lists.intern(posTags);
+        Lists.intern(cposTags);
+        Lists.intern(clusters);
+        if (feats != null) {
+            for (int i=0; i<feats.size(); i++) {
+                Lists.intern(feats.get(i));
+            }
+        }
+        Lists.intern(deprels);        
+        if (binaryTree != null) {
+            binaryTree.intern();
+        }
+        // TODO: this.srlGraph.intern();
     }
     
 }

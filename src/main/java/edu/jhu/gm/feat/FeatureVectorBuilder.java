@@ -11,6 +11,8 @@ import edu.jhu.prim.tuple.Pair;
  */
 public class FeatureVectorBuilder extends IntDoubleHashMap {
 
+    private static final long serialVersionUID = 1L;
+
     public FeatureVectorBuilder() {
         super(0.0);
     }

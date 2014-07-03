@@ -13,34 +13,13 @@ import edu.jhu.gm.feat.FactorTemplateList;
  */
 public abstract class AbstractFgExampleList implements FgExampleList {
         
-    /**
-     * This is a hack to carry around the source sentences. For example, the
-     * CoNLL2009 sentences from which these examples were generated.
-     */
-    private Object sourceSents;
-    protected FactorTemplateList fts;
-
-    public AbstractFgExampleList(FactorTemplateList fts) {
-        this.fts = fts;
-    }
+    public AbstractFgExampleList() { }
 
     /** Gets the i'th example. */
     public abstract FgExample get(int i);
     
     /** Gets the number of examples. */
     public abstract int size();
-
-    public void setSourceSentences(Object sents) {
-        this.sourceSents = sents;
-    }
-    
-    public Object getSourceSentences() {
-        return sourceSents;
-    }
-
-    public FactorTemplateList getTemplates() {
-        return fts;
-    }
     
     // -------- Methods which require iteration through the entire collection ------------
     //
@@ -60,22 +39,6 @@ public abstract class AbstractFgExampleList implements FgExampleList {
             numVars += ex.getOriginalFactorGraph().getNumVars();
         }
         return numVars;
-    }
-
-    public double getTotMsFgClampTimer() {
-        double tot = 0;
-        for (FgExample ex : this) {
-            tot += ex.fgClampTimer.totMs();
-        }
-        return tot;
-    }
-
-    public double getTotMsFeatCacheTimer() {
-        double tot = 0;
-        for (FgExample ex : this) {
-            tot += ex.featCacheTimer.totMs();
-        }
-        return tot;
     }
     
     // ------------------------------------------------------------------------------

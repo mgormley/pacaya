@@ -7,9 +7,6 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import edu.jhu.data.Label;
-import edu.jhu.util.Alphabet;
-
 public class BinaryTreeTest {
 
     @Test
@@ -22,11 +19,9 @@ public class BinaryTreeTest {
                             "(NP-TMP (NNP Nov.) (CD 29) ))))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
-        BinaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader).leftBinarize(alphabet);
+        BinaryTree tree = NaryTree.readTreeInPtbFormat(reader).leftBinarize();
         String newTreeStr = tree.getAsPennTreebankString();
-        
-        System.out.println(alphabet);
+                
         System.out.println(newTreeStr);
         newTreeStr = canonicalizeTreeString(newTreeStr);
         origTreeStr = canonicalizeTreeString(origTreeStr);
@@ -55,32 +50,27 @@ public class BinaryTreeTest {
         
         // First just build (and check) the binary tree.
         StringReader reader = new StringReader(origNaryTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
-        NaryTree naryTree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
-        assertEquals(20, alphabet.size());
-        BinaryTree binaryTree = naryTree.leftBinarize(alphabet);
-        assertEquals(22, alphabet.size());
+        NaryTree naryTree = NaryTree.readTreeInPtbFormat(reader);
+        BinaryTree binaryTree = naryTree.leftBinarize();
 
         String newBinaryTreeStr = binaryTree.getAsPennTreebankString();
         
-        System.out.println(alphabet);
+        
         System.out.println(newBinaryTreeStr);
         newBinaryTreeStr = canonicalizeTreeString(newBinaryTreeStr);
         origBinaryTreeStr = canonicalizeTreeString(origBinaryTreeStr);
         assertEquals(origBinaryTreeStr, newBinaryTreeStr);
         
         // Now do the actual collapsing.
-        naryTree = binaryTree.collapseToNary(alphabet);
+        naryTree = binaryTree.collapseToNary();
 
         String newNaryTreeStr = naryTree.getAsPennTreebankString();
 
-        // Test the collapsed tree.
-        System.out.println(alphabet);
+        // Test the collapsed tree.        
         System.out.println(newNaryTreeStr);
         newNaryTreeStr = canonicalizeTreeString(newNaryTreeStr);
         origNaryTreeStr = canonicalizeTreeString(origNaryTreeStr);
-        assertEquals(origNaryTreeStr, newNaryTreeStr);
-        
+        assertEquals(origNaryTreeStr, newNaryTreeStr);        
     }
     
     private static String canonicalizeTreeString(String newTreeStr) {

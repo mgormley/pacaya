@@ -7,15 +7,15 @@ import edu.jhu.data.conll.CoNLLXToken;
 import edu.jhu.util.Alphabet;
 
 
-public class Sentence extends LabelSequence<Label> {
+public class Sentence extends LabelSequence<String> {
 
     private static final long serialVersionUID = 1L;
     
-    protected Sentence(Alphabet<Label> alphabet) {
+    protected Sentence(Alphabet<String> alphabet) {
         super(alphabet); 
     }
     
-    public Sentence(Alphabet<Label> alphabet, DepTree tree) {
+    public Sentence(Alphabet<String> alphabet, DepTree tree) {
         this(alphabet);
         for (DepTreeNode node : tree.getNodes()) {
             if (!node.isWall()) {
@@ -24,29 +24,31 @@ public class Sentence extends LabelSequence<Label> {
         }
     }
     
-    public Sentence(CoNLLXSentence sent, Alphabet<Label> alphabet) {
+    public Sentence(CoNLLXSentence sent, Alphabet<String> alphabet) {
         this(alphabet);
         for (CoNLLXToken token : sent) {
-            add(new TaggedWord(token.getForm(), token.getPosTag()));
+            // TODO: Here we just add the tags.
+            add(token.getPosTag());
         }
     }
 
-    public Sentence(CoNLL09Sentence sent, Alphabet<Label> alphabet, boolean usePredictedPosTags) {
+    public Sentence(CoNLL09Sentence sent, Alphabet<String> alphabet, boolean usePredictedPosTags) {
         this(alphabet);
         for (CoNLL09Token token : sent) {
-            if (usePredictedPosTags) {
-                add(new TaggedWord(token.getForm(), token.getPpos()));
+            // TODO: Here we just add the tags.
+            if (usePredictedPosTags) {                
+                add(token.getPpos());
             } else {
-                add(new TaggedWord(token.getForm(), token.getPos()));
+                add(token.getPos());
             }
         }
     }
 
-    public Sentence(Alphabet<Label> alphabet, Iterable<Label> labels) {
+    public Sentence(Alphabet<String> alphabet, Iterable<String> labels) {
         super(alphabet, labels);
     }
     
-    public Sentence(Alphabet<Label> alphabet, int[] labelIds) {
+    public Sentence(Alphabet<String> alphabet, int[] labelIds) {
         super(alphabet, labelIds);
     }
 

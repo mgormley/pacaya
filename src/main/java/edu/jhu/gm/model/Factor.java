@@ -2,6 +2,8 @@ package edu.jhu.gm.model;
 
 import java.io.Serializable;
 
+import edu.jhu.gm.inf.FgInferencer;
+
 
 public interface Factor extends Serializable {
     
@@ -13,14 +15,35 @@ public interface Factor extends Serializable {
 
     /** Gets the variables associated with this factor. */
     VarSet getVars();
+
+    /**
+     * If this factor depends on the model, this method will updates this
+     * factor's internal representation accordingly.
+     * 
+     * @param model The model.
+     * @param logDomain Whether to store values in the probability or
+     *            log-probability domain.
+     */
+    void updateFromModel(FgModel model, boolean logDomain);
     
-    /** Gets an object which uniquely identifies the feature template for this factor. */
-    Object getTemplateKey();
+    /** Gets the unnormalized numerator value contributed by this factor. */
+    double getUnormalizedScore(VarConfig goldConfig);
     
-    /** Gets the template ID or -1 if not set. */
-    int getTemplateId();
-    
-    /** Sets the template ID. */
-    void setTemplateId(int templateId);
+    /** Gets the unnormalized numerator value contributed by this factor. */
+    double getUnormalizedScore(int goldConfig);
+
+    /**
+     * Adds the expected feature counts for this factor, given the marginal distribution 
+     * specified by the inferencer for this factor.
+     * 
+     * @param counts The object collecting the feature counts.
+     * @param multiplier The multiplier for the added feature accounts.
+     * @param inferencer The inferencer from which the marginal distribution is taken.
+     * @param factorId The id of this factor within the inferencer.
+     */
+    void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId);
+
+    int getId();
+    void setId(int id);    
     
 }

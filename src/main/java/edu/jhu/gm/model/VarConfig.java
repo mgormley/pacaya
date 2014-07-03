@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class VarConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    // TODO: Internally, we should store an int[] not a HashMap.
     private HashMap<Var,Integer> config;
     private VarSet vars;
     
@@ -54,6 +55,9 @@ public class VarConfig implements Serializable {
             int state = config.get(var);
             configIndex += state * numStatesProd;
             numStatesProd *= var.getNumStates();
+            if (numStatesProd <= 0) {
+                throw new IllegalStateException("Integer overflow when computing config index -- this can occur if trying to compute the index of a high arity factor: " + numStatesProd);
+            }
         }
         return configIndex;
     }

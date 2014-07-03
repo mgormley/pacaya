@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.Var;
@@ -24,13 +25,13 @@ public class BfsBpScheduleTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
 
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit"); 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit"); 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2), "emit"); 
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
+        ExplicitFactor emit1 = new ExplicitFactor(new VarSet(t1)); 
+        ExplicitFactor emit2 = new ExplicitFactor(new VarSet(t2)); 
         
         // Transition factors.
-        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran"); 
-        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2), "tran"); 
+        ExplicitFactor tran0 = new ExplicitFactor(new VarSet(t0, t1)); 
+        ExplicitFactor tran1 = new ExplicitFactor(new VarSet(t1, t2)); 
         
         fg.addFactor(emit0);
         fg.addFactor(emit1);
@@ -62,11 +63,11 @@ public class BfsBpScheduleTest {
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
 
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit"); 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit"); 
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
+        ExplicitFactor emit1 = new ExplicitFactor(new VarSet(t1)); 
         
         // Transition factors.
-        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran");
+        ExplicitFactor tran0 = new ExplicitFactor(new VarSet(t0, t1));
         
         // For this test, we add the transition factor first since we want the root to have multiple children.
         fg.addFactor(emit0);

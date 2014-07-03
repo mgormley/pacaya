@@ -7,21 +7,23 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.featurize.SentFeatureExtractorCache;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.srl.DepParseFactorGraph.DepParseFactorTemplate;
+import edu.jhu.srl.JointNlpFactorGraph.JointFactorTemplate;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
@@ -49,34 +51,41 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
     
     private SrlFeatureExtractorPrm prm;
-    private SrlFactorGraph sfg;
     private FactorTemplateList fts;
-    private VarConfig goldConfig;
-    private SentFeatureExtractorCache sentFeatExt;
+    private VarConfig obsConfig;
+    private SentFeatureExtractor sentFeatExt;
         
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
-        this.sentFeatExt = new SentFeatureExtractorCache(new SentFeatureExtractor(prm.fePrm, sent, cs));
+        // TODO: SentFeatureExtractorCache uses a lot of memory storing lists of Strings. While this saves time when
+        // SRL and dependency parsing use the same feature set, it's probably not worth the memory burden.
+        //this.sentFeatExt = new SentFeatureExtractorCache(new SentFeatureExtractor(prm.fePrm, sent, cs));
+        this.sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
     }
 
     @Override
-    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
-            FactorTemplateList fts) {
-        this.sfg = (SrlFactorGraph) fg;
-        this.goldConfig = goldConfig;
+    public void init(UFgExample ex, FactorTemplateList fts) {
+        this.obsConfig = ex.getObsConfig();
+        this.fts = fts;
+    }
+
+    // For testing only.
+    void init(VarConfig obsConfig, FactorTemplateList fts) {
+        this.obsConfig = obsConfig;
         this.fts = fts;
     }
     
     @Override
-    public FeatureVector calcObsFeatureVector(int factorId) {
-        SrlFactor f = (SrlFactor) sfg.getFactor(factorId);
-        SrlFactorTemplate ft = f.getFactorType();
+    public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
+        ObsFeTypedFactor f = (ObsFeTypedFactor) factor;
+        Enum<?> ft = f.getFactorType();
         VarSet vars = f.getVars();
         
         // Get the observation features.
         ArrayList<String> obsFeats;
         Alphabet<Feature> alphabet;
-        if (ft == SrlFactorTemplate.LINK_ROLE_BINARY || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
+        if (ft == JointFactorTemplate.LINK_ROLE_BINARY || ft == DepParseFactorTemplate.LINK_UNARY 
+                || ft == SrlFactorTemplate.ROLE_UNARY || ft == SrlFactorTemplate.SENSE_ROLE_BINARY) {
             // Look at the variables to determine the parent and child.
             Var var = vars.iterator().next();
             int parent;
@@ -95,11 +104,11 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             // As of 12/18/13, this breaks backwards compatibility with SOME of
             // the features in SentFeatureExtractor including useNarad and
             // useSimple.
-            obsFeats = sentFeatExt.fastGetObsFeats(parent, child);
+            obsFeats = sentFeatExt.createFeatureSet(parent, child);
         } else if (ft == SrlFactorTemplate.SENSE_UNARY) {
             SenseVar var = (SenseVar) vars.iterator().next();
             int parent = var.getParent();
-            obsFeats = sentFeatExt.fastGetObsFeats(parent);
+            obsFeats = sentFeatExt.createFeatureSet(parent);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }
@@ -146,7 +155,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             // Apply the feature-hashing trick.
             for (String obsFeat : obsFeats) {
                 String fname = prefix + obsFeat;
-                int hash = MurmurHash3.murmurhash3_x86_32(fname, 0, fname.length(), 123456789);
+                int hash = MurmurHash3.murmurhash3_x86_32(fname);
                 hash = FastMath.mod(hash, prm.featureHashMod);
                 int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
                 if (fidx != -1) {
@@ -165,22 +174,23 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
      * Gets a string representation of the states of the observed variables for
      * this factor.
      */
-    private String getObsVarsStates(SrlFactor f) {
+    private String getObsVarsStates(Factor f) {
         if (prm.humanReadable) {
             StringBuilder sb = new StringBuilder();
             int i=0;
             for (Var v : f.getVars()) {
-                if (i > 0) {
-                    sb.append("_");
-                }
                 if (v.getType() == VarType.OBSERVED) {
-                    sb.append(goldConfig.getStateName(v));
+                    if (i > 0) {
+                        sb.append("_");
+                    }
+                    sb.append(obsConfig.getStateName(v));
                     i++;
                 }
             }
             return sb.toString();
         } else {
-            return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
+            throw new RuntimeException("This is probably a bug. We should only be considering OBSERVED variables.");
+            //return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
         }
     }
 
@@ -194,11 +204,6 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             hash += 31 * hash + fname.charAt(i);
         }
         return hash;
-    }
-
-    @Override
-    public void clear() {
-        sentFeatExt.clear();
     }
     
 }

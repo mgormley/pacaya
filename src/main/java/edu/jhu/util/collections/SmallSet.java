@@ -41,7 +41,7 @@ public class SmallSet<E extends Comparable<E>> implements Set<E>, Serializable {
         this();
         Sort.mergeSortedLists(set1.list, set2.list, this.list);
     }
-        
+    
     // TODO: containsAll should call this and it should become private.
     public boolean isSuperset(SmallSet<E> other) {
         if (this.list.size() < other.list.size()) {
@@ -181,6 +181,11 @@ public class SmallSet<E extends Comparable<E>> implements Set<E>, Serializable {
         return changed;
         
     }
+    
+    /** Gets the i'th element of this set. */
+    public E get(int i) {
+        return list.get(i);
+    }
 
     /** @inheritDoc */
     @Override
@@ -229,5 +234,14 @@ public class SmallSet<E extends Comparable<E>> implements Set<E>, Serializable {
     public String toString() {
         return "SmallSet [list=" + list + "]";
     }    
+    
+    /**
+     * @see Collections.binarySearch
+     * @param needle is the item being searched for.
+     * @return the index or a number less than 0 if needle is not present.
+     */
+    public int indexOf(E needle) {
+        return Collections.binarySearch(list, needle);
+    }
 
 }

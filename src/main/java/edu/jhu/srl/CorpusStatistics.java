@@ -15,7 +15,6 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
-import edu.jhu.data.Label;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
@@ -32,7 +31,7 @@ import edu.jhu.util.collections.Lists;
  */
 
 public class CorpusStatistics implements Serializable {
-    
+
     /**
      * Parameters for CorpusStatistics.
      */
@@ -56,7 +55,8 @@ public class CorpusStatistics implements Serializable {
     
     public static final String UNKNOWN_ROLE = "argUNK";
     public static final String UNKNOWN_SENSE = "senseUNK";
-    public static List<String> SENSES_FOR_UNK_PRED = Lists.getList(UNKNOWN_SENSE); 
+    public static List<String> SENSES_FOR_UNK_PRED = Lists.getList(UNKNOWN_SENSE);
+    public static final List<String> PRED_POSITION_STATE_NAMES = Lists.getList("_", UNKNOWN_SENSE);
 
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();
@@ -80,7 +80,7 @@ public class CorpusStatistics implements Serializable {
     public CorpusStatistics(CorpusStatisticsPrm prm) {
         this.prm = prm;
         this.normalize = new Normalizer(prm.normalizeWords);
-        this.sig = new SrlBerkeleySignatureBuilder(new Alphabet<Label>());
+        this.sig = new SrlBerkeleySignatureBuilder(new Alphabet<String>());
         initialized = false;
     }
 
@@ -109,20 +109,8 @@ public class CorpusStatistics implements Serializable {
             if (sent.size() > maxSentLength) {
                 maxSentLength = sent.size();
             }
-            for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
-                String role = edge.getLabel();
-                knownRoles.add(role);
-            }
-            for (SrlPred pred : sent.getSrlGraph().getPreds()) {
-                int position = pred.getPosition();
-                String lemma = sent.getLemma(position);
-                Set<String> senses = predSenseSetMap.get(lemma);
-                if (senses == null) {
-                    senses = new TreeSet<String>();
-                    predSenseSetMap.put(lemma, senses);
-                }
-                senses.add(pred.getLabel());
-            }
+            
+            // Word stats.
             for (int position = 0; position < sent.size(); position++) {
                 String wordForm = sent.getWord(position);
                 String cleanWord = normalize.clean(wordForm);
@@ -130,9 +118,33 @@ public class CorpusStatistics implements Serializable {
                 // threshold for knownWords.  
                 String unkWord = sig.getSignature(wordForm, position, prm.language);
                 unkWord = normalize.escape(unkWord);
-                words = addWord(words, cleanWord);
-                unks = addWord(unks, unkWord);
-                knownPostags.add(sent.getPosTag(position));
+                addWord(words, cleanWord);
+                addWord(unks, unkWord);
+            }
+            
+            // POS tag stats.
+            if (sent.getPosTags() != null) {
+                for (int position = 0; position < sent.size(); position++) {
+                    knownPostags.add(sent.getPosTag(position));
+                }
+            }
+            
+            // SRL stats.
+            if (sent.getSrlGraph() != null) {
+                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
+                    String role = edge.getLabel();
+                    knownRoles.add(role);
+                }
+                for (SrlPred pred : sent.getSrlGraph().getPreds()) {
+                    int position = pred.getPosition();
+                    String lemma = sent.getLemma(position);
+                    Set<String> senses = predSenseSetMap.get(lemma);
+                    if (senses == null) {
+                        senses = new TreeSet<String>();
+                        predSenseSetMap.put(lemma, senses);
+                    }
+                    senses.add(pred.getLabel());
+                }
             }
         }
         
@@ -155,14 +167,13 @@ public class CorpusStatistics implements Serializable {
     
     // ------------------- private ------------------- //
 
-    private static Map<String, MutableInt> addWord(Map<String, MutableInt> inputHash, String w) {
+    private static void addWord(Map<String, MutableInt> inputHash, String w) {
         MutableInt count = inputHash.get(w);
         if (count == null) {
             inputHash.put(w, new MutableInt());
         } else {
             count.increment();
         }
-        return inputHash;
     }
 
 

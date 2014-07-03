@@ -1,0 +1,92 @@
+# CRF Parsing features from Finkel et al. (2008). 
+#
+# Following their notation we define w as the word, t as the tag, r as a
+# rule with span/split indices, \rho as the rule only, and r_p as the
+# parent of the rule. w_b, w_s, and w_e are the words positioned at the
+# beginning, split point, and end of the rule span. As in
+# \newcite{finkel_efficient_2008}, the POS tags are annotated with
+# parent information. b(s) is the base label for a state s; p(s) is the
+# parent annotation on state s; ds(w) is the distributional similarity
+# cluster; lc(w) is the lower cased word; unk(w) is the unknown word
+# class.
+
+# # Lexicon features
+# t
+# b(t)
+# <t,w>
+# <t, lc(w)>
+# <b(t), w>
+# <b(t), lc(w)>
+# <t, ds(w)>
+# <t, ds(w_{-1})>
+# <t, ds(w_{+1})>
+# <b(t), ds(w)>
+# <b(t), ds(w_{-1})>
+# <b(t), ds(w_{+1})>
+# <p(t), w>
+# <t, unk(w)>
+# <b(t), unk(w)>
+
+ruleP.tag
+ruleP.bTag
+ruleP.tag + ri.word
+ruleP.tag + ri.lc
+ruleP.bTag + ri.word
+ruleP.bTag + ri.lc
+ruleP.tag + ri.bc1
+ruleP.tag + ri.-1.bc1
+ruleP.tag + ri.1.bc1
+ruleP.bTag + ri.bc1
+ruleP.bTag + ri.-1.bc1
+ruleP.bTag + ri.1.bc1
+ruleP.pTag + ri.word
+ruleP.tag + ri.unk
+ruleP.bTag + ri.unk
+
+# # Grammar Features
+# \rho
+# <b(p(r_p)), ds(w_s)>
+# <b(p(r_p)), ds(w_e)>
+# {\bf unary? }
+# {\bf simplified rule: } base labels of states
+# {\bf dist sim bigrams: } all dist sim bigrams in rule span, and
+# base parent state
+# {\bf dist sim trigrams: } all dist sim trigrams in rule span, and
+# base parent state
+# {\bf heavy feature: } whether the constituent is ``big'' as
+# described in \cite{johnson_2001}
+
+ruleP.tag + ruleLc.tag + ruleRc.tag
+ruleP.bpTag + ri.bc1    
+ruleP.bpTag + rk.bc1    
+#TODO: ruleIsUnary
+ruleP.bTag + ruleLc.bTag + ruleRc.bTag
+line(ri,rk).2gram.bc1 + ruleP.bpTag           # TODO: does "base parent state" mean ruleP.bpTag?
+line(ri,rk).3gram.bc1 + ruleP.bpTag
+#TODO: ruleHeavyFeature
+
+# # Binary-specific features
+# <b(p(r_p)), ds(w_{s-1}), ds(w_s)>
+# {\bf PP feature: }  if right child is a PP then <r, w_s> 
+# {\bf VP features: }  if some child is a verb tag, then rule, with
+# that child replaced by the word 
+
+ruleP.bpTag + ri.-1.bc1 + ri.bc1
+#TODO: rulePPFeat
+#TODO: ruleVPFeat
+
+# # Unaries spanning one word
+# <r, w>
+# <r, ds(w)>
+# <b(p(r)), w>
+# <b(p(r)), ds(w)> 
+
+# Below, ri sufficiently identifies the span/split information since these are only applied to unary rules.
+ruleP.tag + ruleLc.tag + ruleRc.tag + ri.index + ri.word
+ruleP.tag + ruleLc.tag + ruleRc.tag + ri.index + ri.bc1
+ruleP.bpTag + ri.word
+ruleP.bpTag + ri.bc1
+
+   
+
+    

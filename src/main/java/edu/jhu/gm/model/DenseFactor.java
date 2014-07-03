@@ -3,10 +3,10 @@ package edu.jhu.gm.model;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.prim.util.math.FastMath;
@@ -119,23 +119,36 @@ public class DenseFactor implements Serializable {
         unclmpVars.removeAll(clmpVars); 
 
         DenseFactor clmp = new DenseFactor(unclmpVars);
-        IntIter iter = unclmpVars.getConfigIter(this.vars);
+        IntIter iter = IndexForVc.getConfigIter(this.vars, clmpVarConfig);
         
-        int numEqual = 0;
         if (clmp.values.length > 0) {
-            int numConfigs = vars.calcNumConfigs();
-            for (int c=0; c<numConfigs; c++) {
-                VarConfig curClmpSubset = this.vars.getVarConfig(c).getSubset(clmpVars);
-                assert curClmpSubset.size() == clmpVarConfig.size();
-                int uc = iter.next();
-                if (clmpVarConfig.equals(curClmpSubset)) {
-                    clmp.values[uc] = this.values[c];
-                    numEqual++;
-                }
+            for (int c=0; c<clmp.values.length; c++) {
+                int config = iter.next();
+                clmp.values[c] = this.values[config];
             }
         }
-        assert numEqual == unclmpVars.calcNumConfigs() : "numEqual=" + numEqual;
         return clmp;
+        
+        // TODO: Remove after it has been tested.
+        //
+        // This was the old way, but it was unnecessarily slow.
+        //
+        //        IntIter iter = unclmpVars.getConfigIter(this.vars);        
+        //        int numEqual = 0;
+        //        if (clmp.values.length > 0) {
+        //            int numConfigs = vars.calcNumConfigs();
+        //            for (int c=0; c<numConfigs; c++) {
+        //                VarConfig curClmpSubset = this.vars.getVarConfig(c).getSubset(clmpVars);
+        //                assert curClmpSubset.size() == clmpVarConfig.size();
+        //                int uc = iter.next();
+        //                if (clmpVarConfig.equals(curClmpSubset)) {
+        //                    clmp.values[uc] = this.values[c];
+        //                    numEqual++;
+        //                }
+        //            }
+        //        }
+        //        assert numEqual == unclmpVars.calcNumConfigs() : "numEqual=" + numEqual;
+        //        return clmp;
     }
     
     /** Gets the variables associated with this factor. */
@@ -229,6 +242,26 @@ public class DenseFactor implements Serializable {
     }
     
     /**
+     * this /= f
+     * indices matching 0 /= 0 are set to 0.
+     */
+    public void divBP(DenseFactor f) {
+    	DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleDivBP());
+        this.vars = newFactor.vars;
+        this.values = newFactor.values;
+    }
+    
+    /**
+     * this -= f
+     * indices matching (-Infinity) -= (-Infinity) are set to 0.
+     */
+    public void subBP(DenseFactor f) {
+    	DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleSubtractBP());
+        this.vars = newFactor.vars;
+        this.values = newFactor.values;
+    }
+    
+    /**
      * Log-adds a factor to this one.
      * 
      * This is analogous to factor addition, except that the logAdd operator
@@ -243,7 +276,7 @@ public class DenseFactor implements Serializable {
     /**
      * Applies the binary operator to factors f1 and f2.
      * 
-     * This method will opt to be destructive on f1 (returing it instead of a
+     * This method will opt to be destructive on f1 (returning it instead of a
      * new factor) if time/space can be saved by doing so.
      * 
      * Note: destructive if necessary.
@@ -270,7 +303,8 @@ public class DenseFactor implements Serializable {
         } else if (f1.vars.isSuperset(f2.vars)) {
             // Special case where f1 is a superset of f2.
             IntIter iter2 = f2.vars.getConfigIter(f1.vars);
-            for (int c = 0; c < f1.vars.calcNumConfigs(); c++) {
+            int n = f1.vars.calcNumConfigs();
+            for (int c = 0; c < n; c++) {
                 f1.values[c] = op.call(f1.values[c], f2.values[iter2.next()]);
             }
             assert(!iter2.hasNext());
@@ -281,7 +315,8 @@ public class DenseFactor implements Serializable {
             DenseFactor out = new DenseFactor(union);
             IntIter iter1 = f1.vars.getConfigIter(union);
             IntIter iter2 = f2.vars.getConfigIter(union);
-            for (int c = 0; c < out.vars.calcNumConfigs(); c++) {
+            int n = out.vars.calcNumConfigs();
+            for (int c = 0; c < n; c++) {
                 out.values[c] = op.call(f1.values[iter1.next()], f2.values[iter2.next()]);
             }
             assert(!iter1.hasNext());
@@ -329,6 +364,16 @@ public class DenseFactor implements Serializable {
         return values;
     }
     
+    public boolean containsBadValues(boolean logDomain) {
+    	for(int i=0; i<values.length; i++) {
+    		if(Double.isNaN(values[i]))
+    			return true;
+    		if(!logDomain && (values[i] < 0d || Double.isInfinite(values[i])))
+    			return true;
+    	}
+    	return false;
+    }
+    
     /* Note that Factors do not implement the standard hashCode() or equals() methods. */
     
     /** Special equals with a tolerance. */
@@ -355,5 +400,24 @@ public class DenseFactor implements Serializable {
     public int getArgmaxConfigId() {
         return DoubleArrays.argmax(values);
     }    
+    
+    public int size() {
+        return values.length;
+    }
+
+    /**
+     * Gets the infinity norm of this tensor. Defined as the maximum absolute
+     * value of the entries.
+     */
+    public double getInfNorm() {
+        double maxAbs = Double.NEGATIVE_INFINITY;
+        for (int c=0; c<values.length; c++) {
+            double abs = Math.abs(values[c]);
+            if (abs > maxAbs) {
+                maxAbs = abs;
+            }
+        }
+        return maxAbs;
+    }
     
 }

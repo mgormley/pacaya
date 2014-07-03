@@ -6,22 +6,21 @@ import java.util.List;
 public class NonprojDepTreeNode implements DepTreeNode {
 
     private int position = DepTree.EMPTY_POSITION;
-    private Label label;
+    private String label;
     private NonprojDepTreeNode parent;
     private List<NonprojDepTreeNode> children = new ArrayList<NonprojDepTreeNode>();
     
-    public NonprojDepTreeNode(String word, String tag, int position) {
-        this.label = new TaggedWord(word, tag);
-        this.position = position;
-    }
-
-    public NonprojDepTreeNode(Label tw, int position) {
+    public NonprojDepTreeNode(String tw, int position) {
         this.label = tw;
         this.position = position;
     }
 
-    public Label getLabel() {
+    public String getLabel() {
         return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public DepTreeNode getParent() {
@@ -72,6 +71,6 @@ public class NonprojDepTreeNode implements DepTreeNode {
         } else {
             parentPos = parent.position;
         }
-        return String.format("%d:%s-->%d", position, label.getLabel(), parentPos);
+        return String.format("%d:%s-->%d", position, label, parentPos);
     }
 }

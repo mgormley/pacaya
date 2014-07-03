@@ -2,11 +2,8 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
-import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 
 public class Lists {
 
@@ -63,6 +60,19 @@ public class Lists {
         list.add(val);
         return list;
     }
+    
+    public static <T> List<T> cons(T val, List<T> values) {
+        List<T> list = new ArrayList<T>(values);
+        list.add(val);
+        return list;
+    }
+
+    public static <T> List<T> union(List<T> ats1, List<T> ats2) {
+        ArrayList<T> newList = new ArrayList<T>(ats1.size() + ats2.size());
+        newList.addAll(ats1);
+        newList.addAll(ats2);
+        return newList;
+    }
 
     public static <T> ArrayList<T> copyOf(List<T> list) {
         return list == null ? null : new ArrayList<T>(list);
@@ -75,6 +85,20 @@ public class Lists {
             newList.add(elem.intern());
         }
         return newList;
+    }
+    
+    /** Interns a list of strings in place. */
+    public static void intern(List<String> list) {
+        if (list == null) {
+            return;
+        }
+        for (int i=0; i<list.size(); i++) {
+            String interned = list.get(i);
+            if (interned != null) {
+                interned = interned.intern();
+            }
+            list.set(i, interned);
+        }
     }
 
     public static <T> Iterable<T> asIterable(final Iterator<T> iterator) {

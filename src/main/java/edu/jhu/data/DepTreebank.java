@@ -16,10 +16,10 @@ public class DepTreebank implements Iterable<DepTree> {
     private static final Logger log = Logger.getLogger(DepTreebank.class);
 
     private SentenceCollection sentences = null;
-    private Alphabet<Label> alphabet;
+    private Alphabet<String> alphabet;
     private ArrayList<DepTree> trees;
             
-    public DepTreebank(Alphabet<Label> alphabet) {
+    public DepTreebank(Alphabet<String> alphabet) {
         this.alphabet = alphabet;
         this.trees = new ArrayList<DepTree>();
     }
@@ -39,8 +39,8 @@ public class DepTreebank implements Iterable<DepTree> {
         return numWords;
     }
     
-    public Set<Label> getTypes() {
-        Set<Label> types = new HashSet<Label>();
+    public Set<String> getTypes() {
+        Set<String> types = new HashSet<String>();
         for (DepTree tree : this) {
             for (DepTreeNode node : tree) {
                 types.add(node.getLabel());
@@ -88,7 +88,7 @@ public class DepTreebank implements Iterable<DepTree> {
         return trees.size();
     }
 
-    public Alphabet<Label> getAlphabet() {
+    public Alphabet<String> getAlphabet() {
         return alphabet;
     }
 

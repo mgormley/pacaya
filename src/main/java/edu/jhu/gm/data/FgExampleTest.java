@@ -12,13 +12,15 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFgExamplesBuilder;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.collections.Lists;
 
 public class FgExampleTest {
@@ -42,16 +44,18 @@ public class FgExampleTest {
         
         System.out.println("Done reading.");
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.useProjDepTreeFactor = true;
-        prm.fgPrm.linkVarType = VarType.LATENT;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        prm.fgPrm.dpPrm.linkVarType = VarType.LATENT;
 
-        prm.srlFePrm.fePrm.biasOnly = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
+        ofc.init(data);
         
         FgExample ex = data.get(0);
         

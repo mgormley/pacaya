@@ -1,6 +1,7 @@
 package edu.jhu.data.conll;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import org.apache.log4j.Logger;
  * @author mgormley
  *
  */
-public class CoNLLXWriter {
+public class CoNLLXWriter implements Closeable {
 
     private static final Logger log = Logger.getLogger(CoNLLXWriter.class);
     private Writer writer;

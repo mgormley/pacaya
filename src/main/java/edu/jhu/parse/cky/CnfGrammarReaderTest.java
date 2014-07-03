@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.jhu.data.Tag;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 
 public class CnfGrammarReaderTest {
@@ -29,8 +28,8 @@ public class CnfGrammarReaderTest {
         assertEquals(
                 1,
                 grammar.getBinaryRulesWithChildren(
-                        grammar.getNtAlphabet().lookupIndex(new Tag("NP")),
-                        grammar.getNtAlphabet().lookupIndex(new Tag("VP"))).length);
+                        grammar.getNtAlphabet().lookupIndex("NP"),
+                        grammar.getNtAlphabet().lookupIndex("VP")).length);
     }
 
 }

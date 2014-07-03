@@ -11,8 +11,10 @@ import org.apache.log4j.Logger;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
@@ -23,10 +25,14 @@ import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
 import edu.jhu.featurize.TemplateLanguage.PositionList;
 import edu.jhu.featurize.TemplateLanguage.PositionModifier;
+import edu.jhu.featurize.TemplateLanguage.RulePiece;
+import edu.jhu.featurize.TemplateLanguage.SymbolProperty;
 import edu.jhu.featurize.TemplateLanguage.TokPropList;
 import edu.jhu.featurize.TemplateLanguage.TokProperty;
+import edu.jhu.parse.cky.Rule;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.util.SafeEquals;
 
 /**
  * Defines a feature template extractor for templates based on a 'little
@@ -36,7 +42,101 @@ import edu.jhu.srl.CorpusStatistics;
  * @author mmitchell
  */
 public class TemplateFeatureExtractor {
-
+   
+    /**
+     * The local observations. The union of this class with the sentence / corpus
+     * stats member variables of the {@link TemplateFeatureExtractor} form the
+     * full set of observed variables.
+     * 
+     * @author mgormley
+     */
+    public static class LocalObservations {
+        public static final int UNDEF_INT = Integer.MIN_VALUE;
+        private int pidx = UNDEF_INT;
+        private int cidx = UNDEF_INT;
+        private int midx = UNDEF_INT;
+        private Rule rule = null;
+        private int rStartIdx = UNDEF_INT;
+        private int rMidIdx = UNDEF_INT;
+        private int rEndIdx = UNDEF_INT;
+        private LocalObservations() { }
+        public LocalObservations(int pidx, int cidx, int midx, Rule rule, int rStartIdx, int rMidIdx, int rEndIdx) {
+            super();
+            this.pidx = pidx;
+            this.cidx = cidx;
+            this.midx = midx;
+            this.rule = rule;
+            this.rStartIdx = rStartIdx;
+            this.rMidIdx = rMidIdx;
+            this.rEndIdx = rEndIdx;
+        }
+        public int getPidx() {
+            return getIfDefined(pidx, "parent index");
+        }
+        public int getCidx() {
+            return getIfDefined(cidx, "child index");
+        }
+        public int getMidx() {
+            return getIfDefined(midx, "modifier index");
+        }
+        public Rule getRule() {
+            return getIfDefined(rule, "rule");
+        }
+        public int getRStartIdx() {
+            return getIfDefined(rStartIdx, "Start of a rule span");
+        }
+        public int getRMidIdx() {
+            return getIfDefined(rMidIdx, "Split point for a rule span");
+        }
+        public int getREndIdx() {
+            return getIfDefined(rEndIdx, "End of a rule span");
+        }
+        private int getIfDefined(int idx, String obsName) {
+            if (idx == UNDEF_INT) {
+                throw new IllegalStateException("Local observation undefined: " + obsName);
+            }
+            return idx;
+        }
+        private <T> T getIfDefined(T obj, String obsName) {
+            if (obj == null) {
+                throw new IllegalStateException("Local observation undefined: " + obsName);
+            }
+            return obj;
+        }
+        /* ---------- Factory Methods ----------- */
+        public static LocalObservations newPidxCidx(int pidx, int cidx) {
+            LocalObservations pi = new LocalObservations();
+            pi.pidx = pidx;
+            pi.cidx = cidx;
+            return pi;
+        }
+        public static LocalObservations newPidxCidxMidx(int pidx, int cidx, int midx) {
+            LocalObservations pi = new LocalObservations();
+            pi.pidx = pidx;
+            pi.cidx = cidx;
+            pi.midx = midx;
+            return pi;
+        }
+        public static LocalObservations newPidx(int pidx) {
+            LocalObservations pi = new LocalObservations();
+            pi.pidx = pidx;
+            return pi;
+        }
+        public static LocalObservations newRule(Rule rule) {
+            LocalObservations pi = new LocalObservations();
+            pi.rule = rule;
+            return pi;
+        }
+        public static LocalObservations newRuleStartMidEnd(Rule r, int start, int mid, int end) {
+            LocalObservations pi = new LocalObservations();
+            pi.rule = r;
+            pi.rStartIdx = start;
+            pi.rMidIdx = mid;
+            pi.rEndIdx = end;
+            return pi;
+        }
+    }
+    
     private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
 
     private final CorpusStatistics cs;
@@ -47,7 +147,7 @@ public class TemplateFeatureExtractor {
      * This constructor is preferred as it allows the FeaturizedSentence to
      * share work across different feature extractors.
      */
-    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {
+    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {        
         this.cs = cs;
         this.sig = cs.sig;
         this.fSent = fSent;
@@ -55,53 +155,71 @@ public class TemplateFeatureExtractor {
     
     public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.cs = cs;
-        this.sig = cs.sig;
+        if (cs != null) {
+            this.sig = cs.sig;
+        } else {
+            this.sig = null;
+        }
         this.fSent = new FeaturizedSentence(sent, cs);
     }
-        
-    public void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<String> feats) {
+            
+    /** Adds features for a list of feature templates. */
+    public void addFeatures(List<FeatTemplate> tpls, LocalObservations local, List<String> feats) {
         for (FeatTemplate tpl : tpls) {
-            addFeatures(tpl, pidx, cidx, feats);
+            addFeatures(tpl, local, feats);
         }
     }
     
-    public void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<String> feats) {
-        int idx = pidx;
+    /** Adds features for a single feature template. */
+    public void addFeatures(FeatTemplate tpl, LocalObservations local, List<String> feats) {
         if (tpl instanceof FeatTemplate1) {
-            addTokenFeature((FeatTemplate1) tpl, pidx, cidx, feats);
+            addTokenFeature((FeatTemplate1) tpl, local, feats);
         } else if (tpl instanceof FeatTemplate2) {
-            addTokenFeatures((FeatTemplate2) tpl, pidx, cidx, feats);            
+            addTokenFeatures((FeatTemplate2) tpl, local, feats);            
         } else if (tpl instanceof FeatTemplate3) {
-            addListFeature((FeatTemplate3) tpl, pidx, cidx, feats);
+            addListFeature((FeatTemplate3) tpl, local, feats);      
         } else if (tpl instanceof FeatTemplate4) {
-            addOtherFeature((FeatTemplate4) tpl, pidx, cidx, feats);
+            addRuleFeature((FeatTemplate4) tpl, local, feats);
+        } else if (tpl instanceof FeatTemplate0) {
+            addOtherFeature((FeatTemplate0) tpl, local, feats);
         } else if (tpl instanceof JoinTemplate) {
-            addJoinFeature((JoinTemplate) tpl, pidx, cidx, feats);
+            addJoinFeature((JoinTemplate) tpl, local, feats);
         } else {
             throw new IllegalStateException("Feature not supported: " + tpl);
         }
     }
-        
+    
+    /** Adds features for a list of feature templates. (The parent index and child index are the only local observations.) */
+    // TODO: Remove this method when convenient.
+    void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<String> feats) {
+        addFeatures(tpls, LocalObservations.newPidxCidx(pidx, cidx), feats);
+    }
+    
+    /** Adds features for a single feature template. (The parent index and child index are the only local observations.) */
+    // TODO: Remove this method when convenient.
+    void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<String> feats) {
+        addFeatures(tpl, LocalObservations.newPidxCidx(pidx, cidx), feats);
+    }
+    
     /**
      * For n-gram feature templates of the form:
      *     p.w+c_{-1}.bc0
      *     p.t+c.t
      *     p.t+c.t+p.w
      * @param tpl Structured feature template.
-     * @param pidx Token to which the parent position refers.
-     * @param cidx Token to which the child position refers.
+     * @param local Local observations.
      * @param feats The feature list to which this will be added.
      */
-    public void addJoinFeature(JoinTemplate joinTpl, int pidx, int cidx, List<String> feats) {
+    protected void addJoinFeature(JoinTemplate joinTpl, LocalObservations local, List<String> feats) {
         ArrayList<String> joined = new ArrayList<String>();
-        addFeatures(joinTpl.tpls[0], pidx, cidx, joined);
+        addFeatures(joinTpl.tpls[0], local, joined);
         for (int i=1; i<joinTpl.tpls.length; i++) {
             ArrayList<String> tmpFeats = new ArrayList<String>();
             if (joined.size() == 0) {
                 // Short circuit since we'll never create any features.
                 return;
             }
-            addFeatures(joinTpl.tpls[i], pidx, cidx, tmpFeats);
+            addFeatures(joinTpl.tpls[i], local, tmpFeats);
             joined = joinIntoBigrams(joined, tmpFeats);
         }
         feats.addAll(joined);
@@ -117,19 +235,53 @@ public class TemplateFeatureExtractor {
         return joined;
     }
 
+
+    /**
+     * Adds feature templates of the form: 
+     *     ruleP.tag
+     *     ruleLc.bTag
+     * @param tpl Structured feature template.
+     * @param local Local observations.
+     * @param feats The feature list to which this will be added.
+     */
+    protected void addRuleFeature(FeatTemplate4 tpl, LocalObservations local, List<String> feats) {
+        RulePiece piece = tpl.piece; SymbolProperty prop = tpl.prop;
+        Rule rule = local.getRule();        
+        
+        // Get a symbol from the rule.
+        String symbol;
+        switch (piece) {
+        case PARENT: symbol = rule.getParentLabel(); break;
+        case LEFT_CHILD: symbol = rule.getLeftChildLabel(); break;
+        case RIGHT_CHILD: symbol = rule.getRightChildLabel(); break;
+        default: throw new IllegalStateException();
+        }
+        
+        // Get a property of that symbol.
+        String val;
+        switch (prop) {
+        case TAG: val = symbol; break;
+        default: throw new IllegalStateException();
+        }
+        
+        // Create the feature.
+        if (val != null) {
+            feats.add(toFeat(tpl.getName(), val));
+        }
+    }
+
     /**
      * Adds features of the form: 
      *     p.bc1
      *     c_{head}.dr
      *     first(t, NOUN, path(p, root)).bc0
      * @param tpl Structured feature template.
-     * @param pidx Token to which the parent position refers.
-     * @param cidx Token to which the child position refers.
+     * @param local Local observations.
      * @param feats The feature list to which this will be added.
      */
-    public void addTokenFeature(FeatTemplate1 tpl, int pidx, int cidx, List<String> feats) {
+    protected void addTokenFeature(FeatTemplate1 tpl, LocalObservations local, List<String> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokProperty prop = tpl.prop;
-        int idx = getIndexOfPosition(pidx, cidx, pos);
+        int idx = getIndexOfPosition(local, pos);
         idx = getModifiedPosition(mod, idx);
         String val = getTokProp(prop, idx);
         if (val != null) {
@@ -137,20 +289,22 @@ public class TemplateFeatureExtractor {
         }
     }
 
-    private int getIndexOfPosition(int pidx, int cidx, Position pos) {
-        int idx;
+    private int getIndexOfPosition(LocalObservations local, Position pos) {
         switch (pos) {
-        case PARENT: idx = pidx; break;
-        case CHILD: idx = cidx; break;
+        case PARENT: return local.getPidx();
+        case CHILD: return local.getCidx();
+        case MODIFIER: return local.getMidx();
+        case RULE_START: return local.getRStartIdx();
+        case RULE_MID: return local.getRMidIdx();
+        case RULE_END: return local.getREndIdx();
         default: throw new IllegalStateException();
         }
-        return idx;
     }
     
     /** Same as above except that it permits properties of the token which expand to multiple strings. */
-    public void addTokenFeatures(FeatTemplate2 tpl, int pidx, int cidx, List<String> feats) {
+    protected void addTokenFeatures(FeatTemplate2 tpl, LocalObservations local, List<String> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokPropList prop = tpl.prop;
-        int idx = getIndexOfPosition(pidx, cidx, pos);
+        int idx = getIndexOfPosition(local, pos);
         idx = getModifiedPosition(mod, idx);
         List<String> vals = getTokPropList(prop, idx);
         for (String val : vals) {
@@ -165,31 +319,30 @@ public class TemplateFeatureExtractor {
      *    line(p,c).t.noDup
      *    
      * @param tpl Structured feature template.
-     * @param pidx Token to which the parent position refers.
-     * @param cidx Token to which the child position refers.
+     * @param local Local observations.
      * @param feats The feature list to which this will be added.
      */
-    public void addListFeature(FeatTemplate3 tpl, int pidx, int cidx, List<String> feats) {
+    protected void addListFeature(FeatTemplate3 tpl, LocalObservations local, List<String> feats) {
         PositionList pl = tpl.pl; TokProperty prop = tpl.prop; EdgeProperty eprop = tpl.eprop; ListModifier lmod = tpl.lmod;
         
         if (prop == null && eprop == null) {
             throw new IllegalStateException("Feature template extracts nothing. One of prop and eprop must be non-null.");
         }
         
-        Collection<String> vals;
+        List<String> vals;
         switch (pl) {
-        case CHILDREN_P: case NO_FAR_CHILDREN_P: case CHILDREN_C: case NO_FAR_CHILDREN_C: case LINE_P_C: case BTWN_P_C:
+        case CHILDREN_P: case NO_FAR_CHILDREN_P: case CHILDREN_C: case NO_FAR_CHILDREN_C: case LINE_P_C: case LINE_RI_RK: case BTWN_P_C:
             if (eprop != null) {
                 throw new IllegalStateException("EdgeProperty " + eprop + " is only supported on paths. Offending template: " + tpl);
             } else if (prop == null) {
                 throw new IllegalStateException("TokProperty must be non-null for position lists.");
             }
-            List<Integer> indices = getPositionList(pl, pidx, cidx);
-            vals = getTokPropsForList(prop, indices);
+            List<Integer> posList = getPositionList(pl, local);
+            vals = getTokPropsForList(prop, posList);
             listAndPathHelper(vals, lmod, tpl, feats);
             return;
         case PATH_P_C: case PATH_C_LCA: case PATH_P_LCA: case PATH_LCA_ROOT: 
-            List<Pair<Integer, Dir>> path = getPath(pl, pidx, cidx);
+            List<Pair<Integer, Dir>> path = getPath(pl, local);
             vals = getTokPropsForPath(prop, eprop, path);
             listAndPathHelper(vals, lmod, tpl, feats);
             return;
@@ -198,17 +351,37 @@ public class TemplateFeatureExtractor {
         }
     }
 
-    private void listAndPathHelper(Collection<String> vals, ListModifier lmod, FeatTemplate3 tpl, List<String> feats) {
+    private void listAndPathHelper(List<String> vals, ListModifier lmod, FeatTemplate3 tpl, List<String> feats) {
         String feat;
         if (lmod == ListModifier.UNIGRAM) {
             for (String v : vals) {
                 feat = toFeat(tpl.getName(), v);
                 feats.add(feat);
             }
+        } else if (lmod == ListModifier.BIGRAM) {
+            for (int i = -1; i < vals.size() - 1; i++) {
+                feat = toFeat(tpl.getName(), safeGet(vals, i), safeGet(vals, i+1));
+                feats.add(feat);
+            }
+        } else if (lmod == ListModifier.TRIGRAM) {
+            for (int i = -2; i < vals.size() - 2; i++) {
+                feat = toFeat(tpl.getName(), safeGet(vals, i), safeGet(vals, i+1), safeGet(vals, i+2));
+                feats.add(feat);
+            }
         } else {
-            vals = getModifiedList(lmod, vals);
-            feat = toFeat(tpl.getName(), vals);
+            Collection<String> modList = getModifiedList(lmod, vals);
+            feat = toFeat(tpl.getName(), modList);
             feats.add(feat);
+        }
+    }
+
+    private String safeGet(List<String> vals, int i) {
+        if (i < 0) {
+            return "BOS";
+        } else if(vals.size() <= i) {
+            return "EOS";
+        } else {
+            return vals.get(i);
         }
     }
 
@@ -216,26 +389,25 @@ public class TemplateFeatureExtractor {
      * Gets special features.
      *
      * @param tpl Structured feature template.
-     * @param pidx Token to which the parent position refers.
-     * @param cidx Token to which the child position refers.
+     * @param local Local observations.
      * @param feats The feature list to which this will be added.
      */
-    public void addOtherFeature(FeatTemplate4 tpl, int pidx, int cidx, List<String> feats) {
+    protected void addOtherFeature(FeatTemplate0 tpl, LocalObservations local, List<String> feats) {
         OtherFeat template = tpl.feat;  
         switch (template) {
         case PATH_GRAMS:
-            List<Pair<Integer,Dir>> path = getPath(PositionList.PATH_P_C, pidx, cidx);  
+            List<Pair<Integer,Dir>> path = getPath(PositionList.PATH_P_C, local);  
             addPathGrams(tpl, path, feats);
             return;
         default:  
-            String val = getOtherFeatSingleton(tpl.feat, pidx, cidx);
+            String val = getOtherFeatSingleton(tpl.feat, local);
             feats.add(toFeat(tpl.getName(), val));
             return;
         }
     }
 
     // TODO: This is a lot of logic...and should probably live elsewhere.
-    private void addPathGrams(FeatTemplate4 tpl, List<Pair<Integer, Dir>> path, List<String> feats) {
+    private void addPathGrams(FeatTemplate0 tpl, List<Pair<Integer, Dir>> path, List<String> feats) {
         // For each path n-gram, for n in {1,2,3}:
         for (int n=1; n<=3; n++) {
             for (int start = 0; start <= path.size() - n; start++) {
@@ -260,9 +432,9 @@ public class TemplateFeatureExtractor {
         }
     }
     
-    private String getOtherFeatSingleton(OtherFeat template, int pidx, int cidx) {
-        FeaturizedToken ptok = getFeatTok(pidx);
-        FeaturizedToken ctok = getFeatTok(cidx);
+    private String getOtherFeatSingleton(OtherFeat template, LocalObservations local) {
+        int pidx = local.getPidx();
+        int cidx = local.getCidx();
         FeaturizedTokenPair pair = getFeatTokPair(pidx, cidx);
         switch (template) {
         case DISTANCE:
@@ -277,6 +449,8 @@ public class TemplateFeatureExtractor {
             return Integer.toString(binInt(pair.getDependencyPath().size(), 0, 2, 5, 10, 20, 30, 40));
         case SENT_LEN:            
             return Integer.toString(binInt(fSent.size(), 0, 2, 5, 10, 20, 30, 40));
+        case RULE_IS_UNARY:
+            return local.getRule().isUnary() ? "T" : "F";
         default:
             throw new IllegalStateException();
         }
@@ -304,27 +478,30 @@ public class TemplateFeatureExtractor {
         }
     }
 
-    private List<Integer> getPositionList(PositionList pl, int pidx, int cidx) {        
+    private List<Integer> getPositionList(PositionList pl, LocalObservations local) {              
         FeaturizedToken tok;
         FeaturizedTokenPair pair;
         switch (pl) {
         case CHILDREN_P: 
-            tok = getFeatTok(pidx);
+            tok = getFeatTok(local.getPidx());
             return tok.getChildren();
         case NO_FAR_CHILDREN_P: 
-            tok = getFeatTok(pidx);
+            tok = getFeatTok(local.getPidx());
             return tok.getNoFarChildren();
         case CHILDREN_C: 
-            tok = getFeatTok(cidx);
+            tok = getFeatTok(local.getCidx());
             return tok.getChildren();
         case NO_FAR_CHILDREN_C: 
-            tok = getFeatTok(cidx);
+            tok = getFeatTok(local.getCidx());
             return tok.getNoFarChildren();
         case LINE_P_C: 
-            pair = getFeatTokPair(pidx, cidx);
+            pair = getFeatTokPair(local.getPidx(), local.getCidx());
+            return pair.getLinePath();
+        case LINE_RI_RK: 
+            pair = getFeatTokPair(local.getRStartIdx(), local.getREndIdx());
             return pair.getLinePath();
         case BTWN_P_C:
-            pair = getFeatTokPair(pidx, cidx);
+            pair = getFeatTokPair(local.getPidx(), local.getCidx());
             List<Integer> posList = pair.getLinePath();
             if (posList.size() > 2) {
                 posList = posList.subList(1, posList.size() - 1);
@@ -337,8 +514,8 @@ public class TemplateFeatureExtractor {
         }
     }
     
-    private List<Pair<Integer, Dir>> getPath(PositionList pl, int pidx, int cidx) {
-        FeaturizedTokenPair pair = getFeatTokPair(pidx, cidx);
+    private List<Pair<Integer, Dir>> getPath(PositionList pl, LocalObservations local) {        
+        FeaturizedTokenPair pair = getFeatTokPair(local.getPidx(), local.getCidx());
         switch (pl) {
         case PATH_P_C:
             return pair.getDependencyPath();
@@ -423,9 +600,9 @@ public class TemplateFeatureExtractor {
         return props;
     }
 
-    private List<String> getTokPropsForList(TokProperty prop, List<Integer> indices) {
-        List<String> props = new ArrayList<String>(indices.size());
-        for (int idx : indices) {
+    private List<String> getTokPropsForList(TokProperty prop, List<Integer> posList) {
+        List<String> props = new ArrayList<String>(posList.size());
+        for (int idx : posList) {
             String val = getTokProp(prop, idx);
             if (val != null) {
                 props.add(val);
@@ -455,6 +632,8 @@ public class TemplateFeatureExtractor {
         switch (prop) {
         case WORD:
             return tok.getForm();
+        case INDEX:
+            return Integer.toString(idx);
         case LC:
             //TODO: return tok.getFormLc();
             return tok.getForm().toLowerCase();
@@ -478,6 +657,8 @@ public class TemplateFeatureExtractor {
             return tok.getLemma();
         case POS:
             return tok.getPos();
+        case CPOS:
+            return tok.getCpos();
         case BC0:
             String bc = tok.getCluster();
             return bc.substring(0, Math.min(bc.length(), 5));
@@ -501,12 +682,12 @@ public class TemplateFeatureExtractor {
         }
     }
     
-    public static <T> Collection<T> bag(Collection<T> elements) {
+    protected static <T> Collection<T> bag(Collection<T> elements) {
         // bag, which removes all duplicated strings and sort the rest
         return new TreeSet<T>(elements);
     }
     
-    public static <T> ArrayList<T> noDup(Collection<T> elements) {
+    protected static <T> ArrayList<T> noDup(Collection<T> elements) {
         // noDup, which removes all duplicated neighbored strings.
         ArrayList<T> noDupElements = new ArrayList<T>();
         T lastA = null;

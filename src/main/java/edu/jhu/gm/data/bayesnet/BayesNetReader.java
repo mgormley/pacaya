@@ -88,7 +88,7 @@ public class BayesNetReader {
             // Get the factor for this configuration, creating a new one if necessary.
             VarSet vars = config.getVars();
             ExplicitFactor f = factorMap.get(vars);
-            if (f == null) { f = new ExplicitFactor(vars, "bayes_net_factor"); }
+            if (f == null) { f = new ExplicitFactor(vars); }
             
             // Set the value in the factor.
             f.setValue(config.getConfigIndex(), value);

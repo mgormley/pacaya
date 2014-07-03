@@ -6,22 +6,22 @@ import java.util.List;
 
 public class ProjDepTreeNode implements DepTreeNode {
 
-    private Label label;
+    private String label;
     private ProjDepTreeNode parent;
     private LinkedList<ProjDepTreeNode> leftChildren = new LinkedList<ProjDepTreeNode>();
     private ArrayList<ProjDepTreeNode> rightChildren = new ArrayList<ProjDepTreeNode>();
     private int position = DepTree.EMPTY_POSITION;
 
-    public ProjDepTreeNode(String word, String tag) {
-        this.label = new TaggedWord(word, tag);
-    }
-
-    public ProjDepTreeNode(Label tw) {
+    public ProjDepTreeNode(String tw) {
         this.label = tw;
     }
 
-    public Label getLabel() {
+    public String getLabel() {
         return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public DepTreeNode getParent() {
@@ -104,7 +104,7 @@ public class ProjDepTreeNode implements DepTreeNode {
         } else {
             parentPos = parent.getPosition();
         }
-        return String.format("%d:%s-->%d", getPosition(), label.getLabel(), parentPos);
+        return String.format("%d:%s-->%d", getPosition(), label, parentPos);
     }
 
 }

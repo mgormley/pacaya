@@ -4,11 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.GlobalFactor;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
+import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
 
@@ -73,23 +71,38 @@ public class FactorTemplateList implements Serializable {
         }
     }
 
-    public void update(FactorGraph fg) {
+    public void lookupTemplateIds(FactorGraph fg) {
         for (Factor f : fg.getFactors()) {
-            if (f instanceof GlobalFactor) {
-                continue;
-            } else if (f instanceof ExpFamFactor) {
-                lookupTemplateId(f);
-            } else {
-                throw new UnsupportedFactorTypeException(f);
-            }            
+            if (f instanceof TemplateFactor) {
+                lookupTemplateId((TemplateFactor) f);
+            }
+        }
+    }
+    
+    public void getTemplateIds(FactorGraph fg) {
+        for (Factor f : fg.getFactors()) {
+            if (f instanceof TemplateFactor) {
+                getTemplateId((TemplateFactor) f);
+            }
         }
     }
 
-    private FactorTemplate lookupTemplate(Factor f) {
+    public FactorTemplate getTemplate(TemplateFactor f) {
         return fts.get(getTemplateId(f));
     }
     
-    private int lookupTemplateId(Factor f) {
+    public int getTemplateId(TemplateFactor f) {
+        // Try to get the cached id, and only lookup the id in the hash map if it's not there.
+        if (f.getTemplateId() != -1) {
+            return f.getTemplateId();
+        } else {
+            int id = getTemplateIdByKey(f.getTemplateKey());
+            f.setTemplateId(id);
+            return id;
+        }
+    }
+
+    private int lookupTemplateId(TemplateFactor f) {
         int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
         if (index >= fts.size()) {
             // Add the template.
@@ -106,22 +119,8 @@ public class FactorTemplateList implements Serializable {
                     "Expected %d variable assignments, but factor has %d. key = %s.", fts.get(index).getNumConfigs(), f
                             .getVars().calcNumConfigs(), f.getTemplateKey()));
         }
+        f.setTemplateId(index);
         return index;
-    }
-
-    public FactorTemplate getTemplate(Factor f) {
-        return fts.get(getTemplateId(f));
-    }
-    
-    public int getTemplateId(Factor f) {
-        // Try to get the cached id, and only lookup the id in the hash map if it's not there.
-        if (f.getTemplateId() != -1) {
-            return f.getTemplateId();
-        } else {
-            int id = getTemplateIdByKey(f.getTemplateKey());
-            f.setTemplateId(id);
-            return id;
-        }
     }
 
     public FactorTemplate getTemplateByKey(Object templateKey) {
@@ -129,7 +128,6 @@ public class FactorTemplateList implements Serializable {
     }
 
     public int getTemplateIdByKey(Object templateKey) {
-        // TODO: This might be too slow.
         return templateKeyAlphabet.lookupIndex(templateKey);
     }
 

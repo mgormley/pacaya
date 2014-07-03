@@ -10,6 +10,7 @@ import java.util.Set;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
@@ -40,13 +41,12 @@ public class SentFeatureExtractor {
         private static final long serialVersionUID = 1L;
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
-        public boolean isProjective = false;
         /** Whether to use supervised features. */
-        public boolean withSupervision = true;
+        public boolean withSupervision = false;
         /** Whether to add the "Naradowsky" features. */
-        public boolean useNaradFeats = true;
+        public boolean useNaradFeats = false;
         /** Whether to add the "Zhao" features. */
-        public boolean useZhaoFeats = true;
+        public boolean useZhaoFeats = false;
         // NOTE: We default to false on these features since including these
         // would break a lot of unit tests, which expect the default to be 
         // only Zhao+Narad features.
@@ -57,10 +57,10 @@ public class SentFeatureExtractor {
         /** Whether to add the "Bjorkelund" features. */
         public boolean useBjorkelundFeats = false;
         /** Whether to use ONLY feature templates. */
-        public boolean useTemplates = false;
+        public boolean useTemplates = true;
         /** Feature templates. */
-        public List<FeatTemplate> soloTemplates = null;
-        public List<FeatTemplate> pairTemplates = null;
+        public List<FeatTemplate> soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
+        public List<FeatTemplate> pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
     }
     
     // Parameters for feature extraction.
@@ -80,9 +80,6 @@ public class SentFeatureExtractor {
         fSent = new FeaturizedSentence(sent, cs);
         if (prm.useTemplates) {
             ext = new TemplateFeatureExtractor(fSent, cs);
-            if (prm.soloTemplates == null || prm.pairTemplates == null) {
-                throw new IllegalStateException("Both template sets must be specified");
-            }
         }
     }
 
@@ -153,10 +150,12 @@ public class SentFeatureExtractor {
         }
                 
         if (prm.useSimpleFeats) {
-            addSimplePairFeatures(pidx, aidx, feats);
+            throw new RuntimeException("This option is deprecated.");
+            //addSimplePairFeatures(pidx, aidx, feats);
         }
         if (prm.useNaradFeats) {
-            addNaradowskyPairFeatures(pidx, aidx, feats);            
+            throw new RuntimeException("This option is deprecated.");
+            //addNaradowskyPairFeatures(pidx, aidx, feats);            
         }
         if (prm.useZhaoFeats) {
             addZhaoPairFeatures(pidx, aidx, feats);
@@ -171,12 +170,17 @@ public class SentFeatureExtractor {
     }
 
     private void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
-        // TODO: Check that we are NOT using the -1 index here.
-        ext.addFeatures(prm.soloTemplates, idx, -1, feats);
+        if (prm.soloTemplates == null) {
+            throw new IllegalStateException("Solo template set must be specified");
+        }
+        ext.addFeatures(prm.soloTemplates, LocalObservations.newPidx(idx), feats);
     }
 
     private void addTemplatePairFeatures(int pidx, int aidx, ArrayList<String> feats) {
-        ext.addFeatures(prm.pairTemplates, pidx, aidx, feats);        
+        if (prm.pairTemplates == null) {
+            throw new IllegalStateException("Pair template set must be specified");
+        }
+        ext.addFeatures(prm.pairTemplates, LocalObservations.newPidxCidx(pidx, aidx), feats);        
     }
     
     // ---------- Meg's "Simple" features. ---------- 
