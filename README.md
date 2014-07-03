@@ -8,6 +8,7 @@ from CLSP's internal maven repository, or they can be installed
 locally.
 * Prim: a Java primitives library
 * Optimize: a Java optimization library
+* Erma: used only for the ERMA file format
 
 ### Using CLSP's internal maven repository
 
@@ -34,6 +35,10 @@ Bitbucket usernames.
 	git clone git@bitbucket.org:minyans/optimize.git
 	cd optimize
 	mvn install -DskipTests
+3. Checkout and install Erma locally
+	git clone git@github.com:jeisner/erma.git
+	cd erma
+	mvn install -DskipTests
 
 ## Build:
 
@@ -59,3 +64,27 @@ Bitbucket usernames.
 
 * To make the project Git aware, right click on the project and select Team -> Git... 
 
+## Running ACL '14 Experiments
+
+Ensure that you have access to the following git submodule:
+
+   ssh://git@bitbucket.org/mgormley/core.git
+
+Initialize the git submodule:
+
+   git submodule init
+   git submodule update
+
+The following experiment scripts should work fine on the COE grid
+where the corpus files can be found in the appropriate places.
+
+Run a "fast" version of the experiments (should complete in about a
+minute) with output printed to stdout:
+    
+    source setupenv.sh
+    run_srl.py -e srl-conll09 -f
+
+Run the full set of experiments on the grid:
+    
+    source setupenv.sh
+    run_srl.py -e srl-conll09 -q mem
