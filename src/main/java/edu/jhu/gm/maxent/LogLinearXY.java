@@ -42,7 +42,7 @@ public class LogLinearXY {
     private static final Logger log = Logger.getLogger(LogLinearXY.class);
 
     public static class LogLinearXYPrm {
-        /** Variance of L2 regularizer or -1 for automatic. */
+        /** Variance of L2 regularizer. */
         public double l2Variance = -1;
         public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public LogLinearXYPrm() {
@@ -73,11 +73,8 @@ public class LogLinearXY {
         FgExampleList list = getData(data);
         log.info("Number of train instances: " + list.size());
         
-        if (prm.l2Variance == -1) {
-            prm.crfPrm.regularizer = new L2(list.size());
-        } else {
-            prm.crfPrm.regularizer = new L2(prm.l2Variance);
-        }
+        prm.crfPrm.regularizer = new L2(prm.l2Variance);
+        
         log.info("Number of model parameters: " + alphabet.size());
         FgModel model = new FgModel(alphabet.size(), new StringIterable(alphabet.getObjects()));
         CrfTrainer trainer = new CrfTrainer(prm.crfPrm);
