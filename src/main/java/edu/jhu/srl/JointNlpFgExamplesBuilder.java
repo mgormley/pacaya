@@ -88,7 +88,7 @@ public class JointNlpFgExamplesBuilder {
         if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
         }
         
         if (!ofc.isInitialized()) {

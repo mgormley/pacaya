@@ -7,11 +7,11 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
+import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.srl.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
@@ -44,7 +44,7 @@ public class FirstOrderPruner implements Annotator {
 
         // Get configuration for first-order pruning model.
         exPrm.fgPrm.includeSrl = false;
-        exPrm.fgPrm.dpPrm = new DepParseFactorGraphPrm();
+        exPrm.fgPrm.dpPrm = new DepParseFactorGraphBuilderPrm();
         exPrm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
         exPrm.fgPrm.dpPrm.grandparentFactors = false;
         exPrm.fgPrm.dpPrm.siblingFactors = false;
