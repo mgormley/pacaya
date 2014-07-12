@@ -12,8 +12,8 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleVar;
 
 public class SrlFactorGraphTest {
 
