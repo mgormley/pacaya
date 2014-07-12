@@ -15,10 +15,10 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.set.IntSet;
-import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphPrm;
+import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.srl.SrlFactorGraphBuilder.SenseVar;
-import edu.jhu.srl.SrlFactorGraphBuilder.SrlFactorGraphPrm;
+import edu.jhu.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 
 /**
  * A factor graph builder for joint dependency parsing and semantic role
@@ -41,9 +41,9 @@ public class JointNlpFactorGraph extends FactorGraph {
     public static class JointFactorGraphPrm implements Serializable {
         private static final long serialVersionUID = 1L;
         public boolean includeDp = true;
-        public DepParseFactorGraphPrm dpPrm = new DepParseFactorGraphPrm();
+        public DepParseFactorGraphBuilderPrm dpPrm = new DepParseFactorGraphBuilderPrm();
         public boolean includeSrl = true;
-        public SrlFactorGraphPrm srlPrm = new SrlFactorGraphPrm();
+        public SrlFactorGraphBuilderPrm srlPrm = new SrlFactorGraphBuilderPrm();
     }
     
     public enum JointFactorTemplate {

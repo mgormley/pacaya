@@ -34,7 +34,7 @@ public class SrlFactorGraphBuilder implements Serializable {
      * Parameters for the SrlFactorGraph.
      * @author mgormley
      */
-    public static class SrlFactorGraphPrm implements Serializable {
+    public static class SrlFactorGraphBuilderPrm implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
@@ -128,7 +128,7 @@ public class SrlFactorGraphBuilder implements Serializable {
     }
 
     // Parameters for constructing the factor graph.
-    private SrlFactorGraphPrm prm;
+    private SrlFactorGraphBuilderPrm prm;
 
     // Cache of the variables for this factor graph. These arrays may contain
     // null for variables we didn't include in the model.
@@ -138,7 +138,7 @@ public class SrlFactorGraphBuilder implements Serializable {
     // The sentence length.
     private int n;                
 
-    public SrlFactorGraphBuilder(SrlFactorGraphPrm prm) {
+    public SrlFactorGraphBuilder(SrlFactorGraphBuilderPrm prm) {
         this.prm = prm;
     }
 

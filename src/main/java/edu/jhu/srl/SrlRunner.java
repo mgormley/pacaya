@@ -66,7 +66,7 @@ import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphPrm;
+import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
@@ -400,7 +400,7 @@ public class SrlRunner {
             // Get configuration for first-order pruning model.
             JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);   
             prm.fgPrm.includeSrl = false;
-            prm.fgPrm.dpPrm = new DepParseFactorGraphPrm();
+            prm.fgPrm.dpPrm = new DepParseFactorGraphBuilderPrm();
             prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
             prm.fgPrm.dpPrm.grandparentFactors = false;
             prm.fgPrm.dpPrm.siblingFactors = false;

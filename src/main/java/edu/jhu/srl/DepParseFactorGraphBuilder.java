@@ -32,7 +32,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
      * Parameters for the DepParseFactorGraph.
      * @author mgormley
      */
-    public static class DepParseFactorGraphPrm implements Serializable {
+    public static class DepParseFactorGraphBuilderPrm implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
@@ -77,7 +77,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     }
     
     // Parameters for constructing the factor graph.
-    private DepParseFactorGraphPrm prm;
+    private DepParseFactorGraphBuilderPrm prm;
 
     // Cache of the variables for this factor graph. These arrays may contain
     // null for variables we didn't include in the model.
@@ -87,7 +87,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     // The sentence length.
     private int n;
 
-    public DepParseFactorGraphBuilder(DepParseFactorGraphPrm prm) {        
+    public DepParseFactorGraphBuilder(DepParseFactorGraphBuilderPrm prm) {        
         this.prm = prm;
     }
 
