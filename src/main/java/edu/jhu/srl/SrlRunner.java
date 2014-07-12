@@ -66,14 +66,14 @@ import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
+import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphPrm;
 import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
 import edu.jhu.srl.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
@@ -536,7 +536,7 @@ public class SrlRunner {
         if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
         }
         
         if (!ofc.isInitialized()) {

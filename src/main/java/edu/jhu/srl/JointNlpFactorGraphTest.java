@@ -33,10 +33,10 @@ import edu.jhu.prim.Primitives;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.set.IntSet;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.SenseVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.collections.Lists;
 

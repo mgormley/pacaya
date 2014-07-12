@@ -34,8 +34,8 @@ import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleVar;
 
 /**
  * Unit tests for {@link JointNlpFgExamplesBuilderTest}.
