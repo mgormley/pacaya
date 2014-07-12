@@ -2,7 +2,7 @@ package edu.jhu.util.semiring;
 
 import edu.jhu.prim.util.math.FastMath;
 
-public class LogPosNegAlgebra implements Semiring, Algebra {
+public class LogSignAlgebra implements Semiring, Algebra {
 
     // We choose the least significant digit of the mantissa as our sign bit.
     // This bit is chosen for two reasons: (1) the various bit representations

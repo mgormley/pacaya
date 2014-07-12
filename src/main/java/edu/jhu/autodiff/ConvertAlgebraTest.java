@@ -11,7 +11,7 @@ import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -19,8 +19,8 @@ public class ConvertAlgebraTest {
 
     private Algebra inS = new RealAlgebra();
     private Algebra outS = new RealAlgebra();
-    public static List<Algebra> algebras3 = Lists.getList(new RealAlgebra(), new LogSemiring(), new LogPosNegAlgebra());
-    public static List<Algebra> algebras2 = Lists.getList(new RealAlgebra(), new LogPosNegAlgebra());
+    public static List<Algebra> algebras3 = Lists.getList(new RealAlgebra(), new LogSemiring(), new LogSignAlgebra());
+    public static List<Algebra> algebras2 = Lists.getList(new RealAlgebra(), new LogSignAlgebra());
 
     @Test
     public void testForwardAndBackward() {

@@ -2,7 +2,7 @@ package edu.jhu.autodiff;
 
 import static org.junit.Assert.assertTrue;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class AbstractModuleTest {
@@ -20,7 +20,7 @@ public class AbstractModuleTest {
     /** Evaluation of a module which takes one tensor modules as input. */
     public static void evalTensor1(Tensor t1, Tensor expT1Adj, Tensor1Factory fact, Tensor expOut, double adjFill) {
         evalTensor1(t1, expT1Adj, fact, expOut, adjFill, new RealAlgebra());
-        evalTensor1(t1, expT1Adj, fact, expOut, adjFill, new LogPosNegAlgebra());
+        evalTensor1(t1, expT1Adj, fact, expOut, adjFill, new LogSignAlgebra());
     }
 
     private static void evalTensor1(Tensor t1, Tensor expT1Adj, 
@@ -49,7 +49,7 @@ public class AbstractModuleTest {
     /** Evaluation of a module which takes two tensor modules as input. */
     public static void evalTensor2(Tensor t1, Tensor expT1Adj, Tensor t2, Tensor expT2Adj, Tensor2Factory fact, Tensor expOut, double adjFill) {
         evalTensor2(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, new RealAlgebra());
-        evalTensor2(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, new LogPosNegAlgebra());
+        evalTensor2(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, new LogSignAlgebra());
     }
 
     private static void evalTensor2(Tensor t1, Tensor expT1Adj, Tensor t2, Tensor expT2Adj,

@@ -12,7 +12,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 
 /**
  * Softmax MBR decoder for dependency parsing evaluated with expected recall. 
@@ -75,7 +75,7 @@ public class DepParseDecodeLoss extends AbstractTopoModule implements Module<Ten
         // Decoding.
         DepTensorFromBeliefs b2d = new DepTensorFromBeliefs(inf);
         topo.add(b2d);
-        SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, new LogPosNegAlgebra());
+        SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, new LogSignAlgebra());
         topo.add(mbr);
         DepTensorToBeliefs d2b = new DepTensorToBeliefs(mbr, inf);
         topo.add(d2b);

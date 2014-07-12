@@ -16,7 +16,7 @@ import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class SoftmaxMbrDepParseTest {
@@ -41,13 +41,13 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testSimpleReal() {
-        helpSimple(new LogPosNegAlgebra());              
+        helpSimple(new LogSignAlgebra());              
         //helpSimple(new RealAlgebra());
     }
     
     @Test    
     public void testSimpleLogPosNeg() {    
-        helpSimple(new LogPosNegAlgebra());              
+        helpSimple(new LogSignAlgebra());              
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -129,7 +129,7 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFiniteDiffs(new LogPosNegAlgebra());
+        helpGradByFiniteDiffs(new LogSignAlgebra());
     }
 
     private void helpGradByFiniteDiffs(Algebra tmpS) {

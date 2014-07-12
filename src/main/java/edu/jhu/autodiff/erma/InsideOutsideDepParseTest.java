@@ -16,7 +16,7 @@ import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -60,7 +60,7 @@ public class InsideOutsideDepParseTest {
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpForwardBackward(new LogPosNegAlgebra());        
+        helpForwardBackward(new LogSignAlgebra());        
     }
 
     private void helpForwardBackward(Algebra tmpS) {

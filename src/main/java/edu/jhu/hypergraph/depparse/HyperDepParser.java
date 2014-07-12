@@ -14,7 +14,7 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseType;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.Semiring;
 
@@ -107,7 +107,7 @@ public class HyperDepParser {
      * @return The parse chart.
      */
     public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot, double[][] fracChild) {
-        final Algebra semiring = new LogPosNegAlgebra();         
+        final Algebra semiring = new LogSignAlgebra();         
         return insideAlgorithmEntropyFoe(fracRoot, fracChild, semiring);
     }
 

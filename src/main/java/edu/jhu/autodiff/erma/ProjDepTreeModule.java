@@ -21,7 +21,7 @@ import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 
 public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
@@ -47,7 +47,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     private static int oddsRatioCount = 0;
     
     public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn) {
-        this(mTrueIn, mFalseIn, new LogPosNegAlgebra());
+        this(mTrueIn, mFalseIn, new LogSignAlgebra());
     }
     
     public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn, Algebra tmpS) {

@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.util.dist.Gaussian;
 
-public class LogPosNegAlgebraTest {
+public class LogSignAlgebraTest {
 
     private interface BinOp {
         double call(double x, double y, Algebra s);
@@ -20,7 +20,7 @@ public class LogPosNegAlgebraTest {
     }
 
     private static final int NUM_RANDS = 100;
-    private LogPosNegAlgebra sLog = new LogPosNegAlgebra();
+    private LogSignAlgebra sLog = new LogSignAlgebra();
     private RealAlgebra sReal = new RealAlgebra();
             
     @Test

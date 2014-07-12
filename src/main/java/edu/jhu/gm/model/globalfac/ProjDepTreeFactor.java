@@ -29,7 +29,7 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 
 /**
@@ -174,7 +174,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         // Construct the circuit.
         TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
         TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
-        Algebra tmpS = (isForward) ? new LogSemiring() : new LogPosNegAlgebra();
+        Algebra tmpS = (isForward) ? new LogSemiring() : new LogSignAlgebra();
         ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();
         
@@ -382,7 +382,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         EdgeScores ratios = getLogOddsRatios(parent, msgs);
         double logPi = getLogProductOfAllFalseMessages(parent, msgs);
 
-        Algebra s = new LogPosNegAlgebra();
+        Algebra s = new LogSignAlgebra();
         Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();

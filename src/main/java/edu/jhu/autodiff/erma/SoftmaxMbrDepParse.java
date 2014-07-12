@@ -16,7 +16,7 @@ import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 /** 
@@ -46,7 +46,7 @@ public class SoftmaxMbrDepParse extends AbstractTopoModule implements Module<Ten
      * @param temperature The temperature (assumed to be in the REAL semiring).
      */
     public SoftmaxMbrDepParse(Module<Tensor> margIn, double temperature) {
-        this(margIn, temperature, new LogPosNegAlgebra());
+        this(margIn, temperature, new LogSignAlgebra());
     }
     
     /**

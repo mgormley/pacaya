@@ -17,7 +17,7 @@ import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class ProjDepTreeModuleTest {
@@ -58,7 +58,7 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpSimple(new LogPosNegAlgebra());
+        helpSimple(new LogSignAlgebra());
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -92,7 +92,7 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFinDiff(new LogPosNegAlgebra());
+        helpGradByFinDiff(new LogSignAlgebra());
     }
 
     private void helpGradByFinDiff(Algebra tmpS) {
@@ -129,7 +129,7 @@ public class ProjDepTreeModuleTest {
                 tmFalseIn.set(inVals[1], 0, 1);
                 
                 TopoOrder topo = new TopoOrder();
-                ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, new LogPosNegAlgebra());
+                ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, new LogSignAlgebra());
                 Combine comb = new Combine(ea);
                 topo.add(ea);
                 topo.add(comb);

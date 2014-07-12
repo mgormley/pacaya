@@ -8,7 +8,7 @@ public class Algebras {
     
     // Algebras.
     public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra(); 
-    public static final LogPosNegAlgebra LOG_POS_NEG_ALGEBRA = new LogPosNegAlgebra(); 
+    public static final LogSignAlgebra LOG_SIGN_ALGEBRA = new LogSignAlgebra(); 
     // Semirings.
     public static final LogSemiring LOG_SEMIRING = new LogSemiring(); 
     public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring(); 

@@ -14,7 +14,7 @@ import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.dist.Dirichlet;
-import edu.jhu.util.semiring.LogPosNegAlgebra;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
 import edu.jhu.util.semiring.Algebra;
@@ -75,7 +75,7 @@ public class HyperalgoTest {
         expected.weightAdj = null;
         
         expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
-        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
+        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), null);
     }
        
     private static MemHypergraph getSimpleGraph() {
@@ -124,7 +124,7 @@ public class HyperalgoTest {
         expected.weightAdj = new double[]{0, 0, 0, 0, 0, 0, 0, 0};
         
         forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
-        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
+        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), null);
     }
     
     private Scores forwardBackwardCheck(MemHypergraph graph, Scores expected, Algebra s, double[] marginalAdj) {
@@ -205,7 +205,7 @@ public class HyperalgoTest {
         expected.weightAdj = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         
         expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
-        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), null);
+        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), null);
         
         // Check that both semirings get the same answers when using random marginal adjoints.
         expected = new Scores();
@@ -213,7 +213,7 @@ public class HyperalgoTest {
         Arrays.fill(marginalAdj, 1.0);
         marginalAdj = Dirichlet.staticDraw(marginalAdj);
         expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), marginalAdj);
-        forwardBackwardCheck(graph, expected, new LogPosNegAlgebra(), marginalAdj);
+        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), marginalAdj);
     }
             
     private static MemHypergraph getCkyGraph() {
