@@ -7,8 +7,8 @@ import org.junit.Test;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFactorGraph.SenseVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.util.collections.Lists;
 
 public class SrlDecoderTest {
