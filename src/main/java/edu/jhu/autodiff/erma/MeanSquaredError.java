@@ -2,6 +2,8 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.autodiff.AbstractTensorModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
@@ -33,6 +35,8 @@ public class MeanSquaredError extends AbstractTensorModule implements Module<Ten
         }
     }
     
+    private static final Logger log = Logger.getLogger(MeanSquaredError.class);
+
     private Module<Beliefs> inf;
     private VarConfig vc;
     

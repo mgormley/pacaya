@@ -14,6 +14,7 @@ import edu.jhu.gm.train.Accumulator;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class ErmaObjective implements ExampleObjective {
@@ -59,13 +60,11 @@ public class ErmaObjective implements ExampleObjective {
         final LFgExample ex = data.get(i);
         final FactorGraph fg = ex.getFgLatPred();
         final VarConfig goldConfig = ex.getGoldConfig();
-
-        Algebra s = infFactory.getAlgebra();
         
         // Get the modules.
         t.reset(); t.start();
         // Model initialization.
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(fg, model, s);
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(fg, model, infFactory.getAlgebra());
         // Inference.
         ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
         inf.setEffm(effm);
@@ -89,16 +88,20 @@ public class ErmaObjective implements ExampleObjective {
         dl.forward();
         t.stop(); valTimer.add(t);
         
+        // Output algebra.
+        Algebra outS = dl.getAlgebra();
+        // Loss in real algebra.
+        double loss = outS.toReal(dl.getOutput().get(0));
         if (ac.accumValue) {
             // Add the loss.
             t.reset(); t.start();
-            ac.value += dl.getOutput().get(0);
+            ac.value += loss;
             t.stop(); valTimer.add(t);
         }
         if (ac.accumGradient) {
             // Compute the gradient for this example.
             t.reset(); t.start();
-            dl.getOutputAdj().fill(1.0);
+            dl.getOutputAdj().fill(outS.one());
             dl.backward();
             inf.backward();
             effm.backward();
@@ -110,7 +113,7 @@ public class ErmaObjective implements ExampleObjective {
             ac.weight += ex.getWeight();
         }
         if (ac.accumTrainLoss) {
-            ac.trainLoss += dl.getOutput().get(0);
+            ac.trainLoss += loss;
         }
         t0.stop(); tot.add(t0);
     }
