@@ -11,8 +11,8 @@ import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class ConvertAlgebraTest {

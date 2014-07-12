@@ -2,7 +2,6 @@ package edu.jhu.autodiff;
 
 import java.util.List;
 
-import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.collections.Lists;
 
 /**

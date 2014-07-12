@@ -3,12 +3,9 @@ package edu.jhu.autodiff;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -50,12 +47,16 @@ public class SelectTest {
     }
 
     @Test
-    public void testGradByFiniteDiffs() {
+    public void testGradByFiniteDiffsAllSemirings() {
         TensorIdentity id1 = new TensorIdentity(ModuleTestUtils.get3DTensor(s, 2, 3, 5));
-        Select ea = new Select(id1, 1, 2);
+
+        Tensor1Factory fact = new Tensor1Factory() {
+            public Module<Tensor> getModule(Module<Tensor> m1) {
+                return new Select(m1, 1, 2);
+            }
+        };        
         
-        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+        AbstractModuleTest.evalTensor1ByFiniteDiffs(fact, id1);
     }
     
 }

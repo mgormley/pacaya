@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -30,13 +30,13 @@ public class ProdTest {
     }
     
     @Test
-    public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        Prod m = new Prod(id1);
-        
-        TensorVecFn vecFn = new TensorVecFn(id1, m);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+    public void testGradByFiniteDiffsAllSemirings() {
+        Tensor1Factory fact = new Tensor1Factory() {
+            public Module<Tensor> getModule(Module<Tensor> m1) {
+                return new Prod(m1);
+            }
+        };        
+        AbstractModuleTest.evalTensor1ByFiniteDiffs(fact);
     }
     
 }

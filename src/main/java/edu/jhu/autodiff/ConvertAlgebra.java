@@ -4,8 +4,6 @@ import java.util.List;
 
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.SemiringSpeedTest;
 
 /**
  * Converts from the abstract algebra of the input to a given abstract algebra.

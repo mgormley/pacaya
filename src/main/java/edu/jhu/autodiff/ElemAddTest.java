@@ -3,18 +3,15 @@ package edu.jhu.autodiff;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.Algebras;
 
 public class ElemAddTest {
 
-    private Algebra s = new RealAlgebra();
+    private Algebra s = Algebras.REAL_ALGEBRA;
 
     @Test
     public void testForwardAndBackward() {
@@ -42,17 +39,15 @@ public class ElemAddTest {
         assertEquals(2.2, id2.getOutputAdj().getValue(1), 1e-13);
         assertEquals(2.2, id2.getOutputAdj().getValue(2), 1e-13);
     }
-
+    
     @Test
-    public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity id2 = new TensorIdentity(t2);
-        ElemAdd ea = new ElemAdd(id1, id2);
-        
-        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), ea);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+    public void testGradByFiniteDiffsAllSemirings() {
+        Tensor2Factory fact = new Tensor2Factory() {
+            public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
+                return new ElemAdd(m1, m2);
+            }
+        };        
+        AbstractModuleTest.evalTensor2ByFiniteDiffs(fact);
     }
     
 }

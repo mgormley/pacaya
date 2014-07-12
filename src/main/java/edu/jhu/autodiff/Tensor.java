@@ -7,8 +7,6 @@ import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
 
 /**
  * Tensor of doubles (i.e. a multi-dimensional array).

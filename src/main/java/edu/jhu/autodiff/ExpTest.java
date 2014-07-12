@@ -1,13 +1,9 @@
 package edu.jhu.autodiff;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -35,13 +31,13 @@ public class ExpTest {
     }
 
     @Test
-    public void testGradByFiniteDiffs() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        Exp ea = new Exp(id1);
-        
-        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+    public void testGradByFiniteDiffsAllSemirings() {
+        Tensor1Factory fact = new Tensor1Factory() {
+            public Module<Tensor> getModule(Module<Tensor> m1) {
+                return new Exp(m1);
+            }
+        };        
+        AbstractModuleTest.evalTensor1ByFiniteDiffs(fact);
     }
     
 }
