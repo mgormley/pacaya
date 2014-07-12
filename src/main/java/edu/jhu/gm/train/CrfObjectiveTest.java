@@ -49,7 +49,7 @@ import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
 

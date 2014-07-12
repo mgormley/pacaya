@@ -23,17 +23,17 @@ import edu.jhu.gm.model.VarSet;
  * @author mgormley
  * @author mmitchell
  */
-public class DepParseFactorGraph implements Serializable {
+public class DepParseFactorGraphBuilder implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(DepParseFactorGraph.class); 
+    private static final Logger log = Logger.getLogger(DepParseFactorGraphBuilder.class); 
 
     /**
      * Parameters for the DepParseFactorGraph.
      * @author mgormley
      */
-    public static class DepParseFactorGraphPrm implements Serializable {
+    public static class DepParseFactorGraphBuilderPrm implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
@@ -78,7 +78,7 @@ public class DepParseFactorGraph implements Serializable {
     }
     
     // Parameters for constructing the factor graph.
-    private DepParseFactorGraphPrm prm;
+    private DepParseFactorGraphBuilderPrm prm;
 
     // Cache of the variables for this factor graph. These arrays may contain
     // null for variables we didn't include in the model.
@@ -88,7 +88,7 @@ public class DepParseFactorGraph implements Serializable {
     // The sentence length.
     private int n;
 
-    public DepParseFactorGraph(DepParseFactorGraphPrm prm) {        
+    public DepParseFactorGraphBuilder(DepParseFactorGraphBuilderPrm prm) {        
         this.prm = prm;
     }
 

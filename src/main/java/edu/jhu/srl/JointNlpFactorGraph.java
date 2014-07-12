@@ -1,6 +1,5 @@
 package edu.jhu.srl;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -15,10 +14,10 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.set.IntSet;
-import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
+import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
+import edu.jhu.srl.SrlFactorGraphBuilder.RoleVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.SenseVar;
+import edu.jhu.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.util.Prm;
 
 /**
@@ -42,9 +41,9 @@ public class JointNlpFactorGraph extends FactorGraph {
     public static class JointFactorGraphPrm extends Prm {
         private static final long serialVersionUID = 1L;
         public boolean includeDp = true;
-        public DepParseFactorGraphPrm dpPrm = new DepParseFactorGraphPrm();
+        public DepParseFactorGraphBuilderPrm dpPrm = new DepParseFactorGraphBuilderPrm();
         public boolean includeSrl = true;
-        public SrlFactorGraphPrm srlPrm = new SrlFactorGraphPrm();
+        public SrlFactorGraphBuilderPrm srlPrm = new SrlFactorGraphBuilderPrm();
     }
     
     public enum JointFactorTemplate {
@@ -58,8 +57,8 @@ public class JointNlpFactorGraph extends FactorGraph {
     private int n;
     
     // Factor graph builders, which also cache the variables.
-    private DepParseFactorGraph dp;  
-    private SrlFactorGraph srl;
+    private DepParseFactorGraphBuilder dp;  
+    private SrlFactorGraphBuilder srl;
 
     public JointNlpFactorGraph(JointFactorGraphPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
         this(prm, sent.getWords(), sent.getLemmas(), sent.getDepEdgeMask(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe);
@@ -94,11 +93,11 @@ public class JointNlpFactorGraph extends FactorGraph {
         this.n = words.size();
 
         if (prm.includeDp) {
-            dp = new DepParseFactorGraph(prm.dpPrm);
+            dp = new DepParseFactorGraphBuilder(prm.dpPrm);
             dp.build(words, depEdgeMask, fe, fg);
         }
         if (prm.includeSrl) {
-            srl = new SrlFactorGraph(prm.srlPrm); 
+            srl = new SrlFactorGraphBuilder(prm.srlPrm); 
             srl.build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fg);
         }
         
