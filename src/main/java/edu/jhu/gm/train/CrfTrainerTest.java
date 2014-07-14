@@ -5,11 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.autodiff.erma.ErmaObjectiveTest;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
+import edu.jhu.autodiff.erma.ErmaObjectiveTest;
 import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
@@ -54,6 +54,7 @@ import edu.jhu.srl.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebras;
 
@@ -99,6 +100,11 @@ public class CrfTrainerTest {
             
             return fv;
         }
+    }
+    
+    @Before
+    public void setUp() {
+        Prng.seed(123456789101112l);
     }
     
     /**
@@ -229,7 +235,6 @@ public class CrfTrainerTest {
         JUnitUtils.assertArrayEquals(new double[]{0.000, -0.000, -0.515, 0.374, 0.646, 0.710, -0.400}, params1, 1e-3);
         JUnitUtils.assertArrayEquals(new double[]{-0.000, 0.000, -1.323, 0.471, 0.515, 0.495, -0.649}, params2, 1e-3);
     }
-
     
     @Test
     public void testTrainNoLatentVars() {
@@ -378,7 +383,7 @@ public class CrfTrainerTest {
         return train(model, data, null, false);
     }
     
-    private static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
+    public static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
@@ -405,7 +410,7 @@ public class CrfTrainerTest {
         return model;
     }
     
-    private static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
+    public static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
         bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
