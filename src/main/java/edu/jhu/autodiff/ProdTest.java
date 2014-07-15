@@ -6,27 +6,32 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class ProdTest {
 
     private Algebra s = new RealAlgebra();
-
+    
     @Test
-    public void testForward() {
+    public void testForwardAndBackward() {
         Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        Prod m = new Prod(id1);
-        Tensor out = m.forward();
-        assertEquals(2.*3.*5., out.getValue(0), 1e-13);
-        assertTrue(out == m.getOutput());
-        // Set the adjoint of the sum to be 1.
-        m.getOutputAdj().add(2.2);
-        m.backward();
-        assertEquals(2.2*3*5, id1.getOutputAdj().getValue(0), 1e-13);
-        assertEquals(2.2*2*5, id1.getOutputAdj().getValue(1), 1e-13);
-        assertEquals(2.2*2*3, id1.getOutputAdj().getValue(2), 1e-13);
+        
+        Tensor expOut = ModuleTestUtils.getVector(s, 2.*3.*5.);
+        double adjFill = 2.2;
+        Tensor expT1Adj = ModuleTestUtils.getVector(s, 
+                2.2 * 3 * 5,
+                2.2 * 2 * 5,
+                2.2 * 2 * 3);
+        
+        Tensor1Factory fact = new Tensor1Factory() {
+            public Module<Tensor> getModule(Module<Tensor> m1) {
+                return new Prod(m1);
+            }
+        };
+        
+        AbstractModuleTest.evalTensor1(t1, expT1Adj, fact, expOut, adjFill);
     }
     
     @Test
