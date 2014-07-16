@@ -15,7 +15,7 @@ public class DepTensorToBeliefsTest {
     private Algebra s = new RealAlgebra();
 
     @Test
-    public void test() {
+    public void testSimple() {
         Tensor t1 = new Tensor(s, 2,2);
         t1.setValuesOnly(ModuleTestUtils.getVector(s, .2, .3, .5, .7));
         TensorIdentity id1 = new TensorIdentity(t1);

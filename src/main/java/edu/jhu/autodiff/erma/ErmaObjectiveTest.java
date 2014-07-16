@@ -126,6 +126,7 @@ public class ErmaObjectiveTest {
         return bpPrm;
     }    
 
+    // TODO: Is this redundant with tests in CrfTrainerTest?
     @Test
     public void testDpDataOnCrfObjective() throws IOException {
         FactorTemplateList fts = new FactorTemplateList();

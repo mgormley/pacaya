@@ -7,7 +7,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.autodiff.ConvertAlgebra;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.Tensor;
@@ -16,8 +19,8 @@ import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class InsideOutsideDepParseTest {
@@ -93,15 +96,14 @@ public class InsideOutsideDepParseTest {
     }
     
     @Test
-    public void testGradByFiniteDiffs() {    
+    public void testGradByFiniteDiffsAllSemirings() {
         Tensor t1 = new Tensor(s, 4,4);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
-        
-        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1), ea);
-        int numParams = vecFn.getNumDimensions();                
-        IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-5, 1e-8);
+        Tensor1Factory fact = new Tensor1Factory() {
+            public Module<Tensor> getModule(Module<Tensor> m1) {
+                return new InsideOutsideDepParse(m1);
+            }
+        };        
+        AbstractModuleTest.evalTensor1ByFiniteDiffs(fact, new TensorIdentity(t1));
     }
-
+    
 }
