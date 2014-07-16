@@ -24,8 +24,6 @@ export CLASSPATH=$CLASSPATH:`mvn exec:exec -q -Dexec.executable="echo" -Dexec.ar
 
 echo "Setting PYTHONPATH."
 export PYTHONPATH=$ROOT_DIR/scripts
-export PYTHONPATH=$PYTHONPATH:/home/hltcoe/mgormley/installed/gdata-2.0.14/src
 
 echo "Adding to PATH."
-export PATH=$ROOT_DIR/bin:$ROOT_DIR/dip_parse:$PATH
-export PATH=$ROOT_DIR/scripts/experiments:$ROOT_DIR/scripts/experiments/core:$PATH
+export PATH=$ROOT_DIR/scripts/experiments:$PATH
