@@ -14,17 +14,17 @@ import platform
 from glob import glob
 import re
 import random
-from experiments.core.scrape import CsvResultsWriter
-from experiments.core.scrape import get_all_following
-from experiments.core.scrape import get_following
-from experiments.core.scrape import get_following_literal
+from pypipeline.scrape import CsvResultsWriter
+from pypipeline.scrape import get_all_following
+from pypipeline.scrape import get_following
+from pypipeline.scrape import get_following_literal
 
-from experiments.core.util import get_new_file, sweep_mult, fancify_cmd, frange
-from experiments.core.util import head_sentences
-from experiments.core.experiment_runner import ExpParamsRunner, get_subset
-from experiments.core import experiment_runner
-from experiments.core import pipeline
-from experiments.core.pipeline import write_script, RootStage, Stage
+from pypipeline.util import get_new_file, sweep_mult, fancify_cmd, frange
+from pypipeline.util import head_sentences
+from pypipeline.experiment_runner import ExpParamsRunner, get_subset
+from pypipeline import experiment_runner
+from pypipeline import pipeline
+from pypipeline.pipeline import write_script, RootStage, Stage
 from experiments import run_srl
 
 def get_root_dir():

@@ -10,16 +10,16 @@ import shlex
 import subprocess
 from subprocess import Popen
 from optparse import OptionParser
-from experiments.core.util import get_new_file, sweep_mult, fancify_cmd, frange
-from experiments.core.util import head_sentences
+from pypipeline.util import get_new_file, sweep_mult, fancify_cmd, frange
+from pypipeline.util import head_sentences
 import platform
 from glob import glob
-from experiments.core.experiment_runner import ExpParamsRunner, get_subset
-from experiments.core import experiment_runner
-from experiments.core import pipeline
+from pypipeline.experiment_runner import ExpParamsRunner, get_subset
+from pypipeline import experiment_runner
+from pypipeline import pipeline
 import re
 import random
-from experiments.core.pipeline import write_script, RootStage, Stage
+from pypipeline.pipeline import write_script, RootStage, Stage
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *

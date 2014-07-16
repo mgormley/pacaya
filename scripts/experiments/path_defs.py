@@ -10,12 +10,12 @@ import tempfile
 import stat
 import platform
 from glob import glob
-from experiments.core.experiment_runner import ExpParamsRunner, get_subset
-from experiments.core import experiment_runner
-from experiments.core import pipeline
+from pypipeline.experiment_runner import ExpParamsRunner, get_subset
+from pypipeline import experiment_runner
+from pypipeline import pipeline
 import re
 import random
-from experiments.core.pipeline import write_script, RootStage, Stage
+from pypipeline.pipeline import write_script, RootStage, Stage
 import multiprocessing
 from experiments.exp_util import *
 

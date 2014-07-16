@@ -11,7 +11,7 @@ import stat
 import subprocess
 from optparse import OptionParser
 from glob import glob
-from experiments.core.util import get_all_following, get_following, get_time, get_following_literal,\
+from pypipeline.util import get_all_following, get_following, get_time, get_following_literal,\
     to_str, to_int, get_group1, head, get_match
 import shlex
 
@@ -26,16 +26,25 @@ def get_root_dir():
     print "Using root_dir: " + root_dir
     return root_dir;
 
-def prep_project(name, mvn_command, check_local=True):
+
+def prep_project_git(name, install_cmd, check_local=True):
     with lcd("~/research/%s" % (name)):
         local("git push")
         if "nothing to commit, working directory clean" not in local("git status", capture=True):
             print "\nERROR: project requires git commit/git push: %s\n" % name
             if check_local:
-                sys.exit(1)
+                sys.exit(1)    
     with cd("~/working/%s" % (name)):
         if "Already up-to-date" not in run("git pull"):
-            run("mvn %s -DskipTests" % (mvn_command))
+            run(install_cmd)
+
+def prep_project_mvn(name, mvn_cmd, check_local=True):
+    install_cmd = "mvn %s -DskipTests" % (mvn_cmd)
+    prep_project_git(name, install_cmd, check_local)
+
+def prep_project_py(name, check_local=True):
+    install_cmd = "python setup.py develop --user"
+    prep_project_git(name, install_cmd, check_local)
 
 def run_command(name, argv):
     args = " ".join(argv[1:])
@@ -47,10 +56,11 @@ def remote_command(argv):
     env.gateway = "%s:%s" % ("external.hltcoe.jhu.edu", "22")
     env.host_string = "%s:%s" % ("test2", "22")
     run("uname -a")
-    prep_project("prim", "install", True)
-    #prep_project("erma", "install", True)
-    prep_project("optimize", "install", True)
-    prep_project("pacaya", "compile", False)
+    prep_project_mvn("prim", "install", True)
+    #prep_project_mvn("erma", "install", True)
+    prep_project_mvn("optimize", "install", True)
+    prep_project_py("pypipeline", True)
+    prep_project_mvn("pacaya", "compile", False)
     run_command("pacaya", argv)
     
 if __name__ == "__main__":
