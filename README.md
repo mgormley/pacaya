@@ -9,6 +9,7 @@ locally.
 * Prim: a Java primitives library
 * Optimize: a Java optimization library
 * Erma: used only for the ERMA file format
+* [optional] PyPipeline: for running experiments
 
 ### Using CLSP's internal maven repository
 
@@ -39,6 +40,10 @@ Bitbucket usernames.
 	git clone git@github.com:jeisner/erma.git
 	cd erma
 	mvn install -DskipTests
+4. Checkout and install PyPipeline locally
+	git clone https://gitlab.hltcoe.jhu.edu/mgormley/pypipeline.git
+	cd pypipeline
+	python setup.py develop --user
 
 ## Build:
 
@@ -66,14 +71,8 @@ Bitbucket usernames.
 
 ## Running ACL '14 Experiments
 
-Ensure that you have access to the following git submodule:
-
-   ssh://git@bitbucket.org/mgormley/core.git
-
-Initialize the git submodule:
-
-   git submodule init
-   git submodule update
+Ensure that you have properly installed PyPipeline by running "python"
+followed by "import pypipeline.pipeline".
 
 The following experiment scripts should work fine on the COE grid
 where the corpus files can be found in the appropriate places.
