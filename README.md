@@ -69,6 +69,12 @@ Bitbucket usernames.
 
 * To make the project Git aware, right click on the project and select Team -> Git... 
 
+* If using PyDev, there is an outstanding bug
+  (http://sourceforge.net/p/pydev/bugs/1286/) which might not make the
+  egg-link visible to PyPipeline within Eclipse. In this case, the
+  pypipeline project directory can be explicitly added to the
+  PYTHONPATH within the Eclipse project.
+
 ## Running ACL '14 Experiments
 
 Ensure that you have properly installed PyPipeline by running "python"
