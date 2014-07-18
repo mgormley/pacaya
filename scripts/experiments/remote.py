@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/bin/env python
 
 import sys
 from pypipeline.remote_prep import init, prep_project_mvn, prep_project_py, run_command
