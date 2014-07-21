@@ -1,7 +1,5 @@
 package edu.jhu.autodiff.erma;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
@@ -10,8 +8,8 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;

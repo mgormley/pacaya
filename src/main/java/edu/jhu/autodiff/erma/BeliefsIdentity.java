@@ -3,7 +3,6 @@ package edu.jhu.autodiff.erma;
 import java.util.List;
 
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
 
 /**

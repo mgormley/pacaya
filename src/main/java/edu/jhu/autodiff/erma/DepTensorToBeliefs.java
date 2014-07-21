@@ -76,8 +76,8 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
     }
 
     @Override
-    public List<? extends Object> getInputs() {
-        return Lists.getList(inf);
+    public List<Module<Tensor>> getInputs() {
+        return Lists.getList(depIn);
     }    
 
 }

@@ -13,7 +13,6 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.BruteForceInferencerTest;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -21,6 +20,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
 
 

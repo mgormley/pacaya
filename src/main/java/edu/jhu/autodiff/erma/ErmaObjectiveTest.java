@@ -33,11 +33,11 @@ import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.util.JUnitUtils;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
 
 public class ErmaObjectiveTest {

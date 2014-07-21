@@ -1,12 +1,8 @@
 package edu.jhu.autodiff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 

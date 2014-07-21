@@ -14,8 +14,6 @@ import edu.jhu.gm.train.Accumulator;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.RealAlgebra;
 
 public class ErmaObjective implements ExampleObjective {
     

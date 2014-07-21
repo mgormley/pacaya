@@ -13,7 +13,7 @@ import edu.jhu.util.semiring.Algebras;
  * 
  * @author mgormley
  */
-public class Tensor {
+public class Tensor implements ModuleTensor {
 
     protected int[] dims;
     protected int[] strides;

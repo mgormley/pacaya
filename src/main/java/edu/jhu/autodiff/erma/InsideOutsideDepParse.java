@@ -6,17 +6,16 @@ import edu.jhu.autodiff.AbstractTensorModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.hypergraph.Hyperalgo;
+import edu.jhu.hypergraph.Hyperalgo.HyperedgeDoubleFn;
+import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
-import edu.jhu.hypergraph.Hyperalgo.HyperedgeDoubleFn;
-import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph.PCBasicHypernode;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.Algebra;
 
 /**
  * Inside-outside dependency parsing.

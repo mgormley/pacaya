@@ -2,6 +2,7 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
+import edu.jhu.autodiff.ModuleTensor;
 import edu.jhu.autodiff.Module;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.model.Factor;
@@ -12,21 +13,19 @@ import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
 
 /**
  * Module for computing exp(\theta \cdot f(x,y)) to populate each of the exponential family factors.
  * 
  * @author mgormley
  */
-public class ExpFamFactorsModule implements Module<VarTensor[]> {
+public class ExpFamFactorsModule implements Module<Factors> {
 
     private FgModel model;
     private FgModel modelAdj;
     private FactorGraph fg;
-    private VarTensor[] y;
-    private VarTensor[] yAdj;
+    private Factors y;
+    private Factors yAdj;
     private Algebra s;
     
     public ExpFamFactorsModule(FactorGraph fg, FgModel model, Algebra s) {
@@ -36,14 +35,15 @@ public class ExpFamFactorsModule implements Module<VarTensor[]> {
     }
     
     @Override
-    public VarTensor[] forward() {
+    public Factors forward() {
         fg.updateFromModel(model);
-        y = new VarTensor[fg.getNumFactors()];
-        for (int a = 0; a < y.length; a++) {
+        y = new Factors(s);
+        y.f = new VarTensor[fg.getNumFactors()];
+        for (int a = 0; a < y.f.length; a++) {
             Factor factor = fg.getFactor(a);
             if (!(factor instanceof GlobalFactor)) {
-                y[a] = BruteForceInferencer.safeNewVarTensor(s, factor);
-                assert !y[a].containsBadValues();
+                y.f[a] = BruteForceInferencer.safeNewVarTensor(s, factor);
+                assert !y.f[a].containsBadValues();
             }
         }
         return y;
@@ -52,11 +52,11 @@ public class ExpFamFactorsModule implements Module<VarTensor[]> {
     @Override
     public void backward() {
         modelAdj = model.getSparseZeroedCopy();
-        for (int a = 0; a < y.length; a++) {
+        for (int a = 0; a < y.f.length; a++) {
             Factor factor = fg.getFactor(a);
             if (!(factor instanceof GlobalFactor)) {
-                VarTensor factorMarginal = new VarTensor(yAdj[a]);
-                factorMarginal.prod(y[a]);
+                VarTensor factorMarginal = new VarTensor(yAdj.f[a]);
+                factorMarginal.prod(y.f[a]);
                 // addExpectedFeatureCounts() currently only supports the real semiring
                 factorMarginal = factorMarginal.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
                 factor.addExpectedFeatureCounts(modelAdj, factorMarginal, Algebras.REAL_ALGEBRA.one());
@@ -65,17 +65,18 @@ public class ExpFamFactorsModule implements Module<VarTensor[]> {
     }
 
     @Override
-    public VarTensor[] getOutput() {
+    public Factors getOutput() {
         return y;
     }
 
     @Override
-    public VarTensor[] getOutputAdj() {
+    public Factors getOutputAdj() {
         if (yAdj == null) {
-            yAdj = new VarTensor[y.length];
-            for (int a = 0; a < yAdj.length; a++) {
-                if (y[a] != null) {
-                    yAdj[a] = new VarTensor(s, y[a].getVars(), s.zero());
+            yAdj = new Factors(s);
+            yAdj.f = new VarTensor[y.f.length];
+            for (int a = 0; a < yAdj.f.length; a++) {
+                if (y.f[a] != null) {
+                    yAdj.f[a] = new VarTensor(s, y.f[a].getVars(), s.zero());
                 }
             }
         }
@@ -85,14 +86,14 @@ public class ExpFamFactorsModule implements Module<VarTensor[]> {
     @Override
     public void zeroOutputAdj() {
         if (yAdj != null) {
-            for (int a = 0; a < yAdj.length; a++) {
-                if (yAdj[a] != null) { yAdj[a].fill(s.zero()); }
+            for (int a = 0; a < yAdj.f.length; a++) {
+                if (yAdj.f[a] != null) { yAdj.f[a].fill(s.zero()); }
             }
         }
     }
 
     @Override
-    public List<? extends Object> getInputs() {
+    public List<Module<? extends ModuleTensor>> getInputs() {
         return Lists.getList();
     }
 

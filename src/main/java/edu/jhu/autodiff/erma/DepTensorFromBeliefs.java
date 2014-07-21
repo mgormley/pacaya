@@ -65,9 +65,9 @@ public class DepTensorFromBeliefs extends AbstractTensorModule implements Module
     }
 
     @Override
-    public List<? extends Object> getInputs() {
+    public List<Module<Beliefs>> getInputs() {
         return Lists.getList(inf);
-    }    
+    }
 
     /** Gets the maximum index of a parent or child in a LinkVar, plus one. */ 
     static int guessNumWords(Beliefs b) {

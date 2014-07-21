@@ -1,6 +1,6 @@
 package edu.jhu.autodiff.erma;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -8,12 +8,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.Combine;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
@@ -69,12 +67,7 @@ public class ProjDepTreeModuleTest {
         
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
-
-        TopoOrder topo = new TopoOrder();
-        ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, tmpS);
-        Combine comb = new Combine(ea);
-        topo.add(ea);
-        topo.add(comb);
+        ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, tmpS);
         
         Tensor out = topo.forward();
         assertEquals(expout , out.toString());
@@ -100,12 +93,7 @@ public class ProjDepTreeModuleTest {
         TensorIdentity id1 = new TensorIdentity(t1);
         Tensor t2 = new Tensor(s, 3,3);
         TensorIdentity id2 = new TensorIdentity(t2);
-
-        TopoOrder topo = new TopoOrder();
-        ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, tmpS);
-        Combine comb = new Combine(ea);
-        topo.add(ea);
-        topo.add(comb);
+        ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, tmpS);
         
         TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), topo);
         int numParams = vecFn.getNumDimensions();
@@ -128,11 +116,7 @@ public class ProjDepTreeModuleTest {
                 tmTrueIn.set(inVals[0], 0, 1);
                 tmFalseIn.set(inVals[1], 0, 1);
                 
-                TopoOrder topo = new TopoOrder();
-                ProjDepTreeModule ea = new ProjDepTreeModule(id1, id2, new LogSignAlgebra());
-                Combine comb = new Combine(ea);
-                topo.add(ea);
-                topo.add(comb);
+                ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, new LogSignAlgebra());
                 
                 topo.forward();
                 System.out.println(topo.getOutput());

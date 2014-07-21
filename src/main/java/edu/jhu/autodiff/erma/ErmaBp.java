@@ -2,11 +2,8 @@ package edu.jhu.autodiff.erma;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -30,11 +27,9 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.list.DoubleArrayList;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.RealAlgebra;
 
 /**
  * Loopy belief propagation inference algorithm with support for empirical risk
@@ -477,7 +472,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
         // Initialize the adjoints of the potentials.
         if (effm != null) {
-            this.potentialsAdj = effm.getOutputAdj();
+            this.potentialsAdj = effm.getOutputAdj().f;
         } else {
             this.potentialsAdj = new VarTensor[fg.getNumFactors()];
             for (int a=0; a<fg.getNumFactors(); a++) {

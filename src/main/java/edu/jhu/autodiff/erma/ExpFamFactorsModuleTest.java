@@ -18,7 +18,7 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
-public class ExpFamFactorModuleTest {
+public class ExpFamFactorsModuleTest {
 
     boolean logDomain = false;
     Algebra s = new RealAlgebra();
@@ -40,12 +40,12 @@ public class ExpFamFactorModuleTest {
         
         ExpFamFactorsModule effm = new ExpFamFactorsModule(fg, model, s);
         effm.forward();
-        VarTensor[] y = effm.getOutput();
+        VarTensor[] y = effm.getOutput().f;
         System.out.println(Arrays.deepToString(y));
         assertEquals(Math.exp(2*1), y[0].getValue(0), 1e-1);
         assertEquals(Math.exp(3*2), y[0].getValue(1), 1e-1);
         
-        VarTensor[] yAdj = effm.getOutputAdj();
+        VarTensor[] yAdj = effm.getOutputAdj().f;
         for (int a=0; a<yAdj.length; a++) {
             yAdj[a].fill(5);
         }

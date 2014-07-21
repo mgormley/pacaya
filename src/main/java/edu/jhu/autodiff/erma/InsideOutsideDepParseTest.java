@@ -3,8 +3,6 @@ package edu.jhu.autodiff.erma;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
@@ -12,12 +10,9 @@ import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.autodiff.ConvertAlgebra;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
-import edu.jhu.prim.vector.IntDoubleDenseVector;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.LogSignAlgebra;

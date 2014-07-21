@@ -1,7 +1,5 @@
 package edu.jhu.autodiff;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;

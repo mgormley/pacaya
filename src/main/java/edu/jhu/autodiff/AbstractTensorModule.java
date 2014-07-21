@@ -6,7 +6,7 @@ public abstract class AbstractTensorModule implements Module<Tensor> {
 
     protected Tensor y;
     protected Tensor yAdj;
-    // The output and output adjoint will be represented in this abstract algebra.
+    // The output adjoint will be represented in this abstract algebra.
     protected Algebra s;
     
     public AbstractTensorModule(Algebra s) {

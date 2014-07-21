@@ -10,13 +10,10 @@ import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
 
 /**
  * Mean squared error (MSE) loss function.
