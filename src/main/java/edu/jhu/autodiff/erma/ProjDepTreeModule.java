@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.Combine;
 import edu.jhu.autodiff.ConvertAlgebra;
 import edu.jhu.autodiff.ElemDivide;
 import edu.jhu.autodiff.ElemMultiply;
@@ -15,22 +16,19 @@ import edu.jhu.autodiff.ScalarFill;
 import edu.jhu.autodiff.ScalarMultiply;
 import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
-import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.parse.dep.EdgeScores;
-import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.LogSignAlgebra;
 
-public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
+public class ProjDepTreeModule implements Module<Tensor> {
 
     private Module<Tensor> mTrueIn;
     private Module<Tensor> mFalseIn;
     private List<Module<Tensor>> topoOrder;
-    private Module<Tensor> mTrueOut;
-    private Module<Tensor> mFalseOut;
+    private Module<Tensor> comb;
     private Algebra outS;
     // For internal use only.
     private Algebra tmpS;
@@ -59,7 +57,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     }
     
     @Override
-    public Pair<Tensor, Tensor> forward() {
+    public Tensor forward() {
         // Construct the circuit.
         {
             // Initialize using the input tensors.
@@ -108,11 +106,12 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         TakeLeftIfZero mTrueOut1 = new TakeLeftIfZero(mTrueIn1, mTrueOut0, inProd);
         TakeLeftIfZero mFalseOut1 = new TakeLeftIfZero(mFalseIn1, mFalseOut0, inProd);
 
-        mTrueOut = new ConvertAlgebra(mTrueOut1, outS);
-        mFalseOut = new ConvertAlgebra(mFalseOut1, outS);
+        ConvertAlgebra mTrueOut = new ConvertAlgebra(mTrueOut1, outS);
+        ConvertAlgebra mFalseOut = new ConvertAlgebra(mFalseOut1, outS);        
+        comb = new Combine(mFalseOut, mTrueOut);
         
         topoOrder = Lists.getList(mTrueIn1, mFalseIn1, pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
-                partition, partitionMat, bFalse, mTrueOut0, mFalseOut0, inProd, mTrueOut1, mFalseOut1, mTrueOut, mFalseOut);
+                partition, partitionMat, bFalse, mTrueOut0, mFalseOut0, inProd, mTrueOut1, mFalseOut1, mTrueOut, mFalseOut, comb);
 
         // Forward pass.
         for (Module<Tensor> module : topoOrder) {
@@ -158,23 +157,24 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
     }
 
     @Override
-    public Pair<Tensor, Tensor> getOutput() {
-        return new Pair<Tensor,Tensor>(mTrueOut.getOutput(), mFalseOut.getOutput());
+    public Tensor getOutput() {
+        return comb.getOutput();
     }
 
     @Override
-    public Pair<Tensor, Tensor> getOutputAdj() {
-        return new Pair<Tensor,Tensor>(mTrueOut.getOutputAdj(), mFalseOut.getOutputAdj());        
+    public Tensor getOutputAdj() {
+        return comb.getOutputAdj();
     }
 
     @Override
     public void zeroOutputAdj() {
-        mTrueOut.zeroOutputAdj();
-        mFalseOut.zeroOutputAdj();
+        for (Module<?> m : topoOrder) {
+            m.zeroOutputAdj();
+        }
     }
 
     @Override
-    public List<? extends Object> getInputs() {
+    public List<Module<Tensor>> getInputs() {
         return Lists.getList(mTrueIn, mFalseIn);
     }
 
@@ -245,7 +245,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
      * 
      * @author mgormley
      */
-    private static class TakeLeftIfZero extends AbstractTensorModule implements Module<Tensor> {
+    public static class TakeLeftIfZero extends AbstractTensorModule implements Module<Tensor> {
         
         Module<Tensor> leftIn; 
         Module<Tensor> rightIn; 
@@ -288,7 +288,7 @@ public class ProjDepTreeModule implements Module<Pair<Tensor, Tensor>> {
         }
 
         @Override
-        public List<? extends Object> getInputs() {
+        public List<Module<Tensor>> getInputs() {
             return Lists.getList(leftIn, rightIn);
         }
         
