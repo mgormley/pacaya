@@ -10,8 +10,8 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.LanguageConstants;
 import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.srl.CorpusStatistics;
 
 /**
  * Cache of features for a single word in a sentence, this permits indexing into

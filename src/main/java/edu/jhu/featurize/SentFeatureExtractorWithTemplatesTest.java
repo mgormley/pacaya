@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractorWithTemplates.SentFeatureExtractorWithTemplatesPrm;
-import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.collections.Lists;
 
 public class SentFeatureExtractorWithTemplatesTest {

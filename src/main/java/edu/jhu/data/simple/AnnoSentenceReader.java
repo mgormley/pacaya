@@ -14,8 +14,8 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLLXFileReader;
 import edu.jhu.data.conll.CoNLLXSentence;
-import edu.jhu.tag.BrownClusterTagger;
-import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
+import edu.jhu.nlp.tag.BrownClusterTagger;
+import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 
 /**
  * Generic reader of AnnoSentence objects from many different corpora. 

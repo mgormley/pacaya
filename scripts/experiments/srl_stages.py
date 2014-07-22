@@ -46,7 +46,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         if self.get("oldJar"): # TODO: remove this after backwards compat not needed.
             script += 'CLASSPATH=%s:$CLASSPATH\n' % (self.get("oldJar"))
             script += 'echo "CLASSPATH=$CLASSPATH"\n'
-        cmd = "java " + self.get_java_args() + " edu.jhu.srl.JointNlpRunner  %s \n" % (self.get_args())
+        cmd = "java " + self.get_java_args() + " edu.jhu.nlp.joint.JointNlpRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         
         if self.get("train") and self.get("trainType") == "CONLL_2009":

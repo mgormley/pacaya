@@ -16,11 +16,11 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.JointNlpFgExamplesBuilder;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
+import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.util.collections.Lists;
 
 public class FgExampleTest {

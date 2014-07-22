@@ -11,8 +11,8 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceTest;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 public class FeaturizedTokenPairTest {
 

@@ -10,8 +10,8 @@ import java.util.Map.Entry;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.srl.CorpusStatistics;
 
 @Deprecated
 public class SentFeatureExtractorWithTemplates extends SentFeatureExtractor {

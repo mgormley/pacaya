@@ -1,7 +1,7 @@
 package edu.jhu.featurize;
 
 import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.nlp.CorpusStatistics;
 
 /**
  * Lazily created featurized sentence.

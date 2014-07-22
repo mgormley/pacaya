@@ -29,9 +29,9 @@ import edu.jhu.featurize.TemplateLanguage.RulePiece;
 import edu.jhu.featurize.TemplateLanguage.SymbolProperty;
 import edu.jhu.featurize.TemplateLanguage.TokPropList;
 import edu.jhu.featurize.TemplateLanguage.TokProperty;
+import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.util.SafeEquals;
 
 /**

@@ -12,7 +12,7 @@ import edu.jhu.hypergraph.Hypergraph;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.WeightedHyperedge;
-import edu.jhu.srl.MutableInt;
+import edu.jhu.nlp.MutableInt;
 import edu.jhu.util.semiring.Semiring;
 
 public class FirstOrderDepParseHypergraph implements Hypergraph {
