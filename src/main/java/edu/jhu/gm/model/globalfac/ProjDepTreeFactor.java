@@ -179,9 +179,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         dep.forward();
         
         if (isForward) {
-            Pair<Tensor, Tensor> pair = dep.getOutput();
-            Tensor tmTrueOut = pair.get1();
-            Tensor tmFalseOut = pair.get2();
+            Tensor pair = dep.getOutput();
+            Tensor tmTrueOut = pair.select(0, 1);
+            Tensor tmFalseOut = pair.select(0, 0);
             
             // Set the outgoing messages at time (t+1).
             setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
@@ -190,9 +190,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             // Get the adjoints on outgoing message modules at time (t+1).
             Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
             Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
-            Pair<Tensor, Tensor> pairAdj = dep.getOutputAdj();
-            Tensor tmTrueOutAdj = pairAdj.get1();
-            Tensor tmFalseOutAdj = pairAdj.get2();
+            Tensor pairAdj = dep.getOutputAdj();
+            Tensor tmTrueOutAdj = pairAdj.select(0, 1);
+            Tensor tmFalseOutAdj = pairAdj.select(0, 0);
             tmTrueOutAdj.elemAdd(tTrue);
             tmFalseOutAdj.elemAdd(tFalse);
             
