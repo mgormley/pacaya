@@ -14,16 +14,22 @@ import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class AbstractModuleTest {
-
-    /** Factory for a module which takes one tensor modules as input. */
-    public interface Tensor1Factory {
-        Module<Tensor> getModule(Module<Tensor> m1);
+    
+    /** Factory for a module which takes one modules as input. */
+    public interface OneToOneFactory<X extends ModuleTensor<X>,Y extends ModuleTensor<Y>> {
+        Module<Y> getModule(Module<X> m1);
+    }
+        
+    /** Factory for a module which takes two modules as input. */
+    public interface TwoToOneFactory<W extends ModuleTensor<W>, X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> {
+        Module<Y> getModule(Module<W> m1, Module<X> m2);
     }
     
+    /** Factory for a module which takes one tensor modules as input. */
+    public interface Tensor1Factory extends OneToOneFactory<Tensor,Tensor> { }
+    
     /** Factory for a module which takes two tensor modules as input. */
-    public interface Tensor2Factory {
-        Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2);
-    }
+    public interface Tensor2Factory extends TwoToOneFactory<Tensor, Tensor, Tensor> { }
 
     /** Evaluation of a module which takes one tensor modules as input. */
     public static void evalTensor1(Tensor t1, Tensor expT1Adj, Tensor1Factory fact, Tensor expOut, double adjFill) {
@@ -106,14 +112,32 @@ public class AbstractModuleTest {
      * input, and will be tested on multiple semirings.
      */
     public static void evalTensor1ByFiniteDiffs(Tensor1Factory fact, Module<Tensor> in1) {        
+        evalOneToOneByFiniteDiffs(fact, in1);
+    }
+    
+    /**
+     * Evaluates a tensor module by finite differences. This tensor module takes one tensor as
+     * input, and will be tested on multiple semirings.
+     * NOTE: This method is just a variant of the one above which always makes the input to the tested
+     * module non-negative.
+     */
+    public static void evalTensor1ByFiniteDiffsAbs(Tensor1Factory fact, Module<Tensor> in1) {        
+        evalOneToOneByFiniteDiffsAbs(fact, in1);
+    }
+    
+    /**
+     * Evaluates a module by finite differences. This module takes one module as
+     * input, and will be tested on multiple semirings.
+     */
+    public static <X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalOneToOneByFiniteDiffs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             TopoOrder topo = new TopoOrder();
             
-            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
-            Module<Tensor> main = fact.getModule(in1Co);
-            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
+            Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
+            Module<Y> main = fact.getModule(in1Co);
+            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             topo.add(in1Co);
             topo.add(main);
@@ -125,32 +149,31 @@ public class AbstractModuleTest {
     }
     
     /**
-     * Evaluates a tensor module by finite differences. This tensor module takes one tensor as
+     * Evaluates a module by finite differences. This module takes one module as
      * input, and will be tested on multiple semirings.
+     * 
      * NOTE: This method is just a variant of the one above which always makes the input to the tested
      * module non-negative.
      */
-    public static void evalTensor1ByFiniteDiffsAbs(Tensor1Factory fact, Module<Tensor> in1) {        
+    public static <X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             TopoOrder topo = new TopoOrder();
             
-            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
-            Module<Tensor> main = fact.getModule(in1Co);
-            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
+            Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
+            Module<Y> main = fact.getModule(in1Co);
+            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             topo.add(in1Co);
             topo.add(main);
             topo.add(mainCo);
             
             TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1), topo);
-            int numParams = vecFn.getNumDimensions();
-            IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-            ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-5, 1e-8);
+            ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
         }
     }
-
+    
     /** Same as below, but uses two 3 dimensional input tensors. */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact) {
         Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
@@ -165,16 +188,36 @@ public class AbstractModuleTest {
      * input, and will be tested on multiple semirings.
      */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact, Module<Tensor> in1, Module<Tensor> in2) {        
+        evalTwoToOneByFiniteDiffs(fact, in1, in2);
+    }
+    
+    /**
+     * Evaluates a tensor module by finite differences. This tensor module takes two tensors as
+     * input, and will be tested on multiple semirings.
+     * 
+     * NOTE: This method is just a variant of the one above which always makes the input to the tested
+     * module non-negative.
+     */
+    public static void evalTensor2ByFiniteDiffsAbs(Tensor2Factory fact, Module<Tensor> in1, Module<Tensor> in2) {        
+        evalTwoToOneByFiniteDiffsAbs(fact, in1, in2);
+    }
+        
+    /**
+     * Evaluates a module by finite differences. This module takes two modules as
+     * input, and will be tested on multiple semirings.
+     */
+    public static <W extends ModuleTensor<W>, X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalTwoToOneByFiniteDiffs(
+            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             TopoOrder topo = new TopoOrder();
             
-            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
-            Module<Tensor> in2Co = new ConvertAlgebra<Tensor>(in1, s);
-            Module<Tensor> main = fact.getModule(in1Co, in2Co);
-            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
+            Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
+            Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
+            Module<Y> main = fact.getModule(in1Co, in2Co);
+            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             topo.add(in1Co);
             topo.add(in2Co);
@@ -187,23 +230,24 @@ public class AbstractModuleTest {
     }
     
     /**
-     * Evaluates a tensor module by finite differences. This tensor module takes two tensors as
+     * Evaluates a module by finite differences. This module takes two modules as
      * input, and will be tested on multiple semirings.
      * 
      * NOTE: This method is just a variant of the one above which always makes the input to the tested
      * module non-negative.
      */
-    public static void evalTensor2ByFiniteDiffsAbs(Tensor2Factory fact, Module<Tensor> in1, Module<Tensor> in2) {        
+    public static <W extends ModuleTensor<W>, X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalTwoToOneByFiniteDiffsAbs(
+            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             TopoOrder topo = new TopoOrder();
             
-            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
-            Module<Tensor> in2Co = new ConvertAlgebra<Tensor>(in1, s);
-            Module<Tensor> main = fact.getModule(in1Co, in2Co);
-            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
+            Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
+            Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
+            Module<Y> main = fact.getModule(in1Co, in2Co);
+            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             topo.add(in1Co);
             topo.add(in2Co);
