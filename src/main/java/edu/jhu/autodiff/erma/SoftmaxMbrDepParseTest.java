@@ -8,6 +8,9 @@ import java.util.List;
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.Tensor;
@@ -17,6 +20,7 @@ import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -152,4 +156,19 @@ public class SoftmaxMbrDepParseTest {
         ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-8, 1e-5);
     }
     
+    @Test
+    public void testGradByFiniteDiffsAllSemirings() {
+        // Loop over possible internal algebras.
+        for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+            Tensor t1 = new Tensor(s, 4,4);
+            TensorIdentity id1 = new TensorIdentity(t1);
+            Tensor1Factory fact = new Tensor1Factory() {
+                public Module<Tensor> getModule(Module<Tensor> m1) {
+                    return new SoftmaxMbrDepParse(m1, 2, tmpS);
+                }
+            };        
+            // NOTE: The input to SoftmaxMbrDepParse must be non-negative, so we use the Abs variant of the test function.
+            AbstractModuleTest.evalTensor1ByFiniteDiffsAbs(fact, id1);
+        }
+    }
 }

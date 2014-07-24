@@ -9,12 +9,17 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
+import edu.jhu.autodiff.tensor.ElemAdd;
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -23,14 +28,14 @@ public class ProjDepTreeModuleTest {
     Algebra s = new RealAlgebra();
     String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1    2  |  value\n"
-            + "    0    0    0  |  0.0960000\n"
-            + "    0    0    1  |  0.0960000\n"
-            + "    0    1    0  |  0.0960000\n"
-            + "    0    1    1  |  0.0960000\n"
-            + "    1    0    0  |  0.144000\n"
-            + "    1    0    1  |  0.144000\n"
-            + "    1    1    0  |  0.144000\n"
-            + "    1    1    1  |  0.144000\n"
+            + "    0    0    0  |  0.144000\n"
+            + "    0    0    1  |  0.144000\n"
+            + "    0    1    0  |  0.144000\n"
+            + "    0    1    1  |  0.144000\n"
+            + "    1    0    0  |  0.0960000\n"
+            + "    1    0    1  |  0.0960000\n"
+            + "    1    1    0  |  0.0960000\n"
+            + "    1    1    1  |  0.0960000\n"
             + "]";
     
     String expoutAdj1 = "Tensor (RealAlgebra) [\n"
@@ -134,4 +139,22 @@ public class ProjDepTreeModuleTest {
         }
     }
     
+    @Test
+    public void testGradByFiniteDiffsAllSemirings() {
+        // Loop over possible internal algebras.
+        for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+            Tensor t1 = new Tensor(s, 3,3);
+            TensorIdentity id1 = new TensorIdentity(t1);
+            Tensor t2 = new Tensor(s, 3,3);
+            TensorIdentity id2 = new TensorIdentity(t2);
+            Tensor2Factory fact = new Tensor2Factory() {
+                public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
+                    return new ProjDepTreeModule(m1, m2, tmpS);
+                }
+            };        
+            // NOTE: The input to ProjDepTreeModule must be non-negative, so we use the Abs variant of the test function.
+            AbstractModuleTest.evalTensor2ByFiniteDiffsAbs(fact, id1, id2);
+        }
+    }
+        
 }

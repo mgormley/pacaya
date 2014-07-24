@@ -6,6 +6,7 @@ import java.util.List;
 
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
+import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
@@ -122,6 +123,33 @@ public class AbstractModuleTest {
             ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
         }
     }
+    
+    /**
+     * Evaluates a tensor module by finite differences. This tensor module takes one tensor as
+     * input, and will be tested on multiple semirings.
+     * NOTE: This method is just a variant of the one above which always makes the input to the tested
+     * module non-negative.
+     */
+    public static void evalTensor1ByFiniteDiffsAbs(Tensor1Factory fact, Module<Tensor> in1) {        
+        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+        
+        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+            TopoOrder topo = new TopoOrder();
+            
+            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
+            Module<Tensor> main = fact.getModule(in1Co);
+            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
+            
+            topo.add(in1Co);
+            topo.add(main);
+            topo.add(mainCo);
+            
+            TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1), topo);
+            int numParams = vecFn.getNumDimensions();
+            IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
+            ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-5, 1e-8);
+        }
+    }
 
     /** Same as below, but uses two 3 dimensional input tensors. */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact) {
@@ -155,6 +183,37 @@ public class AbstractModuleTest {
             
             TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1, in2), topo);
             ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+        }
+    }
+    
+    /**
+     * Evaluates a tensor module by finite differences. This tensor module takes two tensors as
+     * input, and will be tested on multiple semirings.
+     * 
+     * NOTE: This method is just a variant of the one above which always makes the input to the tested
+     * module non-negative.
+     */
+    public static void evalTensor2ByFiniteDiffsAbs(Tensor2Factory fact, Module<Tensor> in1, Module<Tensor> in2) {        
+        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+        assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+        
+        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+            TopoOrder topo = new TopoOrder();
+            
+            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
+            Module<Tensor> in2Co = new ConvertAlgebra<Tensor>(in1, s);
+            Module<Tensor> main = fact.getModule(in1Co, in2Co);
+            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
+            
+            topo.add(in1Co);
+            topo.add(in2Co);
+            topo.add(main);
+            topo.add(mainCo);
+            
+            TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1, in2), topo);
+            int numParams = vecFn.getNumDimensions();
+            IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
+            ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-5, 1e-8);
         }
     }
 
