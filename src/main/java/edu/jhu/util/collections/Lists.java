@@ -2,13 +2,8 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import edu.jhu.autodiff.AbstractTensorModule;
-import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.Tensor;
 
 public class Lists {
 
