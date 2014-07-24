@@ -2,7 +2,7 @@ package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
@@ -13,7 +13,7 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class ElemDivide extends AbstractTensorModule implements Module<Tensor> {
+public class ElemDivide extends AbstractModule<Tensor> implements Module<Tensor> {
 
     private Module<Tensor> modInX;
     private Module<Tensor> modInW;

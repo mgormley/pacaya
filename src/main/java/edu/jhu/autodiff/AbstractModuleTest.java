@@ -33,9 +33,9 @@ public class AbstractModuleTest {
     private static void evalTensor1(Tensor t1, Tensor expT1Adj, 
             Tensor1Factory fact, Tensor expOut, double adjFill, Algebra tmpS) {
         TensorIdentity id1 = new TensorIdentity(t1);
-        ConvertAlgebra id1Co = new ConvertAlgebra(id1, tmpS);
+        ConvertAlgebra<Tensor> id1Co = new ConvertAlgebra<Tensor>(id1, tmpS);
         Module<Tensor> ea = fact.getModule(id1Co);
-        ConvertAlgebra eaCo = new ConvertAlgebra(ea, t1.getAlgebra());
+        ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, t1.getAlgebra());
     
         TopoOrder topo = new TopoOrder();
         topo.add(id1); 
@@ -64,11 +64,11 @@ public class AbstractModuleTest {
         Tensor.checkSameAlgebra(t1, t2);
         
         TensorIdentity id1 = new TensorIdentity(t1);
-        ConvertAlgebra id1Co = new ConvertAlgebra(id1, tmpS);
+        ConvertAlgebra<Tensor> id1Co = new ConvertAlgebra<Tensor>(id1, tmpS);
         TensorIdentity id2 = new TensorIdentity(t2);
-        ConvertAlgebra id2Co = new ConvertAlgebra(id2, tmpS);
+        ConvertAlgebra<Tensor> id2Co = new ConvertAlgebra<Tensor>(id2, tmpS);
         Module<Tensor> main = fact.getModule(id1Co, id2Co);
-        ConvertAlgebra mainCo = new ConvertAlgebra(main, t1.getAlgebra());
+        ConvertAlgebra<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, t1.getAlgebra());
     
         TopoOrder topo = new TopoOrder();
         topo.add(id1); 
@@ -110,9 +110,9 @@ public class AbstractModuleTest {
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             TopoOrder topo = new TopoOrder();
             
-            Module<Tensor> in1Co = new ConvertAlgebra(in1, s);
+            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
             Module<Tensor> main = fact.getModule(in1Co);
-            Module<Tensor> mainCo = new ConvertAlgebra(main, Algebras.REAL_ALGEBRA);
+            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
             
             topo.add(in1Co);
             topo.add(main);
@@ -143,10 +143,10 @@ public class AbstractModuleTest {
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             TopoOrder topo = new TopoOrder();
             
-            Module<Tensor> in1Co = new ConvertAlgebra(in1, s);
-            Module<Tensor> in2Co = new ConvertAlgebra(in1, s);
+            Module<Tensor> in1Co = new ConvertAlgebra<Tensor>(in1, s);
+            Module<Tensor> in2Co = new ConvertAlgebra<Tensor>(in1, s);
             Module<Tensor> main = fact.getModule(in1Co, in2Co);
-            Module<Tensor> mainCo = new ConvertAlgebra(main, Algebras.REAL_ALGEBRA);
+            Module<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, Algebras.REAL_ALGEBRA);
             
             topo.add(in1Co);
             topo.add(in2Co);

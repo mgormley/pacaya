@@ -63,7 +63,7 @@ public class SoftmaxMbrDepParse extends AbstractTopoModule implements Module<Ten
     
     private void build() {
         // Internally we use a different algebra (tmpS) to avoid numerical precision problems.
-        ConvertAlgebra pIn1 = new ConvertAlgebra(pIn, tmpS);
+        ConvertAlgebra<Tensor> pIn1 = new ConvertAlgebra<Tensor>(pIn, tmpS);
         topo.add(pIn1);
         
         TensorIdentity ti = new TensorIdentity(Tensor.getScalarTensor(tmpS, tmpS.fromReal(temperature)));
@@ -87,7 +87,7 @@ public class SoftmaxMbrDepParse extends AbstractTopoModule implements Module<Ten
         ScalarDivide marg = new ScalarDivide(edgeSums, root, 0);
         topo.add(marg);
         
-        ConvertAlgebra conv = new ConvertAlgebra(marg, outS);
+        ConvertAlgebra<Tensor> conv = new ConvertAlgebra<Tensor>(marg, outS);
         topo.add(conv);
     }
     

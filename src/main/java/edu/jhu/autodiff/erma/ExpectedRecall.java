@@ -2,7 +2,7 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
@@ -19,7 +19,7 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class ExpectedRecall extends AbstractTensorModule implements Module<Tensor> {
+public class ExpectedRecall extends AbstractModule<Tensor> implements Module<Tensor> {
     
     /** Factory for expected recall loss without a decoder. */
     public static class ExpectedRecallFactory implements DlFactory {

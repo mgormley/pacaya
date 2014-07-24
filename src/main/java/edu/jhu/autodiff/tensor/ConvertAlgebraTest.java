@@ -20,9 +20,7 @@ import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class ConvertAlgebraTest {
-
-    private Algebra inS = new RealAlgebra();
-    private Algebra outS = new RealAlgebra();
+    
     public static List<Algebra> algebras3 = Lists.getList(new RealAlgebra(), new LogSemiring(), new LogSignAlgebra());
     public static List<Algebra> algebras2 = Lists.getList(new RealAlgebra(), new LogSignAlgebra());
 
@@ -32,7 +30,7 @@ public class ConvertAlgebraTest {
             for (Algebra outS : algebras3) {
                 Tensor t1 = ModuleTestUtils.getVectorFromReals(inS, 2, 3, 5);
                 TensorIdentity id1 = new TensorIdentity(t1);
-                ConvertAlgebra ea = new ConvertAlgebra(id1, outS);
+                ConvertAlgebra<Tensor> ea = new ConvertAlgebra<Tensor>(id1, outS);
 
                 Tensor out = ea.forward();
                 assertEquals(2, outS.toReal(out.getValue(0)), 1e-13);
@@ -60,9 +58,9 @@ public class ConvertAlgebraTest {
                 TopoOrder topo = new TopoOrder();
                 TensorIdentity id1 = new TensorIdentity(t1);
                 topo.add(id1);
-                ConvertAlgebra ea = new ConvertAlgebra(id1, outS);
+                ConvertAlgebra<Tensor> ea = new ConvertAlgebra<Tensor>(id1, outS);
                 topo.add(ea);
-                ConvertAlgebra ea2 = new ConvertAlgebra(ea, inS);
+                ConvertAlgebra<Tensor> ea2 = new ConvertAlgebra<Tensor>(ea, inS);
                 topo.add(ea2);
                 
                 TensorVecFn vecFn = new TensorVecFn((List) Lists.getList(id1), topo);

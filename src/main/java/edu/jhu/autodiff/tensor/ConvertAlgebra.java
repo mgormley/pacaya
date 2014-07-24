@@ -2,8 +2,9 @@ package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.ModuleTensor;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
@@ -12,11 +13,11 @@ import edu.jhu.util.semiring.Algebra;
  * Converts from the abstract algebra of the input to a given abstract algebra.
  * @author mgormley
  */
-public class ConvertAlgebra extends AbstractTensorModule implements Module<Tensor> {
+public class ConvertAlgebra<T extends ModuleTensor<T>> extends AbstractModule<T> implements Module<T> {
 
-    private Module<Tensor> modIn;
+    private Module<T> modIn;
     
-    public ConvertAlgebra(Module<Tensor> modIn, Algebra s) {
+    public ConvertAlgebra(Module<T> modIn, Algebra s) {
         super(s);
         this.modIn = modIn;
     }
@@ -26,8 +27,8 @@ public class ConvertAlgebra extends AbstractTensorModule implements Module<Tenso
      * x[i] is converted from a real to its semiring form.
      */
     @Override
-    public Tensor forward() {
-        Tensor x = modIn.getOutput();
+    public T forward() {
+        T x = modIn.getOutput();
         y = x.copyAndConvertAlgebra(s);
         return y;
     }
@@ -38,13 +39,13 @@ public class ConvertAlgebra extends AbstractTensorModule implements Module<Tenso
      */
     @Override
     public void backward() {
-        Tensor xAdj = modIn.getOutputAdj();
-        Tensor tmp = yAdj.copyAndConvertAlgebra(modIn.getAlgebra());
+        T xAdj = modIn.getOutputAdj();
+        T tmp = yAdj.copyAndConvertAlgebra(modIn.getAlgebra());
         xAdj.elemAdd(tmp);
     }
 
     @Override
-    public List<Module<Tensor>> getInputs() {
+    public List<Module<T>> getInputs() {
         return Lists.getList(modIn);
     }
     

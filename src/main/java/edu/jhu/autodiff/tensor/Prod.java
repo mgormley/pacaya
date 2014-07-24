@@ -2,7 +2,7 @@ package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
@@ -11,7 +11,7 @@ import edu.jhu.util.collections.Lists;
  * Sum of all the entries in the tensor.
  * @author mgormley
  */
-public class Prod extends AbstractTensorModule implements Module<Tensor> {
+public class Prod extends AbstractModule<Tensor> implements Module<Tensor> {
 
     private Module<Tensor> modIn;
     

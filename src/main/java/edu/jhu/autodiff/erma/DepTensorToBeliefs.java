@@ -2,6 +2,7 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.model.Var;
@@ -15,7 +16,7 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<Beliefs> {
+public class DepTensorToBeliefs extends AbstractModule<Beliefs> implements Module<Beliefs> {
 
     private Module<Tensor> depIn;
     private Module<Beliefs> inf;
@@ -31,9 +32,9 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
         Tensor dep = depIn.getOutput();
         int n = dep.getDims()[1];
         Beliefs origB = inf.getOutput();
-        b = new Beliefs(s);
-        b.varBeliefs = new VarTensor[origB.varBeliefs.length];
-        b.facBeliefs = null;
+        y = new Beliefs(s);
+        y.varBeliefs = new VarTensor[origB.varBeliefs.length];
+        y.facBeliefs = null;
         
         for (int v=0; v<origB.varBeliefs.length; v++) {
             Var var = origB.varBeliefs[v].getVars().get(0);
@@ -45,22 +46,22 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
                 assert p < n && c < n;
                 
                 // Initialize the belief tensor.
-                b.varBeliefs[v] = new VarTensor(s, origB.varBeliefs[v].getVars(), 0.0);
+                y.varBeliefs[v] = new VarTensor(s, origB.varBeliefs[v].getVars(), 0.0);
                 // Set the marginal p(e_{p,c} = True) and p(e_{p,c} = False).
-                b.varBeliefs[v].setValue(LinkVar.TRUE, dep.get(pp, c));
-                b.varBeliefs[v].setValue(LinkVar.FALSE, 1.0 - dep.get(pp, c));
+                y.varBeliefs[v].setValue(LinkVar.TRUE, dep.get(pp, c));
+                y.varBeliefs[v].setValue(LinkVar.FALSE, 1.0 - dep.get(pp, c));
             }
         }
-        return b;
+        return y;
     }
 
     @Override
     public void backward() {
         Tensor depAdj = depIn.getOutputAdj();
         int n = depAdj.getDims()[1];
-        for (int v=0; v<bAdj.varBeliefs.length; v++) {
-            if (bAdj.varBeliefs[v] != null) {
-                Var var = b.varBeliefs[v].getVars().get(0);
+        for (int v=0; v<yAdj.varBeliefs.length; v++) {
+            if (yAdj.varBeliefs[v] != null) {
+                Var var = y.varBeliefs[v].getVars().get(0);
                 if (var instanceof LinkVar) {
                     LinkVar link = (LinkVar) var;
                     int p = link.getParent();
@@ -69,7 +70,7 @@ public class DepTensorToBeliefs extends AbstractBeliefsModule implements Module<
                     assert p < n && c < n;
                     
                     // Add the adjoint of p(e_{p,c} = True).
-                    depAdj.add(bAdj.varBeliefs[v].getValue(LinkVar.TRUE), pp, c);
+                    depAdj.add(yAdj.varBeliefs[v].getValue(LinkVar.TRUE), pp, c);
                 }
             }
         }

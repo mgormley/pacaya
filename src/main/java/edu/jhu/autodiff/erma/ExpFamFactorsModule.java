@@ -2,8 +2,8 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
-import edu.jhu.autodiff.ModuleTensor;
 import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.ModuleTensor;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -93,7 +93,7 @@ public class ExpFamFactorsModule implements Module<Factors> {
     }
 
     @Override
-    public List<Module<? extends ModuleTensor>> getInputs() {
+    public List<Module<? extends ModuleTensor<?>>> getInputs() {
         return Lists.getList();
     }
 

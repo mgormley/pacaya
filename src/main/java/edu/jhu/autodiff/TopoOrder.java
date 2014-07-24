@@ -12,15 +12,15 @@ import com.google.common.collect.Lists;
  * 
  * @author mgormley
  */
-public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
+public class TopoOrder extends AbstractModule<Tensor> implements Module<Tensor> {
 
-    private List<Module<? extends ModuleTensor>> topoOrder = new ArrayList<Module<? extends ModuleTensor>>();
+    private List<Module<? extends ModuleTensor<?>>> topoOrder = new ArrayList<Module<? extends ModuleTensor<?>>>();
     protected Tensor y;
     protected Tensor yAdj;
 
     public TopoOrder() { super(null); }
     
-    public void add(Module<? extends ModuleTensor> m) {
+    public void add(Module<? extends ModuleTensor<?>> m) {
         topoOrder.add(m);
         s = m.getAlgebra();
     }
@@ -35,14 +35,14 @@ public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
 
     @Override
     public void backward() {
-        List<Module<? extends ModuleTensor>> revTopo = Lists.reverse(topoOrder);
-        for (Module<? extends ModuleTensor> m : revTopo) {
+        List<Module<? extends ModuleTensor<?>>> revTopo = Lists.reverse(topoOrder);
+        for (Module<? extends ModuleTensor<?>> m : revTopo) {
             m.backward();
         }
     }
 
     @Override
-    public List<Module<? extends ModuleTensor>> getInputs() {
+    public List<Module<? extends ModuleTensor<?>>> getInputs() {
         List inputs = new ArrayList();
         for (Module m : topoOrder) {
             inputs.add(m);
@@ -71,7 +71,7 @@ public class TopoOrder extends AbstractTensorModule implements Module<Tensor> {
         return (Module<Tensor>)topoOrder.get(topoOrder.size()-1);
     }
 
-    public List<Module<? extends ModuleTensor>> getTopoOrder() {
+    public List<Module<? extends ModuleTensor<?>>> getTopoOrder() {
         return topoOrder;
     }
     

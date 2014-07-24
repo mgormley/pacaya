@@ -822,6 +822,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
      * Computes the Bethe free energy of the factor graph. For acyclic graphs,
      * this is equal to -log(Z) where Z is the exact partition function. For 
      * loopy graphs it can be used as an approximation.
+     * 
+     * NOTE: The result of this call is always in the real semiring.
      */
     protected double getBetheFreeEnergy() {
         // 

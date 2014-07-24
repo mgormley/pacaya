@@ -8,7 +8,7 @@ import edu.jhu.util.collections.Lists;
  * This module is simply the identity function. 
  * @author mgormley
  */
-public class TensorIdentity extends AbstractTensorModule implements Module<Tensor> {
+public class TensorIdentity extends AbstractModule<Tensor> implements Module<Tensor> {
 
     public TensorIdentity(Tensor y) {
         super(y.getAlgebra());

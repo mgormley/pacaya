@@ -2,24 +2,24 @@ package edu.jhu.autodiff;
 
 import edu.jhu.util.semiring.Algebra;
 
-public abstract class AbstractTensorModule implements Module<Tensor> {
+public abstract class AbstractModule<T extends ModuleTensor<T>> implements Module<T> {
 
-    protected Tensor y;
-    protected Tensor yAdj;
+    protected T y;
+    protected T yAdj;
     // The output adjoint will be represented in this abstract algebra.
     protected Algebra s;
     
-    public AbstractTensorModule(Algebra s) {
+    public AbstractModule(Algebra s) {
         this.s = s;
     }
 
     @Override
-    public Tensor getOutput() {
+    public T getOutput() {
         return y;
     }
 
     @Override
-    public Tensor getOutputAdj() {
+    public T getOutputAdj() {
         if (yAdj == null) {
             yAdj = y.copyAndFill(s.zero());
         }
@@ -39,15 +39,15 @@ public abstract class AbstractTensorModule implements Module<Tensor> {
     @Override
     public String toString() {
         return this.getClass() + " [y=" + y + ", yAdj=" + yAdj + "]";
-    }    
-    
-    public static void checkEqualAlgebras(Module<Tensor> m1, Module<Tensor> m2) {
+    }
+
+    public static <T extends ModuleTensor<T>> void checkEqualAlgebras(Module<T> m1, Module<T> m2) {
         if (m1.getAlgebra().getClass() != m2.getAlgebra().getClass()) {
             throw new IllegalArgumentException("Algebras must be the same");
         }
     }
     
-    public static void checkEqualAlgebras(Module<Tensor> m1, Module<Tensor> m2, Module<Tensor> m3) {
+    public static <T extends ModuleTensor<T>> void checkEqualAlgebras(Module<T> m1, Module<T> m2, Module<T> m3) {
         checkEqualAlgebras(m1, m2);
         checkEqualAlgebras(m2, m3);
     }

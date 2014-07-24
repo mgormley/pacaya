@@ -2,7 +2,7 @@ package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
@@ -12,7 +12,7 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class Exp extends AbstractTensorModule implements Module<Tensor> {
+public class Exp extends AbstractModule<Tensor> implements Module<Tensor> {
 
     private Module<Tensor> modInX;
     

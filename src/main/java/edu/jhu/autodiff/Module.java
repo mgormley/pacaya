@@ -5,14 +5,14 @@ import java.util.List;
 import edu.jhu.util.semiring.Algebra;
 
 
-public interface Module<T extends ModuleTensor> {
+public interface Module<T extends ModuleTensor<T>> {
 
     T forward();
     void backward();
     T getOutput();
     T getOutputAdj();
     void zeroOutputAdj();
-    List<? extends Module<? extends ModuleTensor>> getInputs();
+    List<? extends Module<? extends ModuleTensor<?>>> getInputs();
     Algebra getAlgebra();
     
 }

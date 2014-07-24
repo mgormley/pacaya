@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
@@ -22,7 +22,7 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class MeanSquaredError extends AbstractTensorModule implements Module<Tensor> {
+public class MeanSquaredError extends AbstractModule<Tensor> implements Module<Tensor> {
     
     /** Factory for MSE loss without a decoder. */
     public static class MeanSquaredErrorFactory implements DlFactory {

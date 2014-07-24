@@ -2,7 +2,7 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.hypergraph.Hyperalgo;
@@ -26,7 +26,7 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class InsideOutsideDepParse extends AbstractTensorModule implements Module<Tensor> {
+public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Module<Tensor> {
     
     public static final int BETA_IDX = 0;
     public static final int ALPHA_IDX = 1;

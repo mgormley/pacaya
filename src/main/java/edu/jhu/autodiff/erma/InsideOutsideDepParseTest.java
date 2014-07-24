@@ -7,12 +7,12 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
-import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
+import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.LogSignAlgebra;
@@ -65,9 +65,9 @@ public class InsideOutsideDepParseTest {
         Tensor t1 = new Tensor(s, 2,2);
         t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
         TensorIdentity id1 = new TensorIdentity(t1);
-        ConvertAlgebra idCo = new ConvertAlgebra(id1, tmpS);
+        ConvertAlgebra<Tensor> idCo = new ConvertAlgebra<Tensor>(id1, tmpS);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(idCo);
-        ConvertAlgebra eaCo = new ConvertAlgebra(ea, s);
+        ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, s);
 
         TopoOrder topo = new TopoOrder();
         topo.add(id1); 

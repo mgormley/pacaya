@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.tensor.Combine;
@@ -49,7 +49,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
     }
     
     public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn, Algebra tmpS) {
-        AbstractTensorModule.checkEqualAlgebras(mTrueIn, mFalseIn);
+        AbstractModule.checkEqualAlgebras(mTrueIn, mFalseIn);
         this.mTrueIn = mTrueIn;
         this.mFalseIn = mFalseIn;
         this.outS = mTrueIn.getAlgebra();
@@ -61,7 +61,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
         // Construct the circuit.
         {
             // Initialize using the input tensors.
-            AbstractTensorModule.checkEqualAlgebras(mTrueIn, mFalseIn);
+            AbstractModule.checkEqualAlgebras(mTrueIn, mFalseIn);
             Tensor tmTrueIn = mTrueIn.getOutput();
             Tensor tmFalseIn = mFalseIn.getOutput();
             n = tmTrueIn.getDims()[1];
@@ -69,8 +69,8 @@ public class ProjDepTreeModule implements Module<Tensor> {
         }
         
         // Internally we use a different algebra to avoid numerical precision problems.
-        ConvertAlgebra mTrueIn1 = new ConvertAlgebra(mTrueIn, tmpS);
-        ConvertAlgebra mFalseIn1 = new ConvertAlgebra(mFalseIn, tmpS);
+        ConvertAlgebra<Tensor> mTrueIn1 = new ConvertAlgebra<Tensor>(mTrueIn, tmpS);
+        ConvertAlgebra<Tensor> mFalseIn1 = new ConvertAlgebra<Tensor>(mFalseIn, tmpS);
         
         Prod pi = new Prod(mFalseIn1);
         ElemDivide weights = new ElemDivide(mTrueIn1, mFalseIn1);
@@ -106,8 +106,8 @@ public class ProjDepTreeModule implements Module<Tensor> {
         TakeLeftIfZero mTrueOut1 = new TakeLeftIfZero(mTrueIn1, mTrueOut0, inProd);
         TakeLeftIfZero mFalseOut1 = new TakeLeftIfZero(mFalseIn1, mFalseOut0, inProd);
 
-        ConvertAlgebra mTrueOut = new ConvertAlgebra(mTrueOut1, outS);
-        ConvertAlgebra mFalseOut = new ConvertAlgebra(mFalseOut1, outS);        
+        ConvertAlgebra<Tensor> mTrueOut = new ConvertAlgebra<Tensor>(mTrueOut1, outS);
+        ConvertAlgebra<Tensor> mFalseOut = new ConvertAlgebra<Tensor>(mFalseOut1, outS);        
         comb = new Combine(mFalseOut, mTrueOut);
         
         topoOrder = Lists.getList(mTrueIn1, mFalseIn1, pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
@@ -179,7 +179,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
     }
 
     private void checkAndFixPartition(Module<Tensor> bTrue, Module<Tensor> module) {
-        AbstractTensorModule.checkEqualAlgebras(bTrue, module);
+        AbstractModule.checkEqualAlgebras(bTrue, module);
         Algebra s = bTrue.getAlgebra();
         // Correct for the case where the partition function is smaller
         // than some of the beliefs.
@@ -245,7 +245,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
      * 
      * @author mgormley
      */
-    public static class TakeLeftIfZero extends AbstractTensorModule implements Module<Tensor> {
+    public static class TakeLeftIfZero extends AbstractModule<Tensor> implements Module<Tensor> {
         
         Module<Tensor> leftIn; 
         Module<Tensor> rightIn; 

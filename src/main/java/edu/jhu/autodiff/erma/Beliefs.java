@@ -5,7 +5,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
-public class Beliefs implements ModuleTensor {
+public class Beliefs implements ModuleTensor<Beliefs> {
     
     public VarTensor[] varBeliefs;
     public VarTensor[] facBeliefs;
@@ -26,6 +26,13 @@ public class Beliefs implements ModuleTensor {
         clone.facBeliefs = copyOfVarTensorArray(this.facBeliefs);
         return clone;
     }
+    
+    public Beliefs copyAndConvertAlgebra(Algebra newS) {
+        Beliefs clone = new Beliefs(newS);
+        clone.varBeliefs = copyAndConvertAlgebraOfVarTensorArray(this.varBeliefs, newS);
+        clone.facBeliefs = copyAndConvertAlgebraOfVarTensorArray(this.facBeliefs, newS);
+        return clone;
+    }
 
     public void fill(double val) {
         fillVarTensorArray(varBeliefs, val);
@@ -42,7 +49,6 @@ public class Beliefs implements ModuleTensor {
         return count(varBeliefs) + count(facBeliefs);
     }
 
-    @Override
     public double setValue(int idx, double val) {
         int vSize = count(varBeliefs);
         if (idx < vSize) {
@@ -50,6 +56,12 @@ public class Beliefs implements ModuleTensor {
         } else {
             return setValue(idx - vSize, val, facBeliefs);
         }
+    }
+
+    @Override
+    public void elemAdd(Beliefs addend) {
+        addVarTensorArray(this.varBeliefs, addend.varBeliefs);
+        addVarTensorArray(this.facBeliefs, addend.facBeliefs);
     }
 
     /* --------------------------------------------------------- */
@@ -78,6 +90,19 @@ public class Beliefs implements ModuleTensor {
         }
         return clone;
     }
+    
+    public static VarTensor[] copyAndConvertAlgebraOfVarTensorArray(VarTensor[] orig, Algebra newS) {
+        if (orig == null) {
+            return null;
+        }
+        VarTensor[] clone = new VarTensor[orig.length];
+        for (int v = 0; v < clone.length; v++) {
+            if (orig[v] != null) {
+                clone[v] = orig[v].copyAndConvertAlgebra(newS);
+            }
+        }
+        return clone;
+    }
 
     public static void fillVarTensorArray(VarTensor[] beliefs, double val) {
         if (beliefs != null) {
@@ -100,6 +125,15 @@ public class Beliefs implements ModuleTensor {
             }
         }
         throw new RuntimeException("Index out of bounds: " + idx);
+    }
+    
+    public static void addVarTensorArray(VarTensor[] b1, VarTensor[] addend) {
+        assert b1.length == addend.length;
+        for (int i = 0; i < b1.length; i++) {            
+            if (b1[i] != null) {
+                b1[i].elemAdd(addend[i]);
+            }
+        }
     }
     
 }

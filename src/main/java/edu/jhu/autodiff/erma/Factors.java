@@ -5,7 +5,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for potential tables of a factor graph. */
-public class Factors implements ModuleTensor {
+public class Factors implements ModuleTensor<Factors> {
     
     public VarTensor[] f;
     public Algebra s;
@@ -21,6 +21,12 @@ public class Factors implements ModuleTensor {
     public Factors copy() {
         Factors clone = new Factors(s);
         clone.f = Beliefs.copyOfVarTensorArray(this.f);
+        return clone;
+    }
+
+    public Factors copyAndConvertAlgebra(Algebra newS) {
+        Factors clone = new Factors(newS);
+        clone.f = Beliefs.copyAndConvertAlgebraOfVarTensorArray(this.f, newS);
         return clone;
     }
 
@@ -40,6 +46,10 @@ public class Factors implements ModuleTensor {
 
     public double setValue(int idx, double val) {
         return Beliefs.setValue(idx, val, f);
+    }
+    
+    public void elemAdd(Factors addend) {
+        Beliefs.addVarTensorArray(this.f, addend.f);
     }
     
 }
