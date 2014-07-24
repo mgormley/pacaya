@@ -10,6 +10,7 @@ import org.junit.Test;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -28,7 +29,7 @@ public class ConvertAlgebraTest {
     public void testForwardAndBackward() {
         for (Algebra inS : algebras3) {
             for (Algebra outS : algebras3) {
-                Tensor t1 = ModuleTestUtils.getVectorFromReals(inS, 2, 3, 5);
+                Tensor t1 = TensorUtils.getVectorFromReals(inS, 2, 3, 5);
                 TensorIdentity id1 = new TensorIdentity(t1);
                 ConvertAlgebra<Tensor> ea = new ConvertAlgebra<Tensor>(id1, outS);
 
@@ -54,7 +55,7 @@ public class ConvertAlgebraTest {
     public void testGradByFiniteDiffs() {
         for (Algebra inS : algebras2) {
             for (Algebra outS : algebras2) {
-                Tensor t1 = ModuleTestUtils.getVector(inS, inS.fromReal(2), inS.fromReal(3), inS.fromReal(5));
+                Tensor t1 = TensorUtils.getVectorFromValues(inS, inS.fromReal(2), inS.fromReal(3), inS.fromReal(5));
                 TopoOrder topo = new TopoOrder();
                 TensorIdentity id1 = new TensorIdentity(t1);
                 topo.add(id1);

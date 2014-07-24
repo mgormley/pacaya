@@ -12,6 +12,7 @@ import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
@@ -53,7 +54,7 @@ public class SoftmaxMbrDepParseTest {
     private void helpSimple(Algebra tmpS) {
         double T = 2;
         Tensor t1 = new Tensor(s, 2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
+        t1.setValuesOnly(TensorUtils.getVectorFromValues(s, 2, 3, 5, 7));
         // Take the log and multiply by T so that forward yields the same result as the test 
         // in InsideOutsideDepParseTest.
         t1.log();
@@ -93,7 +94,7 @@ public class SoftmaxMbrDepParseTest {
     private void helpSimple2(Algebra tmpS) {
         double T = 1;
         Tensor t1 = new Tensor(s, 2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVectorFromReals(s, .2, .3, .5, .7));
+        t1.setValuesOnly(TensorUtils.getVectorFromReals(s, .2, .3, .5, .7));
         // Take the log and multiply by T so that forward yields the same result as the test 
         // in InsideOutsideDepParseTest.
         //t1.log();

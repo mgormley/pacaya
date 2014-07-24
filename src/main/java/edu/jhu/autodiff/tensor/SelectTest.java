@@ -7,10 +7,10 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -20,7 +20,7 @@ public class SelectTest {
 
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = ModuleTestUtils.get3DTensor(s, 2, 3, 5);
+        Tensor t1 = TensorUtils.get3DTensor(s, 2, 3, 5);
                 
         TensorIdentity id1 = new TensorIdentity(t1);
         Select ea = new Select(id1, 1, 2);
@@ -53,7 +53,7 @@ public class SelectTest {
 
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
-        TensorIdentity id1 = new TensorIdentity(ModuleTestUtils.get3DTensor(s, 2, 3, 5));
+        TensorIdentity id1 = new TensorIdentity(TensorUtils.get3DTensor(s, 2, 3, 5));
 
         Tensor1Factory fact = new Tensor1Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1) {

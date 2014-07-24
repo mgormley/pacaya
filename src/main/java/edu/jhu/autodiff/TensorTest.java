@@ -143,8 +143,8 @@ public class TensorTest {
     
     @Test
     public void testDotProduct() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(s, -4, 6, 7);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
+        Tensor t2 = TensorUtils.getVectorFromValues(s, -4, 6, 7);
         
         assertEquals(2*-4 + 3*6 + 5*7, t1.getDotProduct(t2), 1e-13);
     }

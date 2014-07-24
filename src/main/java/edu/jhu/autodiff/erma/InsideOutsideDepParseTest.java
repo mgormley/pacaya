@@ -8,9 +8,9 @@ import org.junit.Test;
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.util.semiring.Algebra;
@@ -63,7 +63,7 @@ public class InsideOutsideDepParseTest {
 
     private void helpForwardBackward(Algebra tmpS) {
         Tensor t1 = new Tensor(s, 2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVector(s, 2, 3, 5, 7));
+        t1.setValuesOnly(TensorUtils.getVectorFromValues(s, 2, 3, 5, 7));
         TensorIdentity id1 = new TensorIdentity(t1);
         ConvertAlgebra<Tensor> idCo = new ConvertAlgebra<Tensor>(id1, tmpS);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(idCo);

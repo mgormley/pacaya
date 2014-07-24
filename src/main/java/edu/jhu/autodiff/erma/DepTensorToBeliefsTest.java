@@ -4,9 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -17,7 +17,7 @@ public class DepTensorToBeliefsTest {
     @Test
     public void testSimple() {
         Tensor t1 = new Tensor(s, 2,2);
-        t1.setValuesOnly(ModuleTestUtils.getVector(s, .2, .3, .5, .7));
+        t1.setValuesOnly(TensorUtils.getVectorFromValues(s, .2, .3, .5, .7));
         TensorIdentity id1 = new TensorIdentity(t1);
 
         BeliefsIdentity inf = DepTensorFromBeliefsTest.getBeliefsModule();

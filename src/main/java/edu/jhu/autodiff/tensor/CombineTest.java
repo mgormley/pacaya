@@ -7,10 +7,10 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -21,8 +21,8 @@ public class CombineTest {
     @Test
     public void testForwardAndBackward() {
 
-        Tensor t1 = ModuleTestUtils.getVector(s, 1, 2, 3);
-        Tensor t2 = ModuleTestUtils.getVector(s, 4, 5, 6);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 1, 2, 3);
+        Tensor t2 = TensorUtils.getVectorFromValues(s, 4, 5, 6);
         TensorIdentity id1 = new TensorIdentity(t1);
         TensorIdentity id2 = new TensorIdentity(t2);
         Combine ea = new Combine(id1, id2);

@@ -4,9 +4,9 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -16,11 +16,11 @@ public class ProdTest {
     
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
         
-        Tensor expOut = ModuleTestUtils.getVector(s, 2.*3.*5.);
+        Tensor expOut = TensorUtils.getVectorFromValues(s, 2.*3.*5.);
         double adjFill = 2.2;
-        Tensor expT1Adj = ModuleTestUtils.getVector(s, 
+        Tensor expT1Adj = TensorUtils.getVectorFromValues(s, 
                 2.2 * 3 * 5,
                 2.2 * 2 * 5,
                 2.2 * 2 * 3);

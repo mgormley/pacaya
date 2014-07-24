@@ -20,7 +20,7 @@ public class TopoOrderTest {
     public void testSimple() {
         TopoOrder topo = new TopoOrder();
         
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
         TensorIdentity id1 = new TensorIdentity(t1);
         
         Sum s = new Sum(id1);
@@ -50,7 +50,7 @@ public class TopoOrderTest {
     public void testGradByFiniteDiffs() {
         TopoOrder topo = new TopoOrder();
         
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
         TensorIdentity id1 = new TensorIdentity(t1);
         
         Sum s = new Sum(id1);

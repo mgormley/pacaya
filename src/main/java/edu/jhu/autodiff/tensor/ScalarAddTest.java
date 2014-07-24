@@ -4,9 +4,9 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -16,16 +16,16 @@ public class ScalarAddTest {
 
     @Test
     public void testForwardAndBackward() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
+        Tensor t2 = TensorUtils.getVectorFromValues(s, 4, 6, 7);
         
-        Tensor expOut = ModuleTestUtils.getVector(s, 
+        Tensor expOut = TensorUtils.getVectorFromValues(s, 
                 2 + 6, 
                 3 + 6, 
                 5 + 6);
         double adjFill = 2.2;
-        Tensor expT1Adj = ModuleTestUtils.getVector(s, 2.2, 2.2, 2.2);
-        Tensor expT2Adj = ModuleTestUtils.getVector(s, 0, 2.2*3, 0);
+        Tensor expT1Adj = TensorUtils.getVectorFromValues(s, 2.2, 2.2, 2.2);
+        Tensor expT2Adj = TensorUtils.getVectorFromValues(s, 0, 2.2*3, 0);
         
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {

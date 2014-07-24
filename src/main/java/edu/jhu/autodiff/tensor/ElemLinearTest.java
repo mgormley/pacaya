@@ -4,9 +4,9 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
@@ -16,15 +16,15 @@ public class ElemLinearTest {
 
     @Test
     public void testSimple() {
-        Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
+        Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
+        Tensor t2 = TensorUtils.getVectorFromValues(s, 4, 6, 7);
         
-        Tensor expOut = ModuleTestUtils.getVector(s, 
+        Tensor expOut = TensorUtils.getVectorFromValues(s, 
                 2*.3 + 4*.7, 
                 3*.3 + 6*.7, 
                 5*.3 + 7*.7);
-        Tensor expT1Adj = ModuleTestUtils.getVector(s, 2.2*.3, 2.2*.3, 2.2*.3);
-        Tensor expT2Adj = ModuleTestUtils.getVector(s, 2.2*.7, 2.2*.7, 2.2*.7);
+        Tensor expT1Adj = TensorUtils.getVectorFromValues(s, 2.2*.3, 2.2*.3, 2.2*.3);
+        Tensor expT2Adj = TensorUtils.getVectorFromValues(s, 2.2*.7, 2.2*.7, 2.2*.7);
         
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {

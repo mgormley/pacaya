@@ -95,7 +95,7 @@ public class AbstractModuleTest {
 
     /** Same as below, but uses one 3 dimensional input tensors. */
     public static void evalTensor1ByFiniteDiffs(Tensor1Factory fact) {
-        Tensor t1 = ModuleTestUtils.getVector(Algebras.REAL_ALGEBRA, 2, 3, 5);
+        Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
         TensorIdentity in1 = new TensorIdentity(t1);
         evalTensor1ByFiniteDiffs(fact, in1);
     }
@@ -125,8 +125,8 @@ public class AbstractModuleTest {
 
     /** Same as below, but uses two 3 dimensional input tensors. */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact) {
-        Tensor t1 = ModuleTestUtils.getVector(Algebras.REAL_ALGEBRA, 2, 3, 5);
-        Tensor t2 = ModuleTestUtils.getVector(Algebras.REAL_ALGEBRA, 4, 6, 7);
+        Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
+        Tensor t2 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 4, 6, 7);
         TensorIdentity in1 = new TensorIdentity(t1);
         TensorIdentity in2 = new TensorIdentity(t2);
         evalTensor2ByFiniteDiffs(fact, in1, in2);
