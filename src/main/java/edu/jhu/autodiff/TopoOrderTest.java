@@ -5,6 +5,9 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
+import edu.jhu.autodiff.tensor.Exp;
+import edu.jhu.autodiff.tensor.ScalarAdd;
+import edu.jhu.autodiff.tensor.Sum;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;

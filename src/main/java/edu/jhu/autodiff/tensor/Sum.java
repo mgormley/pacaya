@@ -1,31 +1,32 @@
-package edu.jhu.autodiff;
+package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
+import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
 
 /**
  * Sum of all the entries in the tensor.
  * @author mgormley
  */
-public class Select extends AbstractTensorModule implements Module<Tensor> {
+public class Sum extends AbstractTensorModule implements Module<Tensor> {
 
     private Module<Tensor> modIn;
-    private int dim; // In comments below, d.
-    private int idx; // In comments below, k.
     
-    public Select(Module<Tensor> modIn, int dim, int idx) {
+    public Sum(Module<Tensor> modIn) {
         super(modIn.getAlgebra());
+        checkEqualAlgebras(this, modIn);
         this.modIn = modIn;
-        this.dim = dim;
-        this.idx = idx;
     }
     
-    /** Foward pass: y[i] = x[j], where j = (i1, i2, ..., i(d-1), k, i(d+1), ..., i(n)) */
+    /** Foward pass: y = \sum_{i=1}^n x_i */
     @Override
     public Tensor forward() {
         Tensor x = modIn.getOutput();
-        y = x.select(dim, idx);
+        y = new Tensor(s, 1);
+        y.setValue(0, x.getSum());
         return y;
     }
 
@@ -33,7 +34,7 @@ public class Select extends AbstractTensorModule implements Module<Tensor> {
     @Override
     public void backward() {
         Tensor xAdj = modIn.getOutputAdj();
-        xAdj.addTensor(yAdj, dim, idx);
+        xAdj.add(yAdj.getValue(0));
     }
 
     @Override

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
+import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;

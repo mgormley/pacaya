@@ -2,11 +2,11 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
-import edu.jhu.autodiff.ElemLinear;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
+import edu.jhu.autodiff.tensor.ElemLinear;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;

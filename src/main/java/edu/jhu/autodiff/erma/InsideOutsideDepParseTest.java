@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
-import edu.jhu.autodiff.ConvertAlgebra;
+import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;

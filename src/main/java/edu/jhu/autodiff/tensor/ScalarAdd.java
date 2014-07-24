@@ -1,22 +1,25 @@
-package edu.jhu.autodiff;
+package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
+import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
 
 /**
- * Fills each entry in a tensor with a scalar from another tensor.
+ * Addition of each entry in a tensor by a scalar from another tensor.
  * 
  * @author mgormley
  */
-public class ScalarFill extends AbstractTensorModule implements Module<Tensor> {
+public class ScalarAdd extends AbstractTensorModule implements Module<Tensor> {
 
     private Module<Tensor> modInX;
     private Module<Tensor> modInW;
     // The index in w, which should be multiplied each x entry.
     private int k;
     
-    public ScalarFill(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
+    public ScalarAdd(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
         super(modInX.getAlgebra());
         checkEqualAlgebras(this, modInX, modInW);
         this.modInX = modInX;
@@ -24,24 +27,24 @@ public class ScalarFill extends AbstractTensorModule implements Module<Tensor> {
         this.k = k;
     }
     
-    /** Foward pass: y_i = w_k */
+    /** Foward pass: y_i = x_i + w_k */
     @Override
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         double w_k = modInW.getOutput().getValue(k);
         y = x.copy();
-        y.fill(w_k);
+        y.add(w_k);
         return y;
     }
 
     /** 
      * Backward pass: 
-     *    dG/dx_i += dG/dy_i dy_i/dx_i = 0
+     *    dG/dx_i += dG/dy_i dy_i/dx_i = dG/dy_i
      *    dG/dw_k += \sum_{i=1}^n dG/dy_i dy_i/dw_k = \sum_{i=1}^n dG/dy_i
      */
     @Override
     public void backward() {
-        modInX.getOutputAdj();
+        modInX.getOutputAdj().elemAdd(yAdj);
         modInW.getOutputAdj().addValue(k, yAdj.getSum());
     }
 

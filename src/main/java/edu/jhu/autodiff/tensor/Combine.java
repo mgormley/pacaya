@@ -1,7 +1,10 @@
-package edu.jhu.autodiff;
+package edu.jhu.autodiff.tensor;
 
 import java.util.List;
 
+import edu.jhu.autodiff.AbstractTensorModule;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
 
 /**

@@ -4,14 +4,14 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.autodiff.ConvertAlgebra;
-import edu.jhu.autodiff.ElemMultiply;
-import edu.jhu.autodiff.Exp;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ScalarDivide;
-import edu.jhu.autodiff.Select;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.tensor.ConvertAlgebra;
+import edu.jhu.autodiff.tensor.ElemMultiply;
+import edu.jhu.autodiff.tensor.Exp;
+import edu.jhu.autodiff.tensor.ScalarDivide;
+import edu.jhu.autodiff.tensor.Select;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSignAlgebra;

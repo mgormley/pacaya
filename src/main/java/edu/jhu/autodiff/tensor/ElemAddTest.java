@@ -1,31 +1,35 @@
-package edu.jhu.autodiff;
+package edu.jhu.autodiff.tensor;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.Algebras;
 
-public class ScalarAddTest {
+public class ElemAddTest {
 
-    private Algebra s = new RealAlgebra();
-
+    private Algebra s = Algebras.REAL_ALGEBRA;
+    
     @Test
     public void testForwardAndBackward() {
         Tensor t1 = ModuleTestUtils.getVector(s, 2, 3, 5);
         Tensor t2 = ModuleTestUtils.getVector(s, 4, 6, 7);
         
         Tensor expOut = ModuleTestUtils.getVector(s, 
-                2 + 6, 
+                2 + 4, 
                 3 + 6, 
-                5 + 6);
+                5 + 7);
         double adjFill = 2.2;
-        Tensor expT1Adj = ModuleTestUtils.getVector(s, 2.2, 2.2, 2.2);
-        Tensor expT2Adj = ModuleTestUtils.getVector(s, 0, 2.2*3, 0);
+        Tensor expT1Adj = ModuleTestUtils.getVector(s, adjFill, adjFill, adjFill);
+        Tensor expT2Adj = ModuleTestUtils.getVector(s, adjFill, adjFill, adjFill);
         
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
-                return new ScalarAdd(m1, m2, 1);
+                return new ElemAdd(m1, m2);
             }
         };
         
@@ -36,7 +40,7 @@ public class ScalarAddTest {
     public void testGradByFiniteDiffsAllSemirings() {
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
-                return new ScalarAdd(m1, m2, 1);
+                return new ElemAdd(m1, m2);
             }
         };        
         AbstractModuleTest.evalTensor2ByFiniteDiffs(fact);
