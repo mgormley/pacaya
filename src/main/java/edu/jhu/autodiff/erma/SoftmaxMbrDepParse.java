@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.autodiff.tensor.ElemMultiply;
 import edu.jhu.autodiff.tensor.Exp;
@@ -29,14 +30,9 @@ import edu.jhu.util.semiring.RealAlgebra;
  * 
  * @author mgormley
  */
-public class SoftmaxMbrDepParse extends AbstractTopoModule implements Module<Tensor> {
+public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tensor> {
 
     private static final Logger log = Logger.getLogger(SoftmaxMbrDepParse.class);
-
-    private Module<Tensor> pIn;
-    private double temperature;
-    // The internal semiring.
-    private Algebra tmpS;
     
     /**
      * Constructor with a default internal semiring.
@@ -54,60 +50,34 @@ public class SoftmaxMbrDepParse extends AbstractTopoModule implements Module<Ten
      * @param tmpS The semiring used only internally.
      */
     public SoftmaxMbrDepParse(Module<Tensor> margIn, double temperature, Algebra tmpS) {
-        super(margIn.getAlgebra());
-        this.pIn = margIn;
-        this.temperature = temperature;
-        this.tmpS = tmpS;
-        build();
+        super(Lists.getList(margIn), build(margIn, temperature, tmpS));
     }
     
-    private void build() {
+    private static Module<Tensor> build(Module<Tensor> pIn, double temperature, Algebra tmpS) {
+        Algebra outS = pIn.getAlgebra();
+
         // Internally we use a different algebra (tmpS) to avoid numerical precision problems.
         ConvertAlgebra<Tensor> pIn1 = new ConvertAlgebra<Tensor>(pIn, tmpS);
-        topo.add(pIn1);
         
         TensorIdentity ti = new TensorIdentity(Tensor.getScalarTensor(tmpS, tmpS.fromReal(temperature)));
-        topo.add(ti);
         ScalarDivide divide = new ScalarDivide(pIn1, ti, 0);
-        topo.add(divide);
         Exp exp = new Exp(divide);
-        topo.add(exp);
         InsideOutsideDepParse io = new InsideOutsideDepParse(exp);
-        topo.add(io);
         
         // Compute marginals
         Select alphas = new Select(io, 0, InsideOutsideDepParse.ALPHA_IDX);
-        topo.add(alphas);
         Select betas = new Select(io, 0, InsideOutsideDepParse.BETA_IDX);
-        topo.add(betas);
         Select root = new Select(io, 0, InsideOutsideDepParse.ROOT_IDX); // The first entry in this selection is for the root.
-        topo.add(root);
         ElemMultiply edgeSums = new ElemMultiply(alphas, betas);
-        topo.add(edgeSums);
         ScalarDivide marg = new ScalarDivide(edgeSums, root, 0);
-        topo.add(marg);
         
         ConvertAlgebra<Tensor> conv = new ConvertAlgebra<Tensor>(marg, outS);
-        topo.add(conv);
-    }
-    
-    @Override
-    public Tensor forward() {                
-        return topo.forward();
-    }
 
-    @Override
-    public void backward() {
-        topo.backward();
-    }
-
-    @Override
-    public List<Module<Tensor>> getInputs() {
-        return Lists.getList(pIn);
+        return conv;
     }
 
     public void report() {
-        for (Module<? extends Object> mm : topo.getTopoOrder()) {
+        for (Module<? extends Object> mm : this.getTopoOrder()) {
             Module<Tensor> m = (Module<Tensor>) mm;
             System.out.println("Module: " + m.getClass());
             System.out.println("Algebra: " + m.getAlgebra().getClass());

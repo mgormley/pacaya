@@ -7,7 +7,6 @@ import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.autodiff.tensor.ElemLinear;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
@@ -19,7 +18,7 @@ import edu.jhu.util.semiring.LogSignAlgebra;
  * 
  * @author mgormley
  */
-public class DepParseDecodeLoss extends AbstractTopoModule implements Module<Tensor> {
+public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tensor> {
     
     /**
      * This factory defines the decoder / loss module as non-stationary: the softmax parameter on
@@ -33,20 +32,17 @@ public class DepParseDecodeLoss extends AbstractTopoModule implements Module<Ten
         public boolean annealMse = true;
         
         @Override
-        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, int curIter, int maxIter) {
+        public Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
+            double temperature = getTemperature(curIter, maxIter);
+            
             if (annealMse) {
-                Module<Tensor> mse = new MeanSquaredError(inf, goldConfig);
-                double temperature = getTemperature(curIter, maxIter);
-                Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temperature);
                 double prop = (double) curIter / maxIter;
+                
+                Module<Tensor> mse = new MeanSquaredError(inf, goldConfig);
+                Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temperature);                
                 Module<Tensor> lin = new ElemLinear(mse, dep, (1.0-prop), prop);
-                TopoOrder topo = new TopoOrder();
-                topo.add(mse);
-                topo.add(dep);
-                topo.add(lin);
-                return topo;   
+                return new TopoOrder<Tensor>(Lists.getList(inf), lin);
             } else {
-                double temperature = getTemperature(curIter, maxIter);
                 return new DepParseDecodeLoss(inf, goldConfig, temperature);
             }
         }
@@ -58,46 +54,22 @@ public class DepParseDecodeLoss extends AbstractTopoModule implements Module<Ten
             return temp;
         }
     }
-    
-    private Module<Beliefs> inf;
-    private VarConfig goldConfig;
-    private double temperature;
-    
+        
     public DepParseDecodeLoss(Module<Beliefs> inf, VarConfig vc, double temperature) {
-        super(inf.getAlgebra());
-        this.inf = inf;
-        this.goldConfig = vc;
-        this.temperature = temperature;
-        build();
+        super(Lists.getList(inf), build(inf, vc, temperature));
     }
 
-    private void build() {
+    private static Module<Tensor> build(Module<Beliefs> inf, VarConfig goldConfig, double temperature) {
         // Decoding.
         DepTensorFromBeliefs b2d = new DepTensorFromBeliefs(inf);
-        topo.add(b2d);
         SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, new LogSignAlgebra());
-        topo.add(mbr);
         DepTensorToBeliefs d2b = new DepTensorToBeliefs(mbr, inf);
-        topo.add(d2b);
 
         // Loss.
         VarSet predVars = VarSet.getVarsOfType(goldConfig.getVars(), VarType.PREDICTED);
         VarConfig predConfig = goldConfig.getSubset(predVars);
         ExpectedRecall er = new ExpectedRecall(d2b, predConfig);
-        topo.add(er);
-    }
-    
-    public Tensor forward() {        
-        return topo.forward();
-    }
-    
-    public void backward() {
-        topo.backward();
-    }
-    
-    @Override
-    public List<Module<Beliefs>> getInputs() {
-        return Lists.getList(inf);
+        return er;
     }
     
 }

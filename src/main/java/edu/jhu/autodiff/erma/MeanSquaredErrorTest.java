@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.ModuleTestUtils.BeliefsVecFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -73,8 +72,7 @@ public class MeanSquaredErrorTest {
     public void testGradByFiniteDiffs() {
         Algebra s = new RealAlgebra();
         MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);        
-        BeliefsVecFn vecFn = new BeliefsVecFn(id1, mse);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+        ModuleTestUtils.assertFdAndAdEqual(mse, 1e-5, 1e-8);
         // TODO: for (Algebra s : Lists.getList(new RealAlgebra(), new LogPosNegAlgebra())) {  }
     }
 

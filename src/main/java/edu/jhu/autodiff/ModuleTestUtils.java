@@ -17,232 +17,96 @@ import edu.jhu.util.dist.Gaussian;
 public class ModuleTestUtils {
 
     private ModuleTestUtils() { }
-
-    /**
-     * Vector function mapping R^n ==> R^m.
-     * Used to test modules by treating them as a differentiable function.
-     * @author mgormley
-     */
-    public interface VecFn {
-        int getNumDimensions();
-        Tensor getOutputAdj();
-        Tensor forward(IntDoubleVector point);
-        IntDoubleVector forwardAndBackward(IntDoubleVector point, Tensor outAdj);        
-    }
-    
-    /**
-     * Vector function that has a list of tensor modules as input.
-     * @author mgormley
-     */
-    public static class TensorVecFn implements VecFn {
-    
-        List<Module<Tensor>> inputs; 
-        Module<Tensor> output;
-        int totInDimension;
         
-        public TensorVecFn(List<Module<Tensor>> inputs, Module<Tensor> output) {
-            // TODO: find the inputs (i.e. leaves) by DFS.
-            this.inputs = inputs;
-            this.output = output;
-            computeTotInDimension();
-        }
-        
-        public TensorVecFn(Module<Tensor> input, Module<Tensor> output) {
-            this(Lists.getList(input), output);
-        }
-    
-        private void computeTotInDimension() {
-            totInDimension = 0;
-            for (Module<Tensor> input : inputs) {
-                totInDimension += input.getOutput().size();
-            }
-        }
-    
-        public int getNumDimensions() {
-            return totInDimension;
-        }
-        
-        public Tensor forward(IntDoubleVector point) {
-            // Populate the inputs with the point.
-            int idx = 0;
-            for (Module<Tensor> input : inputs) {
-                Tensor x = input.getOutput();
-                int size = x.size();
-                for (int c=0; c<size; c++) {
-                    x.setValue(c, point.get(idx++));
-                }
-            }
-            // Run the forward pass.
-            return output.forward();
-        }
-        
-        public IntDoubleVector forwardAndBackward(IntDoubleVector point, Tensor outputAdj) {
-            zeroOutputAdjs(output);
-            // Run the forward pass.
-            forward(point);
-            // Set the adjoint.
-            output.getOutputAdj().set(outputAdj);
-            // Run the backward pass.
-            output.backward();
-            
-            // Populate the output vector with the adjoints.
-            IntDoubleVector grad = new IntDoubleDenseVector(totInDimension);
-            int idx=0;
-            for (Module<Tensor> input : inputs) {
-                Tensor xAdj = input.getOutputAdj();
-                int size = xAdj.size();
-                for (int c=0; c<size; c++) {
-                    grad.set(idx++, xAdj.getValue(c));
-                }
-            }
-            return grad;
-        }
-
-        private void zeroOutputAdjs(Module<? extends Object> output) {
-            output.zeroOutputAdj();
-            for (Object input : output.getInputs()) {
-                zeroOutputAdjs((Module)input);
-            }
-        }
-
-        public Tensor getOutputAdj() {
-            return output.getOutputAdj();
-        }
-        
-    }
-
-    /**
-     * Vector function that has a list of beliefs modules as input.
-     * @author mgormley
-     */
-    public static class BeliefsVecFn implements VecFn {
-    
-        List<Module<Beliefs>> inputs; 
-        Module<Tensor> output;
-        int totInDimension;
-        
-        public BeliefsVecFn(List<Module<Beliefs>> inputs, Module<Tensor> output) {
-            // TODO: find the inputs (i.e. leaves) by DFS.
-            this.inputs = inputs;
-            this.output = output;
-            computeTotInDimension();
-        }
-        
-        public BeliefsVecFn(Module<Beliefs> input, Module<Tensor> output) {
-            this(Lists.getList(input), output);
-        }
-    
-        private void computeTotInDimension() {
-            totInDimension = 0;
-            for (Module<Beliefs> input : inputs) {
-                totInDimension += input.getOutput().size();
-            }
-        }
-    
-        public int getNumDimensions() {
-            return totInDimension;
-        }
-        
-        public Tensor forward(IntDoubleVector point) {
-            // Populate the inputs with the point.
-            int idx = 0;
-            for (Module<Beliefs> input : inputs) {
-                Beliefs b = input.getOutput();
-                for (int i=0; i<2; i++) {
-                    VarTensor[] beliefs = (i==0) ? b.varBeliefs : b.facBeliefs;
-                    for (int j=0; j<beliefs.length; j++) {
-                        VarTensor x = beliefs[j];
-                        int size = x.size();
-                        for (int c=0; c<size; c++) {
-                            x.setValue(c, point.get(idx++));
-                        }
-                    }
-                }
-            }
-            // Run the forward pass.
-            return output.forward();
-        }
-        
-        public IntDoubleVector forwardAndBackward(IntDoubleVector point, Tensor outputAdj) {
-            zeroOutputAdjs(output);
-            // Run the forward pass.
-            forward(point);
-            // Set the adjoint.
-            output.getOutputAdj().set(outputAdj);
-            // Run the backward pass.
-            output.backward();
-            
-            // Populate the output vector with the adjoints.
-            IntDoubleVector grad = new IntDoubleDenseVector(totInDimension);
-            int idx = 0;
-            for (Module<Beliefs> input : inputs) {
-                Beliefs b = input.getOutputAdj();
-                for (int i=0; i<2; i++) {
-                    VarTensor[] beliefs = (i==0) ? b.varBeliefs : b.facBeliefs;
-                    for (int j=0; j<beliefs.length; j++) {
-                        VarTensor x = beliefs[j];
-                        int size = x.size();
-                        for (int c=0; c<size; c++) {
-                            grad.set(idx++, x.getValue(c));
-                        }
-                    }
-                }
-            }
-            return grad;
-        }
-
-        private void zeroOutputAdjs(Module<? extends Object> output) {
-            output.zeroOutputAdj();
-            for (Object input : output.getInputs()) {
-                zeroOutputAdjs((Module)input);
-            }
-        }
-
-        public Tensor getOutputAdj() {
-            return output.getOutputAdj();
-        }
-        
-    }
-    
     /**
      * Used to test modules by treating them as a differentiable function.
      * @author mgormley
      */
     public static class ModuleFn implements DifferentiableFunction {
 
-        private VecFn vecFn;
+        private Module<?> vecFn;
         int outIdx;
         
-        public ModuleFn(VecFn vecFn, int outIdx) {
+        public ModuleFn(Module<?> vecFn, int outIdx) {
             this.vecFn = vecFn;
             this.outIdx = outIdx;
         }
     
         @Override
         public int getNumDimensions() {
-            return vecFn.getNumDimensions();
+            return getInputSize(vecFn.getInputs());
         }
         
         @Override
         public double getValue(IntDoubleVector point) {
-            Tensor out = vecFn.forward(point);
-            //System.out.println("ModuleFn:\n" + point);
-            //System.out.println("ModuleFn:\n" + out);
+            setInputsFromIdv(vecFn.getInputs(), point);
+            ModuleTensor<?> out = vecFn.forward();
             return out.getValue(outIdx);
         }
     
         @Override
         public IntDoubleVector getGradient(IntDoubleVector point) {
-            Tensor outAdj = vecFn.getOutputAdj().copy();
+            setInputsFromIdv(vecFn.getInputs(), point);
+            vecFn.forward();
+            vecFn.zeroOutputAdj();
+            for (Module<?> x : vecFn.getInputs()) {
+                x.zeroOutputAdj();
+            }
+            ModuleTensor<?> outAdj = vecFn.getOutputAdj();
             outAdj.fill(0);
             outAdj.setValue(outIdx, 1);
-            
-            return vecFn.forwardAndBackward(point, outAdj);
+            vecFn.backward();
+            return getInputsAsIdv(vecFn.getInputs());
         }
     
         @Override
         public ValueGradient getValueGradient(IntDoubleVector point) {
             return new ValueGradient(getValue(point), getGradient(point));
+        }
+        
+        /**
+         * Treats all the input modules as if they were concatenated into a long vector, and
+         * computes the size of that vector.
+         */
+        public static int getInputSize(List<? extends Module<? extends ModuleTensor<?>>> inputs) {
+            int totInDimension = 0;
+            for (Module<?> input : inputs) {
+                totInDimension += input.getOutput().size();
+            }
+            return totInDimension;
+        }
+
+        /**
+         * Treats all the input modules as if they were concatenated into a long vector, and sets
+         * their values to those in the given IntDoubleVector.
+         */
+        public static void setInputsFromIdv(List<? extends Module<? extends ModuleTensor<?>>> inputs, IntDoubleVector point) {
+            int idx = 0;
+            for (Module<? extends ModuleTensor<?>> input : inputs) {
+                ModuleTensor<?> x = input.getOutput();
+                int size = x.size();
+                for (int c=0; c<size; c++) {
+                    x.setValue(c, point.get(idx++));
+                }
+            }
+        }
+
+        /**
+         * Concatenates all the adjoints of a set of input modules to create a single
+         * IntDoubleVector.
+         */
+        public static IntDoubleVector getInputsAsIdv(List<? extends Module<? extends ModuleTensor<?>>> inputs) {
+            int totInDimension = getInputSize(inputs);
+            IntDoubleVector grad = new IntDoubleDenseVector(totInDimension);
+            int idx=0;
+            for (Module<? extends ModuleTensor<?>> input : inputs) {
+                ModuleTensor<?> xAdj = input.getOutputAdj();
+                int size = xAdj.size();
+                for (int c=0; c<size; c++) {
+                    grad.set(idx++, xAdj.getValue(c));
+                }
+            }
+            return grad;
         }
         
     }
@@ -267,16 +131,20 @@ public class ModuleTestUtils {
         return theta;
     }
 
-    public static void assertFdAndAdEqual(VecFn vecFn, double epsilon, double delta) {
-        int numParams = vecFn.getNumDimensions();                
+    public static void assertFdAndAdEqual(Module<?> vecFn, double epsilon, double delta) {
+        int numParams = ModuleFn.getInputSize(vecFn.getInputs());
         IntDoubleDenseVector x = getZeroOneGaussian(numParams);
         assertFdAndAdEqual(vecFn, x, epsilon, delta);
     }
 
-    public static void assertFdAndAdEqual(VecFn vecFn, IntDoubleDenseVector x, double epsilon, double delta) {
-        int numParams = vecFn.getNumDimensions();                
+    public static void assertFdAndAdEqual(Module<?> vecFn, IntDoubleDenseVector x, double epsilon, double delta) {
+        int numParams = ModuleFn.getInputSize(vecFn.getInputs());
+        if (numParams == 0) {
+            throw new IllegalStateException("No input parameters!");
+        }
         // Run forward once to figure out the output dimension.
-        int outDim = vecFn.forward(x).size();
+        vecFn.forward();
+        int outDim = ModuleFn.getInputSize(Lists.getList(vecFn));
         for (int i=0; i<outDim; i++) {
             for (int j=0; j<numParams; j++) {
                 // Test the deriviative d/dx_j(f_i(\vec{x}))
@@ -301,6 +169,9 @@ public class ModuleTestUtils {
     
     public static void assertFdAndAdEqual(DifferentiableFunction fn, IntDoubleVector x, double epsilon, double delta) {
         int numParams = fn.getNumDimensions();
+        if (numParams == 0) {
+            throw new IllegalStateException("No input parameters!");
+        }
         for (int j=0; j<numParams; j++) {
             // Test the deriviative d/dx_j(f(\vec{x}))
             IntDoubleVector d = new IntDoubleDenseVector(numParams);

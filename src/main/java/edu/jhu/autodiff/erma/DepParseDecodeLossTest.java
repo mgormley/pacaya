@@ -3,7 +3,6 @@ package edu.jhu.autodiff.erma;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.ModuleTestUtils.BeliefsVecFn;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
@@ -48,8 +47,7 @@ public class DepParseDecodeLossTest {
         BeliefsIdentity id1 = new BeliefsIdentity(b);        
         DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, 3);
         
-        BeliefsVecFn vecFn = new BeliefsVecFn(id1, dl);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-10, 1e-8);        
+        ModuleTestUtils.assertFdAndAdEqual(dl, 1e-10, 1e-8);        
     }
     
     

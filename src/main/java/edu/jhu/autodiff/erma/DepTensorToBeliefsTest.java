@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TensorUtils;
@@ -42,6 +45,22 @@ public class DepTensorToBeliefsTest {
         assertEquals(0.0, inAdj.get(0,1), 1e-13); //  0, 1
         assertEquals(2.2, inAdj.get(1,0), 1e-13); //  1, 0
         assertEquals(2.2, inAdj.get(1,1), 1e-13); // -1, 1        
+    }
+    
+    @Test
+    public void testGradByFiniteDiffsAllSemirings() {
+        // Inputs
+        Tensor t1 = new Tensor(s, 2,2);
+        t1.setValuesOnly(TensorUtils.getVectorFromValues(s, .2, .3, .5, .7));
+        TensorIdentity id1 = new TensorIdentity(t1);
+        final BeliefsIdentity inf = DepTensorFromBeliefsTest.getBeliefsModule();
+
+        OneToOneFactory<Tensor,Beliefs> fact = new OneToOneFactory<Tensor,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Tensor> m1) {
+                return new DepTensorToBeliefs(m1, inf);
+            }
+        };        
+        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact, id1);
     }
 
 }

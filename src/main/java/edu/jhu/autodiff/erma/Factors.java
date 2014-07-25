@@ -44,6 +44,10 @@ public class Factors implements ModuleTensor<Factors> {
         return Beliefs.count(f);
     }
 
+    public double getValue(int idx) {
+        return Beliefs.getValue(idx, f);
+    }
+    
     public double setValue(int idx, double val) {
         return Beliefs.setValue(idx, val, f);
     }

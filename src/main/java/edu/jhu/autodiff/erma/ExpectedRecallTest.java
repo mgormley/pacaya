@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.ModuleTestUtils.BeliefsVecFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -61,9 +60,8 @@ public class ExpectedRecallTest {
     @Test
     public void testGradByFiniteDiffs() {
         Algebra s = new RealAlgebra();
-        ExpectedRecall mse = new ExpectedRecall(id1, goldConfig);        
-        BeliefsVecFn vecFn = new BeliefsVecFn(id1, mse);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+        ExpectedRecall er = new ExpectedRecall(id1, goldConfig);        
+        ModuleTestUtils.assertFdAndAdEqual(er, 1e-5, 1e-8);
     }
     
 }

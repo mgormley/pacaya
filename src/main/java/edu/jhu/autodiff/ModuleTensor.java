@@ -18,8 +18,10 @@ public interface ModuleTensor<T> {
 
     void elemAdd(T addend);
     
-    // Not currently needed:
-    //double setValue(int idx, double val);
-    //ModuleTensor copy();
+    double getValue(int idx);
+
+    double setValue(int idx, double val);
+    
+    T copy();
         
 }

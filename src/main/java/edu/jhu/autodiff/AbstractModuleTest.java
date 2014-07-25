@@ -1,10 +1,7 @@
 package edu.jhu.autodiff;
 
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
+import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.util.collections.Lists;
@@ -44,11 +41,7 @@ public class AbstractModuleTest {
         Module<Tensor> ea = fact.getModule(id1Co);
         ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, t1.getAlgebra());
     
-        TopoOrder topo = new TopoOrder();
-        topo.add(id1); 
-        topo.add(id1Co);
-        topo.add(ea);
-        topo.add(eaCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), eaCo);
         
         Tensor out = topo.forward();
         assertTensorEqual(expOut, out, 1e-10);
@@ -77,13 +70,7 @@ public class AbstractModuleTest {
         Module<Tensor> main = fact.getModule(id1Co, id2Co);
         ConvertAlgebra<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, t1.getAlgebra());
     
-        TopoOrder topo = new TopoOrder();
-        topo.add(id1); 
-        topo.add(id1Co);
-        topo.add(id2); 
-        topo.add(id2Co);
-        topo.add(main);
-        topo.add(mainCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1, id2), mainCo);
         
         Tensor out = topo.forward();
         assertTensorEqual(expOut, out, 1e-13);
@@ -133,18 +120,12 @@ public class AbstractModuleTest {
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
-            TopoOrder topo = new TopoOrder();
-            
             Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
             Module<Y> main = fact.getModule(in1Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
-            topo.add(in1Co);
-            topo.add(main);
-            topo.add(mainCo);
-            
-            TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1), topo);
-            ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
+            ModuleTestUtils.assertFdAndAdEqual(topo, 1e-5, 1e-8);
         }
     }
     
@@ -159,18 +140,14 @@ public class AbstractModuleTest {
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
-            TopoOrder topo = new TopoOrder();
-            
             Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
             Module<Y> main = fact.getModule(in1Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
-            topo.add(in1Co);
-            topo.add(main);
-            topo.add(mainCo);
-            
-            TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1), topo);
-            ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
+            int numParams = ModuleFn.getInputSize(topo.getInputs());
+            IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
+            ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-5, 1e-8);
         }
     }
     
@@ -212,20 +189,13 @@ public class AbstractModuleTest {
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
-            TopoOrder topo = new TopoOrder();
-            
             Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
             Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
             Module<Y> main = fact.getModule(in1Co, in2Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
-            topo.add(in1Co);
-            topo.add(in2Co);
-            topo.add(main);
-            topo.add(mainCo);
-            
-            TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1, in2), topo);
-            ModuleTestUtils.assertFdAndAdEqual(vecFn, 1e-5, 1e-8);
+            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
+            ModuleTestUtils.assertFdAndAdEqual(topo, 1e-5, 1e-8);
         }
     }
     
@@ -242,22 +212,15 @@ public class AbstractModuleTest {
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
-            TopoOrder topo = new TopoOrder();
-            
             Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
             Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
             Module<Y> main = fact.getModule(in1Co, in2Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
-            topo.add(in1Co);
-            topo.add(in2Co);
-            topo.add(main);
-            topo.add(mainCo);
-            
-            TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(in1, in2), topo);
-            int numParams = vecFn.getNumDimensions();
+            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
+            int numParams = ModuleFn.getInputSize(topo.getInputs());
             IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-            ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-5, 1e-8);
+            ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-5, 1e-8);
         }
     }
 

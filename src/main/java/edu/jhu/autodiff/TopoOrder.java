@@ -1,9 +1,11 @@
 package edu.jhu.autodiff;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import edu.jhu.autodiff.Toposort.Deps;
+import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
 
 
 /**
@@ -12,52 +14,73 @@ import com.google.common.collect.Lists;
  * 
  * @author mgormley
  */
-public class TopoOrder extends AbstractModule<Tensor> implements Module<Tensor> {
+public class TopoOrder<Y extends ModuleTensor<Y>> implements Module<Y> {
 
-    private List<Module<? extends ModuleTensor<?>>> topoOrder = new ArrayList<Module<? extends ModuleTensor<?>>>();
-    protected Tensor y;
-    protected Tensor yAdj;
+    private List<? extends Module<?>> inputs;
+    private Module<Y> outMod;
+    private List<? extends Module<?>> topoOrder;
 
-    public TopoOrder() { super(null); }
-    
-    public void add(Module<? extends ModuleTensor<?>> m) {
-        topoOrder.add(m);
-        s = m.getAlgebra();
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public TopoOrder(Module<Y> root) {
+        this.inputs = Lists.getList();
+        this.outMod = root;
+        Deps deps = getModuleDeps();
+        this.topoOrder = Toposort.toposort(root, deps);
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root) {
+        HashSet inputs = new HashSet(inputsList);
+        if (inputs.size() != inputsList.size()) {
+            throw new IllegalStateException("Multiple copies of module in inputs list: " + inputsList);
+        }
+        this.inputs = inputsList;
+        this.outMod = root;
+
+        Deps deps = getModuleDeps();
+        this.topoOrder = Toposort.toposort(inputs, root, deps);
+    }
+    
+    @SuppressWarnings({ "rawtypes" })
+    private static Deps getModuleDeps() {
+        Deps deps = new Deps() {
+            @Override
+            public List getDeps(Object x) {
+                return ((Module) x).getInputs();
+            }
+        };
+        return deps;
+    }
+
     @Override
-    public Tensor forward() {
+    public Y forward() {
         for (Module<? extends Object> m : topoOrder) {
             m.forward();
         }
-        return getLast().getOutput();
+        return outMod.getOutput();
     }
 
     @Override
     public void backward() {
-        List<Module<? extends ModuleTensor<?>>> revTopo = Lists.reverse(topoOrder);
-        for (Module<? extends ModuleTensor<?>> m : revTopo) {
+        List<? extends Module<?>> revTopo = Lists.reverse(topoOrder);
+        for (Module<?> m : revTopo) {
             m.backward();
         }
     }
 
     @Override
-    public List<Module<? extends ModuleTensor<?>>> getInputs() {
-        List inputs = new ArrayList();
-        for (Module m : topoOrder) {
-            inputs.add(m);
-        }
+    public List<? extends Module<?>> getInputs() {
         return inputs;
     }
 
     @Override
-    public Tensor getOutput() {
-        return getLast().getOutput();
+    public Y getOutput() {
+        return outMod.getOutput();
     }
 
     @Override
-    public Tensor getOutputAdj() {
-        return getLast().getOutputAdj();
+    public Y getOutputAdj() {
+        return outMod.getOutputAdj();
     }
     
     @Override
@@ -67,12 +90,13 @@ public class TopoOrder extends AbstractModule<Tensor> implements Module<Tensor> 
         }
     }
     
-    public Module<Tensor> getLast() {
-        return (Module<Tensor>)topoOrder.get(topoOrder.size()-1);
+    public List<? extends Module<?>> getTopoOrder() {
+        return topoOrder;
     }
 
-    public List<Module<? extends ModuleTensor<?>>> getTopoOrder() {
-        return topoOrder;
+    @Override
+    public Algebra getAlgebra() {
+        return outMod.getAlgebra();
     }
     
 }

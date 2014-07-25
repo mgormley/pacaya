@@ -13,6 +13,7 @@ import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.LogSignAlgebra;
@@ -69,11 +70,7 @@ public class InsideOutsideDepParseTest {
         InsideOutsideDepParse ea = new InsideOutsideDepParse(idCo);
         ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, s);
 
-        TopoOrder topo = new TopoOrder();
-        topo.add(id1); 
-        topo.add(idCo);
-        topo.add(ea);
-        topo.add(eaCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), eaCo);
         
         Tensor out = topo.forward();
         System.out.println(out);

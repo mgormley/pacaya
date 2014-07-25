@@ -49,6 +49,33 @@ public class Beliefs implements ModuleTensor<Beliefs> {
         return count(varBeliefs) + count(facBeliefs);
     }
 
+    /**
+     * Gets a particular value by treating this object as a vector.
+     * 
+     * NOTE: This implementation is O(n).
+     * 
+     * @param idx The index of the value to get.
+     * @return The value at that index.
+     */
+    @Override
+    public double getValue(int idx) {
+        int vSize = count(varBeliefs);
+        if (idx < vSize) {
+            return getValue(idx, varBeliefs);
+        } else {
+            return getValue(idx - vSize, facBeliefs);
+        }
+    }
+
+    /**
+     * Sets a particular value by treating this object as a vector.
+     * 
+     * NOTE: This implementation is O(n).
+     * 
+     * @param idx The index of the value to set.
+     * @param val The value to set.
+     * @return The previous value at that index.
+     */
     public double setValue(int idx, double val) {
         int vSize = count(varBeliefs);
         if (idx < vSize) {
@@ -120,6 +147,19 @@ public class Beliefs implements ModuleTensor<Beliefs> {
             if (beliefs[i] != null) {
                 if (beliefs[i].size() + seen > idx) {
                     return beliefs[i].setValue(idx - seen, val);
+                }
+                seen += beliefs[i].size();
+            }
+        }
+        throw new RuntimeException("Index out of bounds: " + idx);
+    }
+    
+    public static double getValue(int idx, VarTensor[] beliefs) {
+        int seen = 0;
+        for (int i = 0; i < beliefs.length; i++) {
+            if (beliefs[i] != null) {
+                if (beliefs[i].size() + seen > idx) {
+                    return beliefs[i].getValue(idx - seen);
                 }
                 seen += beliefs[i].size();
             }

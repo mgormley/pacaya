@@ -8,7 +8,6 @@ import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -27,7 +26,7 @@ public class MeanSquaredError extends AbstractModule<Tensor> implements Module<T
     /** Factory for MSE loss without a decoder. */
     public static class MeanSquaredErrorFactory implements DlFactory {
         @Override
-        public Module<Tensor> getDl(FactorGraph fg, VarConfig goldConfig, Module<Beliefs> inf, int curIter, int maxIter) {
+        public Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             return new MeanSquaredError(inf, goldConfig);
         }
     }

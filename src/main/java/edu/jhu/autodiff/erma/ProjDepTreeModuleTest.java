@@ -4,16 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
-import edu.jhu.autodiff.ModuleTestUtils.TensorVecFn;
-import edu.jhu.autodiff.tensor.ElemAdd;
 import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -100,10 +98,9 @@ public class ProjDepTreeModuleTest {
         TensorIdentity id2 = new TensorIdentity(t2);
         ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, tmpS);
         
-        TensorVecFn vecFn = new TensorVecFn((List)Lists.getList(id1, id2), topo);
-        int numParams = vecFn.getNumDimensions();
+        int numParams = ModuleFn.getInputSize(topo.getInputs());
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-        ModuleTestUtils.assertFdAndAdEqual(vecFn, x, 1e-8, 1e-5);
+        ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-8, 1e-5);
     }
 
     @Test
