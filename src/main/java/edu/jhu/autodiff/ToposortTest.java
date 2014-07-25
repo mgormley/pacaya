@@ -1,5 +1,6 @@
 package edu.jhu.autodiff;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -8,12 +9,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.autodiff.Toposort.Deps;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 
 public class ToposortTest {
 
@@ -66,17 +69,32 @@ public class ToposortTest {
     }
     
     @Test
+    public void testTopoSortWithInputs2() {
+        // valid sorts:
+        List<String> valid = Arrays.asList(new String[] { 
+                "[3, 2, 1, ROOT]",
+        });
+        
+        Deps<String> deps = new DiamondGraph();
+        List<String> sort = Toposort.toposort(Lists.getList("4"), "ROOT", deps);
+        System.out.println(sort);
+        assertTrue(valid.contains(sort.toString()));
+    }
+    
+    @Test
     public void testTopoSortWithInputs() {
         // valid sorts:
         List<String> valid = Arrays.asList(new String[] { 
                 "[11, 2, 8, 9, 10, ROOT]",
                 "[11, 2, 10, 8, 9, ROOT]",
                 "[8, 11, 9, 2, 10, ROOT]",
+                "[11, 8, 9, 10, 2, ROOT]",
         });
         
         for (int i : Lists.getList(0, 1, 2)) {
-            Deps<String> deps = new ShuffledSimpleGraph(i);
-            List<String> sort = Toposort.toposort(Lists.getList("11", "8", "10"), "ROOT", deps);            
+            // Note: in current implementation all orders are equivalent.
+            Deps<String> deps = new ShuffledSimpleGraph(i*3);
+            List<String> sort = Toposort.toposort(Lists.getList("7", "5", "3"), "ROOT", deps);            
             if(valid.contains(sort.toString())) {
                 System.out.println("i:" + i);
             }
@@ -163,6 +181,22 @@ public class ToposortTest {
         Assert.assertArrayEquals(new String[]{"3", "5", "7"}, l);
     }
     
+    @Test
+    public void testGetImmediateParents() {
+        {
+            SimpleGraph deps = new SimpleGraph();
+            HashSet<String> inputs = new HashSet<String>(Lists.getList("7", "5", "3"));
+            Set<String> parents = Toposort.getImmediateParents(inputs, "ROOT", deps);
+            assertEquals(Sets.getSet("11", "8", "10"), parents);
+        }
+        {
+            SimpleGraph deps = new SimpleGraph();
+            HashSet<String> inputs = new HashSet<String>();
+            Set<String> parents = Toposort.getImmediateParents(inputs, "ROOT", deps);
+            assertEquals(Sets.getSet("7", "5", "3"), parents);
+        }
+    }
+    
     private static class ShuffledSimpleGraph extends SimpleGraph implements Deps<String> {
         
         private int i;
@@ -195,6 +229,23 @@ public class ToposortTest {
             case "7": return Lists.getList();
             case "5": return Lists.getList();
             case "3": return Lists.getList();
+            default: throw new IllegalArgumentException("Unknown node: " + x);
+            }
+        }
+        
+    }
+    
+
+    private static class DiamondGraph implements Deps<String> {
+        
+        @Override
+        public List<String> getDeps(String x) {
+            switch(x) {
+            case "ROOT": return Lists.getList("1");
+            case "1": return Lists.getList("2", "3");
+            case "2": return Lists.getList("3", "4");
+            case "3": return Lists.getList("4");
+            case "4": return Lists.getList();
             default: throw new IllegalArgumentException("Unknown node: " + x);
             }
         }

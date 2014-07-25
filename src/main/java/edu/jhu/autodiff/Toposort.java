@@ -1,15 +1,17 @@
 package edu.jhu.autodiff;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 public class Toposort {
 
     public interface Deps<T> {
-        List<T> getDeps(T x);
+        Collection<T> getDeps(T x);
     }
 
     private Toposort() {
@@ -43,9 +45,10 @@ public class Toposort {
             }
             if (ready) {
                 todo.pop();
-                done.add(x);
                 ancestors.remove(x);
-                order.add(x);
+                if (done.add(x)) {
+                    order.add(x);
+                }
             } else {
                 if (ancestors.contains(x)) {
                     throw new IllegalStateException("Graph is not a DAG. Cycle involves node: " + x);
@@ -59,7 +62,7 @@ public class Toposort {
     /**
      * Gets a topological sort for the graph, where the depth-first search is cutoff by an input set.
      * 
-     * @param inputs The input set / leaf set.
+     * @param inputs The input set which is excluded from the graph.
      * @param root The root of the graph.
      * @param deps Functional description of the graph's dependencies.
      * @return The topological sort.
@@ -70,20 +73,36 @@ public class Toposort {
         final HashSet<T> inputSet = new HashSet<T>(inputs);
         if (inputSet.size() != inputs.size()) {
             throw new IllegalStateException("Multiple copies of module in inputs list: " + inputs);
-        }        
+        }
+        return toposort(inputSet, root, deps);
+    }
+
+    /**
+     * Gets a topological sort for the graph, where the depth-first search is cutoff by an input set.
+     * 
+     * @param inputs The input set which is excluded from the graph.
+     * @param root The root of the graph.
+     * @param deps Functional description of the graph's dependencies.
+     * @return The topological sort.
+     */
+    public static <T> List<T> toposort(final Set<T> inputSet, T root, final Deps<T> deps) {
         // Check that inputs set is a valid set of leaves for the given output module.
-        checkIsValidLeafSet(inputSet, root, deps);
-        
+        checkIsValidLeafSet(inputSet, root, deps);        
+        Deps<T> cutoffDeps = getCutoffDeps(inputSet, deps);
+        return Toposort.toposort(root, cutoffDeps);
+    }
+
+    /** Gets a new Deps graph where each node in the input set is removed from the graph. */
+    public static <T> Deps<T> getCutoffDeps(final Set<T> inputSet, final Deps<T> deps) {
         Deps<T> cutoffDeps = new Deps<T>() {
             @Override
-            public List<T> getDeps(T x) {
-                if (inputSet.contains(x)) {
-                    return Collections.emptyList();
-                }
-                return deps.getDeps(x);
+            public Collection<T> getDeps(T x) {                
+                HashSet<T> pruned = new HashSet<T>(deps.getDeps(x));
+                pruned.removeAll(inputSet);
+                return pruned;
             }
         };
-        return Toposort.toposort(root, cutoffDeps);
+        return cutoffDeps;
     }
 
     /**
@@ -91,7 +110,7 @@ public class Toposort {
      * consist of only descendents of the output, and must define a full cut through the graph with
      * outMod as root.
      */
-    public static <T> void checkIsValidLeafSet(HashSet<T> inputSet, T root, Deps<T> deps) {
+    public static <T> void checkIsValidLeafSet(Set<T> inputSet, T root, Deps<T> deps) {
         {
             // Check that all modules in the input set are descendents of the output module.
             HashSet<T> visited = new HashSet<T>();
@@ -122,7 +141,7 @@ public class Toposort {
      * @return The set of leaf nodes.
      */
     // TODO: detect cycles.
-    public static <T> HashSet<T> dfs(T root, HashSet<T> visited, Deps<T> deps) {
+    public static <T> HashSet<T> dfs(T root, Set<T> visited, Deps<T> deps) {
         // The set of leaves (excluding any which were already marked as visited).
         HashSet<T> leaves = new HashSet<T>();
         // The stack for DFS.
@@ -146,5 +165,41 @@ public class Toposort {
         }
         return leaves;
     }
+    
+    /** Gets the leaves in DFS order. */
+    public static <T> HashSet<T> getLeaves(T root, Deps<T> deps) {
+        return dfs(root, new HashSet<T>(), deps);
+    }
+    
+    public static <T> Set<T> getImmediateParents(Set<T> inputs, T root, Deps<T> deps) {
+        HashSet<T> visited = new HashSet<T>();
+        HashSet<T> leaves = Toposort.dfs(root, visited, Toposort.getCutoffDeps(inputs, deps));
+        if (inputs.size() == 0) {
+            return leaves;
+        }
+        
+        HashSet<T> parents = new HashSet<T>();
+        for (T x : visited) {
+            for(T y : deps.getDeps(x)) {
+                if (inputs.contains(y)) {
+                    parents.add(x);
+                    break;
+                }
+            }
+        }
+        return parents;
+    }
+//
+//    private static <T> List<T> getChildrenAsList(Set<T> leaves, Deps<T> deps) {
+//        HashSet<T> children = new HashSet<T>();
+//        for (T x : leaves) {
+//            for (T y : deps.getDeps(x)) {
+//                if (!leaves.contains(y)) {
+//                    children.add(y);
+//                }
+//            }
+//        }
+//        return new ArrayList<T>(children);
+//    }
 
 }
