@@ -5,8 +5,11 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -69,11 +72,13 @@ public class MeanSquaredErrorTest {
     }
     
     @Test
-    public void testGradByFiniteDiffs() {
-        Algebra s = new RealAlgebra();
-        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);        
-        ModuleTestUtils.assertFdAndAdEqual(mse, 1e-5, 1e-8);
-        // TODO: for (Algebra s : Lists.getList(new RealAlgebra(), new LogPosNegAlgebra())) {  }
+    public void testGradByFiniteDiffsAllSemirings() {
+        OneToOneFactory<Beliefs,Tensor> fact = new OneToOneFactory<Beliefs,Tensor>() {
+            public Module<Tensor> getModule(Module<Beliefs> m1) {
+                return new MeanSquaredError(m1, goldConfig);
+            }
+        };        
+        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact, id1);
     }
-
+    
 }

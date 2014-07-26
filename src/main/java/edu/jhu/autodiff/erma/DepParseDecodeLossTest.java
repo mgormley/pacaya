@@ -50,8 +50,7 @@ public class DepParseDecodeLossTest {
         TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 3));
         DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, temp);
         
-        ModuleTestUtils.assertFdAndAdEqual(dl, 1e-10, 1e-8);        
+        ModuleTestUtils.assertFdAndAdEqual(dl, 1e-8, 1e-5);        
     }
-    
-    
+        
 }

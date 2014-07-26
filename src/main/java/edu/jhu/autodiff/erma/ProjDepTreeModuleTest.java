@@ -98,6 +98,10 @@ public class ProjDepTreeModuleTest {
         TensorIdentity id2 = new TensorIdentity(t2);
         ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, tmpS);
         
+        // Fill the tensors with 1.0 so that initial forward pass doesn't throw an error on the zeros. 
+        t1.fill(s.one());
+        t2.fill(s.one());
+        
         int numParams = ModuleFn.getInputSize(topo.getInputs());
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-8, 1e-5);
@@ -149,6 +153,11 @@ public class ProjDepTreeModuleTest {
                     return new ProjDepTreeModule(m1, m2, tmpS);
                 }
             };        
+            
+            // Fill the tensors with 1.0 so that initial forward pass doesn't throw an error on the zeros. 
+            t1.fill(s.one());
+            t2.fill(s.one());
+            
             // NOTE: The input to ProjDepTreeModule must be non-negative, so we use the Abs variant of the test function.
             AbstractModuleTest.evalTensor2ByFiniteDiffsAbs(fact, id1, id2);
         }

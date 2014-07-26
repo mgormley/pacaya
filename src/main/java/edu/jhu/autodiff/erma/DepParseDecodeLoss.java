@@ -71,7 +71,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         VarSet predVars = VarSet.getVarsOfType(goldConfig.getVars(), VarType.PREDICTED);
         VarConfig predConfig = goldConfig.getSubset(predVars);
         ExpectedRecall er = new ExpectedRecall(d2b, predConfig);
-        return new TopoOrder<Tensor>(Lists.getList(inf), er);
+        return new TopoOrder<Tensor>(Lists.getList(inf, temperature), er);
     }
     
 }
