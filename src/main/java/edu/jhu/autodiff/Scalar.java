@@ -3,7 +3,7 @@ package edu.jhu.autodiff;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
-public class Scalar implements ModuleTensor<Scalar> {
+public class Scalar implements MVec<Scalar> {
 
     private Algebra s;
     private double value;

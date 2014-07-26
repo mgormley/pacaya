@@ -1,11 +1,11 @@
 package edu.jhu.autodiff.erma;
 
-import edu.jhu.autodiff.ModuleTensor;
+import edu.jhu.autodiff.MVec;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
-public class Beliefs implements ModuleTensor<Beliefs> {
+public class Beliefs implements MVec<Beliefs> {
     
     public VarTensor[] varBeliefs;
     public VarTensor[] facBeliefs;

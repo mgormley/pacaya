@@ -3,10 +3,11 @@ package edu.jhu.autodiff;
 import edu.jhu.util.semiring.Algebra;
 
 /**
- * The simplest possible interface for the output of a module.
+ * A simple vector interface. This is specifically designed to be the output of a module.
+ * 
  * @author mgormley
  */
-public interface ModuleTensor<T> {
+public interface MVec<T> {
         
     Algebra getAlgebra();
     

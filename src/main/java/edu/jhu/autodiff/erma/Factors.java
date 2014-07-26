@@ -1,11 +1,11 @@
 package edu.jhu.autodiff.erma;
 
-import edu.jhu.autodiff.ModuleTensor;
+import edu.jhu.autodiff.MVec;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for potential tables of a factor graph. */
-public class Factors implements ModuleTensor<Factors> {
+public class Factors implements MVec<Factors> {
     
     public VarTensor[] f;
     public Algebra s;

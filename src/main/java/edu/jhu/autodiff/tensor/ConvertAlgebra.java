@@ -4,7 +4,7 @@ import java.util.List;
 
 import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.ModuleTensor;
+import edu.jhu.autodiff.MVec;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
@@ -13,7 +13,7 @@ import edu.jhu.util.semiring.Algebra;
  * Converts from the abstract algebra of the input to a given abstract algebra.
  * @author mgormley
  */
-public class ConvertAlgebra<T extends ModuleTensor<T>> extends AbstractModule<T> implements Module<T> {
+public class ConvertAlgebra<T extends MVec<T>> extends AbstractModule<T> implements Module<T> {
 
     private Module<T> modIn;
     

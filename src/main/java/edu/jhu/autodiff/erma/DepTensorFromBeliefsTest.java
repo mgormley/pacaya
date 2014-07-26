@@ -4,7 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.TensorUtils;
+import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
@@ -68,6 +73,18 @@ public class DepTensorFromBeliefsTest {
         
         BeliefsIdentity id1 = new BeliefsIdentity(b);
         return id1;
+    }
+    
+    @Test
+    public void testGradByFiniteDiffsAllSemirings() {
+        BeliefsIdentity id1 = DepTensorFromBeliefsTest.getBeliefsModule();
+
+        OneToOneFactory<Beliefs,Tensor> fact = new OneToOneFactory<Beliefs,Tensor>() {
+            public Module<Tensor> getModule(Module<Beliefs> m1) {
+                return new DepTensorFromBeliefs(m1);
+            }
+        };        
+        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact, id1);
     }
 
 }

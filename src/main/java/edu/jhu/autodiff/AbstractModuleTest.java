@@ -13,12 +13,12 @@ import edu.jhu.util.semiring.RealAlgebra;
 public class AbstractModuleTest {
     
     /** Factory for a module which takes one modules as input. */
-    public interface OneToOneFactory<X extends ModuleTensor<X>,Y extends ModuleTensor<Y>> {
+    public interface OneToOneFactory<X extends MVec<X>,Y extends MVec<Y>> {
         Module<Y> getModule(Module<X> m1);
     }
         
     /** Factory for a module which takes two modules as input. */
-    public interface TwoToOneFactory<W extends ModuleTensor<W>, X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> {
+    public interface TwoToOneFactory<W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> {
         Module<Y> getModule(Module<W> m1, Module<X> m2);
     }
     
@@ -116,7 +116,7 @@ public class AbstractModuleTest {
      * Evaluates a module by finite differences. This module takes one module as
      * input, and will be tested on multiple semirings.
      */
-    public static <X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalOneToOneByFiniteDiffs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
+    public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
@@ -136,7 +136,7 @@ public class AbstractModuleTest {
      * NOTE: This method is just a variant of the one above which always makes the input to the tested
      * module non-negative.
      */
-    public static <X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
+    public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
@@ -183,7 +183,7 @@ public class AbstractModuleTest {
      * Evaluates a module by finite differences. This module takes two modules as
      * input, and will be tested on multiple semirings.
      */
-    public static <W extends ModuleTensor<W>, X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalTwoToOneByFiniteDiffs(
+    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffs(
             TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
@@ -206,7 +206,7 @@ public class AbstractModuleTest {
      * NOTE: This method is just a variant of the one above which always makes the input to the tested
      * module non-negative.
      */
-    public static <W extends ModuleTensor<W>, X extends ModuleTensor<X>, Y extends ModuleTensor<Y>> void evalTwoToOneByFiniteDiffsAbs(
+    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffsAbs(
             TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
