@@ -576,19 +576,7 @@ public class Tensor implements ModuleTensor<Tensor> {
 
     protected void setFromDiffAlgebra(Tensor other) {       
         for (int c=0; c<this.values.length; c++) {
-            if (this.s.equals(other.s)) {
-                this.values[c] = other.values[c];
-            } else if (other.s.equals(Algebras.REAL_ALGEBRA)) {
-                this.values[c] = this.s.fromReal(other.values[c]);
-            } else if (other.s.equals(Algebras.LOG_SEMIRING)) {
-                this.values[c] = this.s.fromLogProb(other.values[c]);
-            } else if (this.s.equals(Algebras.REAL_ALGEBRA)) {
-                this.values[c] = other.s.toReal(other.values[c]);
-            } else if (this.s.equals(Algebras.LOG_SEMIRING)) {
-                this.values[c] = other.s.toLogProb(other.values[c]);
-            } else {
-                throw new RuntimeException("Unable to convert from " + other.s + " to " + this.s);
-            }
+            this.values[c] = Algebras.convertAlgebra(other.values[c], other.s, this.s);
         }
     }
     

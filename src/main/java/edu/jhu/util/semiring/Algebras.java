@@ -14,6 +14,25 @@ public class Algebras {
     public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring(); 
     public static final TropicalSemiring TROPICAL_SEMIRING = new TropicalSemiring(); 
     
+    // TODO: unit test.
+    public static double convertAlgebra(double value, Algebra src, Algebra dst) {
+        if (dst.equals(src)) {
+            return value;
+        } else if (src.equals(Algebras.REAL_ALGEBRA)) {
+            return dst.fromReal(value);
+        } else if (src.equals(Algebras.LOG_SEMIRING)) {
+            return dst.fromLogProb(value);
+        } else if (dst.equals(Algebras.REAL_ALGEBRA)) {
+            return src.toReal(value);
+        } else if (dst.equals(Algebras.LOG_SEMIRING)) {
+            return src.toLogProb(value);
+        } else {
+            // TODO: We could pivot through the real numbers, but this could cause a loss of
+            // floating point precision.
+            throw new RuntimeException("Unable to convert from " + src + " to " + dst);
+        }
+    }
+    
     public static double[] getToReal(double[] compacted, Algebra s) {
         double[] reals = new double[compacted.length];
         for (int i=0; i<compacted.length; i++) {
