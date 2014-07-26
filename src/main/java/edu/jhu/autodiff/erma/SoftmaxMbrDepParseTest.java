@@ -4,10 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.commons.lang.mutable.MutableDouble;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
-import edu.jhu.autodiff.AbstractModuleTest.Tensor1Factory;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
@@ -16,6 +17,7 @@ import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
+import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
@@ -42,6 +44,11 @@ public class SoftmaxMbrDepParseTest {
             + "    1    1  |  1.66804e-15\n"
             + "]";
     
+    @Before
+    public void setUp() {
+        Prng.seed(Prng.DEFAULT_SEED);
+    }
+    
     @Test
     public void testSimpleReal() {
         helpSimple(new LogSignAlgebra());              
@@ -62,7 +69,8 @@ public class SoftmaxMbrDepParseTest {
         t1.log();
         t1.multiply(T);
         TensorIdentity id1 = new TensorIdentity(t1);
-        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, T, tmpS);
+        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, T));
+        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
 
         Tensor out = ea.forward();
         //System.out.println(out);        
@@ -94,7 +102,6 @@ public class SoftmaxMbrDepParseTest {
     }
 
     private void helpSimple2(Algebra tmpS) {
-        double T = 1;
         Tensor t1 = new Tensor(s, 2,2);
         t1.setValuesOnly(TensorUtils.getVectorFromReals(s, .2, .3, .5, .7));
         // Take the log and multiply by T so that forward yields the same result as the test 
@@ -102,7 +109,8 @@ public class SoftmaxMbrDepParseTest {
         //t1.log();
         //t1.multiply(100);
         TensorIdentity id1 = new TensorIdentity(t1);
-        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, T, tmpS);
+        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 1));
+        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
 
         Tensor out = ea.forward();
         //System.out.println(out);        
@@ -138,9 +146,9 @@ public class SoftmaxMbrDepParseTest {
     private void helpGradByFiniteDiffs(Algebra tmpS) {
         Tensor t1 = new Tensor(s, 4,4);
         TensorIdentity id1 = new TensorIdentity(t1);
-        int T = 2;
-        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, T, tmpS);
-                
+        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 2));
+        SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
+        
         int numParams = ModuleFn.getInputSize(ea.getInputs());
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         final MutableDouble sum = new MutableDouble(0);
@@ -159,13 +167,14 @@ public class SoftmaxMbrDepParseTest {
         for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             Tensor t1 = new Tensor(s, 4,4);
             TensorIdentity id1 = new TensorIdentity(t1);
-            Tensor1Factory fact = new Tensor1Factory() {
-                public Module<Tensor> getModule(Module<Tensor> m1) {
-                    return new SoftmaxMbrDepParse(m1, 2, tmpS);
+            TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 2));
+            Tensor2Factory fact = new Tensor2Factory() {
+                public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
+                    return new SoftmaxMbrDepParse(m1, m2, tmpS);
                 }
             };        
             // NOTE: The input to SoftmaxMbrDepParse must be non-negative, so we use the Abs variant of the test function.
-            AbstractModuleTest.evalTensor1ByFiniteDiffsAbs(fact, id1);
+            AbstractModuleTest.evalTensor2ByFiniteDiffsAbs(fact, id1, temp);
         }
     }
 }

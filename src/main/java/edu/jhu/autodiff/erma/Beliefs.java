@@ -175,5 +175,10 @@ public class Beliefs implements ModuleTensor<Beliefs> {
             }
         }
     }
+
+    @Override
+    public Algebra getAlgebra() {
+        return s;
+    }
     
 }

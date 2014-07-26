@@ -1,9 +1,8 @@
 package edu.jhu.autodiff.erma;
 
-import java.util.List;
-
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.autodiff.tensor.ElemLinear;
@@ -11,6 +10,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
 
 /**
@@ -34,16 +34,17 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             double temperature = getTemperature(curIter, maxIter);
-            
+            TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(Algebras.REAL_ALGEBRA, temperature)); 
+                    
             if (annealMse) {
                 double prop = (double) curIter / maxIter;
                 
                 Module<Tensor> mse = new MeanSquaredError(inf, goldConfig);
-                Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temperature);                
+                Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temp);                
                 Module<Tensor> lin = new ElemLinear(mse, dep, (1.0-prop), prop);
                 return new TopoOrder<Tensor>(Lists.getList(inf), lin);
             } else {
-                return new DepParseDecodeLoss(inf, goldConfig, temperature);
+                return new DepParseDecodeLoss(inf, goldConfig, temp);
             }
         }
 
@@ -55,11 +56,12 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         }
     }
         
-    public DepParseDecodeLoss(Module<Beliefs> inf, VarConfig vc, double temperature) {
-        super(Lists.getList(inf), build(inf, vc, temperature));
+    public DepParseDecodeLoss(Module<Beliefs> inf, VarConfig vc, Module<Tensor> temperature) {
+        super();
+        shallowCopy(build(inf, vc, temperature));
     }
 
-    private static Module<Tensor> build(Module<Beliefs> inf, VarConfig goldConfig, double temperature) {
+    private static TopoOrder<Tensor> build(Module<Beliefs> inf, VarConfig goldConfig, Module<Tensor> temperature) {
         // Decoding.
         DepTensorFromBeliefs b2d = new DepTensorFromBeliefs(inf);
         SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, new LogSignAlgebra());
@@ -69,7 +71,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         VarSet predVars = VarSet.getVarsOfType(goldConfig.getVars(), VarType.PREDICTED);
         VarConfig predConfig = goldConfig.getSubset(predVars);
         ExpectedRecall er = new ExpectedRecall(d2b, predConfig);
-        return er;
+        return new TopoOrder<Tensor>(Lists.getList(inf), er);
     }
     
 }

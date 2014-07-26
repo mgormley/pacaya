@@ -55,5 +55,9 @@ public class Factors implements ModuleTensor<Factors> {
     public void elemAdd(Factors addend) {
         Beliefs.addVarTensorArray(this.f, addend.f);
     }
+
+    public Algebra getAlgebra() {
+        return s;
+    }
     
 }

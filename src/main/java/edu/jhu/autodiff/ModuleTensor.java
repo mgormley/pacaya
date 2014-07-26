@@ -8,7 +8,13 @@ import edu.jhu.util.semiring.Algebra;
  */
 public interface ModuleTensor<T> {
         
+    Algebra getAlgebra();
+    
     int size();
+    
+    double getValue(int idx);
+
+    double setValue(int idx, double val);
 
     void fill(double val);
     
@@ -17,10 +23,6 @@ public interface ModuleTensor<T> {
     T copyAndConvertAlgebra(Algebra newS);
 
     void elemAdd(T addend);
-    
-    double getValue(int idx);
-
-    double setValue(int idx, double val);
     
     T copy();
         

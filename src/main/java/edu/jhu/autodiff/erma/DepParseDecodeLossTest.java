@@ -3,6 +3,8 @@ package edu.jhu.autodiff.erma;
 import org.junit.Test;
 
 import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
@@ -44,8 +46,9 @@ public class DepParseDecodeLossTest {
             b.varBeliefs[v] = new VarTensor(s, new VarSet(fg.getVar(v)), 0.5);
         }
         
-        BeliefsIdentity id1 = new BeliefsIdentity(b);        
-        DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, 3);
+        BeliefsIdentity id1 = new BeliefsIdentity(b);
+        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 3));
+        DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, temp);
         
         ModuleTestUtils.assertFdAndAdEqual(dl, 1e-10, 1e-8);        
     }

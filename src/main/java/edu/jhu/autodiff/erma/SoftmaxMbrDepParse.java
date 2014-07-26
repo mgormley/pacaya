@@ -1,7 +1,5 @@
 package edu.jhu.autodiff.erma;
 
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.Module;
@@ -24,9 +22,11 @@ import edu.jhu.util.semiring.RealAlgebra;
  * 1. Compute edge weights w_e = exp(p_{\theta}(y_e=1|x) / T)
  * 2. Run inside-outside on w_e to get q_{\theta}^{1/T}(e)
  * 
- * The input to this module is expected to be a tensor containing the edge weights for dependency
+ * The input marginals to this module is expected to be a tensor containing the edge weights for dependency
  * parsing. The tensor is expected to be an nxn matrix, capable of being converted to EdgeScores
  * internally by EdgeScores.tensorToEdgeScores().
+ * 
+ * The temperature is given by the first entry of its corresponding tensor.
  * 
  * @author mgormley
  */
@@ -37,30 +37,31 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
     /**
      * Constructor with a default internal semiring.
      * @param margIn The input marginals.
-     * @param temperature The temperature (assumed to be in the REAL semiring).
+     * @param temperature Tensor containing the temperature in its first entry.
      */
-    public SoftmaxMbrDepParse(Module<Tensor> margIn, double temperature) {
+    public SoftmaxMbrDepParse(Module<Tensor> margIn, Module<Tensor> temperature) {
         this(margIn, temperature, new LogSignAlgebra());
     }
     
     /**
      * Constructor.
      * @param margIn The input marginals.
-     * @param temperature The temperature (assumed to be in the REAL semiring).
+     * @param temperature Tensor containing the temperature in its first entry.
      * @param tmpS The semiring used only internally.
      */
-    public SoftmaxMbrDepParse(Module<Tensor> margIn, double temperature, Algebra tmpS) {
-        super(Lists.getList(margIn), build(margIn, temperature, tmpS));
+    public SoftmaxMbrDepParse(Module<Tensor> margIn, Module<Tensor> temperature, Algebra tmpS) {
+        super();
+        shallowCopy(build(margIn, temperature, tmpS));
     }
     
-    private static Module<Tensor> build(Module<Tensor> pIn, double temperature, Algebra tmpS) {
+    private static TopoOrder<Tensor> build(Module<Tensor> pIn, Module<Tensor> tIn, Algebra tmpS) {
         Algebra outS = pIn.getAlgebra();
 
         // Internally we use a different algebra (tmpS) to avoid numerical precision problems.
         ConvertAlgebra<Tensor> pIn1 = new ConvertAlgebra<Tensor>(pIn, tmpS);
+        ConvertAlgebra<Tensor> tIn1 = new ConvertAlgebra<Tensor>(tIn, tmpS);
         
-        TensorIdentity ti = new TensorIdentity(Tensor.getScalarTensor(tmpS, tmpS.fromReal(temperature)));
-        ScalarDivide divide = new ScalarDivide(pIn1, ti, 0);
+        ScalarDivide divide = new ScalarDivide(pIn1, tIn1, 0);
         Exp exp = new Exp(divide);
         InsideOutsideDepParse io = new InsideOutsideDepParse(exp);
         
@@ -73,7 +74,7 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
         
         ConvertAlgebra<Tensor> conv = new ConvertAlgebra<Tensor>(marg, outS);
 
-        return conv;
+        return new TopoOrder<Tensor>(Lists.getList(pIn, tIn), conv);
     }
 
     public void report() {

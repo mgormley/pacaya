@@ -19,7 +19,8 @@ public class TopoOrder<Y extends ModuleTensor<Y>> implements Module<Y> {
     private List<? extends Module<?>> inputs;
     private Module<Y> outMod;
     private List<? extends Module<?>> topoOrder;
-
+    private String name;
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public TopoOrder(Module<Y> root) {
         this.inputs = Lists.getList();
@@ -28,17 +29,31 @@ public class TopoOrder<Y extends ModuleTensor<Y>> implements Module<Y> {
         this.topoOrder = Toposort.toposort(root, deps);
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root) {
+        this(inputsList, root, null);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root, String name) {
         HashSet inputs = new HashSet(inputsList);
         if (inputs.size() != inputsList.size()) {
             throw new IllegalStateException("Multiple copies of module in inputs list: " + inputsList);
         }
         this.inputs = inputsList;
         this.outMod = root;
-
+        this.name = name;
+        
         Deps deps = getModuleDeps();
         this.topoOrder = Toposort.toposort(inputs, root, deps);
+    }
+    
+    protected TopoOrder() { }
+    
+    protected void shallowCopy(TopoOrder<Y> other) {
+        this.inputs = other.inputs;
+        this.outMod = other.outMod;
+        this.name = other.name;
+        this.topoOrder = other.topoOrder;
     }
     
     @SuppressWarnings({ "rawtypes" })
@@ -97,6 +112,12 @@ public class TopoOrder<Y extends ModuleTensor<Y>> implements Module<Y> {
     @Override
     public Algebra getAlgebra() {
         return outMod.getAlgebra();
+    }
+
+    @Override
+    public String toString() {
+        return "TopoOrder [name=" + name + ", inputs=" + inputs + ", outMod=" + outMod + ", topoOrder=" + topoOrder
+                + "]";
     }
     
 }
