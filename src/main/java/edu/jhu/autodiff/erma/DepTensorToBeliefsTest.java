@@ -35,15 +35,16 @@ public class DepTensorToBeliefsTest {
         assertEquals(.7, out.varBeliefs[2].getValue(1), 1e-13);
         assertEquals(.5, out.varBeliefs[3].getValue(0), 1e-13);
         assertEquals(.5, out.varBeliefs[3].getValue(1), 1e-13);
-               
         
         Beliefs outAdj = mod.getOutputAdj();
-        outAdj.fill(2.2);
+        outAdj.fill(0.0);
+        outAdj.varBeliefs[2].set(2.2, 1);
+        outAdj.varBeliefs[3].set(2.2, 0);
         mod.backward();
         Tensor inAdj = id1.getOutputAdj();
         assertEquals(0.0, inAdj.get(0,0), 1e-13); // -1, 0
         assertEquals(0.0, inAdj.get(0,1), 1e-13); //  0, 1
-        assertEquals(2.2, inAdj.get(1,0), 1e-13); //  1, 0
+        assertEquals(-2.2, inAdj.get(1,0), 1e-13); //  1, 0
         assertEquals(2.2, inAdj.get(1,1), 1e-13); // -1, 1        
     }
     

@@ -15,7 +15,7 @@ public class TensorTest {
     private Algebra s = new RealAlgebra();
     
     @Test
-    public void testGetSetAddWithIndices() {
+    public void testGetSetAddSubWithIndices() {
         Tensor t1 = new Tensor(s, 2,3,5);
         // Test set.
         double val;
@@ -54,6 +54,18 @@ public class TensorTest {
                 for (int k=0; k<5; k++) {
                     assertEquals(val, t1.add(val, i,j,k), 1e-13);
                     assertEquals(val*2, t1.get(i,j,k), 1e-13);            
+                    val++;
+                }
+            }
+        }
+        
+        // Test subtract.
+        val = 0;
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<3; j++) {
+                for (int k=0; k<5; k++) {
+                    assertEquals(val*2, t1.subtract(val, i,j,k), 1e-13);
+                    assertEquals(val, t1.get(i,j,k), 1e-13);            
                     val++;
                 }
             }

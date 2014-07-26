@@ -70,7 +70,7 @@ public class Tensor implements ModuleTensor<Tensor> {
     /** 
      * Adds the value to the entry corresponding to the given indices.
      * @param indices The indices of the multi-dimensional array.
-     * @param val The value to set.
+     * @param val The value to add.
      * @return The previous value.
      */
     public double add(int[] indices, double val) {
@@ -78,6 +78,20 @@ public class Tensor implements ModuleTensor<Tensor> {
         int c = getConfigIdx(indices);
         double prev = values[c];
         values[c] = s.plus(values[c], val);
+        return prev;
+    }
+    
+    /** 
+     * Subtracts the value to the entry corresponding to the given indices.
+     * @param indices The indices of the multi-dimensional array.
+     * @param val The value to subtract.
+     * @return The previous value.
+     */
+    public double subtract(int[] indices, double val) {
+        checkIndices(indices);
+        int c = getConfigIdx(indices);
+        double prev = values[c];
+        values[c] = s.minus(values[c], val);
         return prev;
     }
 
@@ -89,6 +103,11 @@ public class Tensor implements ModuleTensor<Tensor> {
     /** Convenience method for adding a value with a variable number of indices. */
     public double add(double val, int... indices) {
         return add(indices, val);
+    }
+    
+    /** Convenience method for adding a value with a variable number of indices. */
+    public double subtract(double val, int... indices) {
+        return subtract(indices, val);
     }
     
     /** Gets the index into the values array that corresponds to the indices. */
