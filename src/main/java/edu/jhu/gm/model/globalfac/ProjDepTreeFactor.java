@@ -174,7 +174,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         // Construct the circuit.
         TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
         TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
-        Algebra tmpS = (isForward) ? new LogSemiring() : new LogSignAlgebra();
+        Algebra tmpS = (isForward) ? Algebras.LOG_SEMIRING : Algebras.LOG_SIGN_ALGEBRA;
         ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();
         

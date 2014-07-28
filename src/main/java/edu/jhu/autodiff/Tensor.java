@@ -30,6 +30,7 @@ public class Tensor implements MVec<Tensor> {
         this.strides = getStrides(dims);
         this.values = new double[numConfigs];
         this.s = s;
+        Arrays.fill(values, s.zero());
     }
 
     /** Copy constructor. */
