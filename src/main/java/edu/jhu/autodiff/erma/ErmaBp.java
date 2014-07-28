@@ -622,7 +622,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
                 prod.prod(msgsAdj[i].newMessage);
                 VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
-                msgsAdj[edgeJA.getId()].message.add(prod.getMarginal(varJ, false)); // TODO: semiring
+                msgsAdj[edgeJA.getId()].message.add(prod.getMarginal(varJ, false));
                 // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
                 logTraceMsgUpdate("backwardFactorToVar", msgsAdj[edgeJA.getId()].message, edgeJA);
             }

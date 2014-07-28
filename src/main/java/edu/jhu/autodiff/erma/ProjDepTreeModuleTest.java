@@ -11,7 +11,9 @@ import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
+import edu.jhu.autodiff.tensor.ElemAdd;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -81,6 +83,64 @@ public class ProjDepTreeModuleTest {
         assertEquals(expoutAdj2 , id2.getOutputAdj().toString());
     }
     
+    @Test
+    public void testForwardAndBackward() {
+        for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+            Tensor t1 = new Tensor(s, 2, 2);
+            t1.set(0.5, 0, 0);
+            t1.set(0.5, 0, 1);
+            t1.set(0.5, 1, 0);
+            t1.set(0.5, 1, 1);
+            Tensor t2 = new Tensor(s, 2, 2);
+            t2.set(0.5, 0, 0);
+            t2.set(0.5, 0, 1);
+            t2.set(0.5, 1, 0);
+            t2.set(0.5, 1, 1);
+            
+            Tensor expOut = new Tensor(s, 2, 2, 2);
+            expOut.set(0.125, 0, 0, 0);
+            expOut.set(0.125, 0, 0, 1);
+            expOut.set(0.125, 0, 1, 0);
+            expOut.set(0.125, 0, 1, 1);
+            expOut.set(0.125, 1, 0, 0);
+            expOut.set(0.125, 1, 0, 1);
+            expOut.set(0.125, 1, 1, 0);
+            expOut.set(0.125, 1, 1, 1);
+            
+            Tensor adj = new Tensor(s, 2, 2, 2);
+            adj.set(0.0, 0, 0, 0);
+            adj.set(0.0, 0, 0, 1);
+            adj.set(0.0, 0, 1, 0);
+            adj.set(0.0, 0, 1, 1);
+            adj.set(0.0, 1, 0, 0);
+            adj.set(0.0, 1, 0, 1);
+            adj.set(1.0, 1, 1, 0);
+            adj.set(1.0, 1, 1, 1);
+            
+            Tensor expT1Adj = new Tensor(s, 2, 2);
+            expT1Adj.set(0.0, 0, 0);
+            expT1Adj.set(0.0, 0, 1);
+            expT1Adj.set(0.25, 1, 0);
+            expT1Adj.set(0.25, 1, 1);
+            
+            // TODO: Why is the false adjoint twice the true adjoint?
+            Tensor expT2Adj = new Tensor(s, 2, 2);
+            expT2Adj.set(0.5, 0, 0);
+            expT2Adj.set(0.5, 0, 1);
+            expT2Adj.set(0.0, 1, 0);
+            expT2Adj.set(0.0, 1, 1);
+            
+            Tensor2Factory fact = new Tensor2Factory() {
+                public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
+                    return new ProjDepTreeModule(m1, m2, tmpS);
+                }
+            };
+            
+            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, Algebras.REAL_ALGEBRA);
+            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, Algebras.LOG_SIGN_ALGEBRA);
+        }
+    }
+        
     @Test
     public void testGradByFiniteDiffsReal() {
         helpGradByFinDiff(new RealAlgebra());
