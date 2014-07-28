@@ -164,15 +164,14 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
             throw new IllegalStateException("ConstituencyTreeFactor only supports log and real semirings as input.");
         }
-        boolean logDomain = s.equals(Algebras.LOG_SEMIRING);
         
-        // Note on logDomain: all internal computation is done in the logDomain
+        // All internal computation is done in the logDomain
         // since (for example) pi the product of all incoming false messages
         // would overflow.
         assert (this == parent.getFactor());        
         final double[][] spanWeights = new double[n][n+1];
-        getLogOddsRatios(parent, msgs, logDomain, spanWeights);
-        double pi = getProductOfAllFalseMessages(parent, msgs, logDomain);
+        getLogOddsRatios(parent, msgs, spanWeights);
+        double pi = getProductOfAllFalseMessages(parent, msgs);
 
         // Compute the constituency tree marginals, summing over all 
         // constiuency trees via the inside-outside algorithm.
@@ -225,26 +224,35 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
             outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
             
-            setOutMsgs(msgs, logDomain, outEdge, span, outMsgTrue, outMsgFalse);
+            setOutMsgs(msgs, outEdge, span, outMsgTrue, outMsgFalse);
         }
     }
     
     private double safeLogSubtract(double partition, double beliefTrue) {
         double outMsgFalse;
         if (partition < beliefTrue) {
-            log.warn(String.format("Partition function less than belief: partition=%.20f belief=%.20f", partition, beliefTrue));
+            // This will happen very frequently if the log-add table is used
+            // instead of "exact" log-add.
+            if (log.isTraceEnabled()) {
+                log.trace(String.format("Partition function less than belief: partition=%.20f belief=%.20f", partition, beliefTrue));
+            }
+            // To get around the floating point error, we truncate the
+            // subtraction to log(0).
             outMsgFalse = Double.NEGATIVE_INFINITY;
+            unsafeLogSubtracts++;
         } else {
             outMsgFalse = FastMath.logSubtractExact(partition, beliefTrue);
         }
+        logSubtractCount++;
         return outMsgFalse;
     }
-    
+    private static int unsafeLogSubtracts = 0;
+    private static int logSubtractCount = 0;
     private static int extremeOddsRatios = 0;
     private static int oddsRatioCount = 0;
 
     /** Computes the log odds ratio for each edge. w_{ij} = \mu_{ij}(1) / \mu_{ij}(0) */
-    private void getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[][] spanWeights) {
+    private void getLogOddsRatios(FgNode parent, Messages[] msgs, double[][] spanWeights) {
         Algebra s = msgs[0].message.getAlgebra();
         
         // Compute the odds ratios of the messages for each edge in the tree.
@@ -269,7 +277,8 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             for (int j=0; j<spanWeights[i].length; j++) {
                 double oddsRatio = spanWeights[i][j];
                 // Check min/max.
-                if (oddsRatio < minOddsRatio) {
+                if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
+                    // Don't count *negative* infinities when logging extreme odds ratios.
                     minOddsRatio = oddsRatio;
                 }
                 if (oddsRatio > maxOddsRatio) {
@@ -285,11 +294,13 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             extremeOddsRatios++;
             log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
             log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
+            // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
+            log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
         }
     }
 
     /** Computes pi = \prod_i \mu_i(0). */
-    private double getProductOfAllFalseMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
+    private double getProductOfAllFalseMessages(FgNode parent, Messages[] msgs) {
         // Precompute the product of all the "false" messages.
         // pi = \prod_i \mu_i(0)
         // Here we store log pi.
@@ -303,8 +314,8 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     /** Sets the outgoing messages. */
-    private void setOutMsgs(Messages[] msgs, boolean logDomain, FgEdge outEdge, SpanVar span,
-            double outMsgTrue, double outMsgFalse) {
+    private void setOutMsgs(Messages[] msgs, FgEdge outEdge, SpanVar span, double outMsgTrue,
+            double outMsgFalse) {
         
         // Set the outgoing messages.
         VarTensor outMsg = msgs[outEdge.getId()].newMessage;
