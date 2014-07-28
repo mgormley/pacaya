@@ -34,6 +34,8 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.util.math.LogAddTable;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 public class ErmaProjDepTreeFactorTest {
 
@@ -484,12 +486,12 @@ public class ErmaProjDepTreeFactorTest {
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
-        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
+        FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
         ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
         bpExpl.run();
         //printMessages(fgExpl, bpExpl);
         
-        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
+        FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
         ErmaBp bpDp = new ErmaBp(fgDp, prm);
         bpDp.run();
         //printMessages(fgDp, bpDp);
@@ -503,23 +505,25 @@ public class ErmaProjDepTreeFactorTest {
     
     @Test
     public void testErmaCompareMessagesWithExplicitTreeFactor() {
-        compareErmaMessagesWithExplicitTreeFactor(false, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(false, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, false);
+        //compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, true);
+        //compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, false);
+        //compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, true);
     }
 
-    public void compareErmaMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+    public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
-        prm.maxIterations = 3;
+        prm.maxIterations = 1;
         prm.normalizeMessages = normalizeMessages;
         
-        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
+        FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
         ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
         bpExpl.forward();
         //printMessages(fgExpl, bpExpl);
         
-        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
+        FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
         ErmaBp bpDp = new ErmaBp(fgDp, prm);
         bpDp.forward();
         //printMessages(fgDp, bpDp);
@@ -566,7 +570,7 @@ public class ErmaProjDepTreeFactorTest {
                     System.out.println(fgExpl.getEdge(i));
                     System.out.println(msgExpl);
                     System.out.println(msgDp);
-                } 
+                }
                 assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
             }
             // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
@@ -640,7 +644,7 @@ public class ErmaProjDepTreeFactorTest {
     }
 
     public void comparePartitionWithBruteForce(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
-        FactorGraph fg = get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight);
+        FactorGraph fg = get2WordSentFactorGraph(useExplicitTreeFactor, makeLoopy, negInfEdgeWeight);
         
         System.out.println(fg.getFactors());
         
@@ -753,15 +757,15 @@ public class ErmaProjDepTreeFactorTest {
         }
     }
 
-    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
-        return get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, false);
+    public static FactorGraph get2WordSentFactorGraph(boolean useExplicitTreeFactor, boolean makeLoopy) {
+        return get2WordSentFactorGraph(useExplicitTreeFactor, makeLoopy, false);
     }
     
-    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
-        return get2WordSentFgAndLinks(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight).fg;
+    public static FactorGraph get2WordSentFactorGraph(boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+        return get2WordSentFgAndLinks(useExplicitTreeFactor, makeLoopy, negInfEdgeWeight).fg;
     }
     
-    public static FgAndLinks get2WordSentFgAndLinks(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+    public static FgAndLinks get2WordSentFgAndLinks(boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
@@ -780,7 +784,7 @@ public class ErmaProjDepTreeFactorTest {
         if (negInfEdgeWeight) {
             child[0][1] = Double.NEGATIVE_INFINITY;
         }
-        
+                
         // Create an edge factored dependency tree factor graph.
         //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
         FactorGraph fg = new FactorGraph();
