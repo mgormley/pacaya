@@ -3,7 +3,6 @@ package edu.jhu.autodiff.erma;
 import java.util.List;
 
 import edu.jhu.autodiff.Module;
-import edu.jhu.autodiff.MVec;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -21,21 +20,21 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class ExpFamFactorsModule implements Module<Factors> {
 
-    private FgModel model;
-    private FgModel modelAdj;
+    private Module<MVecFgModel> modIn;
     private FactorGraph fg;
     private Factors y;
     private Factors yAdj;
     private Algebra s;
     
-    public ExpFamFactorsModule(FactorGraph fg, FgModel model, Algebra s) {
+    public ExpFamFactorsModule(Module<MVecFgModel> modIn, FactorGraph fg, Algebra s) {
+        this.modIn = modIn;
         this.fg = fg;
-        this.model = model;
         this.s = s;
     }
     
     @Override
     public Factors forward() {
+        FgModel model = modIn.getOutput().getModel();
         fg.updateFromModel(model);
         y = new Factors(s);
         y.f = new VarTensor[fg.getNumFactors()];
@@ -51,7 +50,8 @@ public class ExpFamFactorsModule implements Module<Factors> {
 
     @Override
     public void backward() {
-        modelAdj = model.getSparseZeroedCopy();
+        // Get a sparse zeroed copy of the model.
+        FgModel modelAdj = modIn.getOutputAdj().getModel();
         for (int a = 0; a < y.f.length; a++) {
             Factor factor = fg.getFactor(a);
             if (!(factor instanceof GlobalFactor)) {
@@ -72,13 +72,7 @@ public class ExpFamFactorsModule implements Module<Factors> {
     @Override
     public Factors getOutputAdj() {
         if (yAdj == null) {
-            yAdj = new Factors(s);
-            yAdj.f = new VarTensor[y.f.length];
-            for (int a = 0; a < yAdj.f.length; a++) {
-                if (y.f[a] != null) {
-                    yAdj.f[a] = new VarTensor(s, y.f[a].getVars(), s.zero());
-                }
-            }
+            yAdj = y.copyAndFill(s.zero());
         }
         return yAdj;
     }
@@ -86,19 +80,13 @@ public class ExpFamFactorsModule implements Module<Factors> {
     @Override
     public void zeroOutputAdj() {
         if (yAdj != null) {
-            for (int a = 0; a < yAdj.f.length; a++) {
-                if (yAdj.f[a] != null) { yAdj.f[a].fill(s.zero()); }
-            }
+            yAdj.fill(s.zero());
         }
     }
 
     @Override
-    public List<Module<? extends MVec<?>>> getInputs() {
-        return Lists.getList();
-    }
-
-    public FgModel getModelAdj() {
-        return modelAdj;
+    public List<Module<MVecFgModel>> getInputs() {
+        return Lists.getList(modIn);
     }
 
     @Override

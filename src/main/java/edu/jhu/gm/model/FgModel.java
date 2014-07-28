@@ -10,6 +10,7 @@ import java.util.Iterator;
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.MVec;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.map.IntDoubleMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
@@ -19,6 +20,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleUnsortedVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
+import edu.jhu.util.semiring.Algebra;
 
 /**
  * A model in the exponential family for a factor graph .
@@ -222,5 +224,5 @@ public class FgModel implements Serializable, IFgModel {
     public IntDoubleVector getParams() {
         return params;
     }
-        
+    
 }

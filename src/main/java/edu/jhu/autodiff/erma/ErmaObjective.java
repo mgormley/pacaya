@@ -63,7 +63,8 @@ public class ErmaObjective implements ExampleObjective {
         // Get the modules.
         t.reset(); t.start();
         // Model initialization.
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(fg, model, infFactory.getAlgebra());
+        FgModelIdentity mid = new FgModelIdentity(model);
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(mid, fg, infFactory.getAlgebra());
         // Inference.
         ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
         inf.setEffm(effm);
@@ -105,7 +106,7 @@ public class ErmaObjective implements ExampleObjective {
             inf.backward();
             effm.backward();
             // Currently, model adj is always returned in the real semiring.
-            ac.gradient.add(effm.getModelAdj());
+            ac.gradient.add(mid.getOutputAdj().getModel());
             t.stop(); gradTimer.add(t);
         }
         if (ac.accumWeight) {
