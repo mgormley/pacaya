@@ -647,6 +647,7 @@ public class JointNlpRunner {
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = infPrm;
+        prm.bFactory = (ErmaBpPrm) infPrm; // TODO: This is a temporary hack to which assumes we always use ErmaBp.
         if (optimizer == Optimizer.LBFGS) {
             prm.optimizer = getLbfgs();
             prm.batchOptimizer = null;

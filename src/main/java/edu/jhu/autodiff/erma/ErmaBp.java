@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BfsBpSchedule;
@@ -22,6 +23,7 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
@@ -42,7 +44,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     private static final Logger log = Logger.getLogger(ErmaBp.class);
     private static final FgEdge END_OF_EDGE_CREATION = null;
     
-    public static class ErmaBpPrm implements FgInferencerFactory {
+    public static class ErmaBpPrm implements FgInferencerFactory, BeliefsModuleFactory {
         
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
@@ -66,6 +68,11 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         @Override
         public FgInferencer getInferencer(FactorGraph fg) {
             return new ErmaBp(fg, this);
+        }
+
+        @Override
+        public Module<Beliefs> getBeliefsModule(Module<Factors> effm, FactorGraph fg) {
+            return new ErmaBp(fg, this, effm);
         }
         
         @Override
@@ -103,7 +110,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     // Messages for each edge in the factor graph. Indexed by edge id. 
     private Messages[] msgs;
     // The number of messages that have converged.
-    private int numConverged = 0;
+    private int numConverged;
     // The variable and factor beliefs - the output of a forward() call.
     VarTensor[] varBeliefs; // Indexed by variable id.
     VarTensor[] facBeliefs; // Indexed by factor id.
@@ -121,20 +128,28 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     
     private Beliefs b;
     private Beliefs bAdj;
-    private ExpFamFactorsModule effm;
+    private Module<Factors> effm;
 
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
-        this(fg, prm, null);
+        this(fg, prm, getFactorsModule(fg, prm));
+    }
+
+    private static ExpFamFactorsModule getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(new FgModelIdentity(new FgModel(0)), fg, prm.getAlgebra());
+        effm.forward();
+        return effm;
     }
     
-    public ErmaBp(final FactorGraph fg, ErmaBpPrm prm, ExpFamFactorsModule effm) {
+    public ErmaBp(final FactorGraph fg, ErmaBpPrm prm, Module<Factors> effm) {
+        if (prm.getAlgebra() != null && !prm.getAlgebra().equals(effm.getAlgebra())) {
+            // TODO: We shouldn't even specify the algebra in prm.
+            log.warn("Ignoring Algebra in ErmaBpPrm since the input module dictates the algebra: "
+                    + prm.getAlgebra() + " " + effm.getAlgebra());
+        }
         this.fg = fg;
-        this.s = prm.getAlgebra();
+        this.s = effm.getAlgebra();
         this.prm = prm;
         this.effm = effm;
-        if (effm != null && !s.equals(effm.getAlgebra())) {
-            throw new IllegalArgumentException("Algebras must be the same for ExpFamFactorModule and this class: " + s + " " + effm.getAlgebra());
-        }
         
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
@@ -151,6 +166,29 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     return fg.getEdges();
                 }
             };
+        }
+    }
+
+    private void initForward() {
+        numConverged = 0;
+        varBeliefs = null;
+        facBeliefs = null;
+        tape = new Tape();
+        varBeliefsUnSum = null;
+        facBeliefsUnSum = null;
+        msgsAdj = null;
+        potentialsAdj = null;
+        // Initialize Messages.
+        this.msgs = new Messages[fg.getNumEdges()];
+        for (int i=0; i<msgs.length; i++) {
+            // TODO: consider alternate initializations. For example, we could initialize to null.
+            msgs[i] = new Messages(s, fg.getEdge(i), s.one());
+        }
+        // Reset the global factors.
+        for (Factor factor : fg.getFactors()) {
+            if (factor instanceof GlobalFactor) {
+                ((GlobalFactor)factor).reset();
+            }
         }
     }
     
@@ -175,18 +213,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     @Override
     public Beliefs forward() {
         // Initialization.
-        tape = new Tape();
-        this.msgs = new Messages[fg.getNumEdges()];        
-        for (int i=0; i<msgs.length; i++) {
-            // TODO: consider alternate initializations. For example, we could initialize to null.
-            msgs[i] = new Messages(s, fg.getEdge(i), s.one());
-        }
-        // Reset the global factors.
-        for (Factor factor : fg.getFactors()) {
-            if (factor instanceof GlobalFactor) {
-                ((GlobalFactor)factor).reset();
-            }
-        }
+        initForward();
         
         // Message passing.
         //
@@ -327,7 +354,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Message from factor f* to variable v*.
         //
         // Set the initial values of the product to those of the sending factor.
-        VarTensor prod = BruteForceInferencer.safeNewVarTensor(s, factor);
+        VarTensor prod = safeNewVarTensor(factor);
         // Compute the product of all messages received by f* (each
         // of which will have a different domain) with the factor f* itself.
         // Exclude the message going out to the variable, v*.
@@ -340,6 +367,16 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
         // Set the final message in case we created a new object.
         msgs[edge.getId()].newMessage = msg;
+    }
+
+    private VarTensor safeNewVarTensor(Factor factor) {
+        if (factor instanceof GlobalFactor) {
+            // This case is only ever used in testing.
+            log.warn("For testing only.");
+            return BruteForceInferencer.safeNewVarTensor(s, factor);
+        } else {
+            return new VarTensor(effm.getOutput().f[factor.getId()]);
+        }
     }
 
     private boolean forwardGlobalFactorToVar(FgEdge edge, int iter) {
@@ -471,16 +508,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             assert !msgsAdj[i].message.containsNaN() : "msgsAdj[i].message = " + msgsAdj[i].message + "\n" + "edge: " + edge;
         }
         // Initialize the adjoints of the potentials.
-        if (effm != null) {
-            this.potentialsAdj = effm.getOutputAdj().f;
-        } else {
-            this.potentialsAdj = new VarTensor[fg.getNumFactors()];
-            for (int a=0; a<fg.getNumFactors(); a++) {
-                if (!(fg.getFactor(a) instanceof GlobalFactor)) {
-                    potentialsAdj[a] = new VarTensor(s, facBeliefsAdj[a].getVars(), s.zero());
-                }
-            }
-        }
+        this.potentialsAdj = effm.getOutputAdj().f;
+        
         for (int a=0; a<fg.getNumFactors(); a++) {
             if (!(fg.getFactor(a) instanceof GlobalFactor)) {
                 // Backward pass for factor beliefs. Part 2.
@@ -568,7 +597,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
 
     private void initVarToFactorAdj(int i, VarTensor[] facBeliefsAdj, int varId, int facId, FgEdge edge) {
         Factor fac = fg.getFactor(facId);
-        VarTensor prod = BruteForceInferencer.safeNewVarTensor(s, fac);
+        VarTensor prod = safeNewVarTensor(fac);
         prod.prod(facBeliefsAdj[facId]);
         getProductOfMessages(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
         msgsAdj[i].message = prod.getMarginal(new VarSet(edge.getVar()), false);
@@ -618,7 +647,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Increment the adjoint for each variable to factor message.
         for (FgEdge edgeJA : fg.getFactorNode(facId).getInEdges()) {
             if (edgeJA != edgeAI.getOpposing()) {
-                VarTensor prod = BruteForceInferencer.safeNewVarTensor(s, factor);
+                VarTensor prod = safeNewVarTensor(factor);
                 getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
                 prod.prod(msgsAdj[i].newMessage);
                 VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
@@ -781,7 +810,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     + " This should only be used for testing.");
         }
         
-        VarTensor prod = BruteForceInferencer.safeNewVarTensor(s, factor);
+        VarTensor prod = safeNewVarTensor(factor);
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
         getProductOfMessages(node, prod, null);
@@ -914,7 +943,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
 
     @Override
-    public List<ExpFamFactorsModule> getInputs() {
+    public List<Module<Factors>> getInputs() {
         if (effm == null) {
             throw new RuntimeException("No inputs until setEffm() is called.");    
         }        

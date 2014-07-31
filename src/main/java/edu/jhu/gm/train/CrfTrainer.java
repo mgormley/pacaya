@@ -2,7 +2,9 @@ package edu.jhu.gm.train;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.autodiff.erma.ErmaObjective;
+import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.gm.data.FgExampleList;
@@ -34,6 +36,7 @@ public class CrfTrainer {
 
     public static class CrfTrainerPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
+        public BeliefsModuleFactory bFactory = null;
         public Optimizer<DifferentiableFunction> optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         public Optimizer<DifferentiableBatchFunction> batchOptimizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
@@ -65,7 +68,7 @@ public class CrfTrainer {
         ExampleObjective exObj;
         boolean isMinimize;
         if (prm.trainer == Trainer.ERMA) {
-            exObj = new ErmaObjective(data, prm.infFactory, prm.dlFactory);
+            exObj = new ErmaObjective(data, prm.bFactory, prm.dlFactory);
             isMinimize = true;
         } else {
             exObj = new CrfObjective(data, prm.infFactory, prm.useMseForValue);

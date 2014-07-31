@@ -5,7 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
+import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -15,6 +20,7 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
+import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -30,6 +36,7 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -92,14 +99,10 @@ public class ErmaBpBackwardTest {
         VarConfig goldConfig = new VarConfig();
         goldConfig.put(t0, 1);
         
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig); 
-        Prng.seed(12345);
-        fn.getGradient(ModuleTestUtils.getAbsZeroOneGaussian(fn.getNumDimensions()));
-        
-        testGradientByFiniteDifferences(fn);
-        testGradientBySpsaApprox(fn);
+        testGradientByFiniteDifferences(fg, goldConfig);
+        testGradientBySpsaApprox(new ErmaErFn(fg, goldConfig));
     }
-    
+
     // Tests ErmaBp and ExpectedRecall gradient by finite differences on a small chain factor graph.
     @Test
     public void testErmaGradientLinearChain() {
@@ -113,9 +116,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(fgv.t1, 1);
         goldConfig.put(fgv.t2, 1);
                 
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
-        
-        testGradientByFiniteDifferences(fn);
+        testGradientByFiniteDifferences(fg, goldConfig);
     }
     
     @Test
@@ -139,16 +140,14 @@ public class ErmaBpBackwardTest {
         goldConfig.put(fgv.w2, 0);
         goldConfig.put(fgv.t1, 1);
         goldConfig.put(fgv.t2, 1);
-                
+        
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
         prm.normalizeMessages = true;
         
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig, prm);
-        
-        testGradientByFiniteDifferences(fn);
+        testGradientByFiniteDifferences(fg, goldConfig, prm);
     }
 
     @Test
@@ -162,9 +161,7 @@ public class ErmaBpBackwardTest {
                 
         VarConfig goldConfig = new VarConfig();
         goldConfig.put(rootVars[0], 1);
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
-        
-        testGradientByFiniteDifferences(fn);
+        testGradientByFiniteDifferences(fg, goldConfig);
     }
     
     @Test
@@ -218,9 +215,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(rootVars[1], 1);
         goldConfig.put(childVars[0][1], 0);
         goldConfig.put(childVars[1][0], 1);
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
-        
-        testGradientByFiniteDifferences(fn);
+        testGradientByFiniteDifferences(fg, goldConfig);
     }
     
     @Test
@@ -240,10 +235,42 @@ public class ErmaBpBackwardTest {
         goldConfig.put(childVars[1][2], 1);
         goldConfig.put(childVars[2][0], 0);
         goldConfig.put(childVars[2][1], 0);
-       
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
         
-        testGradientByFiniteDifferences(fn);
+        testGradientByFiniteDifferences(fg, goldConfig);
+    }
+
+    
+    private static void testGradientByFiniteDifferences(FactorGraph fg, VarConfig goldConfig) {
+        testGradientByFiniteDifferences(fg, goldConfig, ErmaErFn.getDefaultErmaBpPrm());
+    }
+    
+    private static void testGradientByFiniteDifferences(final FactorGraph fg, final VarConfig goldConfig, final ErmaBpPrm prm) {
+        // Test BP and Expected Recall together.
+        testGradientByFiniteDifferences(new ErmaErFn(fg, goldConfig, prm));
+                
+        // Inputs        
+        FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
+        // The sampled values will be in the real semiring.
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        effm.forward();
+        
+        // Test BP and Expected Recall together.
+        //        OneToOneFactory<Factors,Tensor> fact1 = new OneToOneFactory<Factors,Tensor>() {
+        //            public Module<Tensor> getModule(Module<Factors> m1) {
+        //                ErmaBp bp = new ErmaBp(fg, prm, m1);
+        //                ExpectedRecall er = new ExpectedRecall(bp, goldConfig);
+        //                return new TopoOrder<Tensor>(Lists.getList(m1), er);                
+        //            }
+        //        };
+        //        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact1, effm);
+        
+        // Test BP by itself.
+        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
+                return new ErmaBp(fg, prm, m1);
+            }
+        };
+        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact2, effm);
     }
 
     private static void testGradientByFiniteDifferences(ErmaErFn fn) {

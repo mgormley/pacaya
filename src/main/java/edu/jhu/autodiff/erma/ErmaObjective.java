@@ -18,15 +18,19 @@ import edu.jhu.util.semiring.Algebra;
 public class ErmaObjective implements ExampleObjective {
     
     public interface DlFactory {
-        /** Get a module which decodes then evaluates the loss. 
-         * @param effm TODO*/
+        /** Get a module which decodes then evaluates the loss. */
         Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter);
+    }
+    
+    public interface BeliefsModuleFactory {
+        Module<Beliefs> getBeliefsModule(Module<Factors> effm, FactorGraph fg);
+        Algebra getAlgebra();
     }
     
     private static final Logger log = Logger.getLogger(ErmaObjective.class);
 
     private FgExampleList data;
-    private FgInferencerFactory infFactory;
+    private BeliefsModuleFactory infFactory;
     private DlFactory dlFactory;
     
     // Timer: initialize.
@@ -42,8 +46,7 @@ public class ErmaObjective implements ExampleObjective {
     // Timer: total time for an example.
     private Timer tot = new Timer(); 
     
-    // TODO: Change to Module<Belief> factory instead of FgInferencerFactory.
-    public ErmaObjective(FgExampleList data, FgInferencerFactory infFactory, DlFactory dlFactory) {
+    public ErmaObjective(FgExampleList data, BeliefsModuleFactory infFactory, DlFactory dlFactory) {
         this.data = data;        
         this.infFactory = infFactory;
         this.dlFactory = dlFactory;
@@ -66,8 +69,7 @@ public class ErmaObjective implements ExampleObjective {
         FgModelIdentity mid = new FgModelIdentity(model);
         ExpFamFactorsModule effm = new ExpFamFactorsModule(mid, fg, infFactory.getAlgebra());
         // Inference.
-        ErmaBp inf = (ErmaBp) infFactory.getInferencer(fg);
-        inf.setEffm(effm);
+        Module<Beliefs> inf = infFactory.getBeliefsModule(effm, fg);
         // Decoding and Loss.
         Module<Tensor> dl = dlFactory.getDl(goldConfig, effm, inf, ac.curIter, ac.maxIter);
         t.stop(); initTimer.add(t);

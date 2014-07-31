@@ -2,6 +2,8 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.autodiff.Module;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.model.Factor;
@@ -20,6 +22,8 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class ExpFamFactorsModule implements Module<Factors> {
 
+    private static final Logger log = Logger.getLogger(ExpFamFactorsModule.class);
+    
     private Module<MVecFgModel> modIn;
     private FactorGraph fg;
     private Factors y;
