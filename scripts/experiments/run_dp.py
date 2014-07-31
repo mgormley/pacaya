@@ -20,11 +20,12 @@ from pypipeline import pipeline
 import re
 import random
 from pypipeline.pipeline import write_script, RootStage, Stage
+from pypipeline.stages import get_oome_stages
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
-from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory, get_oome_stages
+from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
 
 # ---------------------------- Experiments Creator Class ----------------------------------
 
