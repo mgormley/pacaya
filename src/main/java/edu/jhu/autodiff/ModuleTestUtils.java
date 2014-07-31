@@ -53,8 +53,8 @@ public class ModuleTestUtils {
                 x.zeroOutputAdj();
             }
             MVec<?> outAdj = vecFn.getOutputAdj();
-            outAdj.fill(0);
-            outAdj.setValue(outIdx, 1);
+            outAdj.fill(0.0);
+            outAdj.setValue(outIdx, 1.0);
             vecFn.backward();
             return getInputsAsIdv(vecFn.getInputs());
         }
@@ -146,13 +146,14 @@ public class ModuleTestUtils {
         vecFn.forward();
         int outDim = ModuleFn.getInputSize(Lists.getList(vecFn));
         for (int i=0; i<outDim; i++) {
+            ModuleFn fn = new ModuleFn(vecFn, i);
+            IntDoubleVector grad = fn.getGradient(x);
             for (int j=0; j<numParams; j++) {
                 // Test the deriviative d/dx_j(f_i(\vec{x}))
-                ModuleFn fn = new ModuleFn(vecFn, i);
+
                 IntDoubleVector d = new IntDoubleDenseVector(numParams);
                 d.set(j, 1);
                 double dotFd = StochasticGradientApproximation.getGradDotDirApprox(fn, x, d, epsilon);
-                IntDoubleVector grad = fn.getGradient(x);
                 double dotAd = grad.dot(d);
                 double relError = Math.abs(dotFd - dotAd) / Math.max(Math.abs(dotFd), Math.abs(dotAd));
                 System.out.printf("i=%d j=%d dotFd=%g dotAd=%g relError=%g\n", i, j, dotFd, dotAd, relError);
