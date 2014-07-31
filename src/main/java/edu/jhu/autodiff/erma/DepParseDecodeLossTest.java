@@ -2,6 +2,9 @@ package edu.jhu.autodiff.erma;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.TwoToOneFactory;
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
@@ -28,7 +31,7 @@ public class DepParseDecodeLossTest {
         LinkVar[][] childVars = fgl.childVars;
                 
         // Get variable configuration:
-        VarConfig goldConfig = new VarConfig();
+        final VarConfig goldConfig = new VarConfig();
         goldConfig.put(rootVars[0], 0);
         goldConfig.put(rootVars[1], 1);
         goldConfig.put(rootVars[2], 0);
@@ -50,7 +53,15 @@ public class DepParseDecodeLossTest {
         TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 3));
         DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, temp);
         
-        ModuleTestUtils.assertFdAndAdEqual(dl, 1e-8, 1e-5);        
-    }
+        ModuleTestUtils.assertFdAndAdEqual(dl, 1e-8, 1e-5);      
         
+        // testGradByFiniteDiffsAllSemirings
+        TwoToOneFactory<Beliefs,Tensor,Tensor> fact = new TwoToOneFactory<Beliefs,Tensor,Tensor>() {
+            public Module<Tensor> getModule(Module<Beliefs> m1, Module<Tensor> m2) {
+                return new DepParseDecodeLoss(m1, goldConfig, m2);
+            }
+        };        
+        AbstractModuleTest.evalTwoToOneByFiniteDiffsAbs(fact, id1, temp);
+    }    
+    
 }
