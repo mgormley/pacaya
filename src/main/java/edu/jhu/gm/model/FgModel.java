@@ -10,8 +10,8 @@ import java.util.Iterator;
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
-import edu.jhu.autodiff.MVec;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.map.IntDoubleMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
@@ -20,7 +20,6 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleUnsortedVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
-import edu.jhu.util.semiring.Algebra;
 
 /**
  * A model in the exponential family for a factor graph .
@@ -118,8 +117,26 @@ public class FgModel implements Serializable, IFgModel {
         this.params.add(other.params);
     }
     
-    public double dot(FeatureVector fv) {     
+    public double dot(FeatureVector fv) {
+        // Check for features which don't have a corresponding model parameter
+        int maxIdx = getMaxIdx(fv);
+        if (maxIdx >= this.numParams) {
+            throw new IllegalArgumentException("Invalid feature: " + maxIdx);
+        }
         return params.dot(fv);
+    }
+
+    // TODO: Move this to prim.
+    public static int getMaxIdx(IntDoubleVector vec) {
+        final MutableInt max = new MutableInt(Integer.MIN_VALUE);
+        vec.iterate(new FnIntDoubleToVoid() {
+            public void call(int idx, double val) {
+                if (val > max.v) {
+                    max.v = idx;
+                }
+            }
+        });
+        return max.v;
     }
     
     public int getNumParams() {
