@@ -506,9 +506,9 @@ public class ErmaProjDepTreeFactorTest {
     @Test
     public void testErmaCompareMessagesWithExplicitTreeFactor() {
         compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, false);
-        //compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, true);
-        //compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, false);
-        //compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, false);
+        compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, true);
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
@@ -547,7 +547,9 @@ public class ErmaProjDepTreeFactorTest {
             bpExpl.getOutputAdj().varBeliefs[v].setValue(LinkVar.TRUE, adj);
             bpDp.getOutputAdj().varBeliefs[v].setValue(LinkVar.TRUE, adj);
         }
+        System.out.println("------Expl Backward-----");
         bpExpl.backward();
+        System.out.println("------DP Backward-----");
         bpDp.backward();
         System.out.println("Adjoints");
         assertEqualMessages(fgExpl, bpExpl.getMessagesAdj(), bpDp.getMessagesAdj());
