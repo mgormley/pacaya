@@ -7,7 +7,7 @@ import java.util.List;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 
-public class RandomBpSchedule implements BpSchedule {
+public class RandomBpSchedule implements MessagePassingSchedule {
 
     private ArrayList<FgEdge> order;
     

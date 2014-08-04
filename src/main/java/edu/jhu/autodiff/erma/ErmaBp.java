@@ -13,7 +13,7 @@ import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BfsBpSchedule;
-import edu.jhu.gm.inf.BpSchedule;
+import edu.jhu.gm.inf.MessagePassingSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
@@ -106,7 +106,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     private final ErmaBpPrm prm;
     private final Algebra s;
     private final FactorGraph fg;    
-    private final BpSchedule sched;
+    private final MessagePassingSchedule sched;
     // Messages for each edge in the factor graph. Indexed by edge id. 
     private Messages[] msgs;
     // The number of messages that have converged.
@@ -160,7 +160,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
         } else {
-            sched = new BpSchedule() {
+            sched = new MessagePassingSchedule() {
                 @Override
                 public List<FgEdge> getOrder() {
                     return fg.getEdges();

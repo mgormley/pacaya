@@ -19,7 +19,7 @@ import edu.jhu.gm.model.globalfac.GlobalFactor;
  * @author mgormley
  * 
  */
-public class BfsBpSchedule implements BpSchedule {
+public class BfsBpSchedule implements MessagePassingSchedule {
 
     private static final Logger log = Logger.getLogger(BfsBpSchedule.class);
 

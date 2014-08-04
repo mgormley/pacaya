@@ -78,7 +78,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     private final FactorGraph fg;
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
     private final Messages[] msgs;
-    private BpSchedule sched;
+    private MessagePassingSchedule sched;
     
     private VarTensor[] factorBeliefCache;
     // The number of messages that have converged.
@@ -100,7 +100,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
         } else {
-            sched = new BpSchedule() {
+            sched = new MessagePassingSchedule() {
                 @Override
                 public List<FgEdge> getOrder() {
                     return fg.getEdges();
