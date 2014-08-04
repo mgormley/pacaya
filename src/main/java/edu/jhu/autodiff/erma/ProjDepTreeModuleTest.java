@@ -200,6 +200,7 @@ public class ProjDepTreeModuleTest {
         }
     }
     
+    // NOTE: This test seems to occasionally fail do to floating point precision.
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.

@@ -30,7 +30,7 @@ public class ErmaObjective implements ExampleObjective {
     private static final Logger log = Logger.getLogger(ErmaObjective.class);
 
     private FgExampleList data;
-    private BeliefsModuleFactory infFactory;
+    private BeliefsModuleFactory bFactory;
     private DlFactory dlFactory;
     
     // Timer: initialize.
@@ -46,9 +46,9 @@ public class ErmaObjective implements ExampleObjective {
     // Timer: total time for an example.
     private Timer tot = new Timer(); 
     
-    public ErmaObjective(FgExampleList data, BeliefsModuleFactory infFactory, DlFactory dlFactory) {
+    public ErmaObjective(FgExampleList data, BeliefsModuleFactory bFactory, DlFactory dlFactory) {
         this.data = data;        
-        this.infFactory = infFactory;
+        this.bFactory = bFactory;
         this.dlFactory = dlFactory;
     }
     
@@ -67,9 +67,9 @@ public class ErmaObjective implements ExampleObjective {
         t.reset(); t.start();
         // Model initialization.
         FgModelIdentity mid = new FgModelIdentity(model);
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(mid, fg, infFactory.getAlgebra());
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(mid, fg, bFactory.getAlgebra());
         // Inference.
-        Module<Beliefs> inf = infFactory.getBeliefsModule(effm, fg);
+        Module<Beliefs> inf = bFactory.getBeliefsModule(effm, fg);
         // Decoding and Loss.
         Module<Tensor> dl = dlFactory.getDl(goldConfig, effm, inf, ac.curIter, ac.maxIter);
         t.stop(); initTimer.add(t);
