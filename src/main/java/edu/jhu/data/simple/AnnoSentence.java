@@ -2,21 +2,19 @@ package edu.jhu.data.simple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
+import edu.jhu.data.SpanLabels;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.parse.cky.data.BinaryTree;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.set.IntHashSet;
-import edu.jhu.prim.set.IntSet;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 
@@ -48,11 +46,13 @@ public class AnnoSentence {
      */
     private int[] parents;
     private DepEdgeMask depEdgeMask;
+    private IntHashSet knownPreds;
+    // TODO: This should be broken into semantic-roles and word senses.
     private SrlGraph srlGraph;
-    private IntHashSet knownPreds;    
     /** Constituency parse. */    
     private BinaryTree binaryTree;
 
+    //private SpanLabels namedEntities;
     // TODO: add NER
     // TODO: add Relations (e.g. ACE relations)
     // TODO: add Token offsets.
