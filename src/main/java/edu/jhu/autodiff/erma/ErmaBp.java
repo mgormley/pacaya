@@ -12,13 +12,14 @@ import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.inf.BfsBpSchedule;
-import edu.jhu.gm.inf.MessagePassingSchedule;
+import edu.jhu.gm.inf.BfsMpSchedule;
+import edu.jhu.gm.inf.CachingBpSchedule;
+import edu.jhu.gm.inf.MpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.inf.Messages;
-import edu.jhu.gm.inf.RandomBpSchedule;
+import edu.jhu.gm.inf.RandomMpSchedule;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
@@ -106,7 +107,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     private final ErmaBpPrm prm;
     private final Algebra s;
     private final FactorGraph fg;    
-    private final MessagePassingSchedule sched;
+    private final CachingBpSchedule sched;
     // Messages for each edge in the factor graph. Indexed by edge id. 
     private Messages[] msgs;
     // The number of messages that have converged.
@@ -151,22 +152,24 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         this.prm = prm;
         this.effm = effm;
         
+        MpSchedule sch;
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
-                sched = new BfsBpSchedule(fg);
+                sch = new BfsMpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
-                sched = new RandomBpSchedule(fg);
+                sch = new RandomMpSchedule(fg);
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
         } else {
-            sched = new MessagePassingSchedule() {
+            sch = new MpSchedule() {
                 @Override
                 public List<FgEdge> getOrder() {
                     return fg.getEdges();
                 }
             };
-        }
+        }        
+        sched = new CachingBpSchedule(sch, prm.updateOrder, prm.schedule);
     }
 
     private void initForward() {
@@ -216,11 +219,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         initForward();
         
         // Message passing.
-        //
-        // At iteration -1, we send all the constant messages. Then we never send them again.
-        List<FgEdge> order = null;
         for (int iter=-1; iter < prm.maxIterations; iter++) {
-            order = updateOrder(order, iter);
+            List<FgEdge> order = sched.getOrder(iter);
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {                
                 for (FgEdge edge : order) {
                     forwardCreateMessage(edge, iter);
@@ -252,52 +252,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         forwardVarAndFacBeliefs();
         b = new Beliefs(varBeliefs, facBeliefs);
         return b;
-    }
-
-    private List<FgEdge> updateOrder(List<FgEdge> order, int iter) {
-        if (iter >= 1 && !(prm.updateOrder == BpUpdateOrder.SEQUENTIAL || prm.schedule == BpScheduleType.RANDOM)) {
-            // Just re-use the same order.
-            return order;
-        }
-        // Get the initial order for the edges.
-        order = sched.getOrder();
-        if (iter == -1) {   
-            // Keep only the messages from the leaves for iteration -1. Then never send these again.
-            order = filterNonConstantMsgs(order);
-        } else {
-            // Filter out the messages from the leaves.
-            order = filterConstantMsgs(order);
-        }
-        return order;
-    }
-    
-    /** Filters edges from a leaf node. */
-    private List<FgEdge> filterConstantMsgs(List<FgEdge> order) {
-        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
-        for (FgEdge edge : order) {
-            // If the parent node is not a leaf.
-            if (!isConstantMsg(edge)) {
-                filt.add(edge);
-            }
-        }
-        return filt;
-    }
-    
-    /** Filters edges not from a leaf node. */
-    private List<FgEdge> filterNonConstantMsgs(List<FgEdge> order) {
-        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
-        for (FgEdge edge : order) {
-            // If the parent node is not a leaf.
-            if (isConstantMsg(edge)) {
-                filt.add(edge);
-            }
-        }
-        return filt;
-    }
-
-    /** Returns true iff the edge corresponds to a message which is constant (i.e. sent from a leaf node). */
-    private boolean isConstantMsg(FgEdge edge) {
-        return edge.getParent().getOutEdges().size() == 1;
     }
 
     private void forwardCreateMessage(FgEdge edge, int iter) {
@@ -743,7 +697,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     /** Returns the "converged" residual for constant messages, and the actual residual otherwise. */
     private double smartResidual(VarTensor message, VarTensor newMessage, FgEdge edge) {
         // This is intentionally NOT the semiring zero.
-        return isConstantMsg(edge) ? 0.0 : getResidual(message, newMessage);
+        return CachingBpSchedule.isConstantMsg(edge) ? 0.0 : getResidual(message, newMessage);
     }
 
     /**

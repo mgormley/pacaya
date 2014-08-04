@@ -7,11 +7,11 @@ import java.util.List;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 
-public class RandomBpSchedule implements MessagePassingSchedule {
+public class RandomMpSchedule implements MpSchedule {
 
     private ArrayList<FgEdge> order;
     
-    public RandomBpSchedule(FactorGraph fg) {
+    public RandomMpSchedule(FactorGraph fg) {
         order = new ArrayList<FgEdge>(fg.getEdges());
     }
     @Override

@@ -19,13 +19,13 @@ import edu.jhu.gm.model.globalfac.GlobalFactor;
  * @author mgormley
  * 
  */
-public class BfsBpSchedule implements MessagePassingSchedule {
+public class BfsMpSchedule implements MpSchedule {
 
-    private static final Logger log = Logger.getLogger(BfsBpSchedule.class);
+    private static final Logger log = Logger.getLogger(BfsMpSchedule.class);
 
     private ArrayList<FgEdge> order;
     
-    public BfsBpSchedule(FactorGraph fg) {
+    public BfsMpSchedule(FactorGraph fg) {
         // Create the order list.
         order = new ArrayList<FgEdge>();
         

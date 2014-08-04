@@ -78,7 +78,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     private final FactorGraph fg;
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
     private final Messages[] msgs;
-    private MessagePassingSchedule sched;
+    private CachingBpSchedule sched;
     
     private VarTensor[] factorBeliefCache;
     // The number of messages that have converged.
@@ -91,22 +91,24 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         this.msgs = new Messages[fg.getNumEdges()];
         this.factorBeliefCache = new VarTensor[fg.getNumFactors()];
         
+        MpSchedule sch;
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
-                sched = new BfsBpSchedule(fg);
+                sch = new BfsMpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
-                sched = new RandomBpSchedule(fg);
+                sch = new RandomMpSchedule(fg);
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
         } else {
-            sched = new MessagePassingSchedule() {
+            sch = new MpSchedule() {
                 @Override
                 public List<FgEdge> getOrder() {
                     return fg.getEdges();
                 }
             };
-        }
+        }        
+        sched = new CachingBpSchedule(sch, prm.updateOrder, prm.schedule);
     }
     
     /** For testing only. */
@@ -153,14 +155,11 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         
         
         // Message passing.
-        //
-        // At iteration -1, we send all the constant messages. Then we never send them again.
-        List<FgEdge> order = null;
         for (int iter=-1; iter < prm.maxIterations; iter++) {
             if (timer.totSec() > prm.timeoutSeconds) {
                 break;
             }
-            order = updateOrder(order, iter);
+            List<FgEdge> order = sched.getOrder(iter);
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
                 for (FgEdge edge : order) {
                     createMessage(edge, iter);
@@ -194,52 +193,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         }
         
         timer.stop();
-    }
-
-    private List<FgEdge> updateOrder(List<FgEdge> order, int iter) {
-        if (iter >= 1 && !(prm.updateOrder == BpUpdateOrder.SEQUENTIAL || prm.schedule == BpScheduleType.RANDOM)) {
-            // Just re-use the same order.
-            return order;
-        }
-        // Get the initial order for the edges.
-        order = sched.getOrder();
-        if (iter == -1) {   
-            // Keep only the messages from the leaves for iteration -1. Then never send these again.
-            order = filterNonConstantMsgs(order);
-        } else {
-            // Filter out the messages from the leaves.
-            order = filterConstantMsgs(order);
-        }
-        return order;
-    }
-    
-    /** Filters edges from a leaf node. */
-    private List<FgEdge> filterConstantMsgs(List<FgEdge> order) {
-        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
-        for (FgEdge edge : order) {
-            // If the parent node is not a leaf.
-            if (!isConstantMsg(edge)) {
-                filt.add(edge);
-            }
-        }
-        return filt;
-    }
-    
-    /** Filters edges not from a leaf node. */
-    private List<FgEdge> filterNonConstantMsgs(List<FgEdge> order) {
-        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
-        for (FgEdge edge : order) {
-            // If the parent node is not a leaf.
-            if (isConstantMsg(edge)) {
-                filt.add(edge);
-            }
-        }
-        return filt;
-    }
-
-    /** Returns true iff the edge corresponds to a message which is constant (i.e. sent from a leaf node). */
-    private boolean isConstantMsg(FgEdge edge) {
-        return edge.getParent().getOutEdges().size() == 1;
     }
     
     public boolean isConverged() {
@@ -420,7 +373,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     /** Returns the "converged" residual for constant messages, and the actual residual otherwise. */
     private double smartResidual(VarTensor message, VarTensor newMessage, FgEdge edge) {
         // This is intentionally NOT the semiring zero.
-        return isConstantMsg(edge) ? 0.0 : getResidual(message, newMessage);
+        return CachingBpSchedule.isConstantMsg(edge) ? 0.0 : getResidual(message, newMessage);
     }
 
     /**

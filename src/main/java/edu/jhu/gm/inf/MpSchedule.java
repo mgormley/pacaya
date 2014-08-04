@@ -4,7 +4,11 @@ import java.util.List;
 
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 
-public interface MessagePassingSchedule {
+/**
+ * Schedule for a message passing algorithm.
+ * @author mgormley
+ */
+public interface MpSchedule {
 
     /**
      * Gets the order for a message passing algorithm (e.g. belief propagation). An order consists

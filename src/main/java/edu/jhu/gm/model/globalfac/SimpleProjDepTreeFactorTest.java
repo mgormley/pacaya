@@ -16,7 +16,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BeliefPropagationTest;
-import edu.jhu.gm.inf.BfsBpSchedule;
+import edu.jhu.gm.inf.BfsMpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.Messages;
@@ -232,7 +232,7 @@ public class SimpleProjDepTreeFactorTest {
         bp.run();
         
         // Print schedule:
-        BfsBpSchedule schedule = new BfsBpSchedule(fg);
+        BfsMpSchedule schedule = new BfsMpSchedule(fg);
         
         System.out.println();
         for (FgEdge edge : schedule.getOrder()) {
@@ -313,7 +313,7 @@ public class SimpleProjDepTreeFactorTest {
         bp.run();
         
         // Print schedule:
-        BfsBpSchedule schedule = new BfsBpSchedule(fg);
+        BfsMpSchedule schedule = new BfsMpSchedule(fg);
         
         System.out.println();
         for (FgEdge edge : schedule.getOrder()) {
@@ -392,7 +392,7 @@ public class SimpleProjDepTreeFactorTest {
         }
         
         // Print schedule:
-        BfsBpSchedule schedule = new BfsBpSchedule(fg);        
+        BfsMpSchedule schedule = new BfsMpSchedule(fg);        
         System.out.println();
         for (FgEdge edge : schedule.getOrder()) {
             System.out.println(edge.toString());

@@ -30,7 +30,7 @@ import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.inf.BfsBpSchedule;
+import edu.jhu.gm.inf.BfsMpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
@@ -192,7 +192,7 @@ public class CrfObjectiveTest {
         assertEquals(2*3, infLatPred.getPartition(), 1e-3);         
 
         // Print schedule:
-        BfsBpSchedule schedule = new BfsBpSchedule(fgLatPred);        
+        BfsMpSchedule schedule = new BfsMpSchedule(fgLatPred);        
         System.out.println();
         for (FgEdge edge : schedule.getOrder()) {
             System.out.println(edge.toString());

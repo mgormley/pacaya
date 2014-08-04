@@ -13,7 +13,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 
-public class BfsBpScheduleTest {
+public class BfsMpScheduleTest {
 
     @Test
     public void testGetOrder() {
@@ -39,7 +39,7 @@ public class BfsBpScheduleTest {
         fg.addFactor(tran0);
         fg.addFactor(tran1);
         
-        BfsBpSchedule schedule = new BfsBpSchedule(fg);
+        BfsMpSchedule schedule = new BfsMpSchedule(fg);
         
         System.out.println();
         for (FgEdge edge : schedule.getOrder()) {
@@ -76,7 +76,7 @@ public class BfsBpScheduleTest {
         
 
         ArrayList<FgEdge> order = new ArrayList<FgEdge>();
-        BfsBpSchedule.addEdgesFromRoot(fg.getNode(tran0), order, fg);
+        BfsMpSchedule.addEdgesFromRoot(fg.getNode(tran0), order, fg);
         
         System.out.println();
         for (FgEdge edge : order) {
