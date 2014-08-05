@@ -19,6 +19,7 @@ import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.inf.Messages;
+import edu.jhu.gm.inf.ParallelMpSchedule;
 import edu.jhu.gm.inf.RandomMpSchedule;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -87,6 +88,13 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
     }
     
+    /**
+     * The tape for recording the forward computation of belief propagation. Each entry on the tape
+     * consists of several parts: an edge representing which message was sent, a normalized message,
+     * and the normalizing constant of the pre-normalized message.
+     * 
+     * @author mgormley
+     */
     private static class Tape {
         public List<VarTensor> msgs = new ArrayList<VarTensor>();
         public List<FgEdge> edges = new ArrayList<FgEdge>();
@@ -104,6 +112,22 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
     }
         
+    private static class TapeEntry {
+        public Object item;
+        public List<VarTensor> msgs;
+        public DoubleArrayList msgSums;
+        public List<FgEdge> edges;
+        
+        public TapeEntry(Object item, List<FgEdge> edges) {
+            this.item = item;
+            this.edges = edges;
+            msgs = new ArrayList<VarTensor>(edges.size());
+            msgSums = new DoubleArrayList(edges.size());
+        }
+        
+        
+    }
+    
     private final ErmaBpPrm prm;
     private final Algebra s;
     private final FactorGraph fg;    
@@ -117,7 +141,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     VarTensor[] facBeliefs; // Indexed by factor id.
     
     // The tape, which records each message passed in the forward() call.
-    private Tape tape;
+    private List<TapeEntry> tape;
     // The tape for the normalization of the variable and factor beliefs.
     double[] varBeliefsUnSum; // Indexed by variable id.
     double[] facBeliefsUnSum; // Indexed by factor id.
@@ -162,12 +186,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
         } else {
-            sch = new MpSchedule() {
-                @Override
-                public List<FgEdge> getOrder() {
-                    return fg.getEdges();
-                }
-            };
+            sch = new ParallelMpSchedule(fg);
         }        
         sched = new CachingBpSchedule(sch, prm.updateOrder, prm.schedule);
     }
@@ -176,7 +195,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         numConverged = 0;
         varBeliefs = null;
         facBeliefs = null;
-        tape = new Tape();
+        tape = new ArrayList<TapeEntry>();
         varBeliefsUnSum = null;
         facBeliefsUnSum = null;
         msgsAdj = null;
@@ -186,12 +205,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations. For example, we could initialize to null.
             msgs[i] = new Messages(s, fg.getEdge(i), s.one());
-        }
-        // Reset the global factors.
-        for (Factor factor : fg.getFactors()) {
-            if (factor instanceof GlobalFactor) {
-                ((GlobalFactor)factor).reset();
-            }
         }
     }
     
@@ -219,33 +232,31 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         initForward();
         
         // Message passing.
+        loops:
         for (int iter=-1; iter < prm.maxIterations; iter++) {
-            List<FgEdge> order = sched.getOrder(iter);
-            if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {                
-                for (FgEdge edge : order) {
-                    forwardCreateMessage(edge, iter);
-                    forwardSendMessage(edge);
-                    if (isConverged()) {
-                        // Stop on convergence: Break out of inner loop.
-                        break;
+            List<Object> order = sched.getOrder(iter);
+            for (Object item : order) {
+                List<FgEdge> edges = CachingBpSchedule.toEdgeList(item);
+                TapeEntry te = new TapeEntry(item, edges);
+                if (item instanceof GlobalFactor) {
+                    forwardGlobalFacToVar((GlobalFactor) item);
+                } else {
+                    for (FgEdge edge : edges) {
+                        forwardCreateMessage(edge);
                     }
                 }
-            } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-                for (FgEdge edge : order) {
-                    forwardCreateMessage(edge, iter);
+                for (FgEdge edge : edges) {
+                    normalizeAndAddToTape(edge, te);
                 }
-                // Mark the end of the message creation on the tape with a special tape entry.
-                tape.add(END_OF_EDGE_CREATION, null, 0, false);
-                for (FgEdge edge : order) {
+                for (FgEdge edge : edges) {
                     forwardSendMessage(edge);
                 }
-            } else {
-                throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
-            }
-            if (isConverged()) {
-                // Stop on convergence.
-                log.trace("Stopping on convergence. Iterations = " + (iter+1));
-                break;
+                if (prm.keepTape) { tape.add(te); }
+                if (isConverged()) {
+                    // Stop on convergence: Break out of inner and outer loop.
+                    log.trace("Stopping on convergence. Iterations = " + (iter+1));
+                    break loops;
+                }
             }
         }
         
@@ -254,33 +265,28 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         return b;
     }
 
-    private void forwardCreateMessage(FgEdge edge, int iter) {
+    private void forwardCreateMessage(FgEdge edge) {
         if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
-            boolean created = forwardGlobalFactorToVar(edge, iter);
-            if (created) {
-                // Add all the outgoing messages from the global factor to the tape.
-                normalizeAndAddToTape(edge, true); // only mark the first edge as "created"
-                for (FgEdge e2 : edge.getParent().getOutEdges()) {
-                    if (e2 != edge) {
-                        // Include each created edge so that we can reverse normalization.
-                        normalizeAndAddToTape(e2, false);
-                    }
-                }
-            }
+            throw new IllegalArgumentException("Cannot create a single message from a global factor: " + edge);
+        }
+        if (edge.isVarToFactor()) {
+            forwardVarToFactor(edge);
         } else {
-            if (edge.isVarToFactor()) {
-                forwardVarToFactor(edge);
-            } else {
-                forwardFactorToVar(edge);
-            }
-            normalizeAndAddToTape(edge, true);
+            forwardFactorToVar(edge);
         }
     }
 
     public boolean isConverged() {
         return numConverged == msgs.length;
     }
-    
+
+    private void forwardGlobalFacToVar(GlobalFactor globalFac) {
+        // Since this is a global factor, we pass the incoming messages to it, 
+        // and efficiently marginalize over the variables.
+        log.trace("Creating messages for global factor.");
+        globalFac.createMessages(fg.getNode(globalFac), msgs);
+    }
+        
     private void forwardVarToFactor(FgEdge edge) {
         // Since this is not a global factor, we send messages in the normal way, which
         // in the case of a factor to variable message requires enumerating all possible
@@ -333,25 +339,15 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
     }
 
-    private boolean forwardGlobalFactorToVar(FgEdge edge, int iter) {
-        log.trace("Creating messages for global factor.");
-        // Since this is a global factor, we pass the incoming messages to it, 
-        // and efficiently marginalize over the variables. The current setup is
-        // create all the messages from this factor to its variables, but only 
-        // once per iteration.
-        GlobalFactor globalFac = (GlobalFactor) edge.getFactor();
-        return globalFac.createMessages(edge.getParent(), msgs, iter);
-    }
-
-    private void normalizeAndAddToTape(FgEdge edge, boolean created) {
+    private void normalizeAndAddToTape(FgEdge edge, TapeEntry te) {
         double msgSum = 0;
         if (prm.normalizeMessages) {
             msgSum = forwardNormalize(edge);
         }
         if (prm.keepTape) {
             // The tape stores the old message, the normalization constant of the new message, and the edge.
-            VarTensor oldMsg = new VarTensor(msgs[edge.getId()].message);
-            tape.add(edge, oldMsg, msgSum, created);
+            te.msgs.add(new VarTensor(msgs[edge.getId()].message));
+            te.msgSums.add(msgSum);
         }
     }
     
@@ -405,41 +401,24 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Initialize the message and potential adjoints by running the variable / factor belief computation in reverse.
         backwardVarFacBeliefs(varBeliefsAdj, facBeliefsAdj);
         
-        // Compute the message adjoints by running BP in reverse.
-        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-            // Process each tape entry in reverse order.
-            for (int t = tape.size() - 1; t >= 0; t--) {
-                backwardSendMessage(t);
-                backwardNormalize(t);
-                backwardCreateMessage(t);            
+        // Process each tape entry in reverse order.
+        for (int t = tape.size() - 1; t >= 0; t--) {
+            // Dequeue from tape.
+            TapeEntry te = tape.get(t);
+            for (int j = te.edges.size() - 1; j >= 0; j--) {
+                backwardSendMessage(te.edges.get(j), te.msgs.get(j));
             }
-        } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-            int t = tape.size() - 1;
-            while (t >= 0) {
-                // Send the messages backwards from each tape entry until an
-                // END_OF_EDGE_CREATION marker is reached.
-                int tTop = t;
-                for (; t >= 0; t--) {                
-                    if (tape.edges.get(t) == END_OF_EDGE_CREATION) {
-                        break;
-                    }
-                    backwardSendMessage(t);
-                    backwardNormalize(t);
-                }
-                // Create the adjoints of the messages that were just
-                // "sent backwards" above.
-                t = tTop;
-                for (; t >= 0; t--) {
-                    if (tape.edges.get(t) == END_OF_EDGE_CREATION) {
-                        t--;
-                        break;
-                    }
-                    backwardCreateMessage(t);
+            for (int j = te.edges.size() - 1; j >= 0; j--) {
+                backwardNormalize(te.edges.get(j), te.msgSums.get(j));
+            }
+            if (te.item instanceof GlobalFactor) {
+                backwardGlobalFactorToVar((GlobalFactor) te.item);
+            } else {
+                for (int j = te.edges.size() - 1; j >= 0; j--) {
+                    backwardCreateMessage(te.edges.get(j));
                 }
             }
-        } else {
-            throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
-        }
+        }        
     }
 
     private void backwardVarFacBeliefs(VarTensor[] varBeliefsAdj, VarTensor[] facBeliefsAdj) {
@@ -472,10 +451,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
     }
 
-    private void backwardSendMessage(int t) {
+    private void backwardSendMessage(FgEdge edge, VarTensor oldMsg) {
         // Dequeue from tape.
-        FgEdge edge = tape.edges.get(t);
-        VarTensor oldMsg = tape.msgs.get(t);
         int i = edge.getId();
         
         // Send messages and adjoints in reverse.
@@ -490,39 +467,31 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         logTraceMsgUpdate("backwardSendMessage", msgsAdj[i].newMessage, edge);
     }
 
-    private void backwardNormalize(int t) {
+    private void backwardNormalize(FgEdge edge, double msgSum) {
         if (prm.normalizeMessages) {
-            // Dequeue from tape.
-            FgEdge edge = tape.edges.get(t);
-            double msgSum = tape.msgSums.get(t);
             int i = edge.getId();
             // Convert the adjoint of the message to the adjoint of the unnormalized message.
             unnormalizeAdjInPlace(msgs[i].newMessage, msgsAdj[i].newMessage, msgSum);
         }
     }
     
+    private void backwardGlobalFactorToVar(GlobalFactor globalFac) {
+        globalFac.backwardCreateMessages(fg.getNode(globalFac), msgs, msgsAdj);
+    }
+    
     /**
      * Creates the adjoint of the unnormalized message for the edge at time t
      * and stores it in msgsAdj[i].message.
      */
-    private void backwardCreateMessage(int t) {
-        // Dequeue from tape.
-        FgEdge edge = tape.edges.get(t);
-        boolean created = tape.createFlags.get(t);            
-        int i = edge.getId();
-        
+    private void backwardCreateMessage(FgEdge edge) {        
         if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
-            // TODO: The schedule should be over edge sets, not individual edges, so we don't need the "created" flag.
-            GlobalFactor factor = (GlobalFactor) edge.getFactor();
-            if (created) {
-                factor.backwardCreateMessages(edge.getParent(), msgs, msgsAdj, s);
-            }
-        } else {            
-            if (edge.isVarToFactor()) {
-                backwardVarToFactor(edge, i);
-            } else {
-                backwardFactorToVar(edge, i);
-            }
+            throw new IllegalArgumentException("Cannot create a single message from a global factor: " + edge);
+        }
+        int i = edge.getId();
+        if (edge.isVarToFactor()) {
+            backwardVarToFactor(edge, i);
+        } else {
+            backwardFactorToVar(edge, i);
         }
         assert !msgsAdj[i].message.containsNaN() : "msgsAdj[i].message = " + msgsAdj[i].message + "\n" + "edge: " + edge;
     }
@@ -534,7 +503,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             } else {
                 log.trace(name+"\n"+msg);
             }
-        }     
+        }
         assert !msg.containsNaN() : "msg = " + msg + "\n" + "edge: " + edge;
     }
 

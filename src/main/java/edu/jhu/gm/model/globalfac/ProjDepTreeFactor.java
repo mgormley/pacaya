@@ -155,12 +155,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
         
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs) {
+    public void createMessages(FgNode parent, Messages[] msgs) {
         forwardAndBackward(parent, msgs, null, true);
     }
 
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj) {
         forwardAndBackward(parent, msgs, msgsAdj, false);
     }
     

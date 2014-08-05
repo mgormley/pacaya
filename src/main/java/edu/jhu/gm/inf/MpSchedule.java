@@ -21,6 +21,6 @@ public interface MpSchedule {
      * 
      * @return The order of messages to send.
      */
-    List<FgEdge> getOrder();
+    List<Object> getOrder();
 
 }

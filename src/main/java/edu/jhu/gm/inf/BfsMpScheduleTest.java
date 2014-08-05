@@ -42,8 +42,8 @@ public class BfsMpScheduleTest {
         BfsMpSchedule schedule = new BfsMpSchedule(fg);
         
         System.out.println();
-        for (FgEdge edge : schedule.getOrder()) {
-            System.out.println(edge.toString());
+        for (Object item : schedule.getOrder()) {
+            System.out.println(item.toString());
         }
         
         System.out.println(schedule.getOrder());
@@ -75,11 +75,11 @@ public class BfsMpScheduleTest {
         fg.addFactor(tran0);
         
 
-        ArrayList<FgEdge> order = new ArrayList<FgEdge>();
+        ArrayList<Object> order = new ArrayList<Object>();
         BfsMpSchedule.addEdgesFromRoot(fg.getNode(tran0), order, fg);
         
         System.out.println();
-        for (FgEdge edge : order) {
+        for (Object edge : order) {
             System.out.println(edge.toString());
         }
         

@@ -6,6 +6,9 @@ import java.util.List;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
+import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Wraps a MessagePassingSchedule to create an iteration-specific schedule such that: at iteration
@@ -16,7 +19,7 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 public class CachingBpSchedule {
 
     private MpSchedule sched;
-    private List<FgEdge> order;
+    private List<Object> order;
     private boolean canReuseOrder;
 
     public CachingBpSchedule(MpSchedule sched, BpUpdateOrder updateOrder, BpScheduleType schedule) {
@@ -25,7 +28,7 @@ public class CachingBpSchedule {
         this.canReuseOrder = !(updateOrder == BpUpdateOrder.SEQUENTIAL || schedule == BpScheduleType.RANDOM);
     }
 
-    public List<FgEdge> getOrder(int iter) {
+    public List<Object> getOrder(int iter) {
         if (canReuseOrder && iter >= 1) {
             // Just re-use the same order.
             return order;
@@ -43,24 +46,48 @@ public class CachingBpSchedule {
     }
 
     /** Filters edges from a leaf node. */
-    private static List<FgEdge> filterConstantMsgs(List<FgEdge> order) {
-        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
-        for (FgEdge edge : order) {
-            // If the parent node is not a leaf.
-            if (!isConstantMsg(edge)) {
-                filt.add(edge);
+    @SuppressWarnings("unchecked")
+    private static List<Object> filterConstantMsgs(List<Object> order) {
+        ArrayList<Object> filt = new ArrayList<Object>();
+        for (Object item : order) {
+            if (item instanceof List) {
+                List<Object> items = filterConstantMsgs((List<Object>) item);
+                if (items.size() > 0) {
+                    filt.add(items);
+                }
+            } else if (item instanceof FgEdge) {
+                // If the parent node is not a leaf.
+                if (!isConstantMsg((FgEdge) item)) {
+                    filt.add(item);
+                }
+            } else if (item instanceof GlobalFactor) {
+                filt.add(item);
+            } else {
+                throw new RuntimeException("Invalid type in order: " + item.getClass());
             }
         }
         return filt;
     }
 
     /** Filters edges not from a leaf node. */
-    private static List<FgEdge> filterNonConstantMsgs(List<FgEdge> order) {
-        ArrayList<FgEdge> filt = new ArrayList<FgEdge>();
-        for (FgEdge edge : order) {
-            // If the parent node is not a leaf.
-            if (isConstantMsg(edge)) {
-                filt.add(edge);
+    @SuppressWarnings("unchecked")
+    private static List<Object> filterNonConstantMsgs(List<Object> order) {
+        ArrayList<Object> filt = new ArrayList<Object>();
+        for (Object item : order) {
+            if (item instanceof List) {
+                List<Object> items = filterNonConstantMsgs((List<Object>) item);
+                if (items.size() > 0) {
+                    filt.add(items);
+                }
+            } else if (item instanceof FgEdge) {
+                // If the parent node is not a leaf.
+                if (isConstantMsg((FgEdge) item)) {
+                    filt.add(item);
+                }
+            } else if (item instanceof GlobalFactor) {
+                // Filter.
+            } else {
+                throw new RuntimeException("Invalid type in order: " + item.getClass());
             }
         }
         return filt;
@@ -73,5 +100,18 @@ public class CachingBpSchedule {
     public static boolean isConstantMsg(FgEdge edge) {
         return edge.getParent().getOutEdges().size() == 1;
     }
+    
+    public static List<FgEdge> toEdgeList(Object item) {
+        if (item instanceof FgEdge) {
+            return Lists.getList((FgEdge) item);
+        } else if (item instanceof FgNode) {
+            return ((FgNode)item).getOutEdges();
+        } else if (item instanceof List) {
+            return (List<FgEdge>)item;
+        } else {
+            throw new RuntimeException("Unsupported type in order: " + item);
+        }
+    }
+
 
 }

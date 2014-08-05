@@ -148,7 +148,7 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
     }
         
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs) {
+    public void createMessages(FgNode parent, Messages[] msgs) {
         Algebra s = msgs[0].message.getAlgebra();
         if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
             throw new IllegalStateException("OldProjDepTreeFactor only supports log and real semirings as input.");
@@ -540,7 +540,7 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
     }
     
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s) {
+    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj) {
         // TODO:
         throw new RuntimeException("not yet implemented");        
     }

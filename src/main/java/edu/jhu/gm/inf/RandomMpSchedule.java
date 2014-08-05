@@ -5,17 +5,26 @@ import java.util.Collections;
 import java.util.List;
 
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
+import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 
 public class RandomMpSchedule implements MpSchedule {
 
-    private ArrayList<FgEdge> order;
+    private ArrayList<Object> order;
     
     public RandomMpSchedule(FactorGraph fg) {
-        order = new ArrayList<FgEdge>(fg.getEdges());
+        order = new ArrayList<Object>();
+        for (FgNode node : fg.getNodes()) {
+            if (node.isFactor() && node.getFactor() instanceof GlobalFactor) {
+                order.add(node.getFactor());
+            } else {
+                order.addAll(node.getOutEdges());
+            }
+        }
     }
+    
     @Override
-    public List<FgEdge> getOrder() {
+    public List<Object> getOrder() {
         Collections.shuffle(order);
         return order;
     }

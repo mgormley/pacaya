@@ -5,7 +5,6 @@ import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.FactorGraph.FgNode;
-import edu.jhu.util.semiring.Algebra;
 
 /**
  * A constraint global factor.
@@ -18,21 +17,11 @@ public interface GlobalFactor extends Factor {
 
     /**
      * Creates all the messages from this global factor to all its variables.
-     * The global factor is responsible for ensuring that it does not do
-     * excessive computation for each iteration of BP, so the factor may choose for 
-     * this to be a "no-op" as indicated by its return value.
      * 
      * @param parent The node for this global factor.
      * @param msgs The message containers.
-     * @param iter The current belief propagation iteration.
-     * @return Whether the messages were created.
      */
-    boolean createMessages(FgNode parent, Messages[] msgs, int iter);
-
-    /**
-     * Resets this global factor for a new run of belief propagation.
-     */
-    void reset();
+    void createMessages(FgNode parent, Messages[] msgs);
 
     /**
      * Gets the expected log beliefs for this factor. We include factor's potential function in the
@@ -52,9 +41,8 @@ public interface GlobalFactor extends Factor {
      * @param parent The node for this global factor.
      * @param msgs The messages.
      * @param msgsAdj The adjoints of the messages.
-     * @param s The abstract algebra in which to represent the adjoints.
      */
-    void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj, Algebra s);
+    void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj);
 
     /**
      * Adds the expected feature counts for this factor, given the marginal distribution 

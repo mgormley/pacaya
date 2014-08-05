@@ -236,7 +236,7 @@ public class ProjDepTreeFactorTest {
         BfsMpSchedule schedule = new BfsMpSchedule(fg);
         
         System.out.println();
-        for (FgEdge edge : schedule.getOrder()) {
+        for (Object edge : schedule.getOrder()) {
             System.out.println(edge.toString());
         }
         System.out.println();
@@ -317,7 +317,7 @@ public class ProjDepTreeFactorTest {
         BfsMpSchedule schedule = new BfsMpSchedule(fg);
         
         System.out.println();
-        for (FgEdge edge : schedule.getOrder()) {
+        for (Object edge : schedule.getOrder()) {
             System.out.println(edge.toString());
         }
         System.out.println();
@@ -395,7 +395,7 @@ public class ProjDepTreeFactorTest {
         // Print schedule:
         BfsMpSchedule schedule = new BfsMpSchedule(fg);        
         System.out.println();
-        for (FgEdge edge : schedule.getOrder()) {
+        for (Object edge : schedule.getOrder()) {
             System.out.println(edge.toString());
         }
         System.out.println();

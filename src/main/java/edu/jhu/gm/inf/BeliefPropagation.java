@@ -1,7 +1,6 @@
 package edu.jhu.gm.inf;
 
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -17,6 +16,7 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.util.Timer;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -101,13 +101,8 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
         } else {
-            sch = new MpSchedule() {
-                @Override
-                public List<FgEdge> getOrder() {
-                    return fg.getEdges();
-                }
-            };
-        }        
+            sch = new ParallelMpSchedule(fg);
+        }
         sched = new CachingBpSchedule(sch, prm.updateOrder, prm.schedule);
     }
     
@@ -126,12 +121,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
             msgs[i] = new Messages(s, fg.getEdge(i), s.one());
-        }
-        // Reset the global factors.
-        for (Factor factor : fg.getFactors()) {
-            if (factor instanceof GlobalFactor) {
-                ((GlobalFactor)factor).reset();
-            }
         }
         if (prm.cacheFactorBeliefs) {
             // Initialize factor beliefs
@@ -155,34 +144,32 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         
         
         // Message passing.
+        loops:
         for (int iter=-1; iter < prm.maxIterations; iter++) {
             if (timer.totSec() > prm.timeoutSeconds) {
                 break;
             }
-            List<FgEdge> order = sched.getOrder(iter);
-            if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-                for (FgEdge edge : order) {
-                    createMessage(edge, iter);
-                    sendMessage(edge);
-                    if (isConverged()) {
-                        // Stop on convergence: Break out of inner loop.
-                        break;
+            List<Object> order = sched.getOrder(iter);
+            for (Object item : order) {
+                List<FgEdge> edges = CachingBpSchedule.toEdgeList(item);
+                if (item instanceof GlobalFactor) {
+                    createMessageGlobalFacToVar((GlobalFactor) item);
+                } else {
+                    for (FgEdge edge : edges) {
+                        createMessage(edge);
                     }
                 }
-            } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-                for (FgEdge edge : order) {
-                    createMessage(edge, iter);
+                for (FgEdge edge : edges) {
+                    normalize(edge);
                 }
-                for (FgEdge edge : order) {
+                for (FgEdge edge : edges) {
                     sendMessage(edge);
                 }
-            } else {
-                throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
-            }
-            if (isConverged()) {
-                // Stop on convergence.
-                log.trace("Stopping on convergence. Iterations = " + (iter+1));
-                break;
+                if (isConverged()) {
+                    // Stop on convergence: Break out of inner and outer loop.
+                    log.trace("Stopping on convergence. Iterations = " + (iter+1));
+                    break loops;
+                }
             }
         }
         
@@ -195,6 +182,13 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         timer.stop();
     }
     
+    private void createMessageGlobalFacToVar(GlobalFactor globalFac) {
+        log.trace("Creating messages for global factor.");
+        // Since this is a global factor, we pass the incoming messages to it, 
+        // and efficiently marginalize over the variables. 
+        globalFac.createMessages(fg.getNode(globalFac), msgs);
+    }
+
     public boolean isConverged() {
         return numConverged == msgs.length;
     }
@@ -202,86 +196,69 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     /**
      * Creates a message and stores it in the "pending message" slot for this edge.
      * @param edge The directed edge for which the message should be created.
-     * @param iter The iteration number.
      */
-    protected void createMessage(FgEdge edge, int iter) {
-
-    	int edgeId = edge.getId();
+    protected void createMessage(FgEdge edge) {        
+        if (!edge.isVarToFactor() && edge.getFactor() instanceof GlobalFactor) {
+            throw new IllegalArgumentException("Cannot create a single message from a global factor: " + edge);
+        }
+        int edgeId = edge.getId();
         Var var = edge.getVar();
         Factor factor = edge.getFactor();
         
-        if (!edge.isVarToFactor() && factor instanceof GlobalFactor) {
-            log.trace("Creating messages for global factor.");
-            // Since this is a global factor, we pass the incoming messages to it, 
-            // and efficiently marginalize over the variables. The current setup is
-            // create all the messages from this factor to its variables, but only 
-            // once per iteration.
-            GlobalFactor globalFac = (GlobalFactor) factor;
-            boolean created = globalFac.createMessages(edge.getParent(), msgs, iter);
-            if (created && prm.normalizeMessages) {
-               for (FgEdge e2 : edge.getParent().getOutEdges()) {
-                   normalize(msgs[e2.getId()].newMessage);
-               }
-            }
-            // The messages have been set, so just return.
-            return;
+        // Since this is not a global factor, we send messages in the normal way, which
+        // in the case of a factor to variable message requires enumerating all possible
+        // variable configurations.
+        VarTensor msg = msgs[edgeId].newMessage;
+        
+        // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
+        msg.fill(s.one());
+        
+        if (edge.isVarToFactor()) {
+            // Message from variable v* to factor f*.
+            //
+            // Compute the product of all messages received by v* except for the
+            // one from f*.
+            getProductOfMessages(edge.getParent(), msg, edge.getChild());
         } else {
-        	// Since this is not a global factor, we send messages in the normal way, which
-            // in the case of a factor to variable message requires enumerating all possible
-            // variable configurations.
-            VarTensor msg = msgs[edgeId].newMessage;
-            
-            // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-            msg.fill(s.one());
-            
-            if (edge.isVarToFactor()) {
-                // Message from variable v* to factor f*.
-                //
-                // Compute the product of all messages received by v* except for the
-                // one from f*.
-                getProductOfMessages(edge.getParent(), msg, edge.getChild());
-            } else {
-                // Message from factor f* to variable v*.
-                //
-                // Compute the product of all messages received by f* (each
-                // of which will have a different domain) with the factor f* itself.
-                // Exclude the message going out to the variable, v*.
-                VarTensor prod;
-            	if(prm.cacheFactorBeliefs && !(factor instanceof GlobalFactor)) {
-            		// we are computing f->v, which is the product of a bunch of factor values and v->f messages
-            		// we can cache this product and remove the v->f message that would have been excluded from the product
-            		VarTensor remove = msgs[edge.getOpposing().getId()].message;
-            		VarTensor from = factorBeliefCache[factor.getId()];
-            		prod = new VarTensor(from);
-            		prod.divBP(remove);
-            		
-            		assert !prod.containsBadValues() : "prod from cached beliefs = " + prod;
-            	}
-            	else {	// fall back on normal way of computing messages without caching
-                    // Set the initial values of the product to those of the sending factor.
-            		prod = BruteForceInferencer.safeNewVarTensor(s, factor);
-                	getProductOfMessages(edge.getParent(), prod, edge.getChild());
-            	}
-
-            	
-                // Marginalize over all the assignments to variables for f*, except
-                // for v*.
-                msg = prod.getMarginal(new VarSet(var), false);
+            // Message from factor f* to variable v*.
+            //
+            // Compute the product of all messages received by f* (each
+            // of which will have a different domain) with the factor f* itself.
+            // Exclude the message going out to the variable, v*.
+            VarTensor prod;
+            if(prm.cacheFactorBeliefs && !(factor instanceof GlobalFactor)) {
+                // we are computing f->v, which is the product of a bunch of factor values and v->f messages
+                // we can cache this product and remove the v->f message that would have been excluded from the product
+                VarTensor remove = msgs[edge.getOpposing().getId()].message;
+                VarTensor from = factorBeliefCache[factor.getId()];
+                prod = new VarTensor(from);
+                prod.divBP(remove);
+                
+                assert !prod.containsBadValues() : "prod from cached beliefs = " + prod;
             }
+            else {  // fall back on normal way of computing messages without caching
+                // Set the initial values of the product to those of the sending factor.
+                prod = BruteForceInferencer.safeNewVarTensor(s, factor);
+                getProductOfMessages(edge.getParent(), prod, edge.getChild());
+            }
+
             
-            assert (msg.getVars().equals(new VarSet(var)));
-            
-            normalize(msg);
-            
-            // Set the final message in case we created a new object.
-            msgs[edgeId].newMessage = msg;
+            // Marginalize over all the assignments to variables for f*, except
+            // for v*.
+            msg = prod.getMarginal(new VarSet(var), false);
         }
+        
+        assert (msg.getVars().equals(new VarSet(var)));
+                    
+        // Set the final message in case we created a new object.
+        msgs[edgeId].newMessage = msg;
     }
 
-    private void normalize(VarTensor msg) {
+    private void normalize(FgEdge edge) {
+        VarTensor msg = msgs[edge.getId()].newMessage;
         if (prm.normalizeMessages) {
             msg.normalize();
-        } else { 
+        } else {
             // normalize and logNormalize already check for NaN
             assert !msg.containsBadValues() : "msg = " + msg;
         }

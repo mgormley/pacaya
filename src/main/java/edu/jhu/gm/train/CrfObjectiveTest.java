@@ -194,7 +194,7 @@ public class CrfObjectiveTest {
         // Print schedule:
         BfsMpSchedule schedule = new BfsMpSchedule(fgLatPred);        
         System.out.println();
-        for (FgEdge edge : schedule.getOrder()) {
+        for (Object edge : schedule.getOrder()) {
             System.out.println(edge.toString());
         }
         System.out.println();

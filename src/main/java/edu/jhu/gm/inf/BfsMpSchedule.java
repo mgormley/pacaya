@@ -23,11 +23,11 @@ public class BfsMpSchedule implements MpSchedule {
 
     private static final Logger log = Logger.getLogger(BfsMpSchedule.class);
 
-    private ArrayList<FgEdge> order;
+    private ArrayList<Object> order;
     
     public BfsMpSchedule(FactorGraph fg) {
         // Create the order list.
-        order = new ArrayList<FgEdge>();
+        order = new ArrayList<Object>();
         
         // Add each connected component to the order.
         for (FgNode root : fg.getConnectedComponents()) {
@@ -64,7 +64,7 @@ public class BfsMpSchedule implements MpSchedule {
         }
     }
 
-    public static void addEdgesFromRoot(FgNode root, ArrayList<FgEdge> order, FactorGraph fg) {
+    public static void addEdgesFromRoot(FgNode root, ArrayList<Object> order, FactorGraph fg) {
         Queue<FgNode> queue = new LinkedList<FgNode>();
         Queue<FgNode> leaves = new LinkedList<FgNode>();
         
@@ -114,18 +114,8 @@ public class BfsMpSchedule implements MpSchedule {
         }
     }
 
-    private static int getNumMarked(List<FgEdge> edges) {
-        int numMarked = 0;
-        for (FgEdge e : edges) {
-            if (e.isMarked()) {
-                numMarked++;
-            }
-        }
-        return numMarked;
-    }
-
     @Override
-    public List<FgEdge> getOrder() {
+    public List<Object> getOrder() {
         return order;
     }
 
