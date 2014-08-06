@@ -2,7 +2,12 @@ package edu.jhu.gm.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+
+import edu.jhu.gm.model.FactorGraph.FgEdge;
+import edu.jhu.gm.model.FactorGraph.FgNode;
 
 /**
  * Undirected bipartite graph.
@@ -205,6 +210,36 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
                 dfs(n);
             }
         }
+    }
+    
+    /** Runs a breadth-first-search starting at the root node. */
+    public List<N> bfs(N root) {
+        List<N> order = new ArrayList<>();
+        Queue<N> queue = new LinkedList<>();
+        queue.add(root);
+
+        // Unmark all the nodes.
+        this.setMarkedAllNodes(false);
+    
+        while (!queue.isEmpty()) {
+            // Process the next node in the queue.
+            N node = queue.remove();
+            if (!node.isMarked()) {
+                // Add node only if not marked.
+                order.add(node);
+                node.setMarked(true);
+            }
+            
+            // For each neighbor...
+            for (E edge : node.getOutEdges()) {
+                N neighbor = edge.getChild();
+                if (!neighbor.isMarked()) {
+                    // Queue if not marked.
+                    queue.add(neighbor);
+                }
+            }
+        }
+        return order;
     }
     
     /**

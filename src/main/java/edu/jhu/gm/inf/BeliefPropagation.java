@@ -16,7 +16,6 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.util.Timer;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -151,12 +150,15 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
             }
             List<Object> order = sched.getOrder(iter);
             for (Object item : order) {
-                List<FgEdge> edges = CachingBpSchedule.toEdgeList(item);
-                if (item instanceof GlobalFactor) {
-                    createMessageGlobalFacToVar((GlobalFactor) item);
-                } else {
-                    for (FgEdge edge : edges) {
-                        createMessage(edge);
+                List<FgEdge> edges = CachingBpSchedule.toEdgeList(fg, item);
+                List<?> elems = CachingBpSchedule.toFactorEdgeList(item);
+                for (Object elem : elems) {
+                    if (elem instanceof FgEdge) {
+                        createMessage((FgEdge) elem);
+                    } else if (elem instanceof GlobalFactor) {
+                        createMessageGlobalFacToVar((GlobalFactor) elem);
+                    } else {
+                        throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
                     }
                 }
                 for (FgEdge edge : edges) {

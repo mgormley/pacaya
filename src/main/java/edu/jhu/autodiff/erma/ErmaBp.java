@@ -13,12 +13,12 @@ import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BfsMpSchedule;
-import edu.jhu.gm.inf.CachingBpSchedule;
-import edu.jhu.gm.inf.MpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
+import edu.jhu.gm.inf.CachingBpSchedule;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.inf.Messages;
+import edu.jhu.gm.inf.MpSchedule;
 import edu.jhu.gm.inf.ParallelMpSchedule;
 import edu.jhu.gm.inf.RandomMpSchedule;
 import edu.jhu.gm.model.Factor;
@@ -116,11 +116,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         public Object item;
         public List<VarTensor> msgs;
         public DoubleArrayList msgSums;
-        public List<FgEdge> edges;
         
         public TapeEntry(Object item, List<FgEdge> edges) {
             this.item = item;
-            this.edges = edges;
             msgs = new ArrayList<VarTensor>(edges.size());
             msgSums = new DoubleArrayList(edges.size());
         }
@@ -236,13 +234,16 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         for (int iter=-1; iter < prm.maxIterations; iter++) {
             List<Object> order = sched.getOrder(iter);
             for (Object item : order) {
-                List<FgEdge> edges = CachingBpSchedule.toEdgeList(item);
+                List<FgEdge> edges = CachingBpSchedule.toEdgeList(fg, item);
+                List<?> elems = CachingBpSchedule.toFactorEdgeList(item);
                 TapeEntry te = new TapeEntry(item, edges);
-                if (item instanceof GlobalFactor) {
-                    forwardGlobalFacToVar((GlobalFactor) item);
-                } else {
-                    for (FgEdge edge : edges) {
-                        forwardCreateMessage(edge);
+                for (Object elem : elems) {
+                    if (elem instanceof FgEdge) {
+                        forwardCreateMessage((FgEdge) elem);
+                    } else if (elem instanceof GlobalFactor) {
+                        forwardGlobalFacToVar((GlobalFactor) elem);
+                    } else {
+                        throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
                     }
                 }
                 for (FgEdge edge : edges) {
@@ -405,20 +406,26 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         for (int t = tape.size() - 1; t >= 0; t--) {
             // Dequeue from tape.
             TapeEntry te = tape.get(t);
-            for (int j = te.edges.size() - 1; j >= 0; j--) {
-                backwardSendMessage(te.edges.get(j), te.msgs.get(j));
+            List<FgEdge> edges = CachingBpSchedule.toEdgeList(fg, te.item);
+            List<?> elems = CachingBpSchedule.toFactorEdgeList(te.item);
+            
+            for (int j = edges.size() - 1; j >= 0; j--) {
+                backwardSendMessage(edges.get(j), te.msgs.get(j));
             }
-            for (int j = te.edges.size() - 1; j >= 0; j--) {
-                backwardNormalize(te.edges.get(j), te.msgSums.get(j));
+            for (int j = edges.size() - 1; j >= 0; j--) {
+                backwardNormalize(edges.get(j), te.msgSums.get(j));
             }
-            if (te.item instanceof GlobalFactor) {
-                backwardGlobalFactorToVar((GlobalFactor) te.item);
-            } else {
-                for (int j = te.edges.size() - 1; j >= 0; j--) {
-                    backwardCreateMessage(te.edges.get(j));
+            for (int j = elems.size() - 1; j >= 0; j--) {
+                Object elem = elems.get(j);
+                if (elem instanceof FgEdge) {
+                    backwardCreateMessage((FgEdge) elem);
+                } else if (elem instanceof GlobalFactor) {
+                    backwardGlobalFactorToVar((GlobalFactor) elem);
+                } else {
+                    throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
                 }
             }
-        }        
+        }
     }
 
     private void backwardVarFacBeliefs(VarTensor[] varBeliefsAdj, VarTensor[] facBeliefsAdj) {

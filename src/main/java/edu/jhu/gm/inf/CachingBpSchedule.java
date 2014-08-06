@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
@@ -101,15 +102,34 @@ public class CachingBpSchedule {
         return edge.getParent().getOutEdges().size() == 1;
     }
     
-    public static List<FgEdge> toEdgeList(Object item) {
-        if (item instanceof FgEdge) {
-            return Lists.getList((FgEdge) item);
-        } else if (item instanceof FgNode) {
-            return ((FgNode)item).getOutEdges();
-        } else if (item instanceof List) {
-            return (List<FgEdge>)item;
+    @SuppressWarnings("rawtypes")
+    public static List<FgEdge> toEdgeList(FactorGraph fg, Object item) {
+        ArrayList<FgEdge> edges = new ArrayList<FgEdge>();
+        if (item instanceof List) {
+            for (Object elem : (List) item) {
+                addEdgesOfElem(elem, fg, edges);
+            }
         } else {
-            throw new RuntimeException("Unsupported type in order: " + item);
+            addEdgesOfElem(item, fg, edges);
+        }
+        return edges;
+    }
+
+    private static void addEdgesOfElem(Object elem, FactorGraph fg, ArrayList<FgEdge> edges) {
+        if (elem instanceof FgEdge) {
+            edges.add((FgEdge) elem);
+        } else if (elem instanceof GlobalFactor) {
+            edges.addAll(fg.getNode((GlobalFactor) elem).getOutEdges());
+        } else {
+            throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
+        }
+    }
+    
+    public static List<?> toFactorEdgeList(Object item) {
+        if (item instanceof List) {
+            return (List<?>) item;
+        } else {
+            return Lists.getList(item);
         }
     }
 
