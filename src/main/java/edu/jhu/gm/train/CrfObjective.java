@@ -73,7 +73,7 @@ public class CrfObjective implements ExampleObjective {
         FgInferencer infLat = infFactory.getInferencer(fgLat);
         FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
         t.stop(); infTimer.add(t);
-                
+        
         t.reset(); t.start();
         // Run inference to compute Z(y,x) by summing over the latent variables w.
         infLat.run();        

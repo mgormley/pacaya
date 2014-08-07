@@ -282,10 +282,38 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
 
     private void forwardGlobalFacToVar(GlobalFactor globalFac) {
+        log.trace("Creating messages for global factor.");
         // Since this is a global factor, we pass the incoming messages to it, 
         // and efficiently marginalize over the variables.
-        log.trace("Creating messages for global factor.");
-        globalFac.createMessages(fg.getNode(globalFac), msgs);
+        FgNode node = fg.getNode(globalFac);
+        VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
+        VarTensor[] outMsgs = getMsgs(node, msgs, NEW_MSG, OUT_MSG);
+        globalFac.createMessages(inMsgs, outMsgs);
+    }    
+
+    // Constants for getMsgs().
+    private static final boolean NEW_MSG = true;
+    private static final boolean CUR_MSG = false;
+    private static final boolean IN_MSG = true;
+    private static final boolean OUT_MSG = false;
+    
+    /**
+     * Gets messages from the Messages[].
+     * 
+     * @param parent The node for this factor.
+     * @param msgs The input messages.
+     * @param isNew Whether to get messages in .newMessage or .message.
+     * @param isIn Whether to get incoming or outgoing messages.
+     * @return The output messages.
+     */
+    private static VarTensor[] getMsgs(FgNode parent, Messages[] msgs, boolean isNew, boolean isIn) {
+        List<FgEdge> edges = (isIn) ? parent.getInEdges() : parent.getOutEdges();
+        VarTensor[] arr = new VarTensor[edges.size()];
+        for (int i=0; i<edges.size(); i++) {
+            FgEdge edge = edges.get(i);
+            arr[i] = (isNew) ? msgs[edge.getId()].newMessage : msgs[edge.getId()].message;
+        }
+        return arr;
     }
         
     private void forwardVarToFactor(FgEdge edge) {
@@ -483,7 +511,11 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
     
     private void backwardGlobalFactorToVar(GlobalFactor globalFac) {
-        globalFac.backwardCreateMessages(fg.getNode(globalFac), msgs, msgsAdj);
+        FgNode node = fg.getNode(globalFac);
+        VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
+        VarTensor[] inMsgsAdj = getMsgs(node, msgsAdj, CUR_MSG, IN_MSG);
+        VarTensor[] outMsgsAdj = getMsgs(node, msgsAdj, NEW_MSG, OUT_MSG);
+        globalFac.backwardCreateMessages(inMsgs, outMsgsAdj, inMsgsAdj);
     }
     
     /**
@@ -814,7 +846,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     }
                 }
             } else {
-                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getFactorNode(a), msgs);
+                VarTensor[] inMsgs = getMsgs(fg.getNode(f), msgs, CUR_MSG, IN_MSG);
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(inMsgs);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {

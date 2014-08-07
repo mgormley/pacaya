@@ -193,15 +193,20 @@ public class BfsMpScheduleTest {
         public MockGlobalFactor(VarSet vars) {
             this.vars = vars;
         }
-
+        
         @Override
-        public Factor getClamped(VarConfig clmpVarConfig) {
-            throw new RuntimeException("not implemented");
+        public String toString() {
+            return "MockGlobalFactor";
         }
 
         @Override
         public VarSet getVars() {            
             return vars;
+        }
+
+        @Override
+        public Factor getClamped(VarConfig clmpVarConfig) {
+            throw new RuntimeException("not implemented");
         }
 
         @Override
@@ -211,29 +216,24 @@ public class BfsMpScheduleTest {
 
         @Override
         public double getLogUnormalizedScore(int goldConfig) {
-            return getLogUnormalizedScore(vars.getVarConfig(goldConfig));
-        }
-
-        @Override
-        public void createMessages(FgNode parent, Messages[] msgs) {
-            throw new RuntimeException("not implemented");            
-        }
-
-        @Override
-        public double getExpectedLogBelief(FgNode parent, Messages[] msgs) {
             throw new RuntimeException("not implemented");
         }
 
         @Override
-        public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj) {
+        public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
             throw new RuntimeException("not implemented");
         }
-        
+
         @Override
-        public String toString() {
-            return "MockGlobalFactor";
-        }       
-        
+        public double getExpectedLogBelief(VarTensor[] inMsgs) {
+            throw new RuntimeException("not implemented");
+        }
+
+        @Override
+        public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
+            throw new RuntimeException("not implemented");
+        }
+
     }
 
 }

@@ -3,8 +3,9 @@ package edu.jhu.gm.model.globalfac;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.FactorGraph.FgNode;
+import edu.jhu.gm.model.IFgModel;
+import edu.jhu.gm.model.VarTensor;
 
 /**
  * A constraint global factor.
@@ -16,12 +17,12 @@ import edu.jhu.gm.model.FactorGraph.FgNode;
 public interface GlobalFactor extends Factor {
 
     /**
-     * Creates all the messages from this global factor to all its variables.
+     * Computes and sets the messages from this global factor to each of its variables.
      * 
-     * @param parent The node for this global factor.
-     * @param msgs The message containers.
+     * @param inMsgs The incoming messages to this factor.
+     * @param outMsgs The outgoing messages from this factor. (OUTPUT)
      */
-    void createMessages(FgNode parent, Messages[] msgs);
+    void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs);
 
     /**
      * Gets the expected log beliefs for this factor. We include factor's potential function in the
@@ -31,19 +32,21 @@ public interface GlobalFactor extends Factor {
      * 
      * Note: The value should be returned as a real, though the messages may be in a different
      * semiring.
+     * 
+     * @param inMsgs The incoming messages to this factor.
+     * @return The expected log belief.
      */
-    double getExpectedLogBelief(FgNode parent, Messages[] msgs);
+    double getExpectedLogBelief(VarTensor[] inMsgs);
     
     /**
-     * Computes all the message adjoints. This method will only be called once
-     * per iteration (unlike createMessages).
+     * Computes and sets the adjoints of the incoming messages.
      * 
-     * @param parent The node for this global factor.
-     * @param msgs The messages.
-     * @param msgsAdj The adjoints of the messages.
+     * @param inMsgs The incoming messages to this factor.
+     * @param outMsgsAdj The adjoints of the outgoing messages from this factor.
+     * @param inMsgs The adjoints of the incoming messages to this factor. (OUTPUT)
      */
-    void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj);
-
+    void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj);
+    
     /**
      * Adds the expected feature counts for this factor, given the marginal distribution 
      * specified by the inferencer for this factor.

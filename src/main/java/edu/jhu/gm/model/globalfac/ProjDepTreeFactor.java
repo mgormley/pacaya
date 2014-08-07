@@ -87,14 +87,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     private final int n;
     private LinkVar[] rootVars;
     private LinkVar[][] childVars;
-    
-    // Constants for getMsgs() / setMsgs() / addMsgs().
-    private static final boolean NEW_MSG = true;
-    private static final boolean CUR_MSG = false;
-    private static final boolean IN_MSG = true;
-    private static final boolean OUT_MSG = false;
-    
-    
+        
     /**
      * Constructor.
      * @param n The length of the sentence.
@@ -155,21 +148,21 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
         
     @Override
-    public void createMessages(FgNode parent, Messages[] msgs) {
-        forwardAndBackward(parent, msgs, null, true);
+    public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
+        forwardAndBackward(inMsgs, outMsgs, null, null, true);
     }
 
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj) {
-        forwardAndBackward(parent, msgs, msgsAdj, false);
+    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
+        forwardAndBackward(inMsgs, null, outMsgsAdj, inMsgsAdj, false);
     }
     
-    public void forwardAndBackward(FgNode parent, Messages[] msgs, Messages[] msgsAdj, boolean isForward) {
-        Algebra s = msgs[0].message.getAlgebra();
+    public void forwardAndBackward(VarTensor[] inMsgs, VarTensor[] outMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj, boolean isForward) {
+        Algebra s = inMsgs[0].getAlgebra();
 
         // Get the incoming messages at time (t).
-        Tensor tmTrueIn = getMsgs(parent, msgs, LinkVar.TRUE, CUR_MSG, IN_MSG, s);        
-        Tensor tmFalseIn = getMsgs(parent, msgs, LinkVar.FALSE, CUR_MSG, IN_MSG, s);
+        Tensor tmTrueIn = getMsgs(inMsgs, LinkVar.TRUE, s);        
+        Tensor tmFalseIn = getMsgs(inMsgs, LinkVar.FALSE, s);
         
         // Construct the circuit.
         TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
@@ -184,12 +177,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             Tensor tmFalseOut = pair.select(0, 0);
             
             // Set the outgoing messages at time (t+1).
-            setMsgs(parent, msgs, tmTrueOut, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-            setMsgs(parent, msgs, tmFalseOut, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
+            setMsgs(outMsgs, tmTrueOut, LinkVar.TRUE, s);
+            setMsgs(outMsgs, tmFalseOut, LinkVar.FALSE, s);
         } else {
             // Get the adjoints on outgoing message modules at time (t+1).
-            Tensor tTrue = getMsgs(parent, msgsAdj, LinkVar.TRUE, NEW_MSG, OUT_MSG, s);
-            Tensor tFalse = getMsgs(parent, msgsAdj, LinkVar.FALSE, NEW_MSG, OUT_MSG, s);
+            Tensor tTrue = getMsgs(outMsgsAdj, LinkVar.TRUE, s);
+            Tensor tFalse = getMsgs(outMsgsAdj, LinkVar.FALSE, s);
             Tensor pairAdj = dep.getOutputAdj();
             pairAdj.addTensor(tTrue, 0, 1);
             pairAdj.addTensor(tFalse, 0, 0);
@@ -198,8 +191,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             dep.backward();
             
             // Increment adjoints of the incoming messages at time (t).
-            addMsgs(parent, msgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, CUR_MSG, IN_MSG, s);
-            addMsgs(parent, msgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE, CUR_MSG, IN_MSG, s);
+            addMsgs(inMsgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, s);
+            addMsgs(inMsgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE, s);
         }
     }
 
@@ -305,23 +298,18 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     /**
      * Gets messages from the Messages[].
      * 
-     * @param parent The node for this factor.
-     * @param msgs The input messages.
+     * @param inMsgs The input messages.
      * @param tf Whether to get TRUE or FALSE messages.
-     * @param isNew Whether to get messages in .newMessage or .message.
-     * @param isIn Whether to get incoming or outgoing messages.
      * @param s The abstract algebra.
-     * @return The output messages.
+     * @return The messages as a Tensor.
      */
-    private Tensor getMsgs(FgNode parent, Messages[] msgs, int tf, boolean isNew, boolean isIn, Algebra s) {
+    private Tensor getMsgs(VarTensor[] inMsgs, int tf, Algebra s) {
         EdgeScores es = new EdgeScores(n, s.zero());
         DoubleArrays.fill(es.root, s.zero());
         DoubleArrays.fill(es.child, s.zero());
-        List<FgEdge> edges = (isIn) ? parent.getInEdges() : parent.getOutEdges();
-        for (FgEdge edge : edges) {
-            LinkVar link = (LinkVar) edge.getVar();
-            VarTensor msg = (isNew) ? msgs[edge.getId()].newMessage : msgs[edge.getId()].message;
-            double val = msg.getValue(tf);
+        for (VarTensor inMsg : inMsgs) {
+            LinkVar link = (LinkVar) inMsg.getVars().get(0);            
+            double val = inMsg.getValue(tf);
             es.setScore(link.getParent(), link.getChild(), val);
         }
         return es.toTensor(s);
@@ -330,20 +318,15 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     /**
      * Sets messages on a Messages[].
      * 
-     * @param parent The node for this factor.
      * @param msgs The output messages.
      * @param t The input messages.
      * @param tf Whether to set TRUE or FALSE messages.
-     * @param isNew Whether to set messages in .newMessage or .message.
-     * @param isIn Whether to set incoming or outgoing messages.
      * @param s The abstract algebra.
      */
-    private void setMsgs(FgNode parent, Messages[] msgs, Tensor t, int tf, boolean isNew, boolean isIn, Algebra s) {
+    private void setMsgs(VarTensor[] msgs, Tensor t, int tf, Algebra s) {
         EdgeScores es = EdgeScores.tensorToEdgeScores(t);
-        List<FgEdge> edges = (isIn) ? parent.getInEdges() : parent.getOutEdges();
-        for (FgEdge edge : edges) {
-            LinkVar link = (LinkVar) edge.getVar();
-            VarTensor msg = (isNew) ? msgs[edge.getId()].newMessage : msgs[edge.getId()].message;
+        for (VarTensor msg : msgs) {
+            LinkVar link = (LinkVar) msg.getVars().get(0);            
             double val = es.getScore(link.getParent(), link.getChild());
             msg.setValue(tf, val);
         }
@@ -352,35 +335,29 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     /**
      * Adds to messages on a Messages[].
      * 
-     * @param parent The node for this factor.
      * @param msgs The output messages.
      * @param t The input messages.
      * @param tf Whether to set TRUE or FALSE messages.
-     * @param isNew Whether to add to messages in .newMessage or .message.
-     * @param isIn Whether to add to incoming or outgoing messages.
      * @param s The abstract algebra.
      */
-    private void addMsgs(FgNode parent, Messages[] msgs, Tensor t, int tf, boolean isNew, boolean isIn, Algebra s) {
+    private void addMsgs(VarTensor[] msgs, Tensor t, int tf, Algebra s) {
         EdgeScores es = EdgeScores.tensorToEdgeScores(t);
-        List<FgEdge> edges = (isIn) ? parent.getInEdges() : parent.getOutEdges();
-        for (FgEdge edge : edges) {
-            LinkVar link = (LinkVar) edge.getVar();
-            VarTensor msg = (isNew) ? msgs[edge.getId()].newMessage : msgs[edge.getId()].message;
+        for (VarTensor msg : msgs) {
+            LinkVar link = (LinkVar) msg.getVars().get(0);
             double val = es.getScore(link.getParent(), link.getChild());
             msg.addValue(tf, val);
         }
     }
 
     @Override
-    public double getExpectedLogBelief(FgNode parent, Messages[] msgs) {
+    public double getExpectedLogBelief(VarTensor[] inMsgs) {
         if (n == 0) {
             return 0.0;
         }
-        assert parent.getFactor() == this;
-        EdgeScores ratios = getLogOddsRatios(parent, msgs);
-        double logPi = getLogProductOfAllFalseMessages(parent, msgs);
+        EdgeScores ratios = getLogOddsRatios(inMsgs);
+        double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = new LogSignAlgebra();
+        Algebra s = Algebras.LOG_SIGN_ALGEBRA;
         Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
@@ -400,15 +377,14 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         }
         return expectation;
     }
-          
+    
     /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
-    private EdgeScores getLogOddsRatios(FgNode parent, Messages[] msgs) {  
+    private EdgeScores getLogOddsRatios(VarTensor[] inMsgs) {  
         EdgeScores es = new EdgeScores(n, Double.NEGATIVE_INFINITY);
-        Algebra s = msgs[0].message.getAlgebra();
+        Algebra s = inMsgs[0].getAlgebra();
         // Compute the odds ratios of the messages for each edge in the tree.
-        for (FgEdge inEdge : parent.getInEdges()) {
-            LinkVar link = (LinkVar) inEdge.getVar();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
+        for (VarTensor inMsg : inMsgs) {
+            LinkVar link = (LinkVar) inMsg.getVars().get(0);
             double logOdds = s.toLogProb(inMsg.getValue(LinkVar.TRUE)) - s.toLogProb(inMsg.getValue(LinkVar.FALSE));            
             if (link.getParent() == -1) {
                 es.root[link.getChild()] = logOdds;
@@ -420,14 +396,13 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
 
     /** Computes pi = \prod_i \mu_i(0). */
-    private double getLogProductOfAllFalseMessages(FgNode parent, Messages[] msgs) {
+    private double getLogProductOfAllFalseMessages(VarTensor[] inMsgs) {
         // Precompute the product of all the "false" messages.
         // pi = \prod_i \mu_i(0)
         // Here we store log pi.
-        Algebra s = msgs[0].message.getAlgebra();
+        Algebra s = inMsgs[0].getAlgebra();
         double logPi = 0.0;
-        for (FgEdge inEdge : parent.getInEdges()) {
-            VarTensor inMsg = msgs[inEdge.getId()].message;
+        for (VarTensor inMsg : inMsgs) {
             logPi += s.toLogProb(inMsg.getValue(LinkVar.FALSE));
         }
         return logPi;

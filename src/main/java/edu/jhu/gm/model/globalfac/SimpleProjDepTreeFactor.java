@@ -18,6 +18,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
@@ -31,6 +32,7 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.LogSignAlgebra;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -148,8 +150,8 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
     }
         
     @Override
-    public void createMessages(FgNode parent, Messages[] msgs) {
-        Algebra s = msgs[0].message.getAlgebra();
+    public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
+        Algebra s = inMsgs[0].getAlgebra();
         if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
             throw new IllegalStateException("OldProjDepTreeFactor only supports log and real semirings as input.");
         }
@@ -157,15 +159,12 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
         // All internal computation is done in the logDomain
         // since (for example) pi the product of all incoming false messages
         // would overflow.
-        assert (this == parent.getFactor());        
-        double[] root = new double[n];
-        double[][] child = new double[n][n];
-        getLogOddsRatios(parent, msgs, root, child);
-        double pi = getProductOfAllFalseMessages(parent, msgs);
+        EdgeScores es = getLogOddsRatios(inMsgs);
+        double pi = getLogProductOfAllFalseMessages(inMsgs);
 
         // Compute the dependency tree marginals, summing over all projective
         // spanning trees via the inside-outside algorithm.
-        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(es.root, es.child);
 
         // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
         // Here we store the log partition.
@@ -176,8 +175,10 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
         }
         
         // Create the messages and stage them in the Messages containers.
-        for (FgEdge outEdge : parent.getOutEdges()) {
-            LinkVar link = (LinkVar) outEdge.getVar();
+        for (int i=0; i<inMsgs.length; i++) {
+            VarTensor inMsg = inMsgs[i];
+            VarTensor outMsg = outMsgs[i];
+            LinkVar link = (LinkVar) inMsg.getVars().get(0);
             
             // The beliefs are computed as follows.
             // beliefTrue = pi * FastMath.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
@@ -195,7 +196,7 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
             if (log.isTraceEnabled()) {
                 // Detect numerical precision error.
                 if (beliefFalse == Double.NEGATIVE_INFINITY) {
-                    if (!DoubleArrays.contains(root, Double.NEGATIVE_INFINITY, 1e-13) && !EdgeScores.childContains(child, Double.NEGATIVE_INFINITY, 1e-13)) {
+                    if (!DoubleArrays.contains(es.root, Double.NEGATIVE_INFINITY, 1e-13) && !EdgeScores.childContains(es.child, Double.NEGATIVE_INFINITY, 1e-13)) {
                         log.trace("Found possible numerical precision error.");
                         // For now don't try to fix anything. Just log that there might be a problem.
                         //fixEdge(parent, msgs, logDomain, normalizeMessages, numericalPrecisionEdge);
@@ -209,8 +210,6 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
             }
 
             // Get the incoming messages.
-            FgEdge inEdge = outEdge.getOpposing();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
             double inMsgTrue = s.toLogProb(inMsg.getValue(SpanVar.TRUE));
             double inMsgFalse = s.toLogProb(inMsg.getValue(SpanVar.FALSE));
             
@@ -220,7 +219,7 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
             outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
             outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
             
-            setOutMsgs(msgs, outEdge, link, outMsgTrue, outMsgFalse);
+            setOutMsgs(outMsg, link, outMsgTrue, outMsgFalse);
         }
     }
 //        
@@ -302,35 +301,32 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
     private static int oddsRatioCount = 0;
 
     /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
-    private void getLogOddsRatios(FgNode parent, Messages[] msgs, double[] root, double[][] child) {
-        Algebra s = msgs[0].message.getAlgebra();
-
+    private EdgeScores getLogOddsRatios(VarTensor[] inMsgs) {  
+        EdgeScores es = new EdgeScores(n, Double.NEGATIVE_INFINITY);
+        Algebra s = inMsgs[0].getAlgebra();
         // Compute the odds ratios of the messages for each edge in the tree.
-        DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
-        DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
-        for (FgEdge inEdge : parent.getInEdges()) {
-            LinkVar link = (LinkVar) inEdge.getVar();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
-            double oddsRatio = s.toLogProb(inMsg.getValue(LinkVar.TRUE)) - s.toLogProb(inMsg.getValue(LinkVar.FALSE));
-                        
+        for (VarTensor inMsg : inMsgs) {
+            LinkVar link = (LinkVar) inMsg.getVars().get(0);
+            double logOdds = s.toLogProb(inMsg.getValue(LinkVar.TRUE)) - s.toLogProb(inMsg.getValue(LinkVar.FALSE));            
             if (link.getParent() == -1) {
-                root[link.getChild()] = oddsRatio;
+                es.root[link.getChild()] = logOdds;
             } else {
-                child[link.getParent()][link.getChild()] = oddsRatio;
+                es.child[link.getParent()][link.getChild()] = logOdds;
             }
         }
-
-        checkLinkWeights(root, child);
+        checkLinkWeights(es);
+        return es;
     }
     
-    private void checkLinkWeights(double[] root, double[][] child) {
+    private void checkLinkWeights(EdgeScores es) {
+        
         // Keep track of the minimum and maximum odds ratios, in order to detect
         // possible numerical precision issues.
         double minOddsRatio = Double.POSITIVE_INFINITY;
         double maxOddsRatio = Double.NEGATIVE_INFINITY;
         
-        for (int i=0; i<root.length; i++) {
-            double oddsRatio = root[i];
+        for (int i=0; i<es.root.length; i++) {
+            double oddsRatio = es.root[i];
             // Check min/max.
             if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
                 // Don't count *negative* infinities when logging extreme odds ratios.
@@ -340,12 +336,12 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
                 maxOddsRatio = oddsRatio;
             }
         }
-        for (int i=0; i<child.length; i++) {
-            for (int j=0; j<child[i].length; j++) {
+        for (int i=0; i<es.child.length; i++) {
+            for (int j=0; j<es.child[i].length; j++) {
                 if (i == j) {
                     continue;
                 }
-                double oddsRatio = child[i][j];
+                double oddsRatio = es.child[i][j];
                 // Check min/max.
                 if (oddsRatio < minOddsRatio && oddsRatio != Double.NEGATIVE_INFINITY) {
                     // Don't count *negative* infinities when logging extreme odds ratios.
@@ -370,51 +366,44 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
     }
 
     /** Computes pi = \prod_i \mu_i(0). */
-    private double getProductOfAllFalseMessages(FgNode parent, Messages[] msgs) {
+    private double getLogProductOfAllFalseMessages(VarTensor[] inMsgs) {
         // Precompute the product of all the "false" messages.
         // pi = \prod_i \mu_i(0)
         // Here we store log pi.
-        Algebra s = msgs[0].message.getAlgebra();
+        Algebra s = inMsgs[0].getAlgebra();
         double logPi = 0.0;
-        for (FgEdge inEdge : parent.getInEdges()) {
-            VarTensor inMsg = msgs[inEdge.getId()].message;
+        for (VarTensor inMsg : inMsgs) {
             logPi += s.toLogProb(inMsg.getValue(LinkVar.FALSE));
         }
         return logPi;
     }
 
     /** Sets the outgoing messages. */
-    private void setOutMsgs(Messages[] msgs, FgEdge outEdge,
-            LinkVar link, double outMsgTrue, double outMsgFalse) {
-        
+    private void setOutMsgs(VarTensor outMsg, LinkVar link, double outMsgTrue, double outMsgFalse) {
+
         // Set the outgoing messages.
-        VarTensor outMsg = msgs[outEdge.getId()].newMessage;
         Algebra s = outMsg.getAlgebra();
         outMsg.setValue(SpanVar.FALSE, s.fromLogProb(outMsgFalse));
         outMsg.setValue(SpanVar.TRUE, s.fromLogProb(outMsgTrue));
-                
+
         if (log.isTraceEnabled()) {
             log.trace(String.format("outMsgTrue: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.TRUE)));
             log.trace(String.format("outMsgFalse: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.FALSE)));
         }
-        
-        //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
+
         assert !outMsg.containsBadValues() : "message = " + outMsg;
     }
 
     @Override
-    public double getExpectedLogBelief(FgNode parent, Messages[] msgs) {
+    public double getExpectedLogBelief(VarTensor[] inMsgs) {
         if (n == 0) {
             return 0.0;
         }
-        assert parent.getFactor() == this;
-        double[] root = new double[n];
-        double[][] child = new double[n][n];
-        getLogOddsRatios(parent, msgs, root, child);
-        double logPi = getProductOfAllFalseMessages(parent, msgs);
+        EdgeScores ratios = getLogOddsRatios(inMsgs);
+        double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Algebra s = Algebras.LOG_SIGN_ALGEBRA;
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child, s);
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
@@ -540,9 +529,9 @@ public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements Glo
     }
     
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj) {
-        // TODO:
-        throw new RuntimeException("not yet implemented");        
+    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
+        throw new RuntimeException("This version of the global factor does not support adjoint computation. Use "
+                + ProjDepTreeFactor.class + " instead.");
     }
 
 }

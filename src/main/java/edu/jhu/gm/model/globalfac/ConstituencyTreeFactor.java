@@ -159,8 +159,8 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
         
     @Override
-    public void createMessages(FgNode parent, Messages[] msgs) {
-        Algebra s = msgs[0].message.getAlgebra();
+    public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
+        Algebra s = inMsgs[0].getAlgebra();
         if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
             throw new IllegalStateException("ConstituencyTreeFactor only supports log and real semirings as input.");
         }
@@ -168,10 +168,9 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         // All internal computation is done in the logDomain
         // since (for example) pi the product of all incoming false messages
         // would overflow.
-        assert (this == parent.getFactor());        
         final double[][] spanWeights = new double[n][n+1];
-        getLogOddsRatios(parent, msgs, spanWeights);
-        double pi = getProductOfAllFalseMessages(parent, msgs);
+        getLogOddsRatios(inMsgs, spanWeights);
+        double pi = getProductOfAllFalseMessages(inMsgs);
 
         // Compute the constituency tree marginals, summing over all 
         // constiuency trees via the inside-outside algorithm.
@@ -194,8 +193,10 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         }
         
         // Create the messages and stage them in the Messages containers.
-        for (FgEdge outEdge : parent.getOutEdges()) {
-            SpanVar span = (SpanVar) outEdge.getVar();
+        for (int i=0; i<inMsgs.length; i++) {
+            VarTensor inMsg = inMsgs[i];
+            VarTensor outMsg = outMsgs[i];
+            SpanVar span = (SpanVar) inMsg.getVars().get(0);
             
             // The beliefs are computed as follows.
             // beliefTrue = pi * FastMath.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
@@ -213,8 +214,6 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             // TODO: Detect possible numerical precision error.
             
             // Get the incoming messages.
-            FgEdge inEdge = outEdge.getOpposing();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
             double inMsgTrue = s.toLogProb(inMsg.getValue(SpanVar.TRUE));
             double inMsgFalse = s.toLogProb(inMsg.getValue(SpanVar.FALSE));
             
@@ -224,7 +223,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
             outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
             
-            setOutMsgs(msgs, outEdge, span, outMsgTrue, outMsgFalse);
+            setOutMsgs(outMsg, span, outMsgTrue, outMsgFalse);
         }
     }
     
@@ -252,14 +251,13 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     private static int oddsRatioCount = 0;
 
     /** Computes the log odds ratio for each edge. w_{ij} = \mu_{ij}(1) / \mu_{ij}(0) */
-    private void getLogOddsRatios(FgNode parent, Messages[] msgs, double[][] spanWeights) {
-        Algebra s = msgs[0].message.getAlgebra();
+    private void getLogOddsRatios(VarTensor[] inMsgs, double[][] spanWeights) {
+        Algebra s = inMsgs[0].getAlgebra();
         
         // Compute the odds ratios of the messages for each edge in the tree.
         DoubleArrays.fill(spanWeights, Double.NEGATIVE_INFINITY);
-        for (FgEdge inEdge : parent.getInEdges()) {
-            SpanVar span = (SpanVar) inEdge.getVar();
-            VarTensor inMsg = msgs[inEdge.getId()].message;
+        for (VarTensor inMsg : inMsgs) {
+            SpanVar span = (SpanVar) inMsg.getVars().get(0);
             double oddsRatio = s.toLogProb(inMsg.getValue(SpanVar.TRUE)) - s.toLogProb(inMsg.getValue(SpanVar.FALSE));
             spanWeights[span.getStart()][span.getEnd()] = oddsRatio;                
         }
@@ -300,25 +298,22 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     /** Computes pi = \prod_i \mu_i(0). */
-    private double getProductOfAllFalseMessages(FgNode parent, Messages[] msgs) {
+    private double getProductOfAllFalseMessages(VarTensor[] inMsgs) {
         // Precompute the product of all the "false" messages.
         // pi = \prod_i \mu_i(0)
         // Here we store log pi.
-        Algebra s = msgs[0].message.getAlgebra();
+        Algebra s = inMsgs[0].getAlgebra();
         double logPi = 0.0;
-        for (FgEdge inEdge : parent.getInEdges()) {
-            VarTensor inMsg = msgs[inEdge.getId()].message;
+        for (VarTensor inMsg : inMsgs) {
             logPi += s.toLogProb(inMsg.getValue(SpanVar.FALSE));
         }
         return logPi;
     }
 
     /** Sets the outgoing messages. */
-    private void setOutMsgs(Messages[] msgs, FgEdge outEdge, SpanVar span, double outMsgTrue,
-            double outMsgFalse) {
+    private void setOutMsgs(VarTensor outMsg, SpanVar span, double outMsgTrue, double outMsgFalse) {
         
         // Set the outgoing messages.
-        VarTensor outMsg = msgs[outEdge.getId()].newMessage;
         Algebra s = outMsg.getAlgebra();
         outMsg.setValue(SpanVar.FALSE, s.fromLogProb(outMsgFalse));
         outMsg.setValue(SpanVar.TRUE, s.fromLogProb(outMsgTrue));
@@ -328,20 +323,11 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             log.trace(String.format("outMsgFalse: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.FALSE)));
         }
         
-        //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
         assert !outMsg.containsBadValues() : "message = " + outMsg;
     }
 
-    public static void boundToSafeValues(double[] values) {
-        for (int i=0; i<values.length; i++) {
-            if (values[i] == Double.NEGATIVE_INFINITY) {
-                values[i] = -300;
-            }
-        }
-    }
-
     @Override
-    public double getExpectedLogBelief(FgNode parent, Messages[] msgs) {
+    public double getExpectedLogBelief(VarTensor[] inMsgs) {
         if (n == 0) {
             return 0.0;
         }
@@ -449,7 +435,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     }
 
     @Override
-    public void backwardCreateMessages(FgNode parent, Messages[] msgs, Messages[] msgsAdj) {
+    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
         // TODO:
         throw new RuntimeException("not yet implemented");        
     }
