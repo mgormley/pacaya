@@ -149,7 +149,7 @@ public class SoftmaxMbrDepParseTest {
         TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 2));
         SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
         
-        int numParams = ModuleFn.getInputSize(ea.getInputs());
+        int numParams = ModuleFn.getOutputSize(ea.getInputs());
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         final MutableDouble sum = new MutableDouble(0);
         x.iterate(new FnIntDoubleToVoid() {
@@ -158,7 +158,7 @@ public class SoftmaxMbrDepParseTest {
             }
         });
         x.scale(-1.0/sum.doubleValue());
-        ModuleTestUtils.assertFdAndAdEqual(ea, x, 1e-8, 1e-5);
+        ModuleTestUtils.assertGradientCorrectByFd(ea, x, 1e-8, 1e-5);
     }
     
     @Test

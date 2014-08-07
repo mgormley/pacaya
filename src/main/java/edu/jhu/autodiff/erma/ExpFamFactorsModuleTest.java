@@ -79,7 +79,7 @@ public class ExpFamFactorsModuleTest {
         model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
         ExpFamFactorsModule effm = new ExpFamFactorsModule(id1, fg, s);
-        ModuleTestUtils.assertFdAndAdEqual(effm, 1e-5, 1e-8);
+        ModuleTestUtils.assertGradientCorrectByFd(effm, 1e-5, 1e-8);
     }
 
 }

@@ -113,7 +113,7 @@ public class ErmaObjectiveTest {
         System.out.println(DoubleArrays.toString(obj.getGradient(model.getParams()).toNativeArray(), "%.4g"));
                 
         model.setRandomStandardNormal();        
-        ModuleTestUtils.assertFdAndAdEqual(obj, model.getParams(), 1e-5, 1e-8);
+        ModuleTestUtils.assertGradientCorrectByFd(obj, model.getParams(), 1e-5, 1e-8);
     }
 
     public static ErmaBpPrm getErmaBpPrm(boolean logDomain) {
@@ -141,7 +141,7 @@ public class ErmaObjectiveTest {
         CrfObjective exObj = new CrfObjective(data, getErmaBpPrm(false));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
-        ModuleTestUtils.assertFdAndAdEqual(obj, model.getParams(), 1e-5, 1e-8);
+        ModuleTestUtils.assertGradientCorrectByFd(obj, model.getParams(), 1e-5, 1e-8);
     }
     
     public static FgExampleList getDpData(ObsFeatureConjoiner ofc, int featureHashMod) throws IOException {

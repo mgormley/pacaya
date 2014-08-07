@@ -4,8 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import java_cup.internal_error;
+
+import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.autodiff.erma.Beliefs;
-import edu.jhu.autodiff.erma.StochasticGradientApproximation;
+import edu.jhu.autodiff.erma.Factors;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
@@ -34,7 +37,7 @@ public class ModuleTestUtils {
     
         @Override
         public int getNumDimensions() {
-            return getInputSize(vecFn.getInputs());
+            return getOutputSize(vecFn.getInputs());
         }
         
         @Override
@@ -68,10 +71,10 @@ public class ModuleTestUtils {
          * Treats all the input modules as if they were concatenated into a long vector, and
          * computes the size of that vector.
          */
-        public static int getInputSize(List<? extends Module<? extends MVec<?>>> inputs) {
+        public static int getOutputSize(List<? extends Module<? extends MVec<?>>> mods) {
             int totInDimension = 0;
-            for (Module<?> input : inputs) {
-                totInDimension += input.getOutput().size();
+            for (Module<?> mod : mods) {
+                totInDimension += mod.getOutput().size();
             }
             return totInDimension;
         }
@@ -96,7 +99,7 @@ public class ModuleTestUtils {
          * IntDoubleVector.
          */
         public static IntDoubleVector getInputsAsIdv(List<? extends Module<? extends MVec<?>>> inputs) {
-            int totInDimension = getInputSize(inputs);
+            int totInDimension = getOutputSize(inputs);
             IntDoubleVector grad = new IntDoubleDenseVector(totInDimension);
             int idx=0;
             for (Module<? extends MVec<?>> input : inputs) {
@@ -131,59 +134,86 @@ public class ModuleTestUtils {
         return theta;
     }
 
-    public static void assertFdAndAdEqual(Module<?> vecFn, double epsilon, double delta) {
-        int numParams = ModuleFn.getInputSize(vecFn.getInputs());
+    public static void assertGradientCorrectByFd(Module<?> vecFn, double epsilon, double delta) {
+        int numParams = ModuleFn.getOutputSize(vecFn.getInputs());
         IntDoubleDenseVector x = getZeroOneGaussian(numParams);
-        assertFdAndAdEqual(vecFn, x, epsilon, delta);
+        assertGradientCorrectByFd(vecFn, x, epsilon, delta);
     }
 
-    public static void assertFdAndAdEqual(Module<?> vecFn, IntDoubleDenseVector x, double epsilon, double delta) {
-        int numParams = ModuleFn.getInputSize(vecFn.getInputs());
+    public static void assertGradientCorrectByFd(DifferentiableFunction fn, double epsilon, double delta) {
+        int numParams = fn.getNumDimensions();                
+        IntDoubleDenseVector x = getZeroOneGaussian(numParams);
+        assertGradientCorrectByFd(fn, x, epsilon, delta);
+    }
+
+    public static void assertGradientCorrectByFd(Module<?> vecFn, IntDoubleVector x, double epsilon, double delta) {
+        int numParams = ModuleFn.getOutputSize(vecFn.getInputs());
         if (numParams == 0) {
             throw new IllegalStateException("No input parameters!");
         }
         // Run forward once to figure out the output dimension.
-        vecFn.forward();
-        int outDim = ModuleFn.getInputSize(Lists.getList(vecFn));
+        int outDim = vecFn.forward().size();
         for (int i=0; i<outDim; i++) {
             ModuleFn fn = new ModuleFn(vecFn, i);
-            IntDoubleVector grad = fn.getGradient(x);
-            for (int j=0; j<numParams; j++) {
-                // Test the deriviative d/dx_j(f_i(\vec{x}))
-
-                IntDoubleVector d = new IntDoubleDenseVector(numParams);
-                d.set(j, 1);
-                double dotFd = StochasticGradientApproximation.getGradDotDirApprox(fn, x, d, epsilon);
-                double dotAd = grad.dot(d);
-                double relError = Math.abs(dotFd - dotAd) / Math.max(Math.abs(dotFd), Math.abs(dotAd));
-                System.out.printf("i=%d j=%d dotFd=%g dotAd=%g relError=%g\n", i, j, dotFd, dotAd, relError);
-                assertEquals(dotFd, dotAd, delta);
-            }
+            IntDoubleVector gradAd = fn.getGradient(x);
+            IntDoubleVector gradFd = StochasticGradientApproximation.estimateGradientFd(fn, x, epsilon);
+            // Assert gradients are equal.
+            System.out.print("i="+i);
+            assertVectorEquals(gradFd, gradAd, numParams, delta);
         }
     }
     
-    public static void assertFdAndAdEqual(DifferentiableFunction fn, double epsilon, double delta) {
-        int numParams = fn.getNumDimensions();                
-        IntDoubleDenseVector x = getZeroOneGaussian(numParams);
-        assertFdAndAdEqual(fn, x, epsilon, delta);
-    }
-    
-    public static void assertFdAndAdEqual(DifferentiableFunction fn, IntDoubleVector x, double epsilon, double delta) {
+    public static void assertGradientCorrectByFd(DifferentiableFunction fn, IntDoubleVector x, double epsilon, double delta) {
         int numParams = fn.getNumDimensions();
         if (numParams == 0) {
             throw new IllegalStateException("No input parameters!");
         }
-        for (int j=0; j<numParams; j++) {
-            // Test the deriviative d/dx_j(f(\vec{x}))
-            IntDoubleVector d = new IntDoubleDenseVector(numParams);
-            d.set(j, 1);
-            double dotFd = StochasticGradientApproximation.getGradDotDirApprox(fn, x, d, epsilon);
-            IntDoubleVector grad = fn.getGradient(x);
-            double dotAd = grad.dot(d);
-            double relError = Math.abs(dotFd - dotAd) / Math.max(Math.abs(dotFd), Math.abs(dotAd));
-            System.out.printf("j=%d dotFd=%g dotAd=%g relError=%g\n", j, dotFd, dotAd, relError);
-            assertEquals(dotFd, dotAd, delta);
+        IntDoubleVector gradAd = fn.getGradient(x);
+        IntDoubleVector gradFd = StochasticGradientApproximation.estimateGradientFd(fn, x, epsilon);
+        // Assert gradients are equal.
+        assertVectorEquals(gradFd, gradAd, numParams, delta);
+    }
+    
+    public static void assertGradientEquals(Module<?> vecFn1, Module<?> vecFn2, IntDoubleVector x, double epsilon, double delta) {
+        int numParams1 = ModuleFn.getOutputSize(vecFn1.getInputs());
+        int numParams2 = ModuleFn.getOutputSize(vecFn2.getInputs());
+        assertEquals(numParams1, numParams2);
+        if (numParams1 == 0) {
+            throw new IllegalStateException("No input parameters!");
+        }
+        // Run forward once to figure out the output dimension.
+        int outDim1 = vecFn1.forward().size();
+        int outDim2 = vecFn2.forward().size();
+        assertEquals(outDim1, outDim2);
+        
+        // Assert outputs of forward are equal.        
+        for (int i=0; i<outDim1; i++) {
+            double val1 = (new ModuleFn(vecFn1, i)).getValue(x);
+            double val2 = (new ModuleFn(vecFn2, i)).getValue(x);
+            double relError = Math.abs(val2 - val1) / Math.max(Math.abs(val2), Math.abs(val1));
+            System.out.printf("i=%d val1=%g val2=%g relError=%g\n", i, val1, val2, relError);
+            assertEquals(val1, val2, delta);
+        }
+        // Assert gradients are equal.
+        for (int i=0; i<outDim1; i++) {
+            IntDoubleVector grad1 = (new ModuleFn(vecFn1, i)).getGradient(x);
+            IntDoubleVector grad2 = (new ModuleFn(vecFn2, i)).getGradient(x);
+            System.out.println("i="+i+":");
+            assertVectorEquals(grad1, grad2, numParams1, delta);
         }
     }
 
+    /** Asserts that the two given vectors are equal up to some tolerance threshold. */
+    // TODO: Maybe move this to JUnitUtils in prim?
+    private static void assertVectorEquals(IntDoubleVector grad1, IntDoubleVector grad2, int numParams, double delta) {
+        for (int j=0; j<numParams; j++) {
+            // Test the deriviative d/dx_j(f_i(\vec{x}))
+            double dot1 = grad1.get(j);
+            double dot2 = grad2.get(j);
+            double relError = Math.abs(dot2 - dot1) / Math.max(Math.abs(dot2), Math.abs(dot1));
+            System.out.printf("j=%d dot1=%g dot2=%g relError=%g\n", j, dot1, dot2, relError);
+            assertEquals(dot1, dot2, delta);
+        }
+    }
+        
 }

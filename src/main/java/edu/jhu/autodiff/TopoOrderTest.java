@@ -82,14 +82,14 @@ public class TopoOrderTest {
         assertTrue(Lists.getList(s, add, exp).equals(topo.getTopoOrder()));
         assertTrue(Lists.getList(id1).equals(topo.getInputs()));
         
-        ModuleTestUtils.assertFdAndAdEqual(topo, 1e-5, 1e-8);
+        ModuleTestUtils.assertGradientCorrectByFd(topo, 1e-5, 1e-8);
 
         int numParams = 3;                
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         x.set(0, .2);
         x.set(1, .3);
         x.set(2, .5);
-        ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-5, 1e-8);
+        ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, 1e-8);
     }
     
 }

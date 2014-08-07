@@ -315,7 +315,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
         return arr;
     }
-        
+    
     private void forwardVarToFactor(FgEdge edge) {
         // Since this is not a global factor, we send messages in the normal way, which
         // in the case of a factor to variable message requires enumerating all possible
@@ -352,7 +352,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Marginalize over all the assignments to variables for f*, except
         // for v*.
         msg = prod.getMarginal(new VarSet(var), false);
-        assert !msg.containsBadValues();
+        assert !msg.containsBadValues() : "msg = " + msg;
         
         // Set the final message in case we created a new object.
         msgs[edge.getId()].newMessage = msg;

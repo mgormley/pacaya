@@ -1,4 +1,4 @@
-package edu.jhu.autodiff.erma;
+package edu.jhu.autodiff;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -18,6 +18,28 @@ import edu.jhu.util.dist.Gaussian;
 public class StochasticGradientApproximation {
     
     private StochasticGradientApproximation() { }
+
+    /**
+     * Estimates a gradient of a function by an independent finite-difference computation along each
+     * dimension of the domain of the function.
+     * 
+     * @param fn Function on which to approximate the gradient.
+     * @param x Point at which to approximate the gradient.
+     * @param epsilon The size of the finite difference step.
+     * @return The approximate gradient.
+     */
+    public static IntDoubleVector estimateGradientFd(Function fn, IntDoubleVector x, double epsilon) {
+        int numParams = fn.getNumDimensions();
+        IntDoubleVector gradFd = new IntDoubleDenseVector(numParams);                      
+        for (int j=0; j<numParams; j++) {
+            // Test the deriviative d/dx_j(f_i(\vec{x}))
+            IntDoubleVector d = new IntDoubleDenseVector(numParams);
+            d.set(j, 1);
+            double dotFd = getGradDotDirApprox(fn, x, d, epsilon);
+            gradFd.set(j, dotFd);
+        }
+        return gradFd;
+    }
     
     /**
      * Estimates a gradient of a function by simultaneous perterbations

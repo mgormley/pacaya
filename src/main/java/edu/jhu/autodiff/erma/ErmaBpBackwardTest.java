@@ -9,8 +9,7 @@ import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.Tensor;
-import edu.jhu.autodiff.TopoOrder;
+import edu.jhu.autodiff.StochasticGradientApproximation;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -36,7 +35,6 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -117,6 +115,55 @@ public class ErmaBpBackwardTest {
         goldConfig.put(fgv.t2, 1);
                 
         testGradientByFiniteDifferences(fg, goldConfig);
+    }
+    
+    // Tests that the adjoints for ErmaBp are equal for both PARALLEL and SEQUENTIAL schedules.
+    @Test
+    public void testErmaGradientLinearChainParallelSequential() {
+        //FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+        //final FactorGraph fg = fgv.fg;
+        
+        final FactorGraph fg = new FactorGraph();
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
+        ExplicitFactor tran0 = new ExplicitFactor(new VarSet(t0, t1));
+        fg.addFactor(emit0);
+        fg.addFactor(tran0);
+        
+        VarConfig goldConfig = new VarConfig();
+        goldConfig.put(t0, 1);
+        
+        // Inputs        
+        FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
+        // The sampled values will be in the real semiring.
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        effm.forward();
+        
+        // SEQUENTIAL TREE_LIKE
+        OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
+                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+                prm.schedule = BpScheduleType.TREE_LIKE;
+                prm.normalizeMessages = false;
+                return new ErmaBp(fg, prm, m1);
+            }
+        };
+        
+        // PARALLEL TREE_LIKE
+        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
+                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                prm.updateOrder = BpUpdateOrder.PARALLEL;
+                prm.schedule = BpScheduleType.TREE_LIKE;
+                prm.normalizeMessages = false;
+                prm.maxIterations = 100;
+                return new ErmaBp(fg, prm, m1);
+            }
+        };
+        
+        AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm);
     }
     
     @Test
@@ -280,7 +327,7 @@ public class ErmaBpBackwardTest {
         System.out.println("theta0 = " + theta0);
         Prng.seed(System.currentTimeMillis());
         
-        ModuleTestUtils.assertFdAndAdEqual(fn, theta0, 1e-5, 1e-7);
+        ModuleTestUtils.assertGradientCorrectByFd(fn, theta0, 1e-5, 1e-7);
     }
     
     private static IntDoubleVector testGradientBySpsaApprox(ErmaErFn fn) {

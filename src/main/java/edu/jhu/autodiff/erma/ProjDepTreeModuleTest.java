@@ -162,9 +162,9 @@ public class ProjDepTreeModuleTest {
         t1.fill(s.one());
         t2.fill(s.one());
         
-        int numParams = ModuleFn.getInputSize(topo.getInputs());
+        int numParams = ModuleFn.getOutputSize(topo.getInputs());
         IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-        ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-8, 1e-5);
+        ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-8, 1e-5);
     }
 
     @Test

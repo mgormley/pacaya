@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
+import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
@@ -11,6 +12,22 @@ import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
 public class AbstractModuleTest {
+
+    public interface VectorFactory {
+        IntDoubleVector getVector(int numParams);
+    }
+    
+    public static class StandardNormalVectorFactory implements VectorFactory {
+        public IntDoubleVector getVector(int numParams) {
+            return ModuleTestUtils.getZeroOneGaussian(numParams);
+        }
+    }
+
+    public static class AbsStandardNormalVectorFactory implements VectorFactory {
+        public IntDoubleVector getVector(int numParams) {
+            return ModuleTestUtils.getAbsZeroOneGaussian(numParams);
+        }
+    }
     
     /** Factory for a module which takes one modules as input. */
     public interface OneToOneFactory<X extends MVec<X>,Y extends MVec<Y>> {
@@ -101,7 +118,7 @@ public class AbstractModuleTest {
         assertTrue("Expected: " + expOut + " but was: " + out, expOut.equals(out, d));
     }
 
-    /** Same as below, but uses one 3 dimensional input tensors. */
+    /** Calls {@link #evalTensor1ByFiniteDiffs(Tensor1Factory, Module)} with one 3 dimensional input tensors. */
     public static void evalTensor1ByFiniteDiffs(Tensor1Factory fact) {
         Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
         TensorIdentity in1 = new TensorIdentity(t1);
@@ -109,48 +126,38 @@ public class AbstractModuleTest {
     }
 
     /**
-     * Evaluates a tensor module by finite differences. This tensor module takes one tensor as
-     * input, and will be tested on multiple semirings.
+     * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with 0,1 Gaussian vector factory.
      */
     public static void evalTensor1ByFiniteDiffs(Tensor1Factory fact, Module<Tensor> in1) {        
         evalOneToOneByFiniteDiffs(fact, in1);
     }
     
     /**
-     * Evaluates a tensor module by finite differences. This tensor module takes one tensor as
-     * input, and will be tested on multiple semirings.
-     * NOTE: This method is just a variant of the one above which always makes the input to the tested
-     * module non-negative.
+     * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with positive side of 0,1 Gaussian vector factory.
      */
     public static void evalTensor1ByFiniteDiffsAbs(Tensor1Factory fact, Module<Tensor> in1) {        
         evalOneToOneByFiniteDiffsAbs(fact, in1);
     }
     
     /**
-     * Evaluates a module by finite differences. This module takes one module as
-     * input, and will be tested on multiple semirings.
+     * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with 0,1 Gaussian vector factory.
      */
     public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
-        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
-        
-        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
-            Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
-            Module<Y> main = fact.getModule(in1Co);
-            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
-            
-            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
-            ModuleTestUtils.assertFdAndAdEqual(topo, 1e-5, 1e-8);
-        }
+        evalOneToOneByFiniteDiffsAbs(fact, in1, new StandardNormalVectorFactory());
+    }
+    
+    /**
+     * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with positive side of 0,1 Gaussian vector factory.
+     */
+    public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
+        evalOneToOneByFiniteDiffsAbs(fact, in1, new AbsStandardNormalVectorFactory());
     }
     
     /**
      * Evaluates a module by finite differences. This module takes one module as
      * input, and will be tested on multiple semirings.
-     * 
-     * NOTE: This method is just a variant of the one above which always makes the input to the tested
-     * module non-negative.
      */
-    public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
+    private static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1, VectorFactory vec) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
@@ -159,13 +166,14 @@ public class AbstractModuleTest {
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
-            int numParams = ModuleFn.getInputSize(topo.getInputs());
-            IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-            ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-5, 1e-8);
+            IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
+            ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, 1e-8);
         }
     }
     
-    /** Same as below, but uses two 3 dimensional input tensors. */
+    /**
+     * Calls {@link #evalTensor2ByFiniteDiffs(Tensor2Factory, Module, Module, VectorFactory)} with two 3 dimensional input tensors.
+     */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact) {
         Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
         Tensor t2 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 4, 6, 7);
@@ -173,32 +181,43 @@ public class AbstractModuleTest {
         TensorIdentity in2 = new TensorIdentity(t2);
         evalTensor2ByFiniteDiffs(fact, in1, in2);
     }
-    
+        
     /**
-     * Evaluates a tensor module by finite differences. This tensor module takes two tensors as
-     * input, and will be tested on multiple semirings.
+     * Calls {@link #evalTwoToOneByFiniteDiffs(TwoToOneFactory, Module, Module, VectorFactory)} with 0,1 Gaussian vector factory.
      */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact, Module<Tensor> in1, Module<Tensor> in2) {        
         evalTwoToOneByFiniteDiffs(fact, in1, in2);
     }
     
     /**
-     * Evaluates a tensor module by finite differences. This tensor module takes two tensors as
-     * input, and will be tested on multiple semirings.
-     * 
-     * NOTE: This method is just a variant of the one above which always makes the input to the tested
-     * module non-negative.
+     * Calls {@link #evalTwoToOneByFiniteDiffs(TwoToOneFactory, Module, Module, VectorFactory)} with positive side of 0,1 Gaussian vector factory.
      */
     public static void evalTensor2ByFiniteDiffsAbs(Tensor2Factory fact, Module<Tensor> in1, Module<Tensor> in2) {        
         evalTwoToOneByFiniteDiffsAbs(fact, in1, in2);
     }
         
     /**
+     * Calls {@link #evalTwoToOneByFiniteDiffs(TwoToOneFactory, Module, Module, VectorFactory)} with 0,1 Gaussian vector factory.
+     */
+    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffs(
+            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
+        evalTwoToOneByFiniteDiffs(fact, in1, in2, new StandardNormalVectorFactory());
+    }
+    
+    /**
+     * Calls {@link #evalTwoToOneByFiniteDiffs(TwoToOneFactory, Module, Module, VectorFactory)} with positive side of 0,1 Gaussian vector factory.
+     */
+    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffsAbs(
+            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
+        evalTwoToOneByFiniteDiffs(fact, in1, in2, new AbsStandardNormalVectorFactory());
+    }
+
+    /**
      * Evaluates a module by finite differences. This module takes two modules as
      * input, and will be tested on multiple semirings.
      */
     public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffs(
-            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
+            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2, VectorFactory vec) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
@@ -209,33 +228,44 @@ public class AbstractModuleTest {
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
-            ModuleTestUtils.assertFdAndAdEqual(topo, 1e-5, 1e-8);
+            IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
+            ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, 1e-8);
         }
     }
     
-    /**
-     * Evaluates a module by finite differences. This module takes two modules as
-     * input, and will be tested on multiple semirings.
-     * 
-     * NOTE: This method is just a variant of the one above which always makes the input to the tested
-     * module non-negative.
-     */
-    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffsAbs(
-            TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
-        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
-        assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
-        
-        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
-            Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
-            Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
-            Module<Y> main = fact.getModule(in1Co, in2Co);
-            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
-            
-            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
-            int numParams = ModuleFn.getInputSize(topo.getInputs());
-            IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-            ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-5, 1e-8);
-        }
+    /** Tests that two modules (instantiated by factories) yield equal adjoints. */
+    public static <X extends MVec<X>, Y extends MVec<Y>> void checkOneToOneEqualAdjoints(OneToOneFactory<X, Y> fact1,
+            OneToOneFactory<X, Y> fact2, Module<X> in1) {
+        checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, new StandardNormalVectorFactory());
     }
 
+    /** Tests that two modules (instantiated by factories) yield equal adjoints. */
+    public static <X extends MVec<X>, Y extends MVec<Y>> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
+            OneToOneFactory<X, Y> fact2, Module<X> in1) {
+        checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, new AbsStandardNormalVectorFactory());
+    }
+    
+    /** Tests that two modules (instantiated by factories) yield equal adjoints. */
+    public static <X extends MVec<X>, Y extends MVec<Y>> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
+            OneToOneFactory<X, Y> fact2, Module<X> in1, VectorFactory vec) {
+        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+                
+        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+            System.out.println("Testing on Algebra: " + s);
+            @SuppressWarnings("unchecked")
+            Module<Y>[] topos = new Module[2];
+            int i=0;
+            for (OneToOneFactory<X,Y> fact : Lists.getList(fact1, fact2)) {
+                Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
+                Module<Y> main = fact.getModule(in1Co);
+                Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
+                
+                TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
+                topos[i++] = topo;
+            }
+            IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topos[0].getInputs()));
+            ModuleTestUtils.assertGradientEquals(topos[0], topos[1], x, 1e-5, 1e-8);
+        }
+    }
+    
 }

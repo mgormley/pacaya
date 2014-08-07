@@ -62,9 +62,9 @@ public class ConvertAlgebraTest {
                 
                 TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), ea2);
 
-                int numParams = ModuleFn.getInputSize(topo.getInputs());
+                int numParams = ModuleFn.getOutputSize(topo.getInputs());
                 IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
-                ModuleTestUtils.assertFdAndAdEqual(topo, x, 1e-5, 1e-8);                
+                ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, 1e-8);                
             }
         }
     }

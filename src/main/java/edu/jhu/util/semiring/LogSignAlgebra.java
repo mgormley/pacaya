@@ -209,5 +209,10 @@ public class LogSignAlgebra implements Semiring, Algebra {
         if (this.getClass() == other.getClass()) { return true; }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().toString();
+    }
     
 }

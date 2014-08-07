@@ -126,10 +126,10 @@ public class RealAlgebra implements Semiring, Algebra {
     public double minValue() {
         return Double.NEGATIVE_INFINITY;
     }
-    
+
     @Override
     public String toString() {
-        return "RealAlgebra";
+        return this.getClass().toString();
     }
     
     // Two Algebras / Semirings are equal if they are of the same class.

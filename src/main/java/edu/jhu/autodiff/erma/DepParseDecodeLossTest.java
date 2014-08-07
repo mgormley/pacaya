@@ -53,7 +53,7 @@ public class DepParseDecodeLossTest {
         TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 3));
         DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, temp);
         
-        ModuleTestUtils.assertFdAndAdEqual(dl, 1e-8, 1e-5);      
+        ModuleTestUtils.assertGradientCorrectByFd(dl, 1e-8, 1e-5);      
         
         // testGradByFiniteDiffsAllSemirings
         TwoToOneFactory<Beliefs,Tensor,Tensor> fact = new TwoToOneFactory<Beliefs,Tensor,Tensor>() {

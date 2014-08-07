@@ -137,5 +137,10 @@ public class LogSemiring implements Algebra {
         if (this.getClass() == other.getClass()) { return true; }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().toString();
+    }
     
 }
