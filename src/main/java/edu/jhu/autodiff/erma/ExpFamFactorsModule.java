@@ -38,8 +38,10 @@ public class ExpFamFactorsModule implements Module<Factors> {
     
     @Override
     public Factors forward() {
-        FgModel model = modIn.getOutput().getModel();
-        fg.updateFromModel(model);
+        if (modIn != null) {
+            FgModel model = modIn.getOutput().getModel();
+            fg.updateFromModel(model);
+        }
         y = new Factors(s);
         y.f = new VarTensor[fg.getNumFactors()];
         for (int a = 0; a < y.f.length; a++) {
