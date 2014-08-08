@@ -111,12 +111,12 @@ public abstract class AbstractToFromRealAlgebra implements Semiring, Algebra {
     
     @Override
     public double toLogProb(double nonReal) {
-        return fromReal(FastMath.log(toReal(nonReal)));
+        return FastMath.log(toReal(nonReal));
     }
 
     @Override
     public double fromLogProb(double logProb) {
-        return fromReal(FastMath.exp(toReal(logProb)));
+        return fromReal(FastMath.exp(logProb));
     }
 
     @Override

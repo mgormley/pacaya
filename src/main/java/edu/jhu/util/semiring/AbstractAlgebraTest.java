@@ -37,6 +37,7 @@ public abstract class AbstractAlgebraTest {
     @Test
     public void testToFromReal() {
         toFromCheck(1);
+        toFromCheck(0);
         toFromCheck(-1);
         toFromCheck(Double.POSITIVE_INFINITY);
         toFromCheck(Double.NEGATIVE_INFINITY);
@@ -50,6 +51,23 @@ public abstract class AbstractAlgebraTest {
     private void toFromCheck(double x) {
         System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sLog.fromReal(x)));
         assertEquals(x, sLog.toReal(sLog.fromReal(x)), deltaStrict);
+    }
+    
+    @Test
+    public void testToFromLogProb() {
+        toFromLogProbCheck(0);
+        toFromLogProbCheck(-1);
+        toFromLogProbCheck(Double.NEGATIVE_INFINITY);
+        toFromLogProbCheck(Double.NaN);
+
+        int i = 0, j = 0;
+        double nan3 = (double)i/j;
+        toFromLogProbCheck(nan3);
+    }
+    
+    private void toFromLogProbCheck(double x) {
+        System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sLog.fromReal(x)));
+        assertEquals(x, sLog.toLogProb(sLog.fromLogProb(x)), deltaStrict);
     }
 
     @Test
