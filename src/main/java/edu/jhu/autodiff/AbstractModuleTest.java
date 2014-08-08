@@ -3,13 +3,13 @@ package edu.jhu.autodiff;
 import static org.junit.Assert.assertTrue;
 import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
-import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.util.semiring.SplitAlgebra;
 
 public class AbstractModuleTest {
 
@@ -250,7 +250,7 @@ public class AbstractModuleTest {
             OneToOneFactory<X, Y> fact2, Module<X> in1, VectorFactory vec) {
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
                 
-        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.SPLIT_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
             System.out.println("Testing on Algebra: " + s);
             @SuppressWarnings("unchecked")
             Module<Y>[] topos = new Module[2];

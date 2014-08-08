@@ -9,10 +9,13 @@ public class Algebras {
     // Algebras.
     public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra(); 
     public static final LogSignAlgebra LOG_SIGN_ALGEBRA = new LogSignAlgebra(); 
+    public static final Algebra SPLIT_ALGEBRA = new SplitAlgebra(); 
+    public static final Algebra SHIFTED_REAL_ALGEBRA = new ShiftedRealAlgebra(); 
+    
     // Semirings.
     public static final LogSemiring LOG_SEMIRING = new LogSemiring(); 
     public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring(); 
-    public static final TropicalSemiring TROPICAL_SEMIRING = new TropicalSemiring(); 
+    public static final TropicalSemiring TROPICAL_SEMIRING = new TropicalSemiring();
     
     // TODO: unit test.
     public static double convertAlgebra(double value, Algebra src, Algebra dst) {

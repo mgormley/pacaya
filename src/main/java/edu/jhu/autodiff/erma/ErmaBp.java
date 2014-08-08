@@ -495,7 +495,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         msgs[i].message = oldMsg;                   // The message at time (t)
         // Swap the adjoint messages and zero the one for time (t).
         VarTensor tmp = msgsAdj[i].newMessage;
-        tmp.multiply(0);
+        tmp.multiply(s.zero());
         msgsAdj[i].newMessage = msgsAdj[i].message; // The adjoint at time (t+1)
         msgsAdj[i].message = tmp;                   // The adjoint at time (t)
         
