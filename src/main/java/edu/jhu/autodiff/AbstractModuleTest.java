@@ -1,6 +1,9 @@
 package edu.jhu.autodiff;
 
 import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import edu.jhu.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.prim.vector.IntDoubleVector;
@@ -9,7 +12,6 @@ import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
-import edu.jhu.util.semiring.SplitAlgebra;
 
 public class AbstractModuleTest {
 
@@ -45,6 +47,9 @@ public class AbstractModuleTest {
     /** Factory for a module which takes two tensor modules as input. */
     public interface Tensor2Factory extends TwoToOneFactory<Tensor, Tensor, Tensor> { }
 
+    private static final List<Algebra> test2Algebras = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
+    private static final List<Algebra> test3Algebras = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.SPLIT_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
+    
     /** Evaluation of a module which takes one tensor modules as input. */
     public static void evalTensor1(Tensor t1, Tensor expT1Adj, Tensor1Factory fact, Tensor expOut, double adjFill) {
         evalTensor1(t1, expT1Adj, fact, expOut, adjFill, new RealAlgebra());
@@ -160,14 +165,15 @@ public class AbstractModuleTest {
     private static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1, VectorFactory vec) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
-        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (Algebra s : test2Algebras) {
             Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
             Module<Y> main = fact.getModule(in1Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
             
             TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
-            ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, 1e-8);
+            double delta = s.equals(Algebras.SPLIT_ALGEBRA) ? 1e-2 : 1e-7;
+            ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
         }
     }
     
@@ -221,7 +227,7 @@ public class AbstractModuleTest {
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
-        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (Algebra s : test2Algebras) {
             Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
             Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
             Module<Y> main = fact.getModule(in1Co, in2Co);
@@ -229,7 +235,8 @@ public class AbstractModuleTest {
             
             TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
-            ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, 1e-8);
+            double delta = s.equals(Algebras.SPLIT_ALGEBRA) ? 1e-2 : 1e-8;
+            ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
         }
     }
     
@@ -250,7 +257,7 @@ public class AbstractModuleTest {
             OneToOneFactory<X, Y> fact2, Module<X> in1, VectorFactory vec) {
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
                 
-        for (Algebra s : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.SPLIT_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (Algebra s : test3Algebras) {
             System.out.println("Testing on Algebra: " + s);
             @SuppressWarnings("unchecked")
             Module<Y>[] topos = new Module[2];
@@ -264,7 +271,8 @@ public class AbstractModuleTest {
                 topos[i++] = topo;
             }
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topos[0].getInputs()));
-            ModuleTestUtils.assertGradientEquals(topos[0], topos[1], x, 1e-5, 1e-8);
+            double delta = s.equals(Algebras.SPLIT_ALGEBRA) ? 1e-2 : 1e-8;
+            ModuleTestUtils.assertGradientEquals(topos[0], topos[1], x, 1e-5, delta);
         }
     }
     

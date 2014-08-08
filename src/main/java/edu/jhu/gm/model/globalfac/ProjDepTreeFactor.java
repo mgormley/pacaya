@@ -234,12 +234,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     public double getLogUnormalizedScore(VarConfig vc) {
         LogSemiring s = Algebras.LOG_SEMIRING;
         if (!hasOneParentPerToken(n, vc)) {
-            log.warn("Tree has more than one arc to root.");
+            log.trace("Tree has more than one arc to root.");
             return s.zero();
         }
         int[] parents = getParents(n, vc);
         if (!DepTree.isDepTree(parents, true)) {
-            log.warn("Tree is not a valid dependency tree.");
+            log.trace("Tree is not a valid dependency tree.");
             return s.zero();
         }
         return s.one();

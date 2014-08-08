@@ -4,17 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import java_cup.internal_error;
+import org.junit.Assert;
 
-import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
-import edu.jhu.autodiff.erma.Beliefs;
-import edu.jhu.autodiff.erma.Factors;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.dist.Gaussian;
 
 public class ModuleTestUtils {
@@ -212,7 +208,9 @@ public class ModuleTestUtils {
             double dot2 = grad2.get(j);
             double relError = Math.abs(dot2 - dot1) / Math.max(Math.abs(dot2), Math.abs(dot1));
             System.out.printf("j=%d dot1=%g dot2=%g relError=%g\n", j, dot1, dot2, relError);
-            assertEquals(dot1, dot2, delta);
+            System.out.flush();
+            Assert.assertTrue("Expected " + dot1 + " but was " + dot2,
+                    Primitives.equals(dot1, dot2, delta) || relError <= delta);
         }
     }
         

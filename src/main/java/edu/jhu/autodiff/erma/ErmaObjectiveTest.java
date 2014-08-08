@@ -39,30 +39,37 @@ import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 public class ErmaObjectiveTest {
     
     @Test
     public void testSimpleGradient() {
+        testSimpleGradient(Algebras.REAL_ALGEBRA);
+        testSimpleGradient(Algebras.LOG_SIGN_ALGEBRA);
+    }
+    
+    private void testSimpleGradient(Algebra s) {
         double[] params = new double[] {0.0, 0.0, 0.0, 0.0 };
  
         helpSimpleGradient(params, new ExpectedRecallFactory(), Trainer.ERMA, 
-                new double[]{-0.125, 0.125, 0.125, -0.125});  
+                new double[]{-0.125, 0.125, 0.125, -0.125}, s);  
         helpSimpleGradient(params, new MeanSquaredErrorFactory(), Trainer.ERMA, 
-                new double[]{-0.25, 0.25, 0.25, -0.25}); 
+                new double[]{-0.25, 0.25, 0.25, -0.25}, s); 
         helpSimpleGradient(params, null, Trainer.CLL, 
-                new double[]{0.25, -0.25, -0.25, 0.25});
+                new double[]{0.25, -0.25, -0.25, 0.25}, s);
         
         params = new double[] {1.0, 2.0, 3.0, 4.0 };
         helpSimpleGradient(params, new ExpectedRecallFactory(), Trainer.ERMA, 
-                new double[]{-0.0983, 0.0983, 0.0983, -0.0983}); 
+                new double[]{-0.0983, 0.0983, 0.0983, -0.0983}, s); 
         helpSimpleGradient(params, new MeanSquaredErrorFactory(), Trainer.ERMA, 
-                new double[]{-0.2875, 0.2875, 0.1058, -0.1058}); 
+                new double[]{-0.2875, 0.2875, 0.1058, -0.1058}, s); 
         helpSimpleGradient(params, null, Trainer.CLL, 
-                new double[]{0.3655, -0.3655, -0.1345, 0.1345});
+                new double[]{0.3655, -0.3655, -0.1345, 0.1345}, s);
     }
 
-    private void helpSimpleGradient(double[] params, DlFactory dl, Trainer trainer, double[] expected) {
+    private void helpSimpleGradient(double[] params, DlFactory dl, Trainer trainer, double[] expected, Algebra s) {
         LogLinearXYData xyData = new LogLinearXYData();
         List<String>[] fvs;
         fvs = new List[]{ Lists.getList("x=A,y=A"), Lists.getList("x=A,y=B") };
@@ -77,9 +84,9 @@ public class ErmaObjectiveTest {
 
         ExampleObjective exObj;
         if (trainer == Trainer.ERMA) {
-            exObj = new ErmaObjective(data, getErmaBpPrm(false), dl);
+            exObj = new ErmaObjective(data, getErmaBpPrm(s), dl);
         } else {
-            exObj = new CrfObjective(data, getErmaBpPrm(false));
+            exObj = new CrfObjective(data, getErmaBpPrm(s));
         }
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
@@ -93,11 +100,13 @@ public class ErmaObjectiveTest {
     
     @Test
     public void testDpData() throws IOException {
-        helpDpDataErma(new ExpectedRecallFactory());
-        helpDpDataErma(new MeanSquaredErrorFactory());
+        helpDpDataErma(new ExpectedRecallFactory(), Algebras.REAL_ALGEBRA);
+        helpDpDataErma(new MeanSquaredErrorFactory(), Algebras.REAL_ALGEBRA);
+        helpDpDataErma(new ExpectedRecallFactory(), Algebras.LOG_SIGN_ALGEBRA);
+        helpDpDataErma(new MeanSquaredErrorFactory(), Algebras.LOG_SIGN_ALGEBRA);
     }
 
-    private void helpDpDataErma(DlFactory dl) throws IOException {
+    private void helpDpDataErma(DlFactory dl, Algebra s) throws IOException {
         FactorTemplateList fts = new FactorTemplateList();
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
 
@@ -107,18 +116,18 @@ public class ErmaObjectiveTest {
         FgModel model = new FgModel(ofc.getNumParams());
         model.zero();
         
-        ErmaObjective exObj = new ErmaObjective(data, getErmaBpPrm(false), dl);
+        ErmaObjective exObj = new ErmaObjective(data, getErmaBpPrm(s), dl);
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
 
         System.out.println(DoubleArrays.toString(obj.getGradient(model.getParams()).toNativeArray(), "%.4g"));
                 
         model.setRandomStandardNormal();        
-        ModuleTestUtils.assertGradientCorrectByFd(obj, model.getParams(), 1e-5, 1e-8);
+        ModuleTestUtils.assertGradientCorrectByFd(obj, model.getParams(), 1e-5, 1e-7);
     }
 
-    public static ErmaBpPrm getErmaBpPrm(boolean logDomain) {
+    public static ErmaBpPrm getErmaBpPrm(Algebra s) {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
-        bpPrm.logDomain = logDomain;
+        bpPrm.s = s;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
@@ -138,7 +147,7 @@ public class ErmaObjectiveTest {
         FgModel model = new FgModel(ofc.getNumParams());
         model.setRandomStandardNormal();
 
-        CrfObjective exObj = new CrfObjective(data, getErmaBpPrm(false));
+        CrfObjective exObj = new CrfObjective(data, getErmaBpPrm(Algebras.REAL_ALGEBRA));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         ModuleTestUtils.assertGradientCorrectByFd(obj, model.getParams(), 1e-5, 1e-8);

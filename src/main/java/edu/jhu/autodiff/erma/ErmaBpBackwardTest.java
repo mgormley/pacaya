@@ -210,6 +210,45 @@ public class ErmaBpBackwardTest {
         goldConfig.put(rootVars[0], 1);
         testGradientByFiniteDifferences(fg, goldConfig);
     }
+
+    // Tests that the adjoints for ErmaBp are equal when the global factor does and does NOT use its
+    // dynamic programming approach..
+    @Test
+    public void testErmaGradient2WordGlobalFactorVsExplicit() {
+        boolean useExplicit = false;
+        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(logDomain, useExplicit, false, false);
+        final FactorGraph fg = fgl.fg;
+        
+        // Inputs        
+        FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
+        // The sampled values will be in the real semiring.
+        ExpFamFactorsModule effm = new ExpFamFactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        effm.forward();
+        
+        // SEQUENTIAL TREE_LIKE
+        OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
+                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+                prm.schedule = BpScheduleType.TREE_LIKE;
+                prm.maxIterations = 100;
+                return new ErmaBp(fg, prm, m1);
+            }
+        };
+        
+        // SEQUENTIAL NO_GLOBAL_FACTORS
+        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
+                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+                prm.schedule = BpScheduleType.NO_GLOBAL_FACTORS;
+                prm.maxIterations = 100;
+                return new ErmaBp(fg, prm, m1);
+            }
+        };
+        
+        AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm);
+    }
     
     @Test
     public void testErmaGradient2WordExplicitTreeFactor() {

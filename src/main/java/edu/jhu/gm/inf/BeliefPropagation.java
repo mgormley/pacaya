@@ -65,7 +65,12 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         /** Send messages from a root to the leaves and back. */
         TREE_LIKE,
         /** Send messages in a random order. */
-        RANDOM
+        RANDOM,
+        /**
+         * FOR TESTING ONLY: Schedule with only edges, so that no global factor dynamic programming
+         * algorithms are ever called.
+         */
+        NO_GLOBAL_FACTORS,
     }
     
     public enum BpUpdateOrder {

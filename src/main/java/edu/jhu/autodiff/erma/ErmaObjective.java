@@ -6,7 +6,6 @@ import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
-import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.VarConfig;

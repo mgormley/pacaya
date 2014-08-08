@@ -2,7 +2,6 @@ package edu.jhu.autodiff.erma;
 
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -19,13 +18,13 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.inf.MpSchedule;
+import edu.jhu.gm.inf.NoGlobalFactorsMpSchedule;
 import edu.jhu.gm.inf.ParallelMpSchedule;
 import edu.jhu.gm.inf.RandomMpSchedule;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
@@ -44,7 +43,6 @@ import edu.jhu.util.semiring.Algebras;
 public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgInferencer {
     
     private static final Logger log = Logger.getLogger(ErmaBp.class);
-    private static final FgEdge END_OF_EDGE_CREATION = null;
     
     public static class ErmaBpPrm implements FgInferencerFactory, BeliefsModuleFactory {
         
@@ -89,29 +87,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
     
     /**
-     * The tape for recording the forward computation of belief propagation. Each entry on the tape
-     * consists of several parts: an edge representing which message was sent, a normalized message,
-     * and the normalizing constant of the pre-normalized message.
+     * The tape entries for recording the forward computation of belief propagation. Each entry on
+     * the tape consists of several parts: an item in the schedule representing which messages were
+     * sent, the normalized messages, and the normalizing constants of the pre-normalized messages.
      * 
      * @author mgormley
-     */
-    private static class Tape {
-        public List<VarTensor> msgs = new ArrayList<VarTensor>();
-        public List<FgEdge> edges = new ArrayList<FgEdge>();
-        public DoubleArrayList msgSums = new DoubleArrayList();
-        public BitSet createFlags = new BitSet();
-        public void add(FgEdge edge, VarTensor msg, double msgSum, boolean created) {
-            int t = msgs.size();
-            msgs.add(msg);
-            edges.add(edge);
-            msgSums.add(msgSum);
-            createFlags.set(t, created);
-        }
-        public int size() {
-            return edges.size();
-        }
-    }
-        
+     */        
     private static class TapeEntry {
         public Object item;
         public List<VarTensor> msgs;
@@ -122,7 +103,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             msgs = new ArrayList<VarTensor>(edges.size());
             msgSums = new DoubleArrayList(edges.size());
         }
-        
         
     }
     
@@ -180,6 +160,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 sch = new BfsMpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
                 sch = new RandomMpSchedule(fg);
+            } else if (prm.schedule == BpScheduleType.NO_GLOBAL_FACTORS) {
+                sch = new NoGlobalFactorsMpSchedule(fg);
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
@@ -268,7 +250,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
 
     private void forwardCreateMessage(FgEdge edge) {
         if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
-            throw new IllegalArgumentException("Cannot create a single message from a global factor: " + edge);
+            log.warn("ONLY FOR TESTING: Creating a single message from a global factor: " + edge);
         }
         if (edge.isVarToFactor()) {
             forwardVarToFactor(edge);
@@ -524,7 +506,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
      */
     private void backwardCreateMessage(FgEdge edge) {        
         if (!edge.isVarToFactor() && (edge.getFactor() instanceof GlobalFactor)) {
-            throw new IllegalArgumentException("Cannot create a single message from a global factor: " + edge);
+            log.warn("ONLY FOR TESTING: Creating a single message from a global factor: " + edge);
         }
         int i = edge.getId();
         if (edge.isVarToFactor()) {
@@ -600,10 +582,13 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
         // Increment the adjoint for the potentials.
         {
-            VarTensor prod = new VarTensor(msgsAdj[i].newMessage);
-            getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild());
-            potentialsAdj[facId].add(prod);
-            logTraceMsgUpdate("backwardFactorToVar", potentialsAdj[facId], null);
+            if (potentialsAdj[facId] != null) {
+                VarTensor prod = new VarTensor(msgsAdj[i].newMessage);
+                getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild());
+                // Skip this step when testing global factors.
+                potentialsAdj[facId].add(prod);
+                logTraceMsgUpdate("backwardFactorToVar", potentialsAdj[facId], null);
+            }
         }
         
         // Increment the adjoint for each variable to factor message.
