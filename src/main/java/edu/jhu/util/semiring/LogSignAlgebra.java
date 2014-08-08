@@ -212,7 +212,7 @@ public class LogSignAlgebra implements Semiring, Algebra {
 
     @Override
     public String toString() {
-        return this.getClass().toString();
+        return this.getClass().getSimpleName();
     }
     
 }

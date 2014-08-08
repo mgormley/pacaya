@@ -29,5 +29,10 @@ public class ViterbiSemiring implements Semiring {
         if (this.getClass() == other.getClass()) { return true; }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
+    }
     
 }

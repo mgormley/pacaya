@@ -140,7 +140,7 @@ public class LogSemiring implements Algebra {
 
     @Override
     public String toString() {
-        return this.getClass().toString();
+        return this.getClass().getSimpleName();
     }
     
 }

@@ -129,7 +129,7 @@ public class RealAlgebra implements Semiring, Algebra {
 
     @Override
     public String toString() {
-        return this.getClass().toString();
+        return this.getClass().getSimpleName();
     }
     
     // Two Algebras / Semirings are equal if they are of the same class.
