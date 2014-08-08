@@ -1,6 +1,10 @@
 package edu.jhu.util.semiring;
 
+import org.apache.log4j.Logger;
+
 public class Algebras {
+    
+    private static final Logger log = Logger.getLogger(Algebras.class);
 
     private Algebras() {
         // private constructor.
@@ -30,9 +34,10 @@ public class Algebras {
         } else if (dst.equals(Algebras.LOG_SEMIRING)) {
             return src.toLogProb(value);
         } else {
-            // TODO: We could pivot through the real numbers, but this could cause a loss of
+            // We pivot through the real numbers, but this could cause a loss of
             // floating point precision.
-            throw new RuntimeException("Unable to convert from " + src + " to " + dst);
+            log.warn("FOR TESTING ONLY: unsafe conversion from " + src + " to " + dst);
+            return dst.fromReal(src.toReal(value));
         }
     }
     
