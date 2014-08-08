@@ -22,8 +22,17 @@ public abstract class AbstractAlgebraTest {
     private static final int NUM_RANDS = 100;
     protected Algebra sLog = getAlgebra();
     private RealAlgebra sReal = new RealAlgebra();
+    protected double deltaStrict = 1e-13;
+    protected double deltaLoose = 1e-5;
             
     public abstract Algebra getAlgebra();
+    
+    @Test
+    public void testEquals() {
+        Algebra s1 = getAlgebra();
+        Algebra s2 = getAlgebra();
+        assertTrue(s1.equals(s2));
+    }
     
     @Test
     public void testToFromReal() {
@@ -40,7 +49,7 @@ public abstract class AbstractAlgebraTest {
     
     private void toFromCheck(double x) {
         System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sLog.fromReal(x)));
-        assertEquals(x, sLog.toReal(sLog.fromReal(x)), 1e-13);
+        assertEquals(x, sLog.toReal(sLog.fromReal(x)), deltaStrict);
     }
 
     @Test
@@ -87,109 +96,109 @@ public abstract class AbstractAlgebraTest {
         double x, y;
         x = 1;
         y = 1;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         
         // Test positive and negative numbers with abs(x) > 1. 
         x = 11.11;
         y = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         x = -11.11;
         y = 44.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         x = 11.11;
         y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         x = -11.11;
         y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);         
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);         
         // Swap the relative scales of x and y and test again
         y = 11.11;
         x = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         y = -11.11;
         x = 44.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         y = 11.11;
         x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         y = -11.11;
         x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
 
         // Test numbers whose abs is equal.
         double abs = 13.1313;
         y = abs;
         x = -abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
         y = abs;
         x = abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
         y = -abs;
         x = abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
         y = -abs;
         x = -abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
         
         // Test positive and negative numbers with abs(x) < 1.
         x = 0.11;
         y = 0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         x = -0.11;
         y = 0.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         x = 0.11;
         y = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         x = -0.11;
         y = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);         
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);         
         // Swap the relative scales of x and y and test again
         y = 0.11;
         x = 0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         y = -0.11;
         x = 0.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         y = 0.11;
         x = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
         y = -0.11;
         x = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
 
         // Test with one value as an infinity.
         x = Double.POSITIVE_INFINITY;
         y = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);    
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
         x = Double.NEGATIVE_INFINITY;
         y = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);  
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
         x = Double.POSITIVE_INFINITY;
         y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);    
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
         x = Double.NEGATIVE_INFINITY;
         y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);  
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
         
         // Swap the position of the infinities and test again.
         y = Double.POSITIVE_INFINITY;
         x = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);    
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
         y = Double.NEGATIVE_INFINITY;
         x = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);  
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
         y = Double.POSITIVE_INFINITY;
         x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);    
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
         y = Double.NEGATIVE_INFINITY;
         x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);  
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
         
         for (int i=0; i<NUM_RANDS; i++) {
             x = Gaussian.nextDouble(0.0, 1000);
             y = Gaussian.nextDouble(0.0, 1000);                    
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-5);  
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaLoose);  
         }
     }
         
@@ -222,21 +231,21 @@ public abstract class AbstractAlgebraTest {
     public void testUnaryOperation(boolean failOnNegatives, UnaryOp lambda) {
         double x;
         x = 1;
-        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);
+        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);
         x = 11.11;   
-        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);
+        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);
         x = 0.11;   
-        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);
+        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);
         x = Double.POSITIVE_INFINITY;
-        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);    
+        assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);    
         
         if (!failOnNegatives) {
             x = -11.11;
-            assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);
+            assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);
             x = -0.11;
-            assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);
+            assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);
             x = Double.NEGATIVE_INFINITY;
-            assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-13);    
+            assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);    
         } else {
             x = -11.11;
             try {
@@ -264,12 +273,12 @@ public abstract class AbstractAlgebraTest {
         if (!failOnNegatives) {
             for (int i=0; i<NUM_RANDS; i++) {
                 x = Gaussian.nextDouble(0.0, 1);                  
-                assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-5);  
+                assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaLoose);  
             }
         } else {
             for (int i=0; i<NUM_RANDS; i++) {
                 x = Math.abs(Gaussian.nextDouble(0.0, 1));                  
-                assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), 1e-5);  
+                assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaLoose);  
             }
         }
     }
