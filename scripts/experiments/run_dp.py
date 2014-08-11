@@ -39,6 +39,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "gobble-memory",
                     "dp-aware",
                     "dp-erma",
+                    "dp-erma-tune",
                     )
     
     def __init__(self, options):
@@ -64,10 +65,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         g.defaults += g.feat_mcdonald
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
-                          adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
+                          adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=True, acl14DepFeats=False, normalizeMessages=True,
-                          logDomain=False)
+                          logDomain=False,
+                          algebra="LOG_SIGN")
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
@@ -85,7 +87,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
-        g.erma = SrlExpParams(trainer="ERMA", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
+        g.erma_dp = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
+        g.erma_mse = SrlExpParams(trainer="ERMA", dpLoss="MSE")
+        g.erma_er = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL")
         g.cll = SrlExpParams(trainer="CLL")
         
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
@@ -212,7 +216,29 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
                 exp.add_prereq(prune_exps[lang_short])
             return self._get_pipeline_from_exps(exps)
-             
+        
+        elif self.expname == "dp-erma-tune":
+            # Tuning optimization for gradients computed by ERMA.
+            exps = []
+            #g.defaults.update(trainMaxNumSentences=)
+            g.defaults.set_incl_name("l2variance", False)
+            # With a short number of sentences prune_byDist is causing trouble.
+            g.defaults.update(pruneByDist=False) # TODO: Consider changing this.
+            # Train a first-order pruning model for each language
+            languages = p.cx_lang_short_names
+            for trainMaxNumSentences in [100, 1000, 10000]:
+                for optimizer in [g.sgd, g.adagrad, g.lbfgs]:
+                    for trainer in [g.erma_mse, g.cll, g.erma_er, g.erma_dp]:
+                        for lang_short in ["bg"]:
+                            gl = g.langs[lang_short]
+                            pl = p.langs[lang_short]
+                            data = gl.cx_data
+                            data.update(l2variance=l2var_map[lang_short],
+                                        trainMaxNumSentences=trainMaxNumSentences)
+                            exp = g.defaults + data + g.first_order + g.feat_mcdonald_basic + optimizer + trainer
+                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))                
+                            exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tune":
             # CoNLL-X experiments.
