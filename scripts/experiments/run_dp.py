@@ -181,7 +181,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-erma":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
-            g.defaults += g.erma
+            g.defaults += g.erma_mse #TODO: Change to DEP_PARSE_DECODE_LOSS
             g.defaults.set_incl_name("l2variance", False)
             # Train a first-order pruning model for each language
             prune_exps = {}
@@ -228,7 +228,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             languages = p.cx_lang_short_names
             for trainMaxNumSentences in [100, 1000, 10000]:
                 for optimizer in [g.sgd, g.adagrad, g.lbfgs]:
-                    for trainer in [g.erma_mse, g.cll, g.erma_er, g.erma_dp]:
+                    for trainer in [g.erma_dp, g.erma_mse, g.cll, g.erma_er]:
                         for lang_short in ["bg"]:
                             gl = g.langs[lang_short]
                             pl = p.langs[lang_short]
