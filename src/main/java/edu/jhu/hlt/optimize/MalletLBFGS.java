@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
+import cc.mallet.optimize.InvalidOptimizableException;
 import cc.mallet.optimize.Optimizable;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
@@ -143,7 +144,13 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
         btls.setRelTolx(prm.lsRelTolx);
         lbfgs.setLineOptimizer(btls);
         
-        converged = lbfgs.optimize(prm.maxIterations);
+        try {
+            converged = lbfgs.optimize(prm.maxIterations);
+        } catch (InvalidOptimizableException e) {
+            log.warn("Error during optimization: " + e.getMessage());
+            log.warn("Continuing as if there were no error.");
+            converged = false;
+        }
         
         return converged;
     }
