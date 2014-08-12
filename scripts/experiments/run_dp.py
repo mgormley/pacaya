@@ -187,16 +187,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
             prune_exps = {}
             languages = p.cx_lang_short_names
             for lang_short in languages:
-                gl = g.langs[lang_short]
-                pl = p.langs[lang_short]
-                data = gl.cx_data
-                data.update(l2variance=l2var_map[lang_short],
-                            propTrainAsDev=0,
-                            trainUseCoNLLXPhead=False) # TODO: Set to zero for final experiments.
-                exp = g.defaults + data + g.first_order + g.feat_mcdonald_basic
-                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                prune_exps[lang_short] = exp
-                exps.append(exp)
+                # Include the full first order model, just for comparison with prior work.
+                for feats in [g.feat_mcdonald_basic, g.feat_mcdonald]:
+                    gl = g.langs[lang_short]
+                    pl = p.langs[lang_short]
+                    data = gl.cx_data
+                    data.update(l2variance=l2var_map[lang_short],
+                                propTrainAsDev=0,
+                                trainUseCoNLLXPhead=False) # TODO: Set to zero for final experiments.
+                    exp = g.defaults + data + g.first_order + feats
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    prune_exps[lang_short] = exp
+                    exps.append(exp)
             # Train the other models for each language
             parser = g.second_order 
             parser += SrlExpParams(pruneByModel=True,
