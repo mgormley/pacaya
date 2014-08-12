@@ -103,6 +103,10 @@ public class PosTagDistancePruner implements Trainable, Annotator {
             }
             // Count the edges to the wall, which will never be pruned.
             numEdgesTot += sent.size();
+            // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
+            if (!mask.allowsSinglyRootedTrees()) {
+                log.warn("All single-root trees pruned");
+            }
         }
         
         int numEdgesPruned = numEdgesTot - numEdgesKept;

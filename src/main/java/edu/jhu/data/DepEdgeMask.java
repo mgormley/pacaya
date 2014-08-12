@@ -1,7 +1,9 @@
 package edu.jhu.data;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
+import edu.jhu.prim.list.IntStack;
 import edu.jhu.prim.matrix.BitSetBinaryMatrix;
 
 public class DepEdgeMask implements Serializable {
@@ -79,6 +81,40 @@ public class DepEdgeMask implements Serializable {
 
     public void and(DepEdgeMask other) {
         this.mat.and(other.mat);
-    }        
+    }
+
+    public boolean allowsSinglyRootedTrees() {
+        for (int c=0; c < n; c++) {
+            // For each child of the root, check that a singly root tree 
+            if(this.isKept(-1, c) && allowsSinglyRootedTrees(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean allowsSinglyRootedTrees(int root) {
+        boolean[] marked = new boolean[n];
+        Arrays.fill(marked, false);
+        // Run a depth-first search (excluding edges to the root) starting at the given token, and mark all reachable tokens.
+        IntStack stack = new IntStack();
+        stack.push(root);
+        int numMarked = 0;
+        while (stack.size() > 0) {
+            int p = stack.pop();
+            if (marked[p]) {
+                continue;
+            }
+            for (int c=0; c<n; c++) {
+                if (p != c && !marked[c] && this.isKept(p, c)) {
+                    stack.push(c);
+                }
+            }
+            marked[p] = true;
+            numMarked++;
+        }
+        // If all tokens are reachable, then a singly root tree is possible.
+        return numMarked == n;
+    }
     
 }

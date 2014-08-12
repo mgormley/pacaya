@@ -191,7 +191,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 pl = p.langs[lang_short]
                 data = gl.cx_data
                 data.update(l2variance=l2var_map[lang_short],
-                            propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                            propTrainAsDev=0,
+                            trainUseCoNLLXPhead=False) # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + g.first_order + g.feat_mcdonald_basic
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 prune_exps[lang_short] = exp
@@ -207,7 +208,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 data.update(l2variance=l2var_map[lang_short],
                             # TODO: This method of setting the pruneModel path is very unstable.
                             pruneModel="../1st_tpl_mcdonald_basic_%s/model.binary.gz" % (lang_short),
-                            propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                            propTrainAsDev=0,
+                            trainUseCoNLLXPhead=False)  # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 if parser in [g.second_order, g.second_grand, g.second_sib]:
