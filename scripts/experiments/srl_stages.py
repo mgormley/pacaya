@@ -42,10 +42,6 @@ class SrlExpParams(experiment_runner.JavaExpParams):
     
     def create_experiment_script(self, exp_dir):
         script = "\n"
-        #script += 'echo "CLASSPATH=$CLASSPATH"\n'
-        if self.get("oldJar"): # TODO: remove this after backwards compat not needed.
-            script += 'CLASSPATH=%s:$CLASSPATH\n' % (self.get("oldJar"))
-            script += 'echo "CLASSPATH=$CLASSPATH"\n'
         cmd = "java " + self.get_java_args() + " edu.jhu.nlp.joint.JointNlpRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         
@@ -58,7 +54,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         if self.get("test") and self.get("testType") == "CONLL_2009":
             script += self.get_eval09_script("test", True)
             script += self.get_eval09_script("test", False)
-                        
+        
         if self.get("train") and self.get("trainType") == "CONLL_X":
             script += self.get_eval07_script("train")
         if (self.get("dev") or self.get("propTrainAsDev") > 0) and self.get("devType") == "CONLL_X":

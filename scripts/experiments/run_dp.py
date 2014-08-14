@@ -38,6 +38,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-pruning",
                     "gobble-memory",
                     "dp-aware",
+                    "dp-aware-small",
                     "dp-erma",
                     "dp-erma-tune",
                     )
@@ -64,6 +65,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g, l, p = self.prm_defs.get_param_groups_and_lists_and_paths()
         
         g.defaults += g.feat_mcdonald
+        g.defaults += g.adagrad
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
@@ -139,7 +141,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exps.append(exp)
             exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
-           
+        
         elif self.expname == "dp-pruning":            
             # Trains the pruning models for the CoNLL-X languages.
             exps = []
@@ -159,8 +161,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
-            g.defaults.update(trainMaxNumSentences=100)
-            for trainer in [g.erma, g.cll]:
+            for trainer in [g.erma_mse, g.cll]:
                 for bpMaxIterations in [2, 3, 5, 10]:
                     for lang_short in ["bg", "es", "en"]:
                         gl = g.langs[lang_short]
@@ -169,8 +170,34 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             data = gl.cx_data
                             data.update(l2variance=l2var_map[lang_short],
                                         pruneModel=gl.pruneModel,
-                                        propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                                        propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
                             exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            if parser in [g.second_order, g.second_grand, g.second_sib]:
+                                exps += get_oome_stages(exp)
+                            else:
+                                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        
+        elif self.expname == "dp-aware-small":
+            # Comparison of CLL and ERMA training with varying models and iterations.
+            exps = []
+            overrides = SrlExpParams(trainMaxNumSentences=1111,
+                              trainMaxSentenceLength=30,
+                              pruneByDist=False,
+                              pruneByModel=False)
+            for trainer in [g.erma_mse, g.cll]:
+                for bpMaxIterations in [2, 3, 5, 10]:
+                    for lang_short in ['bg']: #["bg", "es", "en"]:
+                        gl = g.langs[lang_short]
+                        pl = p.langs[lang_short]
+                        for parser in g.parsers:
+                            data = gl.cx_data
+                            data.update(l2variance=l2var_map[lang_short],
+                                        pruneModel=gl.pruneModel,
+                                        propTrainAsDev=0.1)  # TODO: Set to zero for final experiments.
+                            exp = g.defaults + data + parser + trainer + overrides + SrlExpParams(bpMaxIterations=bpMaxIterations)
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                             if parser in [g.second_order, g.second_grand, g.second_sib]:
                                 exps += get_oome_stages(exp)
