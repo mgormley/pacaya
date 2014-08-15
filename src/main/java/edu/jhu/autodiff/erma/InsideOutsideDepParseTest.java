@@ -13,6 +13,7 @@ import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
+import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
@@ -85,6 +86,36 @@ public class InsideOutsideDepParseTest {
         Tensor outAdj = id1.getOutputAdj();
         System.out.println(outAdj);
         assertEquals(expoutAdj, outAdj.toString());
+    }
+    
+    @Test
+    public void testCountTreesUsingPartition() {
+        Tensor t1 = new Tensor(s, 4,4);
+        t1.fill(1.0);
+        TensorIdentity id1 = new TensorIdentity(t1);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
+        Tensor y = ea.forward();        
+        assertEquals(30.0, y.get(InsideOutsideDepParse.ROOT_IDX, 0, 0), 1e-13);
+    }
+    
+    @Test
+    public void testPartitionWithOnlyANonProjectiveTree() {
+        EdgeScores es = new EdgeScores(4, 0.0);
+        // Allow all edges from WALL
+        es.setScore(-1, 0, 1.0);
+        es.setScore(-1, 1, 1.0);
+        es.setScore(-1, 2, 1.0);
+        es.setScore(-1, 3, 1.0);
+        // Allow two children of token 1 (this will be the root)
+        es.setScore(1, 0, 1.0);
+        es.setScore(1, 3, 1.0);
+        // Allow non-projective child of token 0
+        es.setScore(0, 2, 1.0);
+        Tensor t1 = es.toTensor(s);
+        TensorIdentity id1 = new TensorIdentity(t1);
+        InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
+        Tensor y = ea.forward();        
+        assertEquals(0.0, y.get(InsideOutsideDepParse.ROOT_IDX, 0, 0), 1e-13);
     }
     
     @Test
