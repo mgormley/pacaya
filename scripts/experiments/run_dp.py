@@ -202,6 +202,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                         useMseForValue=True)
                             data.remove("test")
                             data.remove("testType")
+                            data.remove("dev")
                             exp = g.defaults + data + parser + trainer + overrides + SrlExpParams(bpMaxIterations=bpMaxIterations)
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                             exps.append(exp)
