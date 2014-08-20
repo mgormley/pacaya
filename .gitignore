@@ -8,6 +8,7 @@
 /target
 /exp
 /remote_exp
+/old_remote_exp
 /data
 
 # Specific files
