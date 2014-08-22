@@ -35,6 +35,7 @@ public class SpanLabels {
      * Sets the label corresponding to the span with given start / end indices.
      * @param start Starting token of the span (inclusive).
      * @param end Ending token of the span (exclusive).
+     * @param label The label.
      * @return The previous label for the span.
      */
     public String setLabel(int start, int end, String label) {
@@ -42,6 +43,16 @@ public class SpanLabels {
         String prev = labels[start][end];
         labels[start][end] = label;
         return prev;
+    }
+    
+    /**
+     * Removes the label corresponding to the span with given start / end indices.
+     * @param start Starting token of the span (inclusive).
+     * @param end Ending token of the span (exclusive).
+     * @return The previous label for the span.
+     */
+    public String removeLabel(int start, int end) {
+        return setLabel(start, end, null);
     }
     
     /**

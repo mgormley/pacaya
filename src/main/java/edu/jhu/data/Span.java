@@ -1,10 +1,15 @@
 package edu.jhu.data;
 
 
+/**
+ * Mutable span with start and end indices.
+ * 
+ * @author mgormley
+ */
 public class Span {
 
-    private int start;
-    private int end;
+    protected int start;
+    protected int end;
         
     public Span(int start, int end) {
         super();

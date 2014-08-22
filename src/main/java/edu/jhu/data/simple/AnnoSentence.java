@@ -7,8 +7,9 @@ import java.util.List;
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
+import edu.jhu.data.LabeledSpan;
+import edu.jhu.data.Situations;
 import edu.jhu.data.Span;
-import edu.jhu.data.SpanLabels;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.TemplateLanguage.AT;
@@ -51,14 +52,14 @@ public class AnnoSentence {
     private SrlGraph srlGraph;
     /** Constituency parse. */    
     private BinaryTree binaryTree;
-
-    //private SpanLabels namedEntities;
-    // TODO: add NER
-    // TODO: add Relations (e.g. ACE relations)
-    // TODO: add Token offsets.
+    private List<LabeledSpan> namedEntities;
+    private Situations relations;
     
     /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
     private Object sourceSent;
+    
+    // TODO: One option: private SpanLabels namedEntities;    
+    // TODO: add Token offsets.
     
     public AnnoSentence() {
 
