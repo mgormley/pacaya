@@ -30,7 +30,6 @@ public class TemplateLanguage {
     }
     
     /* -------------------- Structures of the Little Language ---------------- */
-
     
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
@@ -51,13 +50,12 @@ public class TemplateLanguage {
         DIR, EDGEREL
     }
 
-    /** Position Modifier. A mapping from one position to another. */
-    public enum PositionModifier {
-        IDENTITY, BEFORE1, AFTER1,
-        //
-        HEAD, LNS, RNS, LMC, RMC, LNC, RNC,
-        //
-        LOW_SV, LOW_SN, HIGH_SV, HIGH_SN,
+    /** Positions. */
+    public enum Position {
+        // Dependency parsing
+        PARENT, CHILD, MODIFIER,
+        // Constituency parsing
+        RULE_START, RULE_MID, RULE_END,
     }
 
     /** Position List. Mapping from one or two positions to a position list. */
@@ -72,6 +70,15 @@ public class TemplateLanguage {
             default: return false;
             }
         }
+    }
+
+    /** Position Modifier. A mapping from one position to another. */
+    public enum PositionModifier {
+        IDENTITY, BEFORE1, AFTER1,
+        //
+        HEAD, LNS, RNS, LMC, RMC, LNC, RNC,
+        //
+        LOW_SV, LOW_SN, HIGH_SV, HIGH_SN,
     }
 
     /** List Modifiers. Mapping of a list of strings to a new list of strings. */
@@ -89,14 +96,6 @@ public class TemplateLanguage {
         RULE_IS_UNARY;
         // TODO: Not implemented:
         // PRED_VOICE_WORD_OR_POS,        
-    }
-
-    /** Positions. */
-    public enum Position {
-        // Dependency parsing
-        PARENT, CHILD, MODIFIER,
-        // Constituency parsing
-        RULE_START, RULE_MID, RULE_END;
     }
     
     /** The pieces of a CNF rule. */
