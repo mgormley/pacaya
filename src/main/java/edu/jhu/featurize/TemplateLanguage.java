@@ -56,6 +56,9 @@ public class TemplateLanguage {
         PARENT, CHILD, MODIFIER,
         // Constituency parsing
         RULE_START, RULE_MID, RULE_END,
+        // Mention start, end (inclusive), and head positions
+        M_1_START, M_1_END, M_1_HEAD,
+        M_2_START, M_2_END, M_2_HEAD,
     }
 
     /** Position List. Mapping from one or two positions to a position list. */
