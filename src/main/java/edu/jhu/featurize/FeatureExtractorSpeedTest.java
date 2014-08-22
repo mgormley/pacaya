@@ -13,7 +13,6 @@ import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.data.simple.AnnoSentenceReader;
 import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
-import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;

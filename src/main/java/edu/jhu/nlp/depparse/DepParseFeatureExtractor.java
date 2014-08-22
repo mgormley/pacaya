@@ -8,11 +8,11 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.FeaturizedSentence;
+import edu.jhu.featurize.LocalObservations;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.TemplateFeatureExtractor;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.Feature;

@@ -10,7 +10,6 @@ import java.util.Set;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.prim.tuple.Pair;

@@ -12,7 +12,6 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceTest;
-import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
