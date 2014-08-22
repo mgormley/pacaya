@@ -1,4 +1,8 @@
+# Feature templates for argument identification and classification in semantic role labeling.
+#
 # Number of templates: 188
+#
+
 p.lns.bc0
 c.morpho3 + c.head.morpho3
 c.lmc.word

@@ -1,4 +1,8 @@
+# Feature templates for predicate sense disambiguation in semantic role labeling.
+#
 # Number of templates: 137
+#
+
 p.lnc.deprel
 p.wordTopN
 c.lowsn.bc0

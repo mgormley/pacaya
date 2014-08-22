@@ -1,3 +1,6 @@
+# Feature templates for argument identification and classification in semantic role labeling.
+#
+
 p.word
 p.lemma
 p.pos

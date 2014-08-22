@@ -1,3 +1,7 @@
+# Zhao et al. (2009) argument feature templates for Catalan.
+#
+
+
 # p.currentSense + p.lemma  << Not supported (sense)
 # p.currentSense + p.pos    << Not supported (sense)
 # p.currentSense + a.pos    << Not supported (sense)
