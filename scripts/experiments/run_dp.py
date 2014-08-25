@@ -69,7 +69,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
-                          useLogAddTable=True, acl14DepFeats=False, normalizeMessages=True,
+                          useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
                           algebra="LOG_SIGN")
         g.defaults.set_incl_name("pruneByModel", False)

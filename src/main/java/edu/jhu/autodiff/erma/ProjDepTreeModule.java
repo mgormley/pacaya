@@ -33,7 +33,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
     // For internal use only.
     private Algebra tmpS;
 
-    private static final Logger log = Logger.getLogger(ProjDepTreeFactor.class);
+    private static final Logger log = Logger.getLogger(ProjDepTreeModule.class);
     
     /** The sentence length. */
     private int n;

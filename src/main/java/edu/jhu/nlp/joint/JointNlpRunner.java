@@ -107,7 +107,7 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Number of threads for computation.")
     public static int threads = 1;
     @Opt(hasArg = true, description = "Whether to use a log-add table for faster computation.")
-    public static boolean useLogAddTable = true;
+    public static boolean useLogAddTable = false;
     
     // Options for model IO
     @Opt(hasArg = true, description = "File from which to read a serialized model.")
@@ -295,7 +295,9 @@ public class JointNlpRunner {
 
     public void run() throws ParseException, IOException {  
         FastMath.useLogAddTable = useLogAddTable;
-        
+        if (useLogAddTable) {
+            log.warn("Using log-add table instead of exact computation. When using global factors, this may result in numerical instability.");
+        }
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
             log.warn("Ignoring stopTrainingBy by setting it to null.");
