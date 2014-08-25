@@ -94,18 +94,6 @@ public class TemplateFeatureExtractor {
         }
     }
     
-    /** Adds features for a list of feature templates. (The parent index and child index are the only local observations.) */
-    // TODO: Remove this method when convenient.
-    void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<String> feats) {
-        addFeatures(tpls, LocalObservations.newPidxCidx(pidx, cidx), feats);
-    }
-    
-    /** Adds features for a single feature template. (The parent index and child index are the only local observations.) */
-    // TODO: Remove this method when convenient.
-    void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<String> feats) {
-        addFeatures(tpl, LocalObservations.newPidxCidx(pidx, cidx), feats);
-    }
-    
     /**
      * For n-gram feature templates of the form:
      *     p.w+c_{-1}.bc0
@@ -139,7 +127,6 @@ public class TemplateFeatureExtractor {
         }
         return joined;
     }
-
 
     /**
      * Adds feature templates of the form: 

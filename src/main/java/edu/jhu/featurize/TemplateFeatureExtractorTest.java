@@ -84,14 +84,14 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testParentPosition() {
         FeatTemplate tpl = new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, TokProperty.WORD);
-        String expectedFeat = "p.word_the";
+        String expectedFeat = tpl.getName()+"_the";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
 
     @Test
     public void testChildPosition() {
         FeatTemplate tpl = new FeatTemplate1(Position.CHILD, PositionModifier.IDENTITY, TokProperty.WORD);
-        String expectedFeat = "c.word_food";
+        String expectedFeat = tpl.getName()+"_food";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
     
@@ -125,7 +125,7 @@ public class TemplateFeatureExtractorTest {
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();        
         int cidx = -1;
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpl, pidx, cidx, feats);
+        addFeatures(extr, tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
         }
@@ -144,7 +144,7 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testTokPropListFeature() {
         FeatTemplate tpl = new FeatTemplate2(Position.PARENT, PositionModifier.IDENTITY, TokPropList.EACH_MORPHO);
-        String[] expected = new String[] { "p.eachmorpho_feat1", "p.eachmorpho_feat2" };        
+        String[] expected = new String[] { tpl.getName()+"_feat1", tpl.getName()+"_feat2" };        
         getFeatsAndAssertEquality(tpl, expected);
     }
     
@@ -210,21 +210,21 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testTokPropertyAndEdgePropertyNulls1() {        
         FeatTemplate tpl = new FeatTemplate3(PositionList.PATH_P_C, TokProperty.DEPREL, EdgeProperty.DIR, ListModifier.SEQ);
-        String expectedFeat = "path(p,c).deprel.dir.seq_det_UP_subj_UP_v_DOWN_obj";
+        String expectedFeat = tpl.getName()+"_det_UP_subj_UP_v_DOWN_obj";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
     
     @Test
     public void testTokPropertyAndEdgePropertyNulls2() {
         FeatTemplate tpl = new FeatTemplate3(PositionList.PATH_P_C, TokProperty.DEPREL, null, ListModifier.SEQ);
-        String expectedFeat = "path(p,c).deprel.seq_det_subj_v_obj";
+        String expectedFeat = tpl.getName()+"_det_subj_v_obj";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
     
     @Test
     public void testTokPropertyAndEdgePropertyNulls3() {
         FeatTemplate tpl = new FeatTemplate3(PositionList.PATH_P_C, null, EdgeProperty.EDGEREL, ListModifier.SEQ);
-        String expectedFeat = "path(p,c).edgerel.seq_det_subj_obj";
+        String expectedFeat = tpl.getName()+"_det_subj_obj";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
 
@@ -232,17 +232,17 @@ public class TemplateFeatureExtractorTest {
     public void testListModifiers() {
         {
             FeatTemplate tpl = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-            String expectedFeat = "line(p,c).pos.seq_Det_N_V_N";
+            String expectedFeat = tpl.getName()+"_Det_N_V_N";
             getFeatAndAssertEquality(tpl, expectedFeat);
         }
         {
             FeatTemplate tpl = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.BAG);
-            String expectedFeat = "line(p,c).pos.bag_Det_N_V";
+            String expectedFeat = tpl.getName()+"_Det_N_V";
             getFeatAndAssertEquality(tpl, expectedFeat);
         }
         {
             FeatTemplate tpl = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.MORPHO, null, ListModifier.NO_DUP);
-            String expectedFeat = "line(p,c).morpho.noDup_feat1_feat2_feat";
+            String expectedFeat = tpl.getName()+"_feat1_feat2_feat";
             getFeatAndAssertEquality(tpl, expectedFeat);
         }
     }
@@ -281,7 +281,7 @@ public class TemplateFeatureExtractorTest {
         FeatTemplate tpl = new FeatTemplate3(pl, TokProperty.WORD, includeDir ? EdgeProperty.DIR : null, ListModifier.SEQ);
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpl, pidx, cidx, feats);
+        addFeatures(extr, tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
         }
@@ -361,7 +361,7 @@ public class TemplateFeatureExtractorTest {
         FeatTemplate tpl = new FeatTemplate0(f);
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpl, pidx, cidx, feats);
+        addFeatures(extr, tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
         }
@@ -372,7 +372,7 @@ public class TemplateFeatureExtractorTest {
     private void testOtherFeaturesHelper2(int pidx, int cidx, FeatTemplate tpl, String... expectedFeats) {
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpl, pidx, cidx, feats);
+        addFeatures(extr, tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
         }
@@ -398,16 +398,16 @@ public class TemplateFeatureExtractorTest {
     
     @Test
     public void testBtwnPosFeature() {  
-        FeatTemplate btwnPos = new FeatTemplate3(PositionList.BTWN_P_C, TokProperty.POS, null, ListModifier.UNIGRAM);
-        testOtherFeaturesHelper2(0, 3, btwnPos, "btwn(p,c).pos.1gram_d", "btwn(p,c).pos.1gram_v");
-        testOtherFeaturesHelper2(3, 0, btwnPos, "btwn(p,c).pos.1gram_d", "btwn(p,c).pos.1gram_v");
-        testOtherFeaturesHelper2(1, 3, btwnPos, "btwn(p,c).pos.1gram_d");
-        testOtherFeaturesHelper2(3, 1, btwnPos, "btwn(p,c).pos.1gram_d");
-        testOtherFeaturesHelper2(0, 2, btwnPos, "btwn(p,c).pos.1gram_v");
+        FeatTemplate tpl = new FeatTemplate3(PositionList.BTWN_P_C, TokProperty.POS, null, ListModifier.UNIGRAM);
+        testOtherFeaturesHelper2(0, 3, tpl, tpl.getName()+"_d", tpl.getName()+"_v");
+        testOtherFeaturesHelper2(3, 0, tpl, tpl.getName()+"_d", tpl.getName()+"_v");
+        testOtherFeaturesHelper2(1, 3, tpl, tpl.getName()+"_d");
+        testOtherFeaturesHelper2(3, 1, tpl, tpl.getName()+"_d");
+        testOtherFeaturesHelper2(0, 2, tpl, tpl.getName()+"_v");
 
-        testOtherFeaturesHelper2(0, 1, btwnPos);
-        testOtherFeaturesHelper2(1, 0, btwnPos);
-        testOtherFeaturesHelper2(1, 1, btwnPos);
+        testOtherFeaturesHelper2(0, 1, tpl);
+        testOtherFeaturesHelper2(1, 0, tpl);
+        testOtherFeaturesHelper2(1, 1, tpl);
     }
     
     @Test
@@ -415,19 +415,19 @@ public class TemplateFeatureExtractorTest {
         {
             // Single feature.
             FeatTemplate tpl1 = new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, TokProperty.MORPHO);
-            String expected1 = "p.morpho_feat1_feat2";
+            String expected1 = tpl1.getName()+"_feat1_feat2";
             FeatTemplate tpl2 = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-            String expected2 = "line(p,c).pos.seq_Det_N_V_N";
+            String expected2 = tpl2.getName()+"_Det_N_V_N";
             FeatTemplate tpl = new JoinTemplate(tpl1, tpl2);
             getFeatAndAssertEquality(tpl, expected1 + "_" + expected2);
         }
         {
             // Multiple features.
             FeatTemplate tpl1 = new FeatTemplate2(Position.PARENT, PositionModifier.IDENTITY, TokPropList.EACH_MORPHO);
-            String[] expected1 = new String[] { "p.eachmorpho_feat1",
-                    "p.eachmorpho_feat2" };
+            String[] expected1 = new String[] { tpl1.getName()+"_feat1",
+                    tpl1.getName()+"_feat2" };
             FeatTemplate tpl2 = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-            String expected2 = "line(p,c).pos.seq_Det_N_V_N";
+            String expected2 = tpl2.getName()+"_Det_N_V_N";
             FeatTemplate tpl = new JoinTemplate(tpl1, tpl2);
             String[] expected = new String[] { expected1[0] + "_" + expected2, expected1[1] + "_" + expected2 };
             getFeatsAndAssertEquality(tpl, expected);
@@ -438,12 +438,12 @@ public class TemplateFeatureExtractorTest {
     public void testTrigramFeature() {   
         // Multiple features.
         FeatTemplate tpl1 = new FeatTemplate2(Position.PARENT, PositionModifier.IDENTITY, TokPropList.EACH_MORPHO);
-        String[] expected1 = new String[] { "p.eachmorpho_feat1",
-                "p.eachmorpho_feat2" };
+        String[] expected1 = new String[] { tpl1.getName()+"_feat1",
+                tpl1.getName()+"_feat2" };
         FeatTemplate tpl2 = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-        String expected2 = "line(p,c).pos.seq_Det_N_V_N";
+        String expected2 = tpl2.getName()+"_Det_N_V_N";
         FeatTemplate tpl3 = new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, TokProperty.MORPHO);
-        String expected3 = "p.morpho_feat1_feat2";
+        String expected3 = tpl3.getName()+"_feat1_feat2";
         FeatTemplate tpl = new JoinTemplate(tpl1, tpl2, tpl3);
         String[] expected = new String[] { expected1[0] + "_" + expected2 + "_" + expected3, 
                 expected1[1] + "_" + expected2  + "_" + expected3};
@@ -457,7 +457,7 @@ public class TemplateFeatureExtractorTest {
         int pidx = 0;
         int cidx = 3;
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpl, pidx, cidx, feats);
+        addFeatures(extr, tpl, pidx, cidx, feats);
 
         for (Object feat : feats) {
             System.out.println(feat);
@@ -472,7 +472,7 @@ public class TemplateFeatureExtractorTest {
         int pidx = 0;
         int cidx = 3;
         ArrayList<String> feats = new ArrayList<String>();
-        extr.addFeatures(tpl, pidx, cidx, feats);
+        addFeatures(extr, tpl, pidx, cidx, feats);
 
         for (Object feat : feats) {
             System.out.println(feat);
@@ -512,6 +512,14 @@ public class TemplateFeatureExtractorTest {
             clusters.add(FastMath.mod(i*7, 2) + "10101" + FastMath.mod(i*39, 2));
         }
         sent.setClusters(clusters);
+    }
+    
+
+    
+    /** Adds features for a single feature template. (The parent index and child index are the only local observations.) */
+    // TODO: Remove this method when convenient.
+    private static void addFeatures(TemplateFeatureExtractor extr, FeatTemplate tpl, int pidx, int cidx, List<String> feats) {
+        extr.addFeatures(tpl, LocalObservations.newPidxCidx(pidx, cidx), feats);
     }
 
 }
