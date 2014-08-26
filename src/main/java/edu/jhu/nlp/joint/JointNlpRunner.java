@@ -86,7 +86,9 @@ public class JointNlpRunner {
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
     public enum AlgebraType {
-        REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA);
+        REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA),
+        // SHIFTED_REAL and SPLIT algebras are for testing only.
+        SHIFTED_REAL(Algebras.SHIFTED_REAL_ALGEBRA), SPLIT(Algebras.SPLIT_ALGEBRA);
 
         private Algebra s;
         
