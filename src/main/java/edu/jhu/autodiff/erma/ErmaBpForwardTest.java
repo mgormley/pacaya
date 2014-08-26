@@ -13,6 +13,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.BruteForceInferencerTest;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -22,6 +23,8 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 
 public class ErmaBpForwardTest {
@@ -172,6 +175,52 @@ public class ErmaBpForwardTest {
         testOnSimpleHelper(logDomain);
     }
 
+    private void testOnSimpleHelper(boolean logDomain) throws IOException {
+        Algebra s = logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+        
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 10;
+        prm.s = s;
+        prm.normalizeMessages = true;
+        ErmaBp bp = new ErmaBp(fg, prm);
+        bp.run();
+
+        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
+
+        // TODO: unfortunately, loopy BP does very poorly on this simple example
+        // and does not converge to the correct marginals. Hence we use a (very
+        // high) tolerance of 2 to catch the partition function's value.
+        assertEqualMarginals(fg, bf, bp, 2);
+    }
+    
+    @Test
+    public void testMultipleSemiringsOnSimple() throws IOException {
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
+
+        ErmaBp bpReal = runHelper(fg, Algebras.REAL_ALGEBRA);
+        ErmaBp bpLog = runHelper(fg, Algebras.LOG_SEMIRING);
+        ErmaBp bpLogSign = runHelper(fg, Algebras.LOG_SIGN_ALGEBRA);
+        
+        assertEqualMarginals(fg, bpReal, bpLog, 1e-13);
+        assertEqualMarginals(fg, bpReal, bpLogSign, 1e-13);
+        assertEqualMarginals(fg, bpLog, bpLogSign, 1e-13);
+    }
+
+    private ErmaBp runHelper(FactorGraph fg, Algebra s) throws IOException {        
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 4;
+        prm.s = s;
+        prm.normalizeMessages = true;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        ErmaBp bp = new ErmaBp(fg, prm);
+        bp.run();
+        return bp;
+    }
+
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
@@ -184,26 +233,6 @@ public class ErmaBpForwardTest {
         // Test in the log-probability domain.
         boolean logDomain = true;        
         testOnChainHelper(logDomain);
-    }
-
-    private void testOnSimpleHelper(boolean logDomain) throws IOException {
-        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-
-        ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
-        bp.run();
-
-        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
-
-        // TODO: unfortunately, loopy BP does very poorly on this simple example
-        // and does not converge to the correct marginals. Hence we use a (very
-        // high) tolerance of 2 to catch the partition function's value.
-        assertEqualMarginals(fg, bf, bp, 2);
     }
 
     private void testOnChainHelper(boolean logDomain) {
@@ -354,8 +383,8 @@ public class ErmaBpForwardTest {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 
-    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
-            ErmaBp bp, double tolerance) {
+    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
+            FgInferencer bp, double tolerance) {
         for (Var var : fg.getVars()) {
             {
                 VarTensor bfm = bf.getMarginals(var);

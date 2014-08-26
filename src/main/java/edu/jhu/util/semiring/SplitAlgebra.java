@@ -31,8 +31,8 @@ public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
         this.a1 = new RealAlgebra();
         this.a2 = new ShiftedRealAlgebra();
         this.format = "%12.2e";
-        // Machine epsilon for a 32-bit number.
-        this.delta = 1.19e-07;
+        // Machine epsilon for a 32-bit number is 1.19e-07.
+        this.delta = 1.19e-06;
     }
     
     @Override
