@@ -470,6 +470,8 @@ public class Tensor implements MVec<Tensor> {
             return false;
         if (!Arrays.equals(dims, other.dims))
             return false;
+        if (!this.s.equals(other.s))
+            return false;
         if (this.values.length != other.values.length)
             return false;
         for (int i=0; i<values.length; i++) {
