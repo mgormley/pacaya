@@ -57,20 +57,6 @@ public abstract class AbstractFgInferencer implements FgInferencer {
         marg = ensureLogSemiring(marg);
         return marg;
     }
-
-    private VarTensor ensureRealSemiring(VarTensor marg) {
-        if (!marg.getAlgebra().equals(Algebras.REAL_ALGEBRA)) {
-            marg = marg.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
-        }
-        return marg;
-    }
-    
-    private VarTensor ensureLogSemiring(VarTensor marg) {
-        if (!marg.getAlgebra().equals(Algebras.LOG_SEMIRING)) {
-            marg = marg.copyAndConvertAlgebra(Algebras.LOG_SEMIRING);
-        }
-        return marg;
-    }
         
     /** @inheritDoc */
     @Override
@@ -110,4 +96,18 @@ public abstract class AbstractFgInferencer implements FgInferencer {
         return getAlgebra().toLogProb(pb);
     }   
 
+    public static VarTensor ensureRealSemiring(VarTensor marg) {
+        if (!marg.getAlgebra().equals(Algebras.REAL_ALGEBRA)) {
+            marg = marg.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
+        }
+        return marg;
+    }
+    
+    public static VarTensor ensureLogSemiring(VarTensor marg) {
+        if (!marg.getAlgebra().equals(Algebras.LOG_SEMIRING)) {
+            marg = marg.copyAndConvertAlgebra(Algebras.LOG_SEMIRING);
+        }
+        return marg;
+    }
+    
 }

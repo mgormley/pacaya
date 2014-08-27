@@ -1,6 +1,9 @@
 package edu.jhu.autodiff.erma;
 
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -61,6 +65,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
          * false can save memory. 
          */
         public boolean keepTape = true;
+
+        /** Directory for dumping of beliefs at each iteration (debugging only). */
+        public Path dumpDir = null;
         
         public ErmaBpPrm() {
         }
@@ -241,6 +248,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     break loops;
                 }
             }
+            maybeWriteAllBeliefs();
         }
         
         forwardVarAndFacBeliefs();
@@ -870,6 +878,36 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Compute the product of all messages sent to this node.
         getProductOfMessages(node, prod, null);
         return prod.getSum();
+    }
+
+    private void maybeWriteAllBeliefs() {
+        if (prm.dumpDir != null) {
+            try {
+                forwardVarAndFacBeliefs();
+
+                BufferedWriter writer = Files.createTempFileBufferedWriter("beliefs", prm.dumpDir.toFile());
+                writer.write("Messages:\n");
+                for (Messages m : msgs) {
+                    writer.write("message: ");
+                    writer.write(AbstractFgInferencer.ensureRealSemiring(m.message) + "\n");
+                    writer.write("newMessage: ");
+                    writer.write(AbstractFgInferencer.ensureRealSemiring(m.newMessage) + "\n");
+                }
+                writer.write("Var marginals:\n");
+                for (Var v : fg.getVars()) {
+                    writer.write(this.getMarginals(v) + "\n");
+                }                
+                writer.write("Factor marginals:\n");
+                for (Factor f : fg.getFactors()) {
+                    if (! (f instanceof GlobalFactor)) {
+                        writer.write(this.getMarginals(f) + "\n");
+                    }
+                }
+                writer.write("Partition: " + this.getPartition());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
     
     @Override

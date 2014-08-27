@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.Test;
 
@@ -69,9 +71,18 @@ public class ErmaBpForwardTest {
     }
     
     @Test
-    public void testTwoVarsProb() {
-        boolean logDomain = false;
+    public void testTwoVars() {
+        runTwoVars(false, null);
+        runTwoVars(true, null);
+    }
 
+    @Test
+    public void testDumpingOfBeliefsForDebugging() {
+        runTwoVars(false, Paths.get("./tmp/bpDump"));
+        // No assertions, just make sure we don't fail.
+    }
+
+    private void runTwoVars(boolean logDomain, Path dumpDir) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
@@ -100,6 +111,7 @@ public class ErmaBpForwardTest {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
+        prm.dumpDir = dumpDir;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
 
@@ -202,9 +214,13 @@ public class ErmaBpForwardTest {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
 
         ErmaBp bpReal = runHelper(fg, Algebras.REAL_ALGEBRA);
+        ErmaBp bpSplit = runHelper(fg, Algebras.SPLIT_ALGEBRA);
+        ErmaBp bpShift = runHelper(fg, Algebras.SHIFTED_REAL_ALGEBRA);
         ErmaBp bpLog = runHelper(fg, Algebras.LOG_SEMIRING);
         ErmaBp bpLogSign = runHelper(fg, Algebras.LOG_SIGN_ALGEBRA);
         
+        assertEqualMarginals(fg, bpReal, bpSplit, 1e-4);
+        assertEqualMarginals(fg, bpReal, bpShift, 1e-13);
         assertEqualMarginals(fg, bpReal, bpLog, 1e-13);
         assertEqualMarginals(fg, bpReal, bpLogSign, 1e-13);
         assertEqualMarginals(fg, bpLog, bpLogSign, 1e-13);

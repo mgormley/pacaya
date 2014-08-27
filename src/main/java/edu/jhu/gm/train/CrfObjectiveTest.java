@@ -6,12 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.AnnoSentenceCollection;
@@ -53,6 +55,7 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -277,7 +280,10 @@ public class CrfObjectiveTest {
     @Test
     public void testDp2ndOrderBetheFreeEnergy() throws Exception {
         checkDp2ndOrderBetheFreeEnergy(Algebras.REAL_ALGEBRA);
-        //checkDp2ndOrderBetheFreeEnergy(Algebras.SPLIT_ALGEBRA);
+        // checkDp2ndOrderBetheFreeEnergy(Algebras.SPLIT_ALGEBRA);
+        // The shifted real algebra gives invalid BFE, it's still not clear if this is just a
+        // precision problem or actually a bug.
+        //checkDp2ndOrderBetheFreeEnergy(Algebras.SHIFTED_REAL_ALGEBRA);
         checkDp2ndOrderBetheFreeEnergy(Algebras.LOG_SEMIRING);
         checkDp2ndOrderBetheFreeEnergy(Algebras.LOG_SIGN_ALGEBRA);
     }
@@ -291,14 +297,17 @@ public class CrfObjectiveTest {
         System.out.println("Num features: " + ofc.getNumParams());
         FgModel model = new FgModel(ofc.getNumParams());
         model.setRandomStandardNormal();
-        //model.scale(20);
+        model.scale(0.1);
         System.out.println("Model L2 norm: " + model.l2Norm());
         
-        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
         bpPrm.s = s;
         bpPrm.updateOrder = BpUpdateOrder.PARALLEL;
         bpPrm.normalizeMessages = true;
-        bpPrm.maxIterations = 50;
+        bpPrm.maxIterations = 50;    
+        // Uncomment to enable dumping of beliefs.
+        // bpPrm.dumpDir = Paths.get("./tmp/dump" + s.toString());
+        // Files.deleteRecursively(bpPrm.dumpDir.toFile());
         FgInferencerFactory infFactory = bpPrm;
         AvgBatchObjective obj = getCrfObj(model, data, infFactory);
         double ll = 0;
@@ -309,30 +318,38 @@ public class CrfObjectiveTest {
             ll += exll;
         }
         assertTrue(ll < 0d);
-        assertEquals(-74.29, ll, 1e-2);
+        //Without scaling: assertEquals(-74.29, ll, 1e-2);
+        assertEquals(-10.67, ll, 1e-2);
     }
     
     @Test
     public void testDp2ndOrderGradient() throws Exception {
+        Prng.seed(123456789101112l);
         int featureHashMod = 20;
         FgModel model = new FgModel(2*featureHashMod);
         model.setRandomStandardNormal();
+        model.scale(0.1);
         
         {
             // Take one gradient step.
             IntDoubleVector gradReal = getGradientDp2ndOrder(model, Algebras.REAL_ALGEBRA, featureHashMod);
-            gradReal.scale(0.1);
+            gradReal.scale(0.05);
             model.getParams().add(gradReal);
         }
         
         // Get the gradient using different semirings.
         IntDoubleVector gradReal = getGradientDp2ndOrder(model, Algebras.REAL_ALGEBRA, featureHashMod);
+        IntDoubleVector gradSplit = getGradientDp2ndOrder(model, Algebras.SPLIT_ALGEBRA, featureHashMod);
+        // The shifted algebra sometimes gives invalid gradients but might be due to loss of precision.
+        IntDoubleVector gradShifted = getGradientDp2ndOrder(model, Algebras.SHIFTED_REAL_ALGEBRA, featureHashMod);
         IntDoubleVector gradLog = getGradientDp2ndOrder(model, Algebras.LOG_SEMIRING, featureHashMod);
         IntDoubleVector gradLogSign = getGradientDp2ndOrder(model, Algebras.LOG_SIGN_ALGEBRA, featureHashMod);
 
         // Assert that the gradients are all equal.
         for (int i=0; i<featureHashMod; i++) {
             System.out.printf("i=%d gradReal=%.4e gradLog=%.4e gradLogSign=%.4e\n", i, gradReal.get(i), gradLog.get(i), gradLogSign.get(i));
+            assertEquals(gradReal.get(i), gradSplit.get(i), 1e-4);
+            assertEquals(gradReal.get(i), gradShifted.get(i), 1e-8);
             assertEquals(gradReal.get(i), gradLog.get(i), 1e-8);
             assertEquals(gradReal.get(i), gradLogSign.get(i), 1e-8);
             assertEquals(gradLog.get(i), gradLogSign.get(i), 1e-8);
@@ -344,7 +361,7 @@ public class CrfObjectiveTest {
         FgExampleList data = pair.get1();
         ObsFeatureConjoiner ofc = pair.get2();
         
-        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
         bpPrm.s = s;
         bpPrm.updateOrder = BpUpdateOrder.PARALLEL;
         bpPrm.normalizeMessages = true;
