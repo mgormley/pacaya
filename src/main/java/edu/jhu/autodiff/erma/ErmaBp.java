@@ -773,7 +773,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
     
     public double getPartitionBelief() {
-        if (prm.schedule == BpScheduleType.TREE_LIKE && prm.normalizeMessages == false) {
+        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL && prm.schedule == BpScheduleType.TREE_LIKE
+                && prm.normalizeMessages == false && fg.hasTreeComponents()) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 
             // no renormalization of messages.
             // 
