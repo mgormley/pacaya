@@ -2,6 +2,7 @@ package edu.jhu.nlp.joint;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -138,6 +139,8 @@ public class JointNlpRunner {
     public static boolean normalizeMessages = false;
     @Opt(hasArg = true, description = "The maximum message residual for convergence testing.")
     public static double bpConvergenceThreshold = 1e-3;
+    @Opt(hasArg = true, description = "Directory to dump debugging information for BP.")
+    public static File bpDumpDir = null;
     
     // Options for dependency parse factor graph structure.
     @Opt(hasArg = true, description = "Whether to model the dependency parses.")
@@ -730,6 +733,7 @@ public class JointNlpRunner {
         bpPrm.maxIterations = bpMaxIterations;
         bpPrm.convergenceThreshold = bpConvergenceThreshold;
         bpPrm.keepTape = (trainer == Trainer.ERMA);
+        bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
         return bpPrm;
     }
 
