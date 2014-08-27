@@ -186,7 +186,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
                     break loops;
                 }
             }
-            maybeWriteAllBeliefs();
+            maybeWriteAllBeliefs(iter);
         }
         
         // Clear memory.
@@ -560,10 +560,10 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         return prod.getSum();
     }
 
-    private void maybeWriteAllBeliefs() {
+    private void maybeWriteAllBeliefs(int iter) {
         if (prm.dumpDir != null) {
             try {
-                BufferedWriter writer = Files.createTempFileBufferedWriter("beliefs", prm.dumpDir.toFile());
+                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump" + iter, prm.dumpDir.toFile());
                 writer.write("Messages:\n");
                 for (Messages m : msgs) {
                     writer.write("message: ");
@@ -582,6 +582,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
                     }
                 }
                 writer.write("Partition: " + this.getPartition());
+                writer.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

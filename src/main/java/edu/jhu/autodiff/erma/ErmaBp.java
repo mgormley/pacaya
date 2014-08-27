@@ -248,7 +248,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     break loops;
                 }
             }
-            maybeWriteAllBeliefs();
+            maybeWriteAllBeliefs(iter);
         }
         
         forwardVarAndFacBeliefs();
@@ -881,12 +881,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         return prod.getSum();
     }
 
-    private void maybeWriteAllBeliefs() {
+    private void maybeWriteAllBeliefs(int iter) {
         if (prm.dumpDir != null) {
             try {
                 forwardVarAndFacBeliefs();
 
-                BufferedWriter writer = Files.createTempFileBufferedWriter("beliefs", prm.dumpDir.toFile());
+                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump"+iter, prm.dumpDir.toFile());
                 writer.write("Messages:\n");
                 for (Messages m : msgs) {
                     writer.write("message: ");
@@ -897,7 +897,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 writer.write("Var marginals:\n");
                 for (Var v : fg.getVars()) {
                     writer.write(this.getMarginals(v) + "\n");
-                }                
+                }
                 writer.write("Factor marginals:\n");
                 for (Factor f : fg.getFactors()) {
                     if (! (f instanceof GlobalFactor)) {
@@ -905,6 +905,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     }
                 }
                 writer.write("Partition: " + this.getPartition());
+                writer.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
