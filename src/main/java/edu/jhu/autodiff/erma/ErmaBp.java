@@ -886,9 +886,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             try {
                 forwardVarAndFacBeliefs();
 
-                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump"+iter, prm.dumpDir.toFile());
+                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
+                writer.write("Iteration: " + iter + "\n");
                 writer.write("Messages:\n");
-                for (Messages m : msgs) {
+                for (FgEdge edge : fg.getEdges()) {
+                    Messages m = msgs[edge.getId()];
+                    writer.write(edge + "\n");
                     writer.write("message: ");
                     writer.write(AbstractFgInferencer.ensureRealSemiring(m.message) + "\n");
                     writer.write("newMessage: ");

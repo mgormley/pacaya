@@ -270,6 +270,8 @@ public class JointNlpRunner {
     public static boolean sgdAutoSelectLr = true;
     @Opt(hasArg=true, description="How many epochs between auto-select runs.")
     public static int sgdAutoSelecFreq = 5;
+    @Opt(hasArg=true, description="Whether to compute the function value on iterations other than the last.")
+    public static boolean sgdComputeValueOnNonFinalIter = true;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -718,6 +720,7 @@ public class JointNlpRunner {
         prm.stopBy = stopTrainingBy;
         prm.autoSelectLr = sgdAutoSelectLr;
         prm.autoSelectFreq = sgdAutoSelecFreq;
+        prm.computeValueOnNonFinalIter = sgdComputeValueOnNonFinalIter;
         // Make sure we correctly set the schedule somewhere else.
         prm.sched = null;
         return prm;
@@ -733,7 +736,9 @@ public class JointNlpRunner {
         bpPrm.maxIterations = bpMaxIterations;
         bpPrm.convergenceThreshold = bpConvergenceThreshold;
         bpPrm.keepTape = (trainer == Trainer.ERMA);
-        bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+        if (bpDumpDir != null) {
+            bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+        }
         return bpPrm;
     }
 

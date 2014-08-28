@@ -563,7 +563,8 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     private void maybeWriteAllBeliefs(int iter) {
         if (prm.dumpDir != null) {
             try {
-                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump" + iter, prm.dumpDir.toFile());
+                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
+                writer.write("Iteration: " + iter);
                 writer.write("Messages:\n");
                 for (Messages m : msgs) {
                     writer.write("message: ");
