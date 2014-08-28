@@ -123,18 +123,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
             UFgExample ex = data.get(i);
             AnnoSentence predSent = sents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
-            decoder.decode(model, ex);
-            
-            // Update SRL graph on the sentence. 
-            SrlGraph srlGraph = decoder.getSrlGraph();
-            if (srlGraph != null) {
-                predSent.setSrlGraph(srlGraph);
-            }
-            // Update the dependency tree on the sentence.
-            int[] parents = decoder.getParents();
-            if (parents != null) {
-                predSent.setParents(parents);
-            }
+            decoder.decode(model, ex, predSent);
         }
         timer.stop();
         log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));        

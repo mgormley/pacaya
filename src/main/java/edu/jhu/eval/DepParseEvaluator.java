@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.gm.app.Loss;
 
 /**
  * Computes the unlabeled directed dependency accuracy. This is simply the
@@ -11,7 +12,7 @@ import edu.jhu.data.simple.AnnoSentenceCollection;
  * 
  * @author mgormley
  */
-public class DepParseEvaluator {
+public class DepParseEvaluator implements Loss<AnnoSentence> {
 
     private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
 
@@ -26,6 +27,7 @@ public class DepParseEvaluator {
     }
 
     /** Gets the number of incorrect dependencies. */
+    @Override
     public double loss(AnnoSentence pred, AnnoSentence gold) {
         correct = 0;
         total = 0;
