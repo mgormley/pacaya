@@ -69,7 +69,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
-                          useLogAddTable=True, acl14DepFeats=False, normalizeMessages=True,
+                          useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
                           algebra="LOG_SIGN")
         g.defaults.set_incl_name("pruneByModel", False)
@@ -184,28 +184,30 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Comparison of CLL and ERMA training with varying models and iterations.
             # Here we use a small dataset and no pruning.
             exps = []
-            overrides = SrlExpParams(trainMaxNumSentences=2000,
+            overrides = SrlExpParams(trainMaxNumSentences=20,
                               trainMaxSentenceLength=15,
                               pruneByDist=False,
-                              pruneByModel=False)
-            for trainer in [g.erma_mse, g.cll]:
-                for bpMaxIterations in [2, 3, 4, 5, 6, 7, 8, 9, 10]:
-                    for lang_short in ['en']: #["bg", "es", "en"]:
-                        gl = g.langs[lang_short]
-                        pl = p.langs[lang_short]
-                        for parser in [g.second_order, g.second_sib, g.first_order, g.second_grand]:
-                            data = gl.cx_data
-                            data.update(l2variance=l2var_map[lang_short],
-                                        pruneModel=gl.pruneModel,
-                                        propTrainAsDev=0.5,
-                                        bpUpdateOrder="PARALLEL",
-                                        useMseForValue=True)
-                            data.remove("test")
-                            data.remove("testType")
-                            data.remove("dev")
-                            exp = g.defaults + data + parser + trainer + overrides + SrlExpParams(bpMaxIterations=bpMaxIterations)
-                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                            exps.append(exp)
+                              pruneByModel=False,
+                              propTrainAsDev=0.5,
+                              bpUpdateOrder="SEQUENTIAL", 
+                              bpSchedule="TREE_LIKE",
+                              useMseForValue=True)
+            for l2variance in [500, 1000, 5000, 10000, 50000, 100000]:
+                for trainer in [g.erma_mse, g.cll]:
+                    for bpMaxIterations in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+                        for lang_short in ['en']: #["bg", "es", "en"]:
+                            gl = g.langs[lang_short]
+                            pl = p.langs[lang_short]
+                            for parser in [g.second_order, g.second_sib, g.first_order, g.second_grand]:
+                                data = gl.cx_data
+                                data.remove("test")
+                                data.remove("testType")
+                                data.remove("dev")
+                                exp = g.defaults + data + parser + trainer + overrides 
+                                exp.update(bpMaxIterations=bpMaxIterations,
+                                           l2variance=l2variance)
+                                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                                exps.append(exp)
             return self._get_pipeline_from_exps(exps)
          
         elif self.expname == "dp-erma":

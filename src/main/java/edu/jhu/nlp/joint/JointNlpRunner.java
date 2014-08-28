@@ -2,6 +2,7 @@ package edu.jhu.nlp.joint;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -86,7 +87,9 @@ public class JointNlpRunner {
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
     public enum AlgebraType {
-        REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA);
+        REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA),
+        // SHIFTED_REAL and SPLIT algebras are for testing only.
+        SHIFTED_REAL(Algebras.SHIFTED_REAL_ALGEBRA), SPLIT(Algebras.SPLIT_ALGEBRA);
 
         private Algebra s;
         
@@ -107,7 +110,7 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Number of threads for computation.")
     public static int threads = 1;
     @Opt(hasArg = true, description = "Whether to use a log-add table for faster computation.")
-    public static boolean useLogAddTable = true;
+    public static boolean useLogAddTable = false;
     
     // Options for model IO
     @Opt(hasArg = true, description = "File from which to read a serialized model.")
@@ -136,6 +139,8 @@ public class JointNlpRunner {
     public static boolean normalizeMessages = false;
     @Opt(hasArg = true, description = "The maximum message residual for convergence testing.")
     public static double bpConvergenceThreshold = 1e-3;
+    @Opt(hasArg = true, description = "Directory to dump debugging information for BP.")
+    public static File bpDumpDir = null;
     
     // Options for dependency parse factor graph structure.
     @Opt(hasArg = true, description = "Whether to model the dependency parses.")
@@ -265,6 +270,8 @@ public class JointNlpRunner {
     public static boolean sgdAutoSelectLr = true;
     @Opt(hasArg=true, description="How many epochs between auto-select runs.")
     public static int sgdAutoSelecFreq = 5;
+    @Opt(hasArg=true, description="Whether to compute the function value on iterations other than the last.")
+    public static boolean sgdComputeValueOnNonFinalIter = true;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -295,7 +302,9 @@ public class JointNlpRunner {
 
     public void run() throws ParseException, IOException {  
         FastMath.useLogAddTable = useLogAddTable;
-        
+        if (useLogAddTable) {
+            log.warn("Using log-add table instead of exact computation. When using global factors, this may result in numerical instability.");
+        }
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
             log.warn("Ignoring stopTrainingBy by setting it to null.");
@@ -711,6 +720,7 @@ public class JointNlpRunner {
         prm.stopBy = stopTrainingBy;
         prm.autoSelectLr = sgdAutoSelectLr;
         prm.autoSelectFreq = sgdAutoSelecFreq;
+        prm.computeValueOnNonFinalIter = sgdComputeValueOnNonFinalIter;
         // Make sure we correctly set the schedule somewhere else.
         prm.sched = null;
         return prm;
@@ -726,6 +736,9 @@ public class JointNlpRunner {
         bpPrm.maxIterations = bpMaxIterations;
         bpPrm.convergenceThreshold = bpConvergenceThreshold;
         bpPrm.keepTape = (trainer == Trainer.ERMA);
+        if (bpDumpDir != null) {
+            bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+        }
         return bpPrm;
     }
 

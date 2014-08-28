@@ -1,15 +1,18 @@
 package edu.jhu.gm.inf;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.Test;
 
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -17,6 +20,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
 
 
@@ -65,9 +69,18 @@ public class BeliefPropagationTest {
     }
     
     @Test
-    public void testTwoVarsProb() {
-        boolean logDomain = false;
+    public void testTwoVars() {
+        runTwoVars(false, null);
+        runTwoVars(true, null);
+    }
 
+    @Test
+    public void testDumpingOfBeliefsForDebugging() {
+        runTwoVars(false, Paths.get("./tmp/bpDump"));
+        // No assertions, just make sure we don't fail.
+    }
+
+    private void runTwoVars(boolean logDomain, Path dumpDir) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
@@ -96,6 +109,7 @@ public class BeliefPropagationTest {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
+        prm.dumpDir = dumpDir;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 

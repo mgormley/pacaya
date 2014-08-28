@@ -1,6 +1,9 @@
 package edu.jhu.autodiff.erma;
 
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -61,6 +65,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
          * false can save memory. 
          */
         public boolean keepTape = true;
+
+        /** Directory for dumping of beliefs at each iteration (debugging only). */
+        public Path dumpDir = null;
         
         public ErmaBpPrm() {
         }
@@ -241,6 +248,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     break loops;
                 }
             }
+            maybeWriteAllBeliefs(iter);
         }
         
         forwardVarAndFacBeliefs();
@@ -765,7 +773,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
     
     public double getPartitionBelief() {
-        if (prm.schedule == BpScheduleType.TREE_LIKE && prm.normalizeMessages == false) {
+        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL && prm.schedule == BpScheduleType.TREE_LIKE
+                && prm.normalizeMessages == false && fg.hasTreeComponents()) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 
             // no renormalization of messages.
             // 
@@ -870,6 +879,40 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Compute the product of all messages sent to this node.
         getProductOfMessages(node, prod, null);
         return prod.getSum();
+    }
+
+    private void maybeWriteAllBeliefs(int iter) {
+        if (prm.dumpDir != null) {
+            try {
+                forwardVarAndFacBeliefs();
+
+                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
+                writer.write("Iteration: " + iter + "\n");
+                writer.write("Messages:\n");
+                for (FgEdge edge : fg.getEdges()) {
+                    Messages m = msgs[edge.getId()];
+                    writer.write(edge + "\n");
+                    writer.write("message: ");
+                    writer.write(AbstractFgInferencer.ensureRealSemiring(m.message) + "\n");
+                    writer.write("newMessage: ");
+                    writer.write(AbstractFgInferencer.ensureRealSemiring(m.newMessage) + "\n");
+                }
+                writer.write("Var marginals:\n");
+                for (Var v : fg.getVars()) {
+                    writer.write(this.getMarginals(v) + "\n");
+                }
+                writer.write("Factor marginals:\n");
+                for (Factor f : fg.getFactors()) {
+                    if (! (f instanceof GlobalFactor)) {
+                        writer.write(this.getMarginals(f) + "\n");
+                    }
+                }
+                writer.write("Partition: " + this.getPartition());
+                writer.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
     
     @Override

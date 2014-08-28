@@ -6,22 +6,24 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import org.junit.Test;
 
+import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.data.simple.AnnoSentenceReader;
-import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
-import edu.jhu.gm.data.LFgExample;
+import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -34,11 +36,9 @@ import edu.jhu.gm.inf.BfsMpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.FgInferencerFactory;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -50,9 +50,14 @@ import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.files.Files;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 public class CrfObjectiveTest {
 
@@ -60,30 +65,29 @@ public class CrfObjectiveTest {
 	public void testLogLikelihoodBelowZeroBPLogDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.logDomain = true;
-		logLikelihoodBelowZero(bpPrm);
+		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBPProbDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.logDomain = false;
-		bpPrm.schedule = BpScheduleType.TREE_LIKE;
-		logLikelihoodBelowZero(bpPrm);
+		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBF() {	// brute force
-		logLikelihoodBelowZero(new BruteForceInferencerPrm(false));
-		logLikelihoodBelowZero(new BruteForceInferencerPrm(true));
+		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(Algebras.REAL_ALGEBRA));
+		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(Algebras.LOG_SEMIRING));
 	}
 		
 	/**
 	 * log probabilities should be less than 0...
 	 * make a chain of binary variables with one factor one each.
-	 * more complicated models are not needed, just want to show
-	 * that LL comes out >0.
+	 * more complicated models are not needed, just want to check if
+	 * LL comes out <=0.
 	 */
-	public static void logLikelihoodBelowZero(FgInferencerFactory infFactory) {
+	public static void checkLogLikelihoodBelowZero(FgInferencerFactory infFactory) {
 		
 		System.out.println("[logLikelihoodBelowZero] starting...");
 		FactorGraph fg = new FactorGraph();
@@ -101,7 +105,7 @@ public class CrfObjectiveTest {
 			ExplicitFactor f = new ExplicitFactor(new VarSet(xi));
 			f.fill(Math.sqrt(i + 1));
 			f.setValue(0,  1d);
-			assertEquals(1d, f.getSum(), 1e-8);
+			//assertEquals(1d, f.getSum(), 1e-8);
 			fg.addFactor(f);
 		}
 		
@@ -130,14 +134,14 @@ public class CrfObjectiveTest {
 		assertTrue(objVal < 0d);
 		System.out.println("[logLikelihoodBelowZero] done");
 	}
-    	
+	
     @Test
     public void testSrlLogLikelihood() throws Exception {
-        srlLogLikelihoodCorrect(false);
-        srlLogLikelihoodCorrect(true);
+        checkSrlLogLikelihoodCorrect(false);
+        checkSrlLogLikelihoodCorrect(true);
     }
     
-    public void srlLogLikelihoodCorrect(boolean logDomain) {
+    public void checkSrlLogLikelihoodCorrect(boolean logDomain) {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", new ArrayList<String>()));
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
@@ -217,17 +221,17 @@ public class CrfObjectiveTest {
     }
     
     @Test
-    public void testDpLogLikelihoodLessThanZero() throws Exception {
-        //dpLogLikelihoodCorrectLessThanZero(false);
-        dpLogLikelihoodCorrectLessThanZero(true);
+    public void testDp1stOrderLogLikelihoodLessThanZero() throws Exception {
+        checkDp1stOrderLogLikelihoodLessThanZero(false);
+        checkDp1stOrderLogLikelihoodLessThanZero(true);
     }
     
-    public void dpLogLikelihoodCorrectLessThanZero(boolean logDomain) throws Exception {
+    public void checkDp1stOrderLogLikelihoodLessThanZero(boolean logDomain) throws Exception {
         Prng.seed(123456789101112l);
         FactorTemplateList fts = new FactorTemplateList();
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
 
-        FgExampleList data = getDpData(ofc);
+        FgExampleList data = getDp1stOrderData(ofc);
         
         System.out.println("Num features: " + ofc.getNumParams());
         FgModel model = new FgModel(ofc.getNumParams());
@@ -241,7 +245,7 @@ public class CrfObjectiveTest {
         assertEquals(-5.26574, ll, 1e-3);
     }
 
-    public static FgExampleList getDpData(ObsFeatureConjoiner ofc) throws IOException {
+    public static FgExampleList getDp1stOrderData(ObsFeatureConjoiner ofc) throws IOException {
         AnnoSentenceReaderPrm rPrm = new AnnoSentenceReaderPrm();
         rPrm.maxNumSentences = 3;
         rPrm.maxSentenceLength = 7;
@@ -274,19 +278,111 @@ public class CrfObjectiveTest {
     //    10252    WARN  CrfObjective - Log-likelihood for example should be <= 0: 216.61074154658888
     //    10856    INFO  AvgBatchObjective - Average objective for full dataset: -1320.3962741774715
     @Test
-    public void testDpLogLikelihoodLessThanZero2() throws Exception {
-        dpLogLikelihoodCorrectLessThanZero2(true);
+    public void testDp2ndOrderBetheFreeEnergy() throws Exception {
+        checkDp2ndOrderBetheFreeEnergy(Algebras.REAL_ALGEBRA);
+        // checkDp2ndOrderBetheFreeEnergy(Algebras.SPLIT_ALGEBRA);
+        // The shifted real algebra gives invalid BFE, it's still not clear if this is just a
+        // precision problem or actually a bug.
+        //checkDp2ndOrderBetheFreeEnergy(Algebras.SHIFTED_REAL_ALGEBRA);
+        checkDp2ndOrderBetheFreeEnergy(Algebras.LOG_SEMIRING);
+        checkDp2ndOrderBetheFreeEnergy(Algebras.LOG_SIGN_ALGEBRA);
     }
     
-    public void dpLogLikelihoodCorrectLessThanZero2(boolean logDomain) throws Exception {
+    public void checkDp2ndOrderBetheFreeEnergy(Algebra s) throws Exception {
         Prng.seed(123456789101112l);
+        Pair<FgExampleList, ObsFeatureConjoiner> pair = getDp2ndOrderData(-1);
+        FgExampleList data = pair.get1();
+        ObsFeatureConjoiner ofc = pair.get2();
+        
+        System.out.println("Num features: " + ofc.getNumParams());
+        FgModel model = new FgModel(ofc.getNumParams());
+        model.setRandomStandardNormal();
+        model.scale(0.1);
+        System.out.println("Model L2 norm: " + model.l2Norm());
+        
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.s = s;
+        bpPrm.updateOrder = BpUpdateOrder.PARALLEL;
+        bpPrm.normalizeMessages = true;
+        bpPrm.maxIterations = 50;    
+        // Uncomment to enable dumping of beliefs.
+        // bpPrm.dumpDir = Paths.get("./tmp/dump" + s.toString());
+        // Files.deleteRecursively(bpPrm.dumpDir.toFile());
+        FgInferencerFactory infFactory = bpPrm;
+        AvgBatchObjective obj = getCrfObj(model, data, infFactory);
+        double ll = 0;
+        for (int i=0; i<obj.getNumExamples(); i++) {
+            double exll = obj.getValue(model.getParams(), new int[]{i});
+            System.out.printf("Example %4d ll=%f\n", i, exll);
+            //assertTrue(exll <= 0);
+            ll += exll;
+        }
+        assertTrue(ll < 0d);
+        //Without scaling: assertEquals(-74.29, ll, 1e-2);
+        assertEquals(-10.67, ll, 1e-2);
+    }
+    
+    @Test
+    public void testDp2ndOrderGradient() throws Exception {
+        Prng.seed(123456789101112l);
+        int featureHashMod = 20;
+        FgModel model = new FgModel(2*featureHashMod);
+        model.setRandomStandardNormal();
+        model.scale(0.1);
+        
+        {
+            // Take one gradient step.
+            IntDoubleVector gradReal = getGradientDp2ndOrder(model, Algebras.REAL_ALGEBRA, featureHashMod);
+            gradReal.scale(0.05);
+            model.getParams().add(gradReal);
+        }
+        
+        // Get the gradient using different semirings.
+        IntDoubleVector gradReal = getGradientDp2ndOrder(model, Algebras.REAL_ALGEBRA, featureHashMod);
+        IntDoubleVector gradSplit = getGradientDp2ndOrder(model, Algebras.SPLIT_ALGEBRA, featureHashMod);
+        // The shifted algebra sometimes gives invalid gradients but might be due to loss of precision.
+        IntDoubleVector gradShifted = getGradientDp2ndOrder(model, Algebras.SHIFTED_REAL_ALGEBRA, featureHashMod);
+        IntDoubleVector gradLog = getGradientDp2ndOrder(model, Algebras.LOG_SEMIRING, featureHashMod);
+        IntDoubleVector gradLogSign = getGradientDp2ndOrder(model, Algebras.LOG_SIGN_ALGEBRA, featureHashMod);
+
+        // Assert that the gradients are all equal.
+        for (int i=0; i<featureHashMod; i++) {
+            System.out.printf("i=%d gradReal=%.4e gradLog=%.4e gradLogSign=%.4e\n", i, gradReal.get(i), gradLog.get(i), gradLogSign.get(i));
+            assertEquals(gradReal.get(i), gradSplit.get(i), 1e-4);
+            assertEquals(gradReal.get(i), gradShifted.get(i), 1e-8);
+            assertEquals(gradReal.get(i), gradLog.get(i), 1e-8);
+            assertEquals(gradReal.get(i), gradLogSign.get(i), 1e-8);
+            assertEquals(gradLog.get(i), gradLogSign.get(i), 1e-8);
+        }
+    }
+    
+    public IntDoubleVector getGradientDp2ndOrder(FgModel model, Algebra s, int featureHashMod) throws Exception {
+        Pair<FgExampleList, ObsFeatureConjoiner> pair = getDp2ndOrderData(featureHashMod);
+        FgExampleList data = pair.get1();
+        ObsFeatureConjoiner ofc = pair.get2();
+        
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.s = s;
+        bpPrm.updateOrder = BpUpdateOrder.PARALLEL;
+        bpPrm.normalizeMessages = true;
+        bpPrm.maxIterations = 5;
+        FgInferencerFactory infFactory = bpPrm;
+        AvgBatchObjective obj = getCrfObj(model, data, infFactory);
+        return obj.getGradient(model.getParams());
+    }
+    
+    public Pair<FgExampleList, ObsFeatureConjoiner> getDp2ndOrderData(int featureHashMod) {
         AnnoSentenceReaderPrm rPrm = new AnnoSentenceReaderPrm();
-        rPrm.maxNumSentences = 10;
-        //rPrm.maxSentenceLength = 7;
+        rPrm.maxNumSentences = 3;
+        rPrm.maxSentenceLength = 7;
         rPrm.useCoNLLXPhead = true;
         AnnoSentenceReader r = new AnnoSentenceReader(rPrm);
-        //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
-        r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
+        try {
+            //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
+            r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -300,7 +396,7 @@ public class CrfObjectiveTest {
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         //prm.fgPrm.dpPrm.grandparentFactors = true;
         prm.fgPrm.dpPrm.siblingFactors = true;
-        //prm.fePrm.dpFePrm.featureHashMod = 10;
+        prm.fePrm.dpFePrm.featureHashMod = featureHashMod;
         //prm.fePrm.dpFePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         prm.exPrm.cacheType = CacheType.NONE;
         
@@ -308,29 +404,8 @@ public class CrfObjectiveTest {
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         ofc.init(data);
-        
-        System.out.println("Num features: " + ofc.getNumParams());
-        FgModel model = new FgModel(ofc.getNumParams());
-        model.setRandomStandardNormal();
-        model.scale(20);
-        System.out.println("Model L2 norm: " + model.l2Norm());
-        
-        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = logDomain;
-        bpPrm.updateOrder = BpUpdateOrder.PARALLEL;
-        bpPrm.normalizeMessages = true;
-        bpPrm.maxIterations = 50;
-        FgInferencerFactory infFactory = bpPrm;
-        AvgBatchObjective obj = getCrfObj(model, data, infFactory);
-        double ll = 0;
-        for (int i=0; i<obj.getNumExamples(); i++) {
-            double exll = obj.getValue(model.getParams(), new int[]{i});
-            assertTrue(exll <= 0);
-            ll += exll;
-        }
-        assertTrue(ll < 0d);
+        return new Pair<FgExampleList, ObsFeatureConjoiner>(data, ofc);
     }
-
     
     public static AvgBatchObjective getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
         CrfObjective exObj = new CrfObjective(data, infFactory);

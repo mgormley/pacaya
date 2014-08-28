@@ -1,6 +1,9 @@
 package edu.jhu.gm.inf;
 
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -15,10 +18,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
-import edu.jhu.parse.dep.EdgeScores;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Timer;
+import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -44,6 +45,10 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         public boolean cacheFactorBeliefs = false;
         /** The maximum message residual for convergence testing. */
         public double convergenceThreshold = 0;
+
+        /** Directory for dumping of beliefs at each iteration (debugging only). */
+        public Path dumpDir = null;
+        
         public BeliefPropagationPrm() {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
@@ -181,6 +186,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
                     break loops;
                 }
             }
+            maybeWriteAllBeliefs(iter);
         }
         
         // Clear memory.
@@ -444,9 +450,10 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
-    
+        
     public double getPartitionBelief() {
-        if (prm.schedule == BpScheduleType.TREE_LIKE && prm.normalizeMessages == false) {
+        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL && prm.schedule == BpScheduleType.TREE_LIKE
+                && prm.normalizeMessages == false && fg.hasTreeComponents()) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 
             // no renormalization of messages.
             // 
@@ -553,6 +560,36 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         return prod.getSum();
     }
 
+    private void maybeWriteAllBeliefs(int iter) {
+        if (prm.dumpDir != null) {
+            try {
+                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
+                writer.write("Iteration: " + iter);
+                writer.write("Messages:\n");
+                for (Messages m : msgs) {
+                    writer.write("message: ");
+                    writer.write(AbstractFgInferencer.ensureRealSemiring(m.message) + "\n");
+                    writer.write("newMessage: ");
+                    writer.write(AbstractFgInferencer.ensureRealSemiring(m.newMessage) + "\n");
+                }
+                writer.write("Var marginals:\n");
+                for (Var v : fg.getVars()) {
+                    writer.write(this.getMarginals(v) + "\n");
+                }                
+                writer.write("Factor marginals:\n");
+                for (Factor f : fg.getFactors()) {
+                    if (! (f instanceof GlobalFactor)) {
+                        writer.write(this.getMarginals(f) + "\n");
+                    }
+                }
+                writer.write("Partition: " + this.getPartition());
+                writer.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    
     public FactorGraph getFactorGraph() {
         return fg;
     }

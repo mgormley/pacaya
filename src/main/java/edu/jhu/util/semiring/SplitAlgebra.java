@@ -2,6 +2,8 @@ package edu.jhu.util.semiring;
 
 import java.nio.ByteBuffer;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.prim.Primitives;
 
 /**
@@ -17,6 +19,8 @@ import edu.jhu.prim.Primitives;
  */
 public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
 
+    private static final Logger log = Logger.getLogger(SplitAlgebra.class);
+
     private static final int SHIFTER = 32;
     private static final long MASK_1 = 0xFFFFFFFFl;
     private static final long MASK_2 = ~MASK_1;
@@ -30,9 +34,9 @@ public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
     public SplitAlgebra() {
         this.a1 = new RealAlgebra();
         this.a2 = new ShiftedRealAlgebra();
-        this.format = "%12.2e";
-        // Machine epsilon for a 32-bit number.
-        this.delta = 1.19e-07;
+        this.format = "%12.6e";
+        // Machine epsilon for a 32-bit number is 1.19e-07.
+        this.delta = 1.19e-06;
     }
     
     @Override

@@ -16,7 +16,6 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
@@ -41,8 +40,7 @@ public class CrfObjective implements ExampleObjective {
     private Timer tot = new Timer(); 
     
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
-        this.data = data;
-        this.infFactory = infFactory;
+        this(data, infFactory, false);
     }
 
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory, boolean useMseForValue) {

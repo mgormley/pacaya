@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.Test;
 
@@ -13,6 +15,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.BruteForceInferencerTest;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -22,6 +25,8 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 
 public class ErmaBpForwardTest {
@@ -66,9 +71,18 @@ public class ErmaBpForwardTest {
     }
     
     @Test
-    public void testTwoVarsProb() {
-        boolean logDomain = false;
+    public void testTwoVars() {
+        runTwoVars(false, null);
+        runTwoVars(true, null);
+    }
 
+    @Test
+    public void testDumpingOfBeliefsForDebugging() {
+        runTwoVars(false, Paths.get("./tmp/bpDump"));
+        // No assertions, just make sure we don't fail.
+    }
+
+    private void runTwoVars(boolean logDomain, Path dumpDir) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
@@ -97,6 +111,7 @@ public class ErmaBpForwardTest {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
+        prm.dumpDir = dumpDir;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
 
@@ -172,6 +187,56 @@ public class ErmaBpForwardTest {
         testOnSimpleHelper(logDomain);
     }
 
+    private void testOnSimpleHelper(boolean logDomain) throws IOException {
+        Algebra s = logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+        
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 10;
+        prm.s = s;
+        prm.normalizeMessages = true;
+        ErmaBp bp = new ErmaBp(fg, prm);
+        bp.run();
+
+        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
+
+        // TODO: unfortunately, loopy BP does very poorly on this simple example
+        // and does not converge to the correct marginals. Hence we use a (very
+        // high) tolerance of 2 to catch the partition function's value.
+        assertEqualMarginals(fg, bf, bp, 2);
+    }
+    
+    @Test
+    public void testMultipleSemiringsOnSimple() throws IOException {
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
+
+        ErmaBp bpReal = runHelper(fg, Algebras.REAL_ALGEBRA);
+        ErmaBp bpSplit = runHelper(fg, Algebras.SPLIT_ALGEBRA);
+        ErmaBp bpShift = runHelper(fg, Algebras.SHIFTED_REAL_ALGEBRA);
+        ErmaBp bpLog = runHelper(fg, Algebras.LOG_SEMIRING);
+        ErmaBp bpLogSign = runHelper(fg, Algebras.LOG_SIGN_ALGEBRA);
+        
+        assertEqualMarginals(fg, bpReal, bpSplit, 1e-4);
+        assertEqualMarginals(fg, bpReal, bpShift, 1e-13);
+        assertEqualMarginals(fg, bpReal, bpLog, 1e-13);
+        assertEqualMarginals(fg, bpReal, bpLogSign, 1e-13);
+        assertEqualMarginals(fg, bpLog, bpLogSign, 1e-13);
+    }
+
+    private ErmaBp runHelper(FactorGraph fg, Algebra s) throws IOException {        
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 4;
+        prm.s = s;
+        prm.normalizeMessages = true;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        ErmaBp bp = new ErmaBp(fg, prm);
+        bp.run();
+        return bp;
+    }
+
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
@@ -184,26 +249,6 @@ public class ErmaBpForwardTest {
         // Test in the log-probability domain.
         boolean logDomain = true;        
         testOnChainHelper(logDomain);
-    }
-
-    private void testOnSimpleHelper(boolean logDomain) throws IOException {
-        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-
-        ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
-        bp.run();
-
-        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
-
-        // TODO: unfortunately, loopy BP does very poorly on this simple example
-        // and does not converge to the correct marginals. Hence we use a (very
-        // high) tolerance of 2 to catch the partition function's value.
-        assertEqualMarginals(fg, bf, bp, 2);
     }
 
     private void testOnChainHelper(boolean logDomain) {
@@ -354,8 +399,8 @@ public class ErmaBpForwardTest {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 
-    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
-            ErmaBp bp, double tolerance) {
+    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
+            FgInferencer bp, double tolerance) {
         for (Var var : fg.getVars()) {
             {
                 VarTensor bfm = bf.getMarginals(var);
