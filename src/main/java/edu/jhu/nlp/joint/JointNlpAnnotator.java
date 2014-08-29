@@ -121,9 +121,10 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < sents.size(); i++) {
             UFgExample ex = data.get(i);
-            AnnoSentence predSent = sents.get(i);
+            AnnoSentence inputSent = sents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
-            decoder.decode(model, ex, predSent);
+            AnnoSentence predSent = decoder.decode(model, ex, inputSent);
+            sents.set(i, predSent);
         }
         timer.stop();
         log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));        

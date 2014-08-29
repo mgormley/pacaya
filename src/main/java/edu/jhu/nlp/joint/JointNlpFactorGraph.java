@@ -80,17 +80,15 @@ public class JointNlpFactorGraph extends FactorGraph {
 
     /**
      * Adds factors and variables to the given factor graph.
-     * @param fe TODO
      */
     public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
             ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
-        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe, fg, sent.getDepEdgeMask());
+        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe,
+                ofc, fe, fg, sent.getDepEdgeMask());
     }
 
     /**
      * Adds factors and variables to the given factor graph.
-     * @param fe TODO
-     * @param depEdgeMask TODO
      */
     public void build(List<String> words, List<String> lemmas, IntSet knownPreds, List<String> roleStateNames,
             Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg, DepEdgeMask depEdgeMask) {
@@ -161,6 +159,14 @@ public class JointNlpFactorGraph extends FactorGraph {
 
     public int getSentenceLength() {
         return n;
+    }
+
+    public DepParseFactorGraphBuilder getDpBuilder() {
+        return dp;
+    }
+    
+    public SrlFactorGraphBuilder getSrlBuilder() {
+        return srl;
     }
     
 }

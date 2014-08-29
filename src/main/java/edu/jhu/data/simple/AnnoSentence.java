@@ -326,7 +326,7 @@ public class AnnoSentence {
         return DepTree.getDependencyPath(start, end, parents);
     }
     
-    public Integer size() {
+    public int size() {
         return words.size();
     }
     

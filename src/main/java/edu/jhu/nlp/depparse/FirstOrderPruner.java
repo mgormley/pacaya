@@ -15,10 +15,11 @@ import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder;
+import edu.jhu.nlp.joint.JointNlpEncoder;
+import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
 import edu.jhu.nlp.joint.JointNlpFgModel;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
-import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
@@ -70,17 +71,17 @@ public class FirstOrderPruner implements Annotator {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             LFgExample ex = data.get(i);
-            AnnoSentence predSent = inputSents.get(i);
+            AnnoSentence inputSent = inputSents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
-            decoder.decode(model, ex);
+            AnnoSentence predSent = decoder.decode(model, ex, inputSent);
             
             // Update the dependency tree on the sentence.
-            DepEdgeMask mask = decoder.getDepEdgeMask();
+            DepEdgeMask mask = predSent.getDepEdgeMask();
             if (mask != null) {
-                if (predSent.getDepEdgeMask() == null) {
-                    predSent.setDepEdgeMask(mask);
+                if (inputSent.getDepEdgeMask() == null) {
+                    inputSent.setDepEdgeMask(mask);
                 } else {
-                    predSent.getDepEdgeMask().and(mask);
+                    inputSent.getDepEdgeMask().and(mask);
                 }
             }
             numEdgesKept += mask.getCount();

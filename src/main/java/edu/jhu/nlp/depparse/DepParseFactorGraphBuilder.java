@@ -97,8 +97,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(AnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, FeatureExtractor fe,
-            FactorGraph fg) {
+    public void build(AnnoSentence sent, FeatureExtractor fe, FactorGraph fg) {
         build(sent.getWords(), sent.getDepEdgeMask(), fe, fg);
     }
     

@@ -61,7 +61,7 @@ import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm
 import edu.jhu.nlp.joint.JointNlpAnnotator.InitParams;
 import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
-import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
+import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
@@ -454,7 +454,7 @@ public class JointNlpRunner {
         }
     }
 
-    private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
+    private void removeAts(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
         List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
         if (brownClusters == null) {
             // Filter out the Brown cluster features.
@@ -530,7 +530,7 @@ public class JointNlpRunner {
         return prm;
     }
     
-    private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpFeatureExtractorPrm fePrm) {
+    private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         // Factor graph structure.

@@ -20,7 +20,7 @@ import edu.jhu.util.Timer;
  * 
  * @author mgormley
  */
-public class UnlabeledFgExample implements LFgExample, Serializable {
+public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(UnlabeledFgExample.class);

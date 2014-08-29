@@ -4,14 +4,45 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.gm.app.Decoder;
+import edu.jhu.gm.data.UFgExample;
+import edu.jhu.gm.decode.MbrDecoder;
+import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 
-public class SrlDecoder {
+/**
+ * Decoder from the marginals of a semantic role labeling to an {@link SrlGraph}.
+ *  
+ * @author mgormley
+ */
+public class SrlDecoder implements Decoder<AnnoSentence, SrlGraph> {
 
+    public static class SrlDecoderPrm {
+        // TODO: Set to non-null values.
+        public MbrDecoderPrm mbrPrm = null;
+    }
+    
+    private SrlDecoderPrm prm;
+    
+    public SrlDecoder(SrlDecoderPrm prm) {
+        this.prm = prm;
+    }
+    
+    @Override
+    public SrlGraph decode(FgInferencer inf, UFgExample ex, AnnoSentence sent) {
+        MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
+        mbrDecoder.decode(inf, ex);
+        VarConfig mbrVarConfig = mbrDecoder.getMbrVarConfig();
+        // Get the SRL graph.
+        return SrlDecoder.getSrlGraphFromVarConfig(mbrVarConfig, sent.size());
+    }
+    
     public static SrlGraph getSrlGraphFromVarConfig(VarConfig vc, int n) {
         int srlVarCount = 0;
         

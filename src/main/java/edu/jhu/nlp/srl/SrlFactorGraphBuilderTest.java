@@ -17,7 +17,7 @@ import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 
-public class SrlFactorGraphTest {
+public class SrlFactorGraphBuilderTest {
 
     @Test
     public void testPredictPredPos() {
