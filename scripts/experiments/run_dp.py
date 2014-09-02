@@ -184,15 +184,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Comparison of CLL and ERMA training with varying models and iterations.
             # Here we use a small dataset and no pruning.
             exps = []
-            overrides = SrlExpParams(trainMaxNumSentences=20,
+            overrides = SrlExpParams(trainMaxNumSentences=2000,
                               trainMaxSentenceLength=15,
                               pruneByDist=False,
                               pruneByModel=False,
                               propTrainAsDev=0.5,
                               bpUpdateOrder="SEQUENTIAL", 
                               bpSchedule="TREE_LIKE",
-                              useMseForValue=True,
-                              algebra="REAL")
+                              useMseForValue=True)
             for l2variance in [500, 1000, 5000, 10000, 50000, 100000]:
                 for trainer in [g.erma_mse, g.cll]:
                     for bpMaxIterations in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
