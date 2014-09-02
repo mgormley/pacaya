@@ -191,7 +191,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               propTrainAsDev=0.5,
                               bpUpdateOrder="SEQUENTIAL", 
                               bpSchedule="TREE_LIKE",
-                              useMseForValue=True)
+                              useMseForValue=True,
+                              algebra="REAL")
             for l2variance in [500, 1000, 5000, 10000, 50000, 100000]:
                 for trainer in [g.erma_mse, g.cll]:
                     for bpMaxIterations in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
