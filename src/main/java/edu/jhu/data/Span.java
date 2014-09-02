@@ -6,7 +6,7 @@ package edu.jhu.data;
  * 
  * @author mgormley
  */
-public class Span {
+public class Span implements Comparable<Span> {
 
     protected int start;
     protected int end;
@@ -78,6 +78,15 @@ public class Span {
     @Override
     public String toString() {
         return "Span [start=" + start + ", end=" + end + "]";
-    }    
+    }
+
+    @Override
+    public int compareTo(Span other) {
+        int c = Integer.compare(this.start, other.start);
+        if (c == 0) {
+            c = Integer.compare(this.end, other.end);
+        }
+        return c;
+    }
     
 }
