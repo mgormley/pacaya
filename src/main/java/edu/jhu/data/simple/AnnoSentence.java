@@ -1,7 +1,12 @@
 package edu.jhu.data.simple;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.jhu.data.DepEdgeMask;
@@ -566,6 +571,5 @@ public class AnnoSentence {
             sb.append(",\n");
         }
     }
-    
     
 }

@@ -15,12 +15,18 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
 
     private static final long serialVersionUID = -6867088670574667680L;
 
+    /** Stores the source sentences (e.g. the Communication object for Concrete). */
+    private Object sourceSents;
+
     public AnnoSentenceCollection() {
         super();
     }
     
     public AnnoSentenceCollection(Collection<AnnoSentence> list) {
         super(list);
+        if (list instanceof AnnoSentenceCollection) {
+            this.sourceSents = ((AnnoSentenceCollection) list).sourceSents;
+        }
     }
 
     public static AnnoSentenceCollection getSingleton(AnnoSentence sent) {
@@ -98,6 +104,7 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
      */
     public AnnoSentenceCollection getWithAtsRemoved(List<AT> removeAts) {
         AnnoSentenceCollection newSents = new AnnoSentenceCollection();
+        newSents.sourceSents = this.sourceSents;
         for (AnnoSentence sent : this) {
             AnnoSentence newSent = new AnnoSentence(sent);
             newSent.removeAts(removeAts);
@@ -137,6 +144,14 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
         }
         sb.append("]");
         return sb.toString();        
+    }
+    
+    public Object getSourceSents() {
+        return sourceSents;
+    }
+
+    public void setSourceSents(Object sourceSents) {
+        this.sourceSents = sourceSents;
     }
     
 }

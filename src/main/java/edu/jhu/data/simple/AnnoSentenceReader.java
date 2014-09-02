@@ -8,14 +8,14 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.concrete.ConcreteReader;
+import edu.jhu.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.data.conll.CoNLL08FileReader;
 import edu.jhu.data.conll.CoNLL08Sentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLLXFileReader;
 import edu.jhu.data.conll.CoNLLXSentence;
-import edu.jhu.nlp.tag.BrownClusterTagger;
-import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 
 /**
  * Generic reader of AnnoSentence objects from many different corpora. 
@@ -38,9 +38,11 @@ public class AnnoSentenceReader {
         public boolean useSplitForms = true;
         /** CoNLL-X: whether to use the P(rojective)HEAD column for parents. */
         public boolean useCoNLLXPhead = false;
+        /** Concrete options. */
+        public ConcreteReaderPrm conPrm = new ConcreteReaderPrm();        
     }
     
-    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009 };
+    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE };
     
     public interface SASReader extends Iterable<AnnoSentence> {
         public void close();        
@@ -62,7 +64,17 @@ public class AnnoSentenceReader {
     
     public void loadSents(File dataFile, DatasetType type) throws IOException {
         log.info("Reading " + prm.name + " data of type " + type + " from " + dataFile);
-        loadSents(new FileInputStream(dataFile), type);
+        if (type == DatasetType.CONCRETE) {
+            if (prm.maxNumSentences < Integer.MAX_VALUE || prm.maxSentenceLength < Integer.MAX_VALUE) {
+                log.warn("Currently, we always take all sentences from the Concrete communication." 
+                          + " This doesn't permit downselection of the number of sentences or sentence length.");
+            }
+            ConcreteReader cc = new ConcreteReader(new ConcreteReaderPrm());
+            assert sents.size() == 0;
+            sents = cc.toSentences(dataFile);
+        } else {
+            loadSents(new FileInputStream(dataFile), type);
+        }
     }
 
     public void loadSents(InputStream fis, DatasetType type) throws UnsupportedEncodingException, IOException {

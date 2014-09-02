@@ -2,9 +2,15 @@ package edu.jhu.data.simple;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.log4j.Logger;
+import org.apache.thrift.TException;
+import org.apache.thrift.TSerializer;
+import org.apache.thrift.protocol.TBinaryProtocol;
 
+import edu.jhu.data.concrete.ConcreteWriter;
 import edu.jhu.data.conll.CoNLL08Sentence;
 import edu.jhu.data.conll.CoNLL08Writer;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -12,6 +18,7 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXWriter;
 import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
+import edu.jhu.hlt.concrete.Communication;
 
 public class AnnoSentenceWriter {
 
@@ -50,6 +57,16 @@ public class AnnoSentenceWriter {
                 cw.write(conllSent);
             }
             cw.close();
+        } else if (type == DatasetType.CONCRETE) {
+            Communication comm = (Communication) sents.getSourceSents();
+            ConcreteWriter w = new ConcreteWriter(false);
+            w.addDependencyParse(sents, comm);
+            try {
+                byte[] bytez = new TSerializer(new TBinaryProtocol.Factory()).serialize(comm);
+                Files.write(Paths.get(out.getAbsolutePath()), bytez);
+            } catch (TException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             throw new IllegalStateException("Unsupported data type: " + type);
         }
