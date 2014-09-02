@@ -3,7 +3,6 @@ package edu.jhu.data.concrete;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
@@ -11,14 +10,12 @@ import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.hlt.concrete.AnnotationMetadata;
-import edu.jhu.hlt.concrete.Argument;
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Dependency;
 import edu.jhu.hlt.concrete.DependencyParse;
 import edu.jhu.hlt.concrete.EntityMention;
 import edu.jhu.hlt.concrete.EntityMentionSet;
-import edu.jhu.hlt.concrete.EntityType;
-import edu.jhu.hlt.concrete.PhraseType;
+import edu.jhu.hlt.concrete.MentionArgument;
 import edu.jhu.hlt.concrete.Section;
 import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
@@ -27,13 +24,21 @@ import edu.jhu.hlt.concrete.SituationMention;
 import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.Tokenization;
+import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
 
+/**
+ * Writer of Concrete files from {@link AnnoSentence}s.
+ * 
+ * @author Travis Wolfe
+ */
 public class ConcreteWriter {
 
+    private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
+    
     private final long timestamp;     // time that every annotation that is processed will get
     private boolean careful;    // throw exceptions when things aren't unambiguously correct
     private final boolean srlIsSyntax;
-    
+
     /**
      * @param srlIsSyntax
      * If true, we put SRL annotations in as dependency parses.
@@ -58,7 +63,7 @@ public class ConcreteWriter {
      */
     public void addDependencyParse(
             AnnoSentenceCollection containsDepParses,
-            Communication addTo) {
+            Communication addTo) {        
 
         List<Tokenization> ts = getTokenizationsCorrespondingTo(containsDepParses, addTo);
         for(int i=0; i<ts.size(); i++) {
@@ -75,7 +80,7 @@ public class ConcreteWriter {
             throw new IllegalArgumentException();
         
         DependencyParse p = new DependencyParse();
-        p.uuid = UUID.randomUUID().toString();
+        p.uuid = uuidFactory.getConcreteUUID();
         p.metadata = new AnnotationMetadata();
         p.metadata.confidence = 1d;
         p.metadata.tool = "pacaya dependency parser";
@@ -118,10 +123,10 @@ public class ConcreteWriter {
         else {
             // make a SituationMention for every sentence / SRL
             EntityMentionSet ems = new EntityMentionSet();
-            ems.uuid = UUID.randomUUID().toString();
+            ems.uuid = uuidFactory.getConcreteUUID();
             ems.metadata = meta;
             SituationMentionSet sms = new SituationMentionSet();
-            sms.uuid = UUID.randomUUID().toString();
+            sms.uuid = uuidFactory.getConcreteUUID();
             sms.metadata = meta;
             sms.mentionList = new ArrayList<SituationMention>();
             for(int i=0; i<containsSrl.size(); i++) {
@@ -136,7 +141,7 @@ public class ConcreteWriter {
     
     private DependencyParse makeDependencyParse(SrlGraph srl, AnnoSentence from, AnnotationMetadata meta) {
         DependencyParse p = new DependencyParse();
-        p.uuid = UUID.randomUUID().toString();
+        p.uuid = uuidFactory.getConcreteUUID();
         p.metadata = meta;
         p.dependencyList = new ArrayList<Dependency>();
         for(SrlPred pred : srl.getPreds()) {
@@ -162,25 +167,25 @@ public class ConcreteWriter {
             SituationMention sm = new SituationMention();
             sm.text = from.getWord(p.getPosition());
             sm.confidence = 1d;
-            sm.argumentList = new ArrayList<Argument>();
+            sm.argumentList = new ArrayList<>();
             for(SrlEdge child : p.getEdges()) {
                 int ai = child.getArg().getPosition();
-                Argument a = new Argument();
+                MentionArgument a = new MentionArgument();
                 a.roleLabel = child.getLabel();
                 
                 // make an EntityMention
                 EntityMention em = new EntityMention();
-                em.uuid = UUID.randomUUID().toString();
+                em.uuid = uuidFactory.getConcreteUUID();
                 em.confidence = 1d;
-                em.entityType = EntityType.UNKNOWN;
-                em.phraseType = PhraseType.OTHER;
+                em.entityType = "UNKNOWN";
+                em.phraseType = "OTHER";
                 em.text = from.getWord(ai);
                 em.tokens = new TokenRefSequence();
                 em.tokens.anchorTokenIndex = ai;
                 em.tokens.tokenIndexList = Arrays.asList(ai);
                 em.tokens.tokenizationId = useUUID.uuid;
                 
-                a.entityId = em.uuid;
+                a.entityMentionId = em.uuid;
                 addEntityMentionsTo.mentionSet.add(em);
             }
         }
@@ -193,8 +198,6 @@ public class ConcreteWriter {
             throw new RuntimeException();
         SectionSegmentation ss = from.getSectionSegmentations().get(0);
         for(Section s : ss.getSectionList()) {
-            if(ConcreteReader.shouldSkipSection(s))
-                continue;
             if(careful && s.getSentenceSegmentationSize() != 1)
                 throw new RuntimeException();
             SentenceSegmentation sentseg = s.getSentenceSegmentation().get(0);
@@ -208,7 +211,7 @@ public class ConcreteWriter {
             if(ts.size() != sentences.size())
                 throw new RuntimeException();
             for(int i=0; i<ts.size(); i++) {
-                if(ts.get(i).getTokenList().size() != sentences.get(i).size())
+                if(ts.get(i).getTokenList().getTokensSize() != sentences.get(i).size())
                     throw new RuntimeException();
             }
         }

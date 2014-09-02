@@ -18,12 +18,12 @@ import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Dependency;
 import edu.jhu.hlt.concrete.DependencyParse;
 import edu.jhu.hlt.concrete.Section;
-import edu.jhu.hlt.concrete.SectionKind;
 import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
 import edu.jhu.hlt.concrete.SentenceSegmentation;
 import edu.jhu.hlt.concrete.TaggedToken;
 import edu.jhu.hlt.concrete.Token;
+import edu.jhu.hlt.concrete.TokenList;
 import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
@@ -88,7 +88,6 @@ public class ConcreteReader {
         assert communication.getSectionSegmentationsSize() == 1;
         SectionSegmentation sectionSegmentation = communication.getSectionSegmentations().get(0);
         for (Section section : sectionSegmentation.getSectionList()) {
-            if (shouldSkipSection(section)) { continue; } 
             // Assume first theory.
             assert section.getSentenceSegmentationSize() == 1;
             SentenceSegmentation sentSegmentation = section.getSentenceSegmentation().get(0);
@@ -117,7 +116,8 @@ public class ConcreteReader {
 
         // Words
         List<String> words = new ArrayList<String>();
-        for (Token tok : tokenization.getTokenList()) {
+        TokenList tl = tokenization.getTokenList();
+        for (Token tok : tl.getTokens()) {
             words.add(tok.getText());
         }
         as.setWords(words);
@@ -146,6 +146,12 @@ public class ConcreteReader {
         }
         
         // TODO: Semantic Role Labeling Graph        
+        
+//        // Named Entities
+//        if (tokenization.isSetNerTagList() && prm.nerTagTheory != SKIP) {
+//            List<String> ner = getTagging(tokenization.getNerTagList());
+//            //as.set
+//        }
         
         return as;
     }
@@ -194,11 +200,6 @@ public class ConcreteReader {
         for (AnnoSentence sent : reader.toSentences(inputFile)) {
             System.out.println(sent);
         }        
-    }
-
-    /** Returns whether to skip this section. */
-    public static boolean shouldSkipSection(Section section) {
-        return section.getKind() != SectionKind.PASSAGE;
     }
 
 }
