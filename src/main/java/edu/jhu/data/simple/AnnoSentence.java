@@ -1,19 +1,14 @@
 package edu.jhu.data.simple;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.LabeledSpan;
-import edu.jhu.data.Situations;
+import edu.jhu.data.NerMentions;
+import edu.jhu.data.RelationMentions;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
@@ -57,14 +52,11 @@ public class AnnoSentence {
     private SrlGraph srlGraph;
     /** Constituency parse. */    
     private BinaryTree binaryTree;
-    private List<LabeledSpan> namedEntities;
-    private Situations relations;
+    private NerMentions namedEntities;
+    private RelationMentions relations;
     
     /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
     private Object sourceSent;
-    
-    // TODO: One option: private SpanLabels namedEntities;    
-    // TODO: add Token offsets.
     
     public AnnoSentence() {
 
@@ -84,6 +76,8 @@ public class AnnoSentence {
         this.parents = IntArrays.copyOf(other.parents);
         this.depEdgeMask = (other.depEdgeMask == null) ? null : new DepEdgeMask(other.depEdgeMask);
         this.knownPreds = (other.knownPreds == null) ? null : new IntHashSet(other.knownPreds);
+        this.namedEntities = new NerMentions(other.namedEntities);
+        this.relations = new RelationMentions(other.relations);
         this.sourceSent = other.sourceSent;
         // TODO: this should be a deep copy.
         this.feats = Lists.copyOf(other.feats);
@@ -108,6 +102,8 @@ public class AnnoSentence {
         newSent.feats = this.feats;
         newSent.srlGraph = this.srlGraph;
         newSent.binaryTree = this.binaryTree;
+        newSent.namedEntities = this.namedEntities;
+        newSent.relations = this.relations;
         return newSent;
     }
     
@@ -415,7 +411,7 @@ public class AnnoSentence {
     public void setKnownPreds(IntHashSet knownPreds) {
         this.knownPreds = knownPreds;
     }
-    
+
     public SrlGraph getSrlGraph() {
         return srlGraph;
     }
@@ -460,6 +456,22 @@ public class AnnoSentence {
         this.sourceSent = sourceSent;
     }
 
+    public NerMentions getNamedEntities() {
+        return namedEntities;
+    }
+
+    public void setNamedEntities(NerMentions namedEntities) {
+        this.namedEntities = namedEntities;
+    }
+
+    public RelationMentions getRelations() {
+        return relations;
+    }
+
+    public void setRelations(RelationMentions relations) {
+        this.relations = relations;
+    }
+
     public void removeAts(List<AT> removeAts) {
         for (AT at : removeAts) {
             removeAt(at);
@@ -480,6 +492,8 @@ public class AnnoSentence {
         case SRL_PRED_IDX: this.knownPreds = null; break;
         case SRL: this.srlGraph = null; break;
         case BINARY_TREE: this.binaryTree = null; break;
+        case NER: this.namedEntities = null; break;
+        case RELATIONS: this.relations = null; break;
         default: throw new RuntimeException("not implemented for " + at);
         }
     }
@@ -498,6 +512,8 @@ public class AnnoSentence {
         case SRL_PRED_IDX: return this.knownPreds != null;
         case SRL: return this.srlGraph != null;
         case BINARY_TREE: return this.binaryTree != null;
+        case NER: return this.namedEntities != null;
+        case RELATIONS: return this.relations != null;        
         default: throw new RuntimeException("not implemented for " + at);
         }
     }
@@ -516,6 +532,8 @@ public class AnnoSentence {
         case SRL_PRED_IDX: dest.knownPreds = src.knownPreds; break;
         case SRL: dest.srlGraph = src.srlGraph; break;
         case BINARY_TREE: dest.binaryTree = src.binaryTree; break;
+        case NER: dest.namedEntities = src.namedEntities; break;
+        case RELATIONS: dest.namedEntities = src.namedEntities; break;
         default: throw new RuntimeException("not implemented for " + at);
         }
     }
@@ -535,6 +553,8 @@ public class AnnoSentence {
         if (binaryTree != null) {
             binaryTree.intern();
         }
+        namedEntities.intern();
+        relations.intern();
         // TODO: this.srlGraph.intern();
     }
 
@@ -558,6 +578,10 @@ public class AnnoSentence {
         appendIfNotNull(sb, "srlGraph", srlGraph);
         appendIfNotNull(sb, "knownPreds", knownPreds);
         appendIfNotNull(sb, "binaryTree", binaryTree);
+        appendIfNotNull(sb, "namedEntities", namedEntities);
+        if (namedEntities != null) { appendIfNotNull(sb, "namedEntities (context)", namedEntities.toString(words)); }
+        appendIfNotNull(sb, "relations", relations);
+        if (relations != null) { appendIfNotNull(sb, "relations (context)", relations.toString(words)); }
         appendIfNotNull(sb, "sourceSent", sourceSent);
         sb.append("]");
         return sb.toString();

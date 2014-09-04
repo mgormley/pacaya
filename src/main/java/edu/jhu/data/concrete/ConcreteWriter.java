@@ -71,7 +71,7 @@ public class ConcreteWriter {
             AnnoSentence s = containsDepParses.get(i);
             List<String> depTypes = s.getDeprels();
             int[] parents = s.getParents();
-            t.dependencyParseList.add(makeDepParse(parents, depTypes));
+            t.addToDependencyParseList(makeDepParse(parents, depTypes));
         }
     }
 
@@ -83,7 +83,7 @@ public class ConcreteWriter {
         p.uuid = uuidFactory.getConcreteUUID();
         p.metadata = new AnnotationMetadata();
         p.metadata.confidence = 1d;
-        p.metadata.tool = "pacaya dependency parser";
+        p.metadata.tool = "Pacaya dependency parser";
         p.metadata.timestamp = timestamp;
         p.dependencyList = new ArrayList<Dependency>();
         for(int i=0; i<parents.length; i++) {

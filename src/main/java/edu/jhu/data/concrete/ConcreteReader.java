@@ -6,27 +6,43 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
+import edu.jhu.data.NerMention;
+import edu.jhu.data.NerMentions;
+import edu.jhu.data.RelationMention;
+import edu.jhu.data.RelationMentions;
+import edu.jhu.data.Span;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Dependency;
 import edu.jhu.hlt.concrete.DependencyParse;
+import edu.jhu.hlt.concrete.EntityMention;
+import edu.jhu.hlt.concrete.EntityMentionSet;
+import edu.jhu.hlt.concrete.MentionArgument;
 import edu.jhu.hlt.concrete.Section;
 import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
 import edu.jhu.hlt.concrete.SentenceSegmentation;
+import edu.jhu.hlt.concrete.SituationMention;
+import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TaggedToken;
 import edu.jhu.hlt.concrete.Token;
 import edu.jhu.hlt.concrete.TokenList;
+import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
+import edu.jhu.hlt.concrete.UUID;
+import edu.jhu.prim.tuple.Pair;
 
 /**
  * Reader of Concrete protocol buffer files.
@@ -72,10 +88,10 @@ public class ConcreteReader {
         }
     }
 
-    public AnnoSentenceCollection toSentences(Communication communication) {
+    public AnnoSentenceCollection toSentences(Communication comm) {
         AnnoSentenceCollection annoSents = new AnnoSentenceCollection();
-        addSentences(communication, annoSents);
-        annoSents.setSourceSents(communication);
+        addSentences(comm, annoSents);
+        annoSents.setSourceSents(comm);
         return annoSents;
     }
 
@@ -83,30 +99,162 @@ public class ConcreteReader {
      * Converts each sentence in communication to a {@link AnnoSentence}
      * and adds it to annoSents.
      */
-    public void addSentences(Communication communication, AnnoSentenceCollection annoSents) {
+    public void addSentences(Communication comm, AnnoSentenceCollection aSents) {
+        List<AnnoSentence> tmpSents = new ArrayList<>();
+        
         // Assume first theory.
-        assert communication.getSectionSegmentationsSize() == 1;
-        SectionSegmentation sectionSegmentation = communication.getSectionSegmentations().get(0);
-        for (Section section : sectionSegmentation.getSectionList()) {
+        assert comm.getSectionSegmentationsSize() == 1;
+        SectionSegmentation cSs = comm.getSectionSegmentations().get(0);
+        for (Section cSection : cSs.getSectionList()) {
             // Assume first theory.
-            assert section.getSentenceSegmentationSize() == 1;
-            SentenceSegmentation sentSegmentation = section.getSentenceSegmentation().get(0);
-            for (Sentence sentence : sentSegmentation.getSentenceList()) {                        
-                annoSents.add(getAnnoSentence(sentence));
+            assert cSection.getSentenceSegmentationSize() == 1;
+            SentenceSegmentation sentSegmentation = cSection.getSentenceSegmentation().get(0);
+            for (Sentence cSent : sentSegmentation.getSentenceList()) { 
+                // Assume first theory.
+                assert cSent.getTokenizationListSize() == 1;
+                Tokenization cToks = cSent.getTokenizationList().get(0);
+                tmpSents.add(getAnnoSentence(cToks));
             }
+        }
+
+        if (comm.getEntityMentionSetsSize() > 0) {
+            addEntityMentions(comm, tmpSents);
+
+            if (comm.getSituationMentionSetsSize() > 0) {
+                addSituationMentions(comm, tmpSents);
+            }            
+        }
+        
+        aSents.addAll(tmpSents);
+    }
+
+    private void addEntityMentions(Communication comm, List<AnnoSentence> tmpSents) {
+        List<List<NerMention>> mentions = new ArrayList<>();
+        for (int i=0; i<tmpSents.size(); i++) {
+            mentions.add(new ArrayList<NerMention>());
+        }
+        
+        Map<String, Integer> toksUuid2SentIdx = generateTokUuid2SentIdxMap(comm);
+        
+        assert comm.getEntityMentionSetsSize() == 1;
+        EntityMentionSet cEms = comm.getEntityMentionSets().get(0);
+        for (EntityMention cEm : cEms.getMentionSet()) {
+            TokenRefSequence cEmToks = cEm.getTokens();
+            int sentIdx = toksUuid2SentIdx.get(cEmToks.getTokenizationId().getUuidString());
+            int start = Collections.min(cEmToks.getTokenIndexList());
+            int end = Collections.max(cEmToks.getTokenIndexList()) + 1;
+            String entityType = cEm.getEntityType();
+            String entitySubtype = null;
+            if (entityType.contains(":")) {
+                String[] splits = entityType.split(":");
+                entityType = splits[0];
+                entitySubtype = splits[1];
+            }
+            NerMention aEm = new NerMention(
+                    new Span(start, end), 
+                    entityType,
+                    entitySubtype,
+                    cEm.getPhraseType(),
+                    cEmToks.getAnchorTokenIndex(),
+                    cEm.getUuid().getUuidString());
+            mentions.get(sentIdx).add(aEm);
+        }
+        
+        for (int i=0; i<tmpSents.size(); i++) {
+            AnnoSentence aSent = tmpSents.get(i);
+            NerMentions ner = new NerMentions(aSent.size(), mentions.get(i));
+            aSent.setNamedEntities(ner);
         }
     }
 
-    private AnnoSentence getAnnoSentence(Sentence sentence) {
-        if (prm.tokenizationTheory >= sentence.getTokenizationListSize()) {
-            throw new IllegalArgumentException("Sentence does not contain Tokenization theory: "
-                    + prm.tokenizationTheory);
+    private void addSituationMentions(Communication comm, List<AnnoSentence> tmpSents) {
+        Map<String, NerMention> emId2em = getUuid2ArgsMap(tmpSents);
+        Map<String, Integer> emId2SentIdx = getUuid2SentIdxMap(tmpSents);
+        
+        assert comm.getSituationMentionSetsSize() == 1;
+        SituationMentionSet cSms = comm.getSituationMentionSets().get(0);
+        for (SituationMention cSm : cSms.getMentionList()) {
+            if (!"STATE".equals(cSm.getSituationType())) {
+                throw new IllegalStateException("Expecting situations of type STATE. " + cSm.getSituationType());
+            }
+            
+            // Type / subtype.
+            String stateType = cSm.getStateType();
+            String stateSubtype = null;
+            if (stateType.contains(":")) {
+                String[] splits = stateType.split(":");
+                stateType = splits[0];
+                stateSubtype = splits[1];
+            }
+            
+            // Arguments and sentence index.
+            List<Pair<String,NerMention>> aArgs = new ArrayList<>();
+            int sentIdx = -1;
+            for (MentionArgument cArg : cSm.getArgumentList()) {
+                String role = cArg.getRole();
+                UUID cEmId = cArg.getEntityMentionId();
+                NerMention aEm = emId2em.get(cEmId.getUuidString());
+                aArgs.add(new Pair<String,NerMention>(role, aEm));
+                
+                int idx = emId2SentIdx.get(cEmId.getUuidString());                
+                if (sentIdx != -1 && sentIdx != idx) {
+                    throw new IllegalStateException("Multiple sentence indices for arguments: " + sentIdx + " " + idx);
+                }
+                sentIdx = idx;
+            }
+            
+            // Situation's trigger extent.
+            int start = Collections.min(cSm.getTokens().getTokenIndexList());
+            int end = Collections.max(cSm.getTokens().getTokenIndexList()) + 1;
+            
+            RelationMention aSm = new RelationMention(stateType, stateSubtype, aArgs, new Span(start, end));
+            AnnoSentence aSent = tmpSents.get(sentIdx);
+            RelationMentions aRels = aSent.getRelations();
+            if (aRels == null) {
+                aRels = new RelationMentions();
+            }
+            aRels.add(aSm);
+            aSent.setRelations(aRels);            
         }
-        return getAnnoSentence(sentence.getTokenizationList().get(0));
+    }
+
+    /** Get a map from UUIDs to our entity mentions. */
+    private Map<String, NerMention> getUuid2ArgsMap(List<AnnoSentence> tmpSents) {
+        Map<String, NerMention> emId2em = new HashMap<>();
+        for (int i=0; i<tmpSents.size(); i++) {
+            for (NerMention aEm : tmpSents.get(i).getNamedEntities()) {
+                emId2em.put(aEm.getId(), aEm);
+            }
+        }
+        return emId2em;
+    }
+
+    /** Gets a map from UUIDs to our sentence indices. */
+    private Map<String, Integer> getUuid2SentIdxMap(List<AnnoSentence> tmpSents) {
+        Map<String, Integer> emId2SentIdx = new HashMap<>();
+        for (int i=0; i<tmpSents.size(); i++) {
+            for (NerMention aEm : tmpSents.get(i).getNamedEntities()) {
+                emId2SentIdx.put(aEm.getId(), i);
+            }
+        }
+        return emId2SentIdx;
+    }
+
+    private Map<String, Integer> generateTokUuid2SentIdxMap(Communication comm) {
+        Map<String,Integer> toksUuid2SentIdx = new HashMap<>();
+        int i=0;
+        SectionSegmentation cSs = comm.getSectionSegmentations().get(0);
+        for (Section cSection : cSs.getSectionList()) {
+            SentenceSegmentation sentSegmentation = cSection.getSentenceSegmentation().get(0);
+            for (Sentence cSent : sentSegmentation.getSentenceList()) {
+                Tokenization cToks = cSent.getTokenizationList().get(0);
+                toksUuid2SentIdx.put(cToks.getUuid().getUuidString(), i++);
+            }
+        }
+        return toksUuid2SentIdx;
     }
 
     private AnnoSentence getAnnoSentence(Tokenization tokenization) {
-
         TokenizationKind kind = tokenization.getKind();
         if (kind != TokenizationKind.TOKEN_LIST) {
             throw new IllegalArgumentException("tokens must be of kind TOKEN_LIST: " + kind);
@@ -145,13 +293,7 @@ public class ConcreteReader {
             as.setParents(parents);
         }
         
-        // TODO: Semantic Role Labeling Graph        
-        
-//        // Named Entities
-//        if (tokenization.isSetNerTagList() && prm.nerTagTheory != SKIP) {
-//            List<String> ner = getTagging(tokenization.getNerTagList());
-//            //as.set
-//        }
+        // TODO: Semantic Role Labeling Graph
         
         return as;
     }
@@ -196,6 +338,7 @@ public class ConcreteReader {
             System.exit(1);
         }
 
+        System.out.println("Reading file: " + inputFile);
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
         for (AnnoSentence sent : reader.toSentences(inputFile)) {
             System.out.println(sent);
@@ -203,24 +346,3 @@ public class ConcreteReader {
     }
 
 }
-
-
-// TODO: Switch to this code for reading TokenTagging theories if the thrift schema changes.
-// 
-//        // POS Tags
-//        if (tokenization.isSetPosTagList() && prm.posTagTheory != SKIP) {
-//            if (prm.posTagTheory >= tokenization.getPosTagListSize()) {
-//                throw new IllegalArgumentException("Sentence does not contain POS tags theory: " + prm.posTagTheory);
-//            }
-//            List<String> posTags = getTagging(tokenization.getPosTags(prm.posTagTheory));
-//            as.setPosTags(posTags);
-//        }
-//        
-//        // Lemmas
-//        if (tokenization.isSetLemmaList() && prm.lemmaTheory != SKIP) {
-//            if (prm.lemmaTheory >= tokenization.getLemmasListSize()) {
-//                throw new IllegalArgumentException("Sentence does not contain lemma theory: " + prm.lemmaTheory);
-//            }
-//            List<String> lemmas = getTagging(tokenization.getLemmas(prm.lemmaTheory));
-//            as.setLemmas(lemmas);
-//        }

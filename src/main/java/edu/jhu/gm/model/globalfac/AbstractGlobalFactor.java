@@ -8,6 +8,7 @@ import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 
+// TODO: Rename to AbstractConstraintFactor.
 public abstract class AbstractGlobalFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;

@@ -6,6 +6,7 @@ package edu.jhu.data;
  * 
  * @author mgormley
  */
+@Deprecated
 public class SpanLabels {
 
     // The sentence length.

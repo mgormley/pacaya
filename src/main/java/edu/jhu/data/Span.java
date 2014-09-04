@@ -1,8 +1,10 @@
 package edu.jhu.data;
 
+import java.util.List;
+
 
 /**
- * Mutable span with start and end indices.
+ * Mutable span with start (inclusive) and end  (exclusive) indices. 
  * 
  * @author mgormley
  */
@@ -87,6 +89,17 @@ public class Span implements Comparable<Span> {
             c = Integer.compare(this.end, other.end);
         }
         return c;
+    }
+
+    public String getString(List<String> words, String sep) {
+        StringBuilder sb = new StringBuilder();
+        for (int i=start; i<end; i++) {
+            sb.append(words.get(i));
+            if (i < end-1) {
+                sb.append(sep);
+            }
+        }
+        return sb.toString();
     }
     
 }
