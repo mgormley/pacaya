@@ -8,13 +8,19 @@ import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 
-// TODO: Rename to AbstractConstraintFactor.
-public abstract class AbstractGlobalFactor implements GlobalFactor {
+/**
+ * A constraint global factor.
+ * 
+ * Unlike a full global factor, this does not have any parameters or features.
+ * 
+ * @author mgormley
+ */
+public abstract class AbstractConstraintFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
     private int id = -1;
     
-    public AbstractGlobalFactor() {  }
+    public AbstractConstraintFactor() {  }
 
     public void updateFromModel(FgModel model) {
         // Currently, global factors do not support features, and

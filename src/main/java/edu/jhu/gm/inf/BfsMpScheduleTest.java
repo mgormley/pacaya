@@ -20,7 +20,7 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.AbstractGlobalFactor;
+import edu.jhu.gm.model.globalfac.AbstractConstraintFactor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.model.VarSet;
 
@@ -184,7 +184,7 @@ public class BfsMpScheduleTest {
         assertEquals(expectedOrderStr4, orderStr.toString());
     }
     
-    private static class MockGlobalFactor extends AbstractGlobalFactor implements GlobalFactor {
+    private static class MockGlobalFactor extends AbstractConstraintFactor implements GlobalFactor {
 
         private static final long serialVersionUID = 1L;
 

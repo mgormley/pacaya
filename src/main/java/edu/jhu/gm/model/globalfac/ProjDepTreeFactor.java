@@ -38,7 +38,7 @@ import edu.jhu.util.semiring.LogSemiring;
  * 
  * @author mgormley
  */
-public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFactor {
+public class ProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
  

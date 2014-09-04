@@ -39,7 +39,7 @@ import edu.jhu.util.semiring.LogSemiring;
  * 
  * @author mgormley
  */
-public class ConstituencyTreeFactor extends AbstractGlobalFactor implements GlobalFactor {
+public class ConstituencyTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
  

@@ -40,7 +40,7 @@ import edu.jhu.util.semiring.LogSignAlgebra;
  * 
  * @author mgormley
  */
-public class SimpleProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFactor {
+public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
  
