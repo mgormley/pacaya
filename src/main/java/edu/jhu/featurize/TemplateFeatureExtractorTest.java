@@ -9,6 +9,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.data.NerMention;
+import edu.jhu.data.Span;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceTest;
@@ -59,7 +61,9 @@ public class TemplateFeatureExtractorTest {
         int rk = 6;
         int midx = 1;
         Rule rule = getRule("NP", "Det", "N", 0);
-        LocalObservations local = new LocalObservations(pidx, cidx, midx, rule, ri, rj, rk);
+        NerMention ne1 = new NerMention(new Span(0,2), "GPE", "Location", "Nom", 1, "UUID-12345");
+        NerMention ne2 = new NerMention(new Span(5,9), "PER", "None", "Pro", 5, "UUID-67890");
+        LocalObservations local = LocalObservations.getAll(pidx, cidx, midx, rule, ri, rj, rk, ne1, ne2);
         
         AnnoSentence sent = CoNLL09Sentence.toAnnoSentence(AnnoSentenceTest.getDogConll09Sentence(), true);
         addFakeBrownClusters(sent);

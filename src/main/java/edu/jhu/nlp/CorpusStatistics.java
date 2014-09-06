@@ -15,9 +15,13 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
+import edu.jhu.data.NerMention;
+import edu.jhu.data.NerMentions;
+import edu.jhu.data.RelationMentions;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.prim.tuple.ComparablePair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -66,6 +70,7 @@ public class CorpusStatistics implements Serializable {
     
     public List<String> linkStateNames;
     public List<String> roleStateNames;
+    public List<String> relationStateNames;
     // Mapping from predicate form to the set of predicate senses.
     public Map<String,List<String>> predSenseListMap = new HashMap<String,List<String>>();
 
@@ -88,10 +93,11 @@ public class CorpusStatistics implements Serializable {
         Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
         Set<String> knownRoles = new HashSet<String>();
         Set<String> knownLinks = new HashSet<String>();
+        Set<String> knownRelations = new HashSet<String>();
         Map<String, MutableInt> words = new HashMap<String, MutableInt>();
         Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
         initialized = true;
-                
+        
         // Store the variable states we have seen before so
         // we know what our vocabulary of possible states are for
         // the Link variable. Applies to knownLinks, knownRoles.
@@ -146,6 +152,22 @@ public class CorpusStatistics implements Serializable {
                     senses.add(pred.getLabel());
                 }
             }
+            
+            // Relation stats.
+            if (sent.getRelations() != null && sent.getNamedEntities() != null) {
+                NerMentions nes = sent.getNamedEntities();
+                RelationMentions rels = sent.getRelations();
+                for (int i=0; i<nes.size(); i++) {
+                    NerMention ne1 = nes.get(i);
+                    for (int j=0; j<nes.size(); j++) {
+                        NerMention ne2 = nes.get(j);
+                        if (i != j && (ne1.compareTo(ne2) < 0 || (ne1.compareTo(ne2) == 0 && i < j))) {
+                            String relation = RelationsEncoder.getRelation(rels, ne1, ne2);
+                            knownRelations.add(relation);
+                        }
+                    }
+                }
+            }
         }
         
         // For words and unknown word classes, we only keep those above some threshold.
@@ -156,6 +178,7 @@ public class CorpusStatistics implements Serializable {
         
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
+        this.relationStateNames =  new ArrayList<String>(knownRelations);
         for (Entry<String,Set<String>> entry : predSenseSetMap.entrySet()) {
             predSenseListMap.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
         }

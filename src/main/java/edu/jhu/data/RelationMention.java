@@ -42,6 +42,22 @@ public class RelationMention {
         }
         this.trigger = other.trigger;
     }
+    
+    public String getType() {
+        return type;
+    }
+
+    public String getSubType() {
+        return subType;
+    }
+
+    public List<Pair<String, NerMention>> getArgs() {
+        return args;
+    }
+
+    public Span getTrigger() {
+        return trigger;
+    }
 
     public void intern() {
         if (type != null) {

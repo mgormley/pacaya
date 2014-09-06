@@ -1,7 +1,10 @@
 package edu.jhu.data;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+
+import edu.jhu.prim.tuple.Pair;
 
 /**
  * Representation of mentions of relations, events, or semantic roles.<br>
@@ -10,7 +13,7 @@ import java.util.List;
  * 
  * @author mgormley
  */
-public class RelationMentions {
+public class RelationMentions implements Iterable<RelationMention> {
 
     private List<RelationMention> ments;
 
@@ -35,6 +38,15 @@ public class RelationMentions {
     public void add(RelationMention sm) {
         ments.add(sm);
     }
+    
+    public RelationMention get(int i) {
+        return ments.get(i);
+    }
+
+    @Override
+    public Iterator<RelationMention> iterator() {
+        return ments.iterator();
+    }
 
     @Override
     public String toString() {
@@ -52,6 +64,18 @@ public class RelationMentions {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    public RelationMention get(NerMention ne1, NerMention ne2) {
+        for (RelationMention rm : ments) {
+            List<Pair<String, NerMention>> args = rm.getArgs();
+            if (args.size() == 2
+                    && args.get(0).get2().equals(ne1) 
+                    && args.get(1).get2().equals(ne2)) {
+                return rm;
+            }
+        }
+        return null;
     }
 
 }

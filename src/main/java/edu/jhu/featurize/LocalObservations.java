@@ -1,5 +1,6 @@
 package edu.jhu.featurize;
 
+import edu.jhu.data.NerMention;
 import edu.jhu.parse.cky.Rule;
 
 /**
@@ -18,19 +19,10 @@ public class LocalObservations {
     private int rStartIdx = UNDEF_INT;
     private int rMidIdx = UNDEF_INT;
     private int rEndIdx = UNDEF_INT;
-
+    private NerMention ne1 = null;
+    private NerMention ne2 = null;
+    
     private LocalObservations() {
-    }
-
-    public LocalObservations(int pidx, int cidx, int midx, Rule rule, int rStartIdx, int rMidIdx, int rEndIdx) {
-        super();
-        this.pidx = pidx;
-        this.cidx = cidx;
-        this.midx = midx;
-        this.rule = rule;
-        this.rStartIdx = rStartIdx;
-        this.rMidIdx = rMidIdx;
-        this.rEndIdx = rEndIdx;
     }
 
     public int getPidx() {
@@ -76,6 +68,21 @@ public class LocalObservations {
     }
 
     /* ---------- Factory Methods ----------- */
+
+    public static LocalObservations getAll(int pidx, int cidx, int midx, Rule rule, int rStartIdx, int rMidIdx, int rEndIdx, NerMention ne1, NerMention ne2) {
+        LocalObservations pi = new LocalObservations();
+        pi.pidx = pidx;
+        pi.cidx = cidx;
+        pi.midx = midx;
+        pi.rule = rule;
+        pi.rStartIdx = rStartIdx;
+        pi.rMidIdx = rMidIdx;
+        pi.rEndIdx = rEndIdx;
+        pi.ne1 = ne1;
+        pi.ne2 = ne2;
+        return pi;
+    }
+
     public static LocalObservations newPidxCidx(int pidx, int cidx) {
         LocalObservations pi = new LocalObservations();
         pi.pidx = pidx;
@@ -109,6 +116,13 @@ public class LocalObservations {
         pi.rStartIdx = start;
         pi.rMidIdx = mid;
         pi.rEndIdx = end;
+        return pi;
+    }
+    
+    public static LocalObservations newNe1Ne2(NerMention ne1, NerMention ne2) {
+        LocalObservations pi = new LocalObservations();
+        pi.ne1 = ne1;
+        pi.ne2 = ne2;
         return pi;
     }
 }

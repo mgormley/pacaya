@@ -101,4 +101,12 @@ public class NerMentions implements Iterable<NerMention> {
         return sb.toString();
     }
 
+    public NerMention get(int i) {
+        return spans.get(i);
+    }
+    
+    public int size() {
+        return spans.size();
+    }
+
 }

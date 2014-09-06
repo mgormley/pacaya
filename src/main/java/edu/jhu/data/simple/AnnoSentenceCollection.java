@@ -98,7 +98,7 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
     }
 
     /**
-     * Gets a deep copy of these sentences with some annotation layers removed.
+     * Gets a shallow copy of these sentences with some annotation layers removed.
      * @param removeAts The annotation layers to remove.
      * @return The filtered deep copy.
      */
@@ -106,7 +106,7 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
         AnnoSentenceCollection newSents = new AnnoSentenceCollection();
         newSents.sourceSents = this.sourceSents;
         for (AnnoSentence sent : this) {
-            AnnoSentence newSent = new AnnoSentence(sent);
+            AnnoSentence newSent = sent.getShallowCopy();
             newSent.removeAts(removeAts);
             newSents.add(newSent);
         }

@@ -52,28 +52,25 @@ public class JointNlpDecoder implements Decoder<AnnoSentence, AnnoSentence> {
         int n = fg.getSentenceLength();
         VarConfig mbrVarConfig = mbrDecoder.getMbrVarConfig();
 
+        AnnoSentence predSent = sent.getShallowCopy();
+
         // Get the SRL graph.
         SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(mbrVarConfig, n);
+        if (srlGraph != null) {
+            predSent.setSrlGraph(srlGraph);
+        }
         // Get the dependency tree.
         int[] parents = (new DepParseDecoder()).decode(inf, ex, sent);
         if (parents != null) {
             DepParseDecoder.addDepParseAssignment(parents, fg.getDpBuilder(), mbrVarConfig);
-        }
-        DepEdgeMask depEdgeMask = (new DepEdgeMaskDecoder(prm.maskPrm)).decode(inf, ex, sent);
-        
-        AnnoSentence predSent = sent.getShallowCopy();
-        // Update SRL graph on the sentence. 
-        if (srlGraph != null) {
-            predSent.setSrlGraph(srlGraph);
-        }
-        // Update the dependency tree on the sentence.
-        if (parents != null) {
             predSent.setParents(parents);
         }
-        // Update the dependency mask on the sentence.
+        // Get the dependency edge mask.
+        DepEdgeMask depEdgeMask = (new DepEdgeMaskDecoder(prm.maskPrm)).decode(inf, ex, sent);
         if (depEdgeMask != null) {
             predSent.setDepEdgeMask(depEdgeMask);
         }
+        
         return predSent;
     }
     

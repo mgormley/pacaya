@@ -1,6 +1,7 @@
 package edu.jhu.nlp.srl;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -16,20 +17,19 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorTemplate;
+import edu.jhu.nlp.relations.RelObsFe;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
-import edu.jhu.util.hash.MurmurHash3;
 
 /**
  * Feature extractor for SRL. All the "real" feature extraction is done in
@@ -56,7 +56,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private FactorTemplateList fts;
     private VarConfig obsConfig;
     private SentFeatureExtractor sentFeatExt;
-        
+    
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, AnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
         // TODO: SentFeatureExtractorCache uses a lot of memory storing lists of Strings. While this saves time when
@@ -122,54 +122,23 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
-        
-        FeatureVector fv = new FeatureVector(obsFeats.size());
-        
-        // Add the bias features.
+                
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
         ArrayList<String> biasFeats = new ArrayList<String>();
         biasFeats.add("BIAS_FEATURE");
         if (!"_".equals(prefix)) {
             biasFeats.add(prefix + "BIAS_FEATURE");
         }
-        addFeatures(biasFeats, alphabet, "", fv, true);
+        
+        // Add the bias features.
+        FeatureVector fv = new FeatureVector(biasFeats.size() + obsFeats.size());
+        RelObsFe.addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
         
         // Add the other features.
-        addFeatures(obsFeats, alphabet, prefix, fv, false);
+        addPrefix(obsFeats, prefix);
+        RelObsFe.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
         
         return fv;
-    }
-
-    /**
-     * Prepends the string prefix to each feature in obsFeats, and adds each one to fv using the given alphabet.
-     */
-    private void addFeatures(ArrayList<String> obsFeats, Alphabet<Feature> alphabet, String prefix, FeatureVector fv, boolean isBiasFeat) {
-        if (prm.featureHashMod <= 0) {
-            // Just use the features as-is.
-            for (String obsFeat : obsFeats) {
-                String fname = prefix + obsFeat;
-                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
-                if (fidx != -1) {
-                    fv.add(fidx, 1.0);
-                }
-            }
-        } else {
-            // Apply the feature-hashing trick.
-            for (String obsFeat : obsFeats) {
-                String fname = prefix + obsFeat;
-                int hash = MurmurHash3.murmurhash3_x86_32(fname);
-                hash = FastMath.mod(hash, prm.featureHashMod);
-                int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
-                if (fidx != -1) {
-                    int revHash = reverseHashCode(fname);
-                    if (revHash < 0) {
-                        fv.add(fidx, -1.0);
-                    } else {
-                        fv.add(fidx, 1.0);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -195,17 +164,12 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             //return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
         }
     }
-
-    /**
-     * Returns the hash code of the reverse of this string.
-     */
-    private int reverseHashCode(String fname) {
-        int hash = 0;
-        int n = fname.length();
-        for (int i=n-1; i>=0; i--) {
-            hash += 31 * hash + fname.charAt(i);
+    
+    /** Prepends a prefix to each string. */
+    private static void addPrefix(List<String> strs, String prefix) {
+        for (int i=0; i<strs.size(); i++) {
+            strs.set(i, prefix + strs.get(i));
         }
-        return hash;
     }
     
 }
