@@ -24,7 +24,7 @@ import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorTemplate;
-import edu.jhu.nlp.relations.RelObsFe;
+import edu.jhu.nlp.relations.FeatureUtils;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
@@ -132,11 +132,11 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         
         // Add the bias features.
         FeatureVector fv = new FeatureVector(biasFeats.size() + obsFeats.size());
-        RelObsFe.addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
+        FeatureUtils.addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
         
         // Add the other features.
         addPrefix(obsFeats, prefix);
-        RelObsFe.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
+        FeatureUtils.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
         
         return fv;
     }

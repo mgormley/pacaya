@@ -156,15 +156,15 @@ public class CorpusStatistics implements Serializable {
             // Relation stats.
             if (sent.getRelations() != null && sent.getNamedEntities() != null) {
                 NerMentions nes = sent.getNamedEntities();
-                RelationMentions rels = sent.getRelations();
-                for (int i=0; i<nes.size(); i++) {
+                RelationMentions rels = sent.getRelations();                
+                // Iterate over all pairs of mentions, such that ne1 comes before ne2.
+                // This code assumes that the mentions are already in sorted order.
+                for (int i = 0; i < nes.size(); i++) {
                     NerMention ne1 = nes.get(i);
-                    for (int j=0; j<nes.size(); j++) {
+                    for (int j=i+1; j < nes.size(); j++) {
                         NerMention ne2 = nes.get(j);
-                        if (i != j && (ne1.compareTo(ne2) < 0 || (ne1.compareTo(ne2) == 0 && i < j))) {
-                            String relation = RelationsEncoder.getRelation(rels, ne1, ne2);
-                            knownRelations.add(relation);
-                        }
+                        String relation = RelationsEncoder.getRelation(rels, ne1, ne2);
+                        knownRelations.add(relation);
                     }
                 }
             }

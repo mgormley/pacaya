@@ -71,22 +71,23 @@ public class RelationsFactorGraphBuilder {
         varMap = new HashMap<>();
         
         // Create relation variables.
+        //
+        // Iterate over all pairs of mentions, such that ne1 comes before ne2.
+        // This code assumes that the mentions are already in sorted order.
         List<RelVar> rvs = new ArrayList<>();
         NerMentions nes = sent.getNamedEntities();
-        for (int i=0; i<nes.size(); i++) {
+        for (int i = 0; i < nes.size(); i++) {
             NerMention ne1 = nes.get(i);
-            for (int j=0; j<nes.size(); j++) {
+            for (int j=i+1; j < nes.size(); j++) {
                 NerMention ne2 = nes.get(j);
-                if (i != j && (ne1.compareTo(ne2) < 0 || (ne1.compareTo(ne2) == 0 && i < j))) {
-                    // Create relation variable.
-                    String name = RelVar.getDefaultName(ne1.getSpan(), ne2.getSpan());
-                    RelVar rv = new RelVar(VarType.PREDICTED, name, ne1, ne2, cs.relationStateNames);
-                    rvs.add(rv);
-                    varMap.put(new Pair<NerMention,NerMention>(ne1, ne2), rv);
-                }
+                // Create relation variable.
+                String name = RelVar.getDefaultName(ne1.getSpan(), ne2.getSpan());
+                RelVar rv = new RelVar(VarType.PREDICTED, name, ne1, ne2, cs.relationStateNames);
+                rvs.add(rv);
+                varMap.put(new Pair<NerMention,NerMention>(ne1, ne2), rv);
             }
         }
-        
+                
         // Create a unary factor for each relation variable.
         ObsFeatureExtractor obsFe = new RelObsFe(prm, sent, cj.getTemplates());
         for (RelVar rv : rvs) {

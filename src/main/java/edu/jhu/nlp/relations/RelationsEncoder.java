@@ -1,5 +1,7 @@
 package edu.jhu.nlp.relations;
 
+import java.util.List;
+
 import edu.jhu.data.NerMention;
 import edu.jhu.data.NerMentions;
 import edu.jhu.data.RelationMention;
@@ -58,16 +60,16 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
 
     private static void addRelVarAssignments(AnnoSentence sent, RelationMentions rels, RelationsFactorGraphBuilder rfgb,
             VarConfig vc) {
+        // Iterate over all pairs of mentions, such that ne1 comes before ne2.
+        // This code assumes that the mentions are already in sorted order.
         NerMentions nes = sent.getNamedEntities();
-        for (int i=0; i<nes.size(); i++) {
+        for (int i = 0; i < nes.size(); i++) {
             NerMention ne1 = nes.get(i);
-            for (int j=0; j<nes.size(); j++) {
+            for (int j=i+1; j < nes.size(); j++) {
                 NerMention ne2 = nes.get(j);
-                if (i != j && (ne1.compareTo(ne2) < 0 || (ne1.compareTo(ne2) == 0 && i < j))) {
-                    String relation = getRelation(rels, ne1, ne2);
-                    RelVar var = rfgb.getVar(ne1, ne2);
-                    vc.put(var, relation);
-                }
+                String relation = getRelation(rels, ne1, ne2);
+                RelVar var = rfgb.getVar(ne1, ne2);
+                vc.put(var, relation);
             }
         }
     }

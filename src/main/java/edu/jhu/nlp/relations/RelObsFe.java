@@ -1,7 +1,6 @@
 package edu.jhu.nlp.relations;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import edu.jhu.data.simple.AnnoSentence;
@@ -15,15 +14,12 @@ import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.hash.MurmurHash3;
 
 /**
  * Feature extraction for relations.
  * @author mgormley
  */
-// TODO: This replicates a lot of code in SrlFeatureExtractor. 
 public class RelObsFe implements ObsFeatureExtractor {
     
     private RelationsFactorGraphBuilderPrm prm;
@@ -56,54 +52,12 @@ public class RelObsFe implements ObsFeatureExtractor {
         biasFeats.add("BIAS_FEATURE");
         // Add the bias features.
         FeatureVector fv = new FeatureVector(1 + obsFeats.size());
-        addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
+        FeatureUtils.addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
         
         // Add the other features.
-        addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
+        FeatureUtils.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
         
         return fv;
-    } 
-    
-    /**
-     * Adds each feature to fv using the given alphabet.
-     */
-    public static void addFeatures(Collection<String> obsFeats, Alphabet<Feature> alphabet, FeatureVector fv, boolean isBiasFeat, int featureHashMod) {
-        if (featureHashMod <= 0) {
-            // Just use the features as-is.
-            for (String fname : obsFeats) {
-                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
-                if (fidx != -1) {
-                    fv.add(fidx, 1.0);
-                }
-            }
-        } else {
-            // Apply the feature-hashing trick.
-            for (String fname : obsFeats) {
-                int hash = MurmurHash3.murmurhash3_x86_32(fname);
-                hash = FastMath.mod(hash, featureHashMod);
-                int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
-                if (fidx != -1) {
-                    int revHash = reverseHashCode(fname);
-                    if (revHash < 0) {
-                        fv.add(fidx, -1.0);
-                    } else {
-                        fv.add(fidx, 1.0);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the hash code of the reverse of this string.
-     */
-    public static int reverseHashCode(String fname) {
-        int hash = 0;
-        int n = fname.length();
-        for (int i=n-1; i>=0; i--) {
-            hash += 31 * hash + fname.charAt(i);
-        }
-        return hash;
     }
 
     

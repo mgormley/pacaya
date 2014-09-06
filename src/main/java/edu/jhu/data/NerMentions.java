@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Labeling of spans in a sentence. This can be used to represent, for example, the labeling of
- * named-entities.
+ * named-entities. The mentions are kept in sorted order.
  * 
  * @author mgormley
  */
@@ -15,23 +15,20 @@ public class NerMentions implements Iterable<NerMention> {
 
     // The sentence length.
     private int n;
-    // The labels for each span.
-    List<NerMention> spans;
-
-    public NerMentions(int n) {
-        spans = new ArrayList<>();
-    }
+    // The sorted named entity mentions.
+    List<NerMention> ments;
 
     public NerMentions(int n, List<NerMention> spans) {
-        this.spans = spans;
+        this.ments = spans;
+        Collections.sort(spans);
     }
 
     /** Deep copy constructor. */
     public NerMentions(NerMentions other) {
         this.n = other.n;
-        this.spans = new ArrayList<>(other.spans.size());
-        for (int i = 0; i < spans.size(); i++) {
-            this.spans.add(new NerMention(other.spans.get(i)));
+        this.ments = new ArrayList<>(other.ments.size());
+        for (int i = 0; i < ments.size(); i++) {
+            this.ments.add(new NerMention(other.ments.get(i)));
         }
     }
 
@@ -60,19 +57,19 @@ public class NerMentions implements Iterable<NerMention> {
     }
 
     public void intern() {
-        for (NerMention s : spans) {
+        for (NerMention s : ments) {
             s.intern();
         }
     }
 
     @Override
     public Iterator<NerMention> iterator() {
-        return spans.iterator();
+        return ments.iterator();
     }
 
     @Override
     public String toString() {
-        return "LabeledSpans [n=" + n + ", spans=" + spans + "]";
+        return "LabeledSpans [n=" + n + ", spans=" + ments + "]";
     }
 
     public String toString(List<String> words) {
@@ -82,16 +79,16 @@ public class NerMentions implements Iterable<NerMention> {
             if (i != 0) {
                 sb.append(" ");
             }
-            for (int j = 0; j < spans.size(); j++) {
-                NerMention s = spans.get(j);
+            for (int j = 0; j < ments.size(); j++) {
+                NerMention s = ments.get(j);
                 if (s.getSpan().start() == i) {
                     sb.append(String.format("<e j=%d t=%s st=%s pt=%s>", j, s.getEntityType(), s.getEntitySubType(),
                             s.getPhraseType()));
                 }
             }
             sb.append(words.get(i));
-            for (int j = 0; j < spans.size(); j++) {
-                NerMention s = spans.get(j);
+            for (int j = 0; j < ments.size(); j++) {
+                NerMention s = ments.get(j);
                 if (s.getSpan().end() == i + 1) {
                     sb.append(String.format("</e j=%d>", j));
                 }
@@ -102,11 +99,11 @@ public class NerMentions implements Iterable<NerMention> {
     }
 
     public NerMention get(int i) {
-        return spans.get(i);
+        return ments.get(i);
     }
     
     public int size() {
-        return spans.size();
+        return ments.size();
     }
 
 }

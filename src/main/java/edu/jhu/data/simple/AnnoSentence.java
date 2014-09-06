@@ -66,6 +66,7 @@ public class AnnoSentence {
      * Fairly deep copy constructor. Everything is deeply copied except for the
      * source sentence and the SRL graph, the features, and the constituency parse.
      */
+    @Deprecated
     public AnnoSentence(AnnoSentence other) {
         this.words = Lists.copyOf(other.words);
         this.lemmas = Lists.copyOf(other.lemmas);
