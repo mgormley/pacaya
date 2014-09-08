@@ -1,11 +1,11 @@
 # Features selected as in Bjorkelund et al. (2009) for 'sense' language 'de'
-children(p).deprel.bag
-children(p).pos.bag
-children(p).word.bag
-children(p).deprel.seq
-children(p).deprel.seq + p.morpho
-children(p).deprel.seq + p.head.morpho
-p.morpho
-p.head.morpho
-p.head.pos
-p.head.word
+deprel(bag(children(p)))
+pos(bag(children(p)))
+word(bag(children(p)))
+deprel(seq(children(p)))
+deprel(seq(children(p))) + morpho(p)
+deprel(seq(children(p))) + morpho(head(p))
+morpho(p)
+morpho(head(p))
+pos(head(p))
+word(head(p))

@@ -9,31 +9,31 @@
 # Run sed to produce final output:
 # grep -v "#" src/main/resources/edu/jhu/featurize/bjorkelund-es-arg-feats.txt |   sed -f ./tmp.sed
 
-c.deprel
-c.morpho
-c.pos
-c.pos + p.lemma
-c.word
-c.word + children(p).deprel.bag
-c.word + c.rmc.word
-children(p).deprel.bag
-children(p).deprel.seq + path(p,c).dir.deprel.seq
-path(p,c).dir.deprel.seq
-path(p,c).dir.deprel.seq + relative(p,c)
-c.lmc.morpho
-c.lns.word
-c.lmc.word
-c.lmc.word + path(p,c).dir.pos.seq
-path(p,c).dir.pos.seq
-path(p,c).dir.pos.seq + c.rns.morpho
+deprel(c)
+morpho(c)
+pos(c)
+pos(c) + lemma(p)
+word(c)
+word(c) + deprel(bag(children(p)))
+word(c) + word(rmc(c))
+deprel(bag(children(p)))
+deprel(seq(children(p))) + deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c)))) + relative(p,c)
+morpho(lmc(c))
+word(lns(c))
+word(lmc(c))
+word(lmc(c)) + pos(dir(seq(path(p,c))))
+pos(dir(seq(path(p,c))))
+pos(dir(seq(path(p,c)))) + morpho(rns(c))
 relative(p,c)
-p.morpho # NOT SUPPORTED: + p.lemmaSense
-p.lemma
+morpho(p) # NOT SUPPORTED: + lemmaSense(p)
+lemma(p)
 # NOT SUPPORTED: p.lemmaSense
-c.rmc.morpho
-c.rmc.pos
-c.rns.word
-c.rmc.word
+morpho(rmc(c))
+pos(rmc(c))
+word(rns(c))
+word(rmc(c))
 
 
 

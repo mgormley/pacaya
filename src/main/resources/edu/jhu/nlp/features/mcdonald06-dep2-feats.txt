@@ -28,21 +28,21 @@
 
 # McDonald & Pereira (2006)
 
-m.pos + c.pos
-m.word + c.word
-m.word + c.pos
-m.pos + c.word
+pos(m) + pos(c)
+word(m) + word(c)
+word(m) + pos(c)
+pos(m) + word(c)
 
-relative(c,m) + m.pos + c.pos
-relative(c,m) + m.word + c.word
-relative(c,m) + m.word + c.pos
-relative(c,m) + m.pos + c.word
+relative(c,m) + pos(m) + pos(c)
+relative(c,m) + word(m) + word(c)
+relative(c,m) + word(m) + pos(c)
+relative(c,m) + pos(m) + word(c)
 
 distance(c,m)
-distance(c,m) + m.pos + c.pos 
+distance(c,m) + pos(m) + pos(c) 
 relative(c,m) + distance(c,m)
-relative(c,m) + distance(c,m) + m.pos + c.pos
+relative(c,m) + distance(c,m) + pos(m) + pos(c)
 
-p.pos + m.pos + c.pos
-relative(c,m) + p.pos + m.pos + c.pos
+pos(p) + pos(m) + pos(c)
+relative(c,m) + pos(p) + pos(m) + pos(c)
 

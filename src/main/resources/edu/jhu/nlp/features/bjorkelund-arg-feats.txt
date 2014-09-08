@@ -4,64 +4,64 @@
 # Sense << TODO: This requires a change to our model.
 
 # PredWord
-p.word
+word(p)
 # PredPOS
-p.pos
+pos(p)
 # PredLemma
-p.lemma
+lemma(p)
 # PredDeprel
-p.deprel
+deprel(p)
 # PredFeats
-p.morpho
+morpho(p)
 # PredParentWord
-p.head.word
+word(head(p))
 # PredParentPOS
-p.head.pos
+pos(head(p))
 # PredParentFeats
-p.head.morpho
+morpho(head(p))
 # DepSubCat
-children(p).deprel.seq
+deprel(seq(children(p)))
 # ChildDepSet
-children(p).deprel.bag
+deprel(bag(children(p)))
 # ChildWordSet
-children(p).word.bag
+word(bag(children(p)))
 # ChildPOSSet
-children(p).pos.bag
+pos(bag(children(p)))
 # ArgWord
-c.word
+word(c)
 # ArgPOS
-c.pos
+pos(c)
 # ArgFeats
-c.morpho
+morpho(c)
 # ArgDeprel
-c.deprel
+deprel(c)
 # DeprelPath
-path(p,c).dir.deprel.seq
+deprel(dir(seq(path(p,c))))
 # POSPath
-path(p,c).dir.pos.seq
+pos(dir(seq(path(p,c))))
 # Position
 relative(p,c)
 # LeftWord
-c.lmc.word
+word(lmc(c))
 # LeftPOS
-c.lmc.pos
+pos(lmc(c))
 # LeftFeats
-c.lmc.morpho
+morpho(lmc(c))
 # RightWord
-c.rmc.word
+word(rmc(c))
 # RightPOS
-c.rmc.pos
+pos(rmc(c))
 # RightFeats
-c.rmc.morpho
+morpho(rmc(c))
 # LeftSiblingWord
-c.lns.word
+word(lns(c))
 # LeftSiblingPOS
-c.lns.pos
+pos(lns(c))
 # LeftSiblingFeats
-c.lns.morpho
+morpho(lns(c))
 # RightSiblingWord
-c.rns.word
+word(rns(c))
 # RightSiblingPOS
-c.rns.pos
+pos(rns(c))
 # RightSiblingFeats
-c.rns.morpho
+morpho(rns(c))

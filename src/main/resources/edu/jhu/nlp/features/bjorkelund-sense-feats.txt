@@ -2,24 +2,24 @@
 #
 
 # PredWord
-p.word
+word(p)
 # PredPOS
-p.pos
+pos(p)
 # PredDeprel
-p.deprel
+deprel(p)
 # PredFeats
-p.morpho
+morpho(p)
 # PredParentWord
-p.head.word
+word(head(p))
 # PredParentPOS
-p.head.pos
+pos(head(p))
 # PredParentFeats
-p.head.morpho
+morpho(head(p))
 # DepSubCat
-children(p).deprel.seq
+deprel(seq(children(p)))
 # ChildDepSet
-children(p).deprel.bag
+deprel(bag(children(p)))
 # ChildWordSet
-children(p).word.bag
+word(bag(children(p)))
 # ChildPOSSet
-children(p).pos.bag
+pos(bag(children(p)))

@@ -27,21 +27,21 @@
 # <t, unk(w)>
 # <b(t), unk(w)>
 
-ruleP.tag
-ruleP.bTag
-ruleP.tag + ri.word
-ruleP.tag + ri.lc
-ruleP.bTag + ri.word
-ruleP.bTag + ri.lc
-ruleP.tag + ri.bc1
-ruleP.tag + ri.-1.bc1
-ruleP.tag + ri.1.bc1
-ruleP.bTag + ri.bc1
-ruleP.bTag + ri.-1.bc1
-ruleP.bTag + ri.1.bc1
-ruleP.pTag + ri.word
-ruleP.tag + ri.unk
-ruleP.bTag + ri.unk
+tag(ruleP)
+bTag(ruleP)
+tag(ruleP) + word(ri)
+tag(ruleP) + lc(ri)
+bTag(ruleP) + word(ri)
+bTag(ruleP) + lc(ri)
+tag(ruleP) + bc1(ri)
+tag(ruleP) + bc1(-1(ri))
+tag(ruleP) + bc1(1(ri))
+bTag(ruleP) + bc1(ri)
+bTag(ruleP) + bc1(-1(ri))
+bTag(ruleP) + bc1(1(ri))
+pTag(ruleP) + word(ri)
+tag(ruleP) + unk(ri)
+bTag(ruleP) + unk(ri)
 
 # # Grammar Features
 # \rho
@@ -56,13 +56,13 @@ ruleP.bTag + ri.unk
 # {\bf heavy feature: } whether the constituent is ``big'' as
 # described in \cite{johnson_2001}
 
-ruleP.tag + ruleLc.tag + ruleRc.tag
-ruleP.bpTag + ri.bc1    
-ruleP.bpTag + rk.bc1    
+tag(ruleP) + tag(ruleLc) + tag(ruleRc)
+bpTag(ruleP) + bc1(ri)    
+bpTag(ruleP) + bc1(rk)    
 #TODO: ruleIsUnary
-ruleP.bTag + ruleLc.bTag + ruleRc.bTag
-line(ri,rk).2gram.bc1 + ruleP.bpTag           # TODO: does "base parent state" mean ruleP.bpTag?
-line(ri,rk).3gram.bc1 + ruleP.bpTag
+bTag(ruleP) + bTag(ruleLc) + bTag(ruleRc)
+bc1(2gram(line(ri,rk))) + bpTag(ruleP)           # TODO: does "base parent state" mean bpTag(ruleP)?
+bc1(3gram(line(ri,rk))) + bpTag(ruleP)
 #TODO: ruleHeavyFeature
 
 # # Binary-specific features
@@ -71,7 +71,7 @@ line(ri,rk).3gram.bc1 + ruleP.bpTag
 # {\bf VP features: }  if some child is a verb tag, then rule, with
 # that child replaced by the word 
 
-ruleP.bpTag + ri.-1.bc1 + ri.bc1
+bpTag(ruleP) + bc1(-1(ri)) + bc1(ri)
 #TODO: rulePPFeat
 #TODO: ruleVPFeat
 
@@ -82,10 +82,10 @@ ruleP.bpTag + ri.-1.bc1 + ri.bc1
 # <b(p(r)), ds(w)> 
 
 # Below, ri sufficiently identifies the span/split information since these are only applied to unary rules.
-ruleP.tag + ruleLc.tag + ruleRc.tag + ri.index + ri.word
-ruleP.tag + ruleLc.tag + ruleRc.tag + ri.index + ri.bc1
-ruleP.bpTag + ri.word
-ruleP.bpTag + ri.bc1
+tag(ruleP) + tag(ruleLc) + tag(ruleRc) + index(ri) + word(ri)
+tag(ruleP) + tag(ruleLc) + tag(ruleRc) + index(ri) + bc1(ri)
+bpTag(ruleP) + word(ri)
+bpTag(ruleP) + bc1(ri)
 
    
 

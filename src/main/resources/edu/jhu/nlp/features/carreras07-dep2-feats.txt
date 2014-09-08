@@ -19,13 +19,13 @@
 
 # Carreras (2007)
 #
-relative(p,c) + p.cpos + c.cpos + m.cpos
-relative(p,c) + p.cpos + m.cpos
-relative(p,c) + c.cpos + m.cpos
-relative(p,c) + p.word + m.word
-relative(p,c) + c.word + m.word
-relative(p,c) + p.cpos + m.word
-relative(p,c) + c.cpos + m.word
-relative(p,c) + p.word + m.cpos
-relative(p,c) + c.word + m.cpos
+relative(p,c) + cpos(p) + cpos(c) + cpos(m)
+relative(p,c) + cpos(p) + cpos(m)
+relative(p,c) + cpos(c) + cpos(m)
+relative(p,c) + word(p) + word(m)
+relative(p,c) + word(c) + word(m)
+relative(p,c) + cpos(p) + word(m)
+relative(p,c) + cpos(c) + word(m)
+relative(p,c) + word(p) + cpos(m)
+relative(p,c) + word(c) + cpos(m)
 

@@ -3,192 +3,192 @@
 # Number of templates: 188
 #
 
-p.lns.bc0
-c.morpho3 + c.head.morpho3
-c.lmc.word
-c.lowsv.bc0
-p.head.pos
-p.-1.pos
-p.morpho
-p.rns.deprel
-p.word + c.pos
-c.lc
-p.head.word
-p.-1.morpho1
-p.1.morpho3
-c.highsv.bc0
-p.head.deprel
-c.pos
-c.lns.deprel
-p.head.morpho
-children(p).pos.seq
-c.lowsn.deprel
-c.highsn.deprel
-p.highsv.pos
-p.lemma + p.1.lemma
-c.head.deprel
-p.morpho3
-c.lnc.pos
-c.rnc.pos
-p.pos + c.word
-c.lowsv.deprel
-c.rns.pos
-c.-1.bc0
-p.bc0
-c.morpho3 + c.1.morpho3
-c.1.lemma
-c.morpho
-p.-1.deprel
-children(p).deprel.bag
-c.rns.word
-p.lnc.deprel
-c.word
-children(c).morpho1.noDup
-p.word
-c.lowsv.pos
-c.lmc.pos
-c.lowsn.pos
-c.lemma + c.head.word
-c.rmc.deprel + c.word
-p.lns.pos
-c.deprel
-p.pos + c.pos + relative(p,c)
-p.pos + distance(p,c) + relative(p,c)
-c.highsv.deprel
-c.-1.pos
+bc0(lns(p))
+morpho3(c) + morpho3(head(c))
+word(lmc(c))
+bc0(lowsv(c))
+pos(head(p))
+pos(-1(p))
+morpho(p)
+deprel(rns(p))
+word(p) + pos(c)
+lc(c)
+word(head(p))
+morpho1(-1(p))
+morpho3(1(p))
+bc0(highsv(c))
+deprel(head(p))
+pos(c)
+deprel(lns(c))
+morpho(head(p))
+pos(seq(children(p)))
+deprel(lowsn(c))
+deprel(highsn(c))
+pos(highsv(p))
+lemma(p) + lemma(1(p))
+deprel(head(c))
+morpho3(p)
+pos(lnc(c))
+pos(rnc(c))
+pos(p) + word(c)
+deprel(lowsv(c))
+pos(rns(c))
+bc0(-1(c))
+bc0(p)
+morpho3(c) + morpho3(1(c))
+lemma(1(c))
+morpho(c)
+deprel(-1(p))
+deprel(bag(children(p)))
+word(rns(c))
+deprel(lnc(p))
+word(c)
+morpho1(noDup(children(c)))
+word(p)
+pos(lowsv(c))
+pos(lmc(c))
+pos(lowsn(c))
+lemma(c) + word(head(c))
+deprel(rmc(c)) + word(c)
+pos(lns(p))
+deprel(c)
+pos(p) + pos(c) + relative(p,c)
+pos(p) + distance(p,c) + relative(p,c)
+deprel(highsv(c))
+pos(-1(c))
 geneology(p,c)
 distance(p,c)
-p.lmc.deprel
-p.deprel
-c.chpre5
-p.bc1
-p.morpho2
-c.lmc.deprel
-p.rns.pos
-p.lnc.pos
-p.rnc.bc0
-p.rmc.deprel
-p.pos + c.pos + distance(p,c)
-p.word + c.word
-p.lowsn.bc0
-p.lowsv.bc0
-p.1.pos
-p.lemma
+deprel(lmc(p))
+deprel(p)
+chpre5(c)
+bc1(p)
+morpho2(p)
+deprel(lmc(c))
+pos(rns(p))
+pos(lnc(p))
+bc0(rnc(p))
+deprel(rmc(p))
+pos(p) + pos(c) + distance(p,c)
+word(p) + word(c)
+bc0(lowsn(p))
+bc0(lowsv(p))
+pos(1(p))
+lemma(p)
 continuity(path(p,c))
-p.1.bc0
-p.lowsv.deprel
-c.lmc.deprel + c.word
-line(p,c).pos.seq
-c.head.lemma
-c.lns.morpho
-children(c).morpho3.bag
-p.word + c.word + p.pos + c.pos
-path(p,c).deprel.dir.seq
-p.lmc.bc0
-p.-1.bc0
-c.rnc.deprel
-c.eachmorpho
-children(p).pos.bag
-p.rnc.pos
-c.rmc.bc0
-line(p,c).morpho1.bag
-c.morpho3
-p.lowsv.pos
-c.-1.deprel
-p.morpho1
-path(p,c).deprel.seq
-p.capitalized
-c.1.pos + c.pos
-c.head.bc0
-p.pos + c.pos
-p.lowsn.pos
-p.1.deprel
-line(p,c).word.seq
-c.rmc.pos
-path(p,c).pos.seq
-c.highsv.pos
-c.morpho2
-p.pos + children(p).deprel.bag
+bc0(1(p))
+deprel(lowsv(p))
+deprel(lmc(c)) + word(c)
+pos(seq(line(p,c)))
+lemma(head(c))
+morpho(lns(c))
+morpho3(bag(children(c)))
+word(p) + word(c) + pos(p) + pos(c)
+deprel(dir(seq(path(p,c))))
+bc0(lmc(p))
+bc0(-1(p))
+deprel(rnc(c))
+eachmorpho(c)
+pos(bag(children(p)))
+pos(rnc(p))
+bc0(rmc(c))
+morpho1(bag(line(p,c)))
+morpho3(c)
+pos(lowsv(p))
+deprel(-1(c))
+morpho1(p)
+deprel(seq(path(p,c)))
+capitalized(p)
+pos(1(c)) + pos(c)
+bc0(head(c))
+pos(p) + pos(c)
+pos(lowsn(p))
+deprel(1(p))
+word(seq(line(p,c)))
+pos(rmc(c))
+pos(seq(path(p,c)))
+pos(highsv(c))
+morpho2(c)
+pos(p) + deprel(bag(children(p)))
 pathGrams
-path(p,c).lemma.seq
-c.1.deprel
-p.pos
-c.1.pos
+lemma(seq(path(p,c)))
+deprel(1(c))
+pos(p)
+pos(1(c))
 distance(p,c) + relative(p,c)
-p.-1.lemma
-c.rmc.lemma
-p.rmc.pos
-p.rnc.deprel
-c.-1.morpho2 + c.morpho2
-p.lowsn.deprel
-c.lemma + p.lemma
-c.lowsn.bc0
-noFarChildren(c).pos.bag + c.rmc.word
-p.rmc.bc0
-c.lns.word
-c.highsn.bc0
+lemma(-1(p))
+lemma(rmc(c))
+pos(rmc(p))
+deprel(rnc(p))
+morpho2(-1(c)) + morpho2(c)
+deprel(lowsn(p))
+lemma(c) + lemma(p)
+bc0(lowsn(c))
+pos(bag(noFarChildren(c))) + word(rmc(c))
+bc0(rmc(p))
+word(lns(c))
+bc0(highsn(c))
 relative(p,c)
-p.lns.deprel
-line(p,c).deprel.seq
-c.wordTopN
-line(p,c).bc0.seq
-p.word + children(p).deprel.bag
-p.highsn.pos
+deprel(lns(p))
+deprel(seq(line(p,c)))
+wordTopN(c)
+bc0(seq(line(p,c)))
+word(p) + deprel(bag(children(p)))
+pos(highsn(p))
 len(path(p,c))
-c.bc0
-c.bc1
-p.chpre5
-c.word + c.1.word
-c.pos + distance(p,c) + relative(p,c)
-c.-1.word
-c.lmc.morpho
-p.highsn.deprel
-c.rmc.word
-path(p,c).lemma.bag
-p.pos + c.pos + distance(p,c) + relative(p,c)
-line(p,c).lemma.seq
-c.lmc.bc0
-c.rns.morpho
-p.highsn.bc0
-c.rnc.bc0
-p.highsv.bc0
-c.rmc.deprel
-path(p,c).pos.dir.seq
-c.rnc.deprel + c.word
-path(p,c).deprel.seq + p.morpho1
-path(c,lca(p,c)).lemma.bag
-c.highsn.pos
-children(p).deprel.seq
-children(p).word.bag
-c.lowsv.lemma
-c.word + children(c).pos.seq
-c.lemma
+bc0(c)
+bc1(c)
+chpre5(p)
+word(c) + word(1(c))
+pos(c) + distance(p,c) + relative(p,c)
+word(-1(c))
+morpho(lmc(c))
+deprel(highsn(p))
+word(rmc(c))
+lemma(bag(path(p,c)))
+pos(p) + pos(c) + distance(p,c) + relative(p,c)
+lemma(seq(line(p,c)))
+bc0(lmc(c))
+morpho(rns(c))
+bc0(highsn(p))
+bc0(rnc(c))
+bc0(highsv(p))
+deprel(rmc(c))
+pos(dir(seq(path(p,c))))
+deprel(rnc(c)) + word(c)
+deprel(seq(path(p,c))) + morpho1(p)
+lemma(bag(path(c,lca(p,c))))
+pos(highsn(c))
+deprel(seq(children(p)))
+word(bag(children(p)))
+lemma(lowsv(c))
+word(c) + pos(seq(children(c)))
+lemma(c)
 sentlen
-c.rns.bc0
-path(p,c).bc0.seq
-c.rmc.morpho
-p.highsv.deprel
-c.morpho1
-c.lmc.lemma
-p.head.bc0
-path(c,lca(p,c)).lemma.seq
-c.lns.pos
-p.wordTopN
-c.pos + children(c).deprel.bag
-c.capitalized
-path(p,c).bc0.dir.seq
-p.eachmorpho + c.eachmorpho
-c.lns.bc0
-c.head.pos
-c.1.bc0
-c.lnc.deprel
-c.rns.deprel
-p.rns.bc0
-c.lnc.bc0
-p.lc
-p.eachmorpho
-p.lnc.bc0
-children(p).bc0.seq
-p.lmc.pos
-p.-1.pos + p.pos
+bc0(rns(c))
+bc0(seq(path(p,c)))
+morpho(rmc(c))
+deprel(highsv(p))
+morpho1(c)
+lemma(lmc(c))
+bc0(head(p))
+lemma(seq(path(c,lca(p,c))))
+pos(lns(c))
+wordTopN(p)
+pos(c) + deprel(bag(children(c)))
+capitalized(c)
+bc0(dir(seq(path(p,c))))
+eachmorpho(p) + eachmorpho(c)
+bc0(lns(c))
+pos(head(c))
+bc0(1(c))
+deprel(lnc(c))
+deprel(rns(c))
+bc0(rns(p))
+bc0(lnc(c))
+lc(p)
+eachmorpho(p)
+bc0(lnc(p))
+bc0(seq(children(p)))
+pos(lmc(p))
+pos(-1(p)) + pos(p)
 

@@ -1,38 +1,38 @@
 # Features selected as in Bjorkelund et al. (2009) for 'arg' language 'de'
-c.deprel
-c.deprel + children(p).pos.bag
-c.deprel + path(p,c).dir.pos.seq
+deprel(c)
+deprel(c) + pos(bag(children(p)))
+deprel(c) + pos(dir(seq(path(p,c))))
 # c.deprel + p.lemmaSense ### NOT SUPPORTED
-c.morpho
-c.morpho + c.lmc.pos
+morpho(c)
+morpho(c) + pos(lmc(c))
 # c.morpho + p.lemmaSense ### NOT SUPPORTED
-c.pos
+pos(c)
 # c.pos + p.lemmaSense ### NOT SUPPORTED
-c.pos + c.rns.pos
-c.word
-c.word + p.lemma
+pos(c) + pos(rns(c))
+word(c)
+word(c) + lemma(p)
 # c.word + p.lemmaSense ### NOT SUPPORTED
-children(p).deprel.bag
-children(p).deprel.bag + path(p,c).dir.pos.seq
-children(p).pos.bag + p.deprel
-path(p,c).dir.deprel.seq
-path(p,c).dir.deprel.seq + p.head.word
-c.lmc.morpho
-c.lmc.morpho + p.head.pos
-c.lns.morpho
-c.lns.pos
-c.lns.pos + c.rns.pos
-c.lmc.word
+deprel(bag(children(p)))
+deprel(bag(children(p))) + pos(dir(seq(path(p,c))))
+pos(bag(children(p))) + deprel(p)
+deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c)))) + word(head(p))
+morpho(lmc(c))
+morpho(lmc(c)) + pos(head(p))
+morpho(lns(c))
+pos(lns(c))
+pos(lns(c)) + pos(rns(c))
+word(lmc(c))
 # c.lmc.word + p.lemmaSense ### NOT SUPPORTED
-path(p,c).dir.pos.seq
+pos(dir(seq(path(p,c))))
 # relative(p,c) + p.lemmaSense ### NOT SUPPORTED
-p.morpho
-p.lemma
+morpho(p)
+lemma(p)
 # p.lemmaSense ### NOT SUPPORTED
 # p.lemmaSense + c.rns.pos ### NOT SUPPORTED
-p.pos
-p.pos + p.head.word
-p.head.pos
-c.rmc.pos + c.rns.pos
-c.rns.pos
-c.rns.word
+pos(p)
+pos(p) + word(head(p))
+pos(head(p))
+pos(rmc(c)) + pos(rns(c))
+pos(rns(c))
+word(rns(c))

@@ -32,36 +32,36 @@
 #       - b-pos: POS of a word in between parent and child nodes.
 
 # Basic Unigram Features
-p.word + p.pos
-p.word
-p.pos
-c.word + c.pos
-c.word
-c.pos
+word(p) + pos(p)
+word(p)
+pos(p)
+word(c) + pos(c)
+word(c)
+pos(c)
 
 # Basic Bigram Features
-p.word + p.pos + c.word + c.pos
-p.pos + c.word + c.pos
-p.word + c.word + c.pos
-p.word + p.pos + c.pos
-p.word + p.pos + c.word
-p.word + c.word
-p.pos + c.pos
+word(p) + pos(p) + word(c) + pos(c)
+pos(p) + word(c) + pos(c)
+word(p) + word(c) + pos(c)
+word(p) + pos(p) + pos(c)
+word(p) + pos(p) + word(c)
+word(p) + word(c)
+pos(p) + pos(c)
 
 # In Between POS Features
-p.pos + btwn(p,c).pos.1gram + c.pos
+pos(p) + pos(1gram(btwn(p,c))) + pos(c)
 
 # Surrounding Word POS Features
-p.pos + p.1.pos + c.-1.pos + c.pos
-p.-1.pos + p.pos + c.-1.pos + c.pos
-p.pos + p.1.pos + c.pos + c.1.pos
-p.-1.pos + p.pos + c.pos + c.1.pos
+pos(p) + pos(1(p)) + pos(-1(c)) + pos(c)
+pos(-1(p)) + pos(p) + pos(-1(c)) + pos(c)
+pos(p) + pos(1(p)) + pos(c) + pos(1(c))
+pos(-1(p)) + pos(p) + pos(c) + pos(1(c))
 
 # Backed-off versions of Surrounding Word POS Features
-p.-1.pos + p.pos + c.pos
-p.pos + c.-1.pos + c.pos
-p.pos + c.pos + c.1.pos
-p.pos + p.1.pos + c.pos
+pos(-1(p)) + pos(p) + pos(c)
+pos(p) + pos(-1(c)) + pos(c)
+pos(p) + pos(c) + pos(1(c))
+pos(p) + pos(1(p)) + pos(c)
 
 # TODO: It's not clear whether these were included in McDonald et al. (2005), 
 # but Koo et al. (2008) had them.
@@ -70,50 +70,50 @@ distance(p,c)
 relative(p,c) + distance(p,c)
 
 # All features in Table 1 were conjoined with *direction* of attachment and *distance*.
-relative(p,c) + distance(p,c) + p.word + p.pos
-relative(p,c) + distance(p,c) + p.word
-relative(p,c) + distance(p,c) + p.pos
-relative(p,c) + distance(p,c) + c.word + c.pos
-relative(p,c) + distance(p,c) + c.word
-relative(p,c) + distance(p,c) + c.pos
-relative(p,c) + distance(p,c) + p.word + p.pos + c.word + c.pos
-relative(p,c) + distance(p,c) + p.pos + c.word + c.pos
-relative(p,c) + distance(p,c) + p.word + c.word + c.pos
-relative(p,c) + distance(p,c) + p.word + p.pos + c.pos
-relative(p,c) + distance(p,c) + p.word + p.pos + c.word
-relative(p,c) + distance(p,c) + p.word + c.word
-relative(p,c) + distance(p,c) + p.pos + c.pos
-relative(p,c) + distance(p,c) + p.pos + btwn(p,c).pos.1gram + c.pos
-relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.-1.pos + c.pos
-relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.-1.pos + c.pos
-relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.pos + c.1.pos
-relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.pos + c.1.pos
-relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.pos
-relative(p,c) + distance(p,c) + p.pos + c.-1.pos + c.pos
-relative(p,c) + distance(p,c) + p.pos + c.pos + c.1.pos
-relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.pos
+relative(p,c) + distance(p,c) + word(p) + pos(p)
+relative(p,c) + distance(p,c) + word(p)
+relative(p,c) + distance(p,c) + pos(p)
+relative(p,c) + distance(p,c) + word(c) + pos(c)
+relative(p,c) + distance(p,c) + word(c)
+relative(p,c) + distance(p,c) + pos(c)
+relative(p,c) + distance(p,c) + word(p) + pos(p) + word(c) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + word(c) + pos(c)
+relative(p,c) + distance(p,c) + word(p) + word(c) + pos(c)
+relative(p,c) + distance(p,c) + word(p) + pos(p) + pos(c)
+relative(p,c) + distance(p,c) + word(p) + pos(p) + word(c)
+relative(p,c) + distance(p,c) + word(p) + word(c)
+relative(p,c) + distance(p,c) + pos(p) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + pos(1gram(btwn(p,c))) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + pos(1(p)) + pos(-1(c)) + pos(c)
+relative(p,c) + distance(p,c) + pos(-1(p)) + pos(p) + pos(-1(c)) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + pos(1(p)) + pos(c) + pos(1(c))
+relative(p,c) + distance(p,c) + pos(-1(p)) + pos(p) + pos(c) + pos(1(c))
+relative(p,c) + distance(p,c) + pos(-1(p)) + pos(p) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + pos(-1(c)) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + pos(c) + pos(1(c))
+relative(p,c) + distance(p,c) + pos(p) + pos(1(p)) + pos(c)
 
 # These features are added for both the entire words as well as the
 # 5-gram prefix if the word is longer than 5 characters.
-p.chpre5 + p.pos
-p.chpre5
-c.chpre5 + c.pos
-c.chpre5
-p.chpre5 + p.pos + c.chpre5 + c.pos
-p.pos + c.chpre5 + c.pos
-p.chpre5 + c.chpre5 + c.pos
-p.chpre5 + p.pos + c.pos
-p.chpre5 + p.pos + c.chpre5
-p.chpre5 + c.chpre5
-relative(p,c) + distance(p,c) + p.chpre5 + p.pos
-relative(p,c) + distance(p,c) + p.chpre5
-relative(p,c) + distance(p,c) + c.chpre5 + c.pos
-relative(p,c) + distance(p,c) + c.chpre5
-relative(p,c) + distance(p,c) + p.chpre5 + p.pos + c.chpre5 + c.pos
-relative(p,c) + distance(p,c) + p.pos + c.chpre5 + c.pos
-relative(p,c) + distance(p,c) + p.chpre5 + c.chpre5 + c.pos
-relative(p,c) + distance(p,c) + p.chpre5 + p.pos + c.pos
-relative(p,c) + distance(p,c) + p.chpre5 + p.pos + c.chpre5
-relative(p,c) + distance(p,c) + p.chpre5 + c.chpre5
+chpre5(p) + pos(p)
+chpre5(p)
+chpre5(c) + pos(c)
+chpre5(c)
+chpre5(p) + pos(p) + chpre5(c) + pos(c)
+pos(p) + chpre5(c) + pos(c)
+chpre5(p) + chpre5(c) + pos(c)
+chpre5(p) + pos(p) + pos(c)
+chpre5(p) + pos(p) + chpre5(c)
+chpre5(p) + chpre5(c)
+relative(p,c) + distance(p,c) + chpre5(p) + pos(p)
+relative(p,c) + distance(p,c) + chpre5(p)
+relative(p,c) + distance(p,c) + chpre5(c) + pos(c)
+relative(p,c) + distance(p,c) + chpre5(c)
+relative(p,c) + distance(p,c) + chpre5(p) + pos(p) + chpre5(c) + pos(c)
+relative(p,c) + distance(p,c) + pos(p) + chpre5(c) + pos(c)
+relative(p,c) + distance(p,c) + chpre5(p) + chpre5(c) + pos(c)
+relative(p,c) + distance(p,c) + chpre5(p) + pos(p) + pos(c)
+relative(p,c) + distance(p,c) + chpre5(p) + pos(p) + chpre5(c)
+relative(p,c) + distance(p,c) + chpre5(p) + chpre5(c)
 
 

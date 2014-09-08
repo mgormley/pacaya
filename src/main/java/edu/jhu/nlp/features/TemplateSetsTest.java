@@ -30,7 +30,7 @@ public class TemplateSetsTest {
         assertTrue(1567 <= numUnigrams);
         assertTrue(1226961 <= numBigrams);
     }
-    
+     
     @Test
     public void testGetBjorkelund() {
         List<FeatTemplate> tpls;

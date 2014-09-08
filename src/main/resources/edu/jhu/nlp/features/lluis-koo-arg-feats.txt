@@ -8,29 +8,29 @@
 
 # -------- Modified features from Lluis et al. (2013) to include Brown Clusters ---------
 
-p.bc1
-p.bc0
-c.bc1
-c.bc0
-p.bc1 + c.bc1
-path(p,c).deprel.dir.seq
-path(p,c).deprel.dir.seq + c.bc0
-path(p,c).deprel.dir.seq + p.bc0
-path(p,c).deprel.dir.seq + c.bc1
-path(p,c).deprel.dir.seq + p.bc1
+bc1(p)
+bc0(p)
+bc1(c)
+bc0(c)
+bc1(p) + bc1(c)
+deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c)))) + bc0(c)
+deprel(dir(seq(path(p,c)))) + bc0(p)
+deprel(dir(seq(path(p,c)))) + bc1(c)
+deprel(dir(seq(path(p,c)))) + bc1(p)
 
 # -------- Features from Lluis et al. (2013) ---------
 
 pathGrams
 continuity(path(p,c))
 
-p.word
-p.pos
-c.word
-c.pos
-p.word + c.word
-path(p,c).deprel.dir.seq
-path(p,c).deprel.dir.seq + c.pos
-path(p,c).deprel.dir.seq + p.pos
-path(p,c).deprel.dir.seq + c.word
-path(p,c).deprel.dir.seq + p.word
+word(p)
+pos(p)
+word(c)
+pos(c)
+word(p) + word(c)
+deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c)))) + pos(c)
+deprel(dir(seq(path(p,c)))) + pos(p)
+deprel(dir(seq(path(p,c)))) + word(c)
+deprel(dir(seq(path(p,c)))) + word(p)

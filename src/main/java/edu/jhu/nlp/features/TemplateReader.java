@@ -94,33 +94,20 @@ public class TemplateReader {
     }
 
     private FeatTemplate getSingletonFeatTemplate(String t) {
-        List<Description> descs = new ArrayList<Description>();
-        Description desc = TemplateLanguage.getDescByName(t);
-        if (desc != null) {
-            descs.add(desc);
-        } else {
-            String[] structures = STRUCTURE_SEP_REGEX.split(t);
-            for (String s : structures) {
-                desc = TemplateLanguage.getDescByName(s);
-                if (desc == null) {
-                    throw new IllegalStateException("Unknown name: " + s);
-                }
-                descs.add(desc);
-            }
-        }
+        TemplateStruct s = TemplateStruct.readTree(t);
                     
         // Get all of the individual pieces by looking each up by its string name
         // in {@link TemplateLanguage#getDescByName}.
-        Position pos = safeGet(descs, Position.class);
-        PositionList pl = safeGet(descs, PositionList.class);
-        TokProperty prop = safeGet(descs, TokProperty.class);
-        TokPropList propl = safeGet(descs, TokPropList.class);
-        PositionModifier mod =safeGet(descs, PositionModifier.class);
-        ListModifier lmod = safeGet(descs, ListModifier.class);
-        EdgeProperty eprop = safeGet(descs, EdgeProperty.class);
-        RulePiece rpiece = safeGet(descs, RulePiece.class);
-        SymbolProperty rprop = safeGet(descs, SymbolProperty.class);
-        OtherFeat other = safeGet(descs, OtherFeat.class);
+        Position pos = safeGet(s, Position.class);
+        PositionList pl = safeGet(s, PositionList.class);
+        TokProperty prop = safeGet(s, TokProperty.class);
+        TokPropList propl = safeGet(s, TokPropList.class);
+        PositionModifier mod =safeGet(s, PositionModifier.class);
+        ListModifier lmod = safeGet(s, ListModifier.class);
+        EdgeProperty eprop = safeGet(s, EdgeProperty.class);
+        RulePiece rpiece = safeGet(s, RulePiece.class);
+        SymbolProperty rprop = safeGet(s, SymbolProperty.class);
+        OtherFeat other = safeGet(s, OtherFeat.class);
                 
         if (pos != null && pl != null) {
             throw new IllegalStateException("Both position and position list cannot be specified: " + t);
@@ -147,11 +134,15 @@ public class TemplateReader {
         return tpl;
     }
     
-    @SuppressWarnings("unchecked")
-    private <T> T safeGet(List<Description> descs, Class<T> class1) {
-        for (Description d : descs) {
-            if (class1.isInstance(d.getObj())) {
-                return (T) d.getObj();
+    //@SuppressWarnings("unchecked")
+    private <T> T safeGet(TemplateStruct p, Class<T> class1) {
+        if (class1.isInstance(p.type)) {
+            return (T) p.type;
+        }
+        for (TemplateStruct c : p.deps) {
+            T t = safeGet(c, class1);
+            if (t != null) {
+                return t;
             }
         }
         return null;

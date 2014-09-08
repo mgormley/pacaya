@@ -75,7 +75,7 @@ public class TemplateSets {
                     }
                 }
             }
-        }     
+        }
         for (RulePiece piece : RulePiece.values()) {
             for (SymbolProperty prop : SymbolProperty.values()) {
                 tpls.add(new FeatTemplate4(piece, prop));                

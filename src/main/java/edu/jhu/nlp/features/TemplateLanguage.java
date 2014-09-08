@@ -130,8 +130,9 @@ public class TemplateLanguage {
     
     public static String getNameFromDesc(FeatTemplate tpl) {
         List<Enum<?>> struc = tpl.getStructure();
-        List<String> name = new ArrayList<String>();
-        for (Enum<?> e : struc) {
+        StringBuilder name = new StringBuilder();
+        for (int i=0; i<struc.size(); i++) {
+            Enum<?> e = struc.get(i);
             if (e == null || e == PositionModifier.IDENTITY) {
                 continue;
             }
@@ -139,9 +140,19 @@ public class TemplateLanguage {
             if (d == null) {
                 throw new IllegalStateException("Enum not found in map: " + e);
             }
-            name.add(d.name);
+            name.append(d.name);
+            if (i < struc.size()-1) {
+                name.append("(");
+            }
         }
-        return StringUtils.join(name, ".");
+        for (int i=1; i<struc.size(); i++) {
+            Enum<?> e = struc.get(i);
+            if (e == null || e == PositionModifier.IDENTITY) {
+                continue;
+            }
+            name.append(")");
+        }
+        return name.toString();
     }
     
     private static ArrayList<Description> desc = new ArrayList<Description>();
@@ -369,7 +380,7 @@ public class TemplateLanguage {
             this.prop = prop;
         }
         public List<Enum<?>> getStructure() {
-            return Lists.getList(pos, mod, prop);
+            return Lists.getList(prop, mod, pos);
         }
     }
     
@@ -395,7 +406,7 @@ public class TemplateLanguage {
             this.prop = prop;
         }
         public List<Enum<?>> getStructure() {
-            return Lists.getList(pos, mod, prop);
+            return Lists.getList(prop, mod, pos);
         }
     }
 
@@ -425,7 +436,7 @@ public class TemplateLanguage {
             this.lmod = lmod;
         }
         public List<Enum<?>> getStructure() {
-            return Lists.getList(pl, prop, eprop, lmod);
+            return Lists.getList(prop, eprop, lmod, pl);
         }
     }
     
@@ -448,7 +459,7 @@ public class TemplateLanguage {
             this.prop = prop;
         }
         public List<Enum<?>> getStructure() {
-            return Lists.getList(piece, prop);
+            return Lists.getList(prop, piece);
         }
     }
     

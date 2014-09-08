@@ -2,28 +2,28 @@
 #
 
 # mode 1
-p.word + c.word
-p.pos + c.pos
-p.word + c.pos
-p.pos + c.word
-p.word + c.word + p.pos + c.pos
+word(p) + word(c)
+pos(p) + pos(c)
+word(p) + pos(c)
+pos(p) + word(c)
+word(p) + word(c) + pos(p) + pos(c)
 
 # mode 2
-p.pos + c.pos + distance(p,c)
-p.pos + c.pos + relative(p,c)
-p.pos + distance(p,c) + relative(p,c)
-c.pos + distance(p,c) + relative(p,c)
-p.pos + c.pos + distance(p,c) + relative(p,c) # Commented out in Naradowsky code: 
+pos(p) + pos(c) + distance(p,c)
+pos(p) + pos(c) + relative(p,c)
+pos(p) + distance(p,c) + relative(p,c)
+pos(c) + distance(p,c) + relative(p,c)
+pos(p) + pos(c) + distance(p,c) + relative(p,c) # Commented out in Naradowsky code: 
 
 # mode 3
 sentlen
 distance(p,c)
 relative(p,c)
 distance(p,c) + relative(p,c)
-p.word
-p.pos
-c.word
-c.pos
+word(p)
+pos(p)
+word(c)
+pos(c)
 
 # mode 4
-p.eachmorpho + c.eachmorpho
+eachmorpho(p) + eachmorpho(c)

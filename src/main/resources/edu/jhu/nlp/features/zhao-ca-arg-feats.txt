@@ -2,109 +2,110 @@
 #
 
 
-# p.currentSense + p.lemma  << Not supported (sense)
-# p.currentSense + p.pos    << Not supported (sense)
-# p.currentSense + a.pos    << Not supported (sense)
+# p.currentSense + p.lemma  ## Not supported (sense)
+# p.currentSense + p.pos    ## Not supported (sense)
+# p.currentSense + a.pos    ## Not supported (sense)
 # p_{-1}.FEAT1
-p.-1.morpho1
+morpho1(-1(p))
 # p.FEAT2
-p.morpho2 
+morpho2(p) 
 # p .FEAT3
-p.1.morpho3 
-# p.semrm.semdprel          << Not supported (pipeline required)
+morpho3(1(p)) 
+# p.semrm.semdprel          ## Not supported (pipeline required)
 # p.lm.dprel
-p.lmc.deprel 
+deprel(lmc(p)) 
 # p.form + p.children.dprel.bag
-p.word + children(p).deprel.bag 
+word(p) + deprel(bag(children(p))) 
 # p.lemma_{n} (for n=-1, n=0)
-p.lemma
-p.-1.lemma 
+lemma(p)
+lemma(-1(p)) 
 # p.lemma + p.lemma_{1}
-p.lemma + p.1.lemma
+lemma(p) + lemma(1(p))
 # p.pos_{-1} + p.pos
-p.-1.pos + p.pos
+pos(-1(p)) + pos(p)
 # p.pos
-p.pos
+pos(p)
 # p.pos + p.children.dprel.bag
-p.pos + children(p).deprel.bag
+pos(p) + deprel(bag(children(p)))
 
 # -----------------------------------
 # a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6
-c.morpho 
+morpho(c) 
 # a_{-1}.FEAT2 + a.FEAT2
-c.-1.morpho2 + c.morpho2 
+morpho2(-1(c)) + morpho2(c) 
 # a.FEAT3 + a_{1}.FEAT3
-c.morpho3 + c.1.morpho3 
+morpho3(c) + morpho3(1(c)) 
 # a.FEAT3 + a.h.FEAT3 
-c.morpho3 + c.head.morpho3
+morpho3(c) + morpho3(head(c))
 # a.children.FEAT1.noDup 
-children(c).morpho1.noDup
+morpho1(noDup(children(c)))
 # a.children.FEAT3.bag
-children(c).morpho3.bag 
+morpho3(bag(children(c))) 
 # a.h.lemma 
-c.head.lemma
+lemma(head(c))
 # a.lm.dprel + a.form 
-c.lmc.deprel + c.word
+deprel(lmc(c)) + word(c)
 # a.lm.form 
-c.lmc.word
-# a.lm_{-1}.lemma              << Not supported (double position modifier) 
-c.lmc.-1.lemma
-# a.lm_{n}.pos (n=0,1)         << Not supported (double position modifier)     
-c.lmc.pos
-c.lmc.1.pos
-# a.noFarChildren.pos.bag + a.rm.form      << Not supported (noFarChildren(c))
-noFarChildren(c).pos.bag + c.rmc.word 
-# a.pphead.lemma               << Not supported: "pphead" is not described in Zhao. 
+word(lmc(c))
+# a.lm_{-1}.lemma              
+# TODO: lemma(-1(lmc(c)))      ## Not supported (double position modifier) 
+lemma(lmc(c))
+# a.lm_{n}.pos (n=0,1)         
+pos(1(lmc(c)))                 ## Not supported (double position modifier)     
+pos(lmc(c))
+# a.noFarChildren.pos.bag + a.rm.form      ## Not supported (noFarChildren(c))
+pos(bag(noFarChildren(c))) + word(rmc(c)) 
+# a.pphead.lemma               ## Not supported: "pphead" is not described in Zhao. 
 # (Our other implementation used the syntactic head, so we use that here.)
-c.head.lemma
+lemma(head(c))
 #a.rm.dprel + a.form 
-c.rmc.deprel + c.word
-# a.rm_{-1}.form               << Not supported (double position modifier) 
-c.rmc.-1.word
+deprel(rmc(c)) + word(c)
+# a.rm_{-1}.form               
+word(-1(rmc(c)))                ## Not supported (double position modifier) 
 # a.rm.lemma
-c.rmc.lemma 
+lemma(rmc(c)) 
 # a.rn.dprel + a.form
-c.rnc.deprel + c.word 
+deprel(rnc(c)) + word(c) 
 # a.lowSupportVerb.lemma 
-c.lowsv.lemma
+lemma(lowsv(c))
 #a_{-1}.form 
-c.-1.word
+word(-1(c))
 # a.form + a_{1}.form 
-c.word + c.1.word
-# a.form + a.children.pos      << Not supported (children(c))
-c.word + children(c).pos
+word(c) + word(1(c))
+# a.form + a.children.pos      
+word(c) + pos(children(c))     ## Not supported (children(c))
 # a.lemma + a.h.form 
-c.lemma + c.head.word
-# a.lemma + a.pphead.form       << Not supported: "pphead" is not described in Zhao. Would be identical to above with syntactic head.
+lemma(c) + word(head(c))
+# a.lemma + a.pphead.form      ## Not supported: "pphead" is not described in Zhao. Would be identical to above with syntactic head.
 # a_{1}.lemma 
-c.1.lemma
-# a_{1}.pos + a.pos.seq        << Invalid pattern from Zhao, can't apply seq to a singleton position. 
-c.1.pos + c.pos
+lemma(1(c))
+# a_{1}.pos + a.pos.seq        ## Invalid pattern from Zhao, can't apply seq to a singleton position. 
+pos(1(c)) + pos(c)
 # a.pos + a.children.dprel.bag
-c.pos + children(c).deprel.bag
+pos(c) + deprel(bag(children(c)))
 
 # -----------------------------------
 
 #a.lemma + p.lemma 
-c.lemma + p.lemma
+lemma(c) + lemma(p)
 # (a:p dpPath.dprel) + p.FEAT1 
-path(p,c).deprel + p.morpho1
+deprel(path(p,c)) + morpho1(p)
 # a:p linePath.distance 
 distance(p,c)
 # a:p linePath.FEAT1.bag 
-line(p,c).morpho1.bag
+morpho1(bag(line(p,c)))
 # a:p linePath.form.seq 
-line(p,c).word.seq
+word(seq(line(p,c)))
 # a:p linePath.lemma.seq 
-line(p,c).lemma.seq
+lemma(seq(line(p,c)))
 # a:p linePath.dprel.seq 
-line(p,c).deprel.seq
+deprel(seq(line(p,c)))
 # a:p dpPath.lemma.seq 
-path(p,c).lemma.seq
+lemma(seq(path(p,c)))
 # a:p dpPath.lemma.bag 
-path(p,c).lemma.bag
+lemma(bag(path(p,c)))
 # a:p dpPathArgu.lemma.seq 
-path(c,lca(p,c)).lemma.seq
+lemma(seq(path(c,lca(p,c))))
 # a:p dpPathArgu.lemma.bag
-path(c,lca(p,c)).lemma.bag
+lemma(bag(path(c,lca(p,c))))
 
