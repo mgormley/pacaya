@@ -18,9 +18,16 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
+import edu.jhu.util.collections.Lists;
 
 public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions> {
 
+    private static final String NO_RELATION_LABEL = "NO_RELATION";
+
+    public enum DatasetType {
+        ACE2004, ACE2005
+    }
+    
     private RelationsFactorGraphBuilderPrm prm;
     private CorpusStatistics cs;
     private ObsFeatureConjoiner ofc;
@@ -78,13 +85,39 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
         RelationMention rm = rels.get(ne1, ne2);
         String relation;
         if (rm == null) {
-            relation = "NO_RELATION";
-        } else {
+            relation = NO_RELATION_LABEL;
+        } else if (isAsymmetric(rm.getType(), rm.getSubType(), DatasetType.ACE2005)) {
             String role1 = rm.getArgs().get(0).get1();
             String role2 = rm.getArgs().get(1).get1();
             relation = String.format("%s:%s:%s", rm.getType(), role1, role2);
+        } else {
+            relation = String.format("%s:%s:%s", rm.getType(), "Arg-1", "Arg-1");
         }
         return relation;
+    }
+    
+    private static boolean isAsymmetric(String relType, String relSubtype, DatasetType dataType) {
+        // Currently, we rely on the DatasetType.ANNOTATION which loses information about the source.
+        // Here we assume the use of ACE 2005 or throw an error.
+        if (relType.equals("DISC")) {
+            // The DISC relation only appears in ACE 2004.
+            throw new RuntimeException("ACE 2004 not currently supported");
+        } else {
+            dataType = DatasetType.ACE2005;
+        }
+        
+        if (dataType == DatasetType.ACE2005) {
+            // This is valid whether or not subtypes are used.
+            List<String> asymmtricTypes = Lists.getList("ART", "GEN-AFF", "ORG-AFF", "PART-WHOLE");
+            return asymmtricTypes.contains(relType);
+//        } else if (dataType == DatasetType.ACE2004 && !useRelationSubtype) {
+//            // Following prior work, only PER-SOC (and NONE) are the fully symmetric types.
+//            List<String> asymmtricTypes = Lists.getList("PHYS", "EMP-ORG", "ART", "OTHER-AFF", "GPE-AFF", "DISC");
+//            return asymmtricTypes.contains(rm.getType());
+        } else {
+            // TODO: Implement case for ACE '04 subtypes.
+            throw new RuntimeException("Not yet implemented");
+        }
     }
         
 }
