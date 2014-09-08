@@ -4,6 +4,6 @@ import edu.jhu.data.simple.AnnoSentenceCollection;
 
 public interface Trainable {
 
-    void train(AnnoSentenceCollection sents);
+    void train(AnnoSentenceCollection goldSents);
     
 }

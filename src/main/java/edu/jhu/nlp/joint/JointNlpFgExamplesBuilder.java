@@ -61,7 +61,7 @@ public class JointNlpFgExamplesBuilder {
         jePrm.fePrm = prm.fePrm;
         jePrm.fgPrm = prm.fgPrm;
     }
-
+    
     public FgExampleList getData(AnnoSentenceCollection sents) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");

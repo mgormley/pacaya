@@ -37,6 +37,7 @@ public class AnnoSentence {
     private List<String> posTags;
     private List<String> cposTags;
     private List<String> clusters;
+    private List<double[]> embeds;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
     /**
@@ -73,6 +74,7 @@ public class AnnoSentence {
         this.posTags = Lists.copyOf(other.posTags);
         this.cposTags = Lists.copyOf(other.cposTags);
         this.clusters = Lists.copyOf(other.clusters);
+        this.embeds = Lists.copyOf(other.embeds);
         this.deprels = Lists.copyOf(other.deprels);
         this.parents = IntArrays.copyOf(other.parents);
         this.depEdgeMask = (other.depEdgeMask == null) ? null : new DepEdgeMask(other.depEdgeMask);
@@ -95,6 +97,7 @@ public class AnnoSentence {
         newSent.posTags = this.posTags;
         newSent.cposTags = this.cposTags;
         newSent.clusters = this.clusters;
+        newSent.embeds = this.embeds;
         newSent.deprels = this.deprels;
         newSent.parents = this.parents;
         newSent.depEdgeMask = this.depEdgeMask;
@@ -126,6 +129,10 @@ public class AnnoSentence {
     /** Gets the i'th Distributional Similarity Cluster ID as a String. */
     public String getCluster(int i) {
         return clusters.get(i);
+    }
+    
+    public double[] getEmbed(int i) {
+        return embeds.get(i);
     }
     
     /** Gets the i'th lemma as a String. */
@@ -188,6 +195,13 @@ public class AnnoSentence {
      */
     public List<String> getClusters(Span span) {
         return getSpan(clusters, span);
+    }
+    
+    /**
+     * Gets a list of word embeddings corresponding to a token span.
+     */
+    public List<double[]> getEmbeds(Span span) {
+        return getSpan(embeds, span);
     }
 
     /**
@@ -274,9 +288,9 @@ public class AnnoSentence {
     }
     
     // TODO: Consider moving this to LabelSequence.
-    private static List<String> getSpan(List<String> seq, Span span) {
+    private static <T> List<T> getSpan(List<T> seq, Span span) {
         assert (span != null);
-        List<String> list = new ArrayList<String>();
+        List<T> list = new ArrayList<>();
         for (int i = span.start(); i < span.end(); i++) {
             list.add(seq.get(i));
         }
@@ -388,7 +402,15 @@ public class AnnoSentence {
     public void setClusters(List<String> clusters) {
         this.clusters = clusters;
     }
-    
+        
+    public List<double[]> getEmbeds() {
+        return embeds;
+    }
+
+    public void setEmbeds(List<double[]> embeds) {
+        this.embeds = embeds;
+    }
+
     public int[] getParents() {
         return parents;
     }
@@ -482,10 +504,11 @@ public class AnnoSentence {
     public void removeAt(AT at) {
         switch (at) {
         case WORD: this.words = null; break;
-        case BROWN: this.clusters = null; break;
         case LEMMA: this.lemmas = null; break;
         case POS: this.posTags = null; break;
         case CPOS: this.cposTags = null; break;
+        case BROWN: this.clusters = null; break;
+        case EMBED: this.embeds = null; break;
         case MORPHO: this.feats = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
@@ -502,10 +525,11 @@ public class AnnoSentence {
     public boolean hasAt(AT at) {
         switch (at) {
         case WORD: return this.words != null;
-        case BROWN: return this.clusters != null;
         case LEMMA: return this.lemmas != null;
         case POS: return this.posTags != null;
         case CPOS: return this.cposTags != null;
+        case BROWN: return this.clusters != null;
+        case EMBED: return this.embeds != null;
         case MORPHO: return this.feats != null;
         case DEP_TREE: return this.parents != null;
         case DEPREL: return this.deprels != null;
@@ -522,10 +546,11 @@ public class AnnoSentence {
     public static void copyShallow(AnnoSentence src, AnnoSentence dest, AT at) {
         switch (at) {
         case WORD: dest.words = src.words; break;
-        case BROWN: dest.clusters = src.clusters; break;
         case LEMMA: dest.lemmas = src.lemmas; break;
         case POS: dest.posTags = src.posTags; break;
         case CPOS: dest.cposTags = src.cposTags; break;
+        case BROWN: dest.clusters = src.clusters; break;
+        case EMBED: dest.embeds = src.embeds; break;
         case MORPHO: dest.feats = src.feats; break;
         case DEP_TREE: dest.parents = src.parents; break;
         case DEPREL: dest.deprels = src.deprels; break;
@@ -568,6 +593,7 @@ public class AnnoSentence {
         appendIfNotNull(sb, "tags", posTags);
         appendIfNotNull(sb, "cposTags", cposTags);
         appendIfNotNull(sb, "clusters", clusters);
+        appendIfNotNull(sb, "embeds", embeds);
         appendIfNotNull(sb, "feats", feats);
         if (parents != null) {
             sb.append("parents=");

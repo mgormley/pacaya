@@ -58,6 +58,9 @@ import edu.jhu.nlp.depparse.FirstOrderPruner;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
+import edu.jhu.nlp.embed.Embeddings.Scaling;
+import edu.jhu.nlp.embed.EmbeddingsAnnotator;
+import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpAnnotator.InitParams;
 import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
@@ -168,6 +171,14 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Brown cluster file")
     public static File brownClusters = null;
     
+    // Options for Embeddings.
+    @Opt(hasArg=true, description="Path to word embeddings text file.")
+    public static File embeddingsFile = null;
+    @Opt(hasArg=true, description="Method for normalization of the embeddings.")
+    public static Scaling embNorm = Scaling.L1_NORM;
+    @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
+    public static double embScaler = 15.0;
+    
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
     public static boolean includeSrl = true;
@@ -251,7 +262,7 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Whether to gzip an object before caching it.")
     public static boolean gzipCache = false;    
     
-    // Options for training.
+    // Options for optimization.
     @Opt(hasArg=true, description="The optimization method to use for training.")
     public static Optimizer optimizer = Optimizer.LBFGS;
     @Opt(hasArg=true, description="The variance for the L2 regularizer.")
@@ -282,6 +293,8 @@ public class JointNlpRunner {
     public static double adaDeltaConstantAddend = Math.pow(Math.E, -6.);
     @Opt(hasArg=true, description="Stop training by this date/time.")
     public static Date stopTrainingBy = null;
+    
+    // Options for training.
     @Opt(hasArg=true, description="Whether to use the mean squared error instead of conditional log-likelihood when evaluating training quality.")
     public static boolean useMseForValue = false;
     @Opt(hasArg=true, description="The type of trainer to use (e.g. conditional log-likelihood, ERMA).")
@@ -331,7 +344,7 @@ public class JointNlpRunner {
             AnnoSentenceCollection goldSents = corpus.getTrainGold();
             AnnoSentenceCollection inputSents = corpus.getTrainInput();
 
-            addBrownClusters(inputSents);
+            addClustersAndEmbeddings(inputSents);
             AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
             // Train the distance-based pruner. 
             if (pruneByDist) {
@@ -364,7 +377,7 @@ public class JointNlpRunner {
             // Test the model on dev data.
             String name = "dev";
             AnnoSentenceCollection inputSents = corpus.getDevInput();
-            addBrownClusters(inputSents);
+            addClustersAndEmbeddings(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
             // Decode and evaluate the dev data.
             jointAnno.annotate(inputSents);            
@@ -378,7 +391,7 @@ public class JointNlpRunner {
             // Test the model on test data.
             String name = "test";
             AnnoSentenceCollection inputSents = corpus.getTestInput();
-            addBrownClusters(inputSents);
+            addClustersAndEmbeddings(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
             // Decode and evaluate the test data.
             jointAnno.annotate(inputSents);
@@ -389,7 +402,8 @@ public class JointNlpRunner {
         }
     }
 
-    private void addBrownClusters(AnnoSentenceCollection sents) throws IOException {
+    private void addClustersAndEmbeddings(AnnoSentenceCollection sents) throws IOException {
+        // Add Brown clusters.
         if (brownClusters != null) {            
             log.info("Adding Brown clusters.");
             BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
@@ -398,6 +412,15 @@ public class JointNlpRunner {
             log.info("Brown cluster hit rate: " + bct.getHitRate());
         } else {
             log.warn("No Brown cluster file specified.");            
+        }
+        // Add word embeddings.
+        if (embeddingsFile != null) {
+            log.info("Adding word embeddings.");
+            EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
+            ea.annotate(sents);
+            log.info("Embeddings hit rate: " + ea.getHitRate());
+        } else {
+            log.info("No embeddings file specified.");
         }
     }
 
@@ -755,6 +778,14 @@ public class JointNlpRunner {
         BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
         bcPrm.language = CorpusHandler.language;
         return bcPrm;
+    }
+
+    private static EmbeddingsAnnotatorPrm getEmbeddingsAnnotatorPrm() {
+        EmbeddingsAnnotatorPrm prm = new EmbeddingsAnnotatorPrm();
+        prm.embeddingsFile = embeddingsFile;
+        prm.embNorm = embNorm;
+        prm.embScaler= embScaler;
+        return prm;
     }
     
     public static void main(String[] args) {

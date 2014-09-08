@@ -29,8 +29,8 @@ public class PosTagDistancePruner implements Trainable, Annotator {
     public PosTagDistancePruner() { }
     
     @Override
-    public void train(AnnoSentenceCollection sents) {
-        for (AnnoSentence sent : sents) {
+    public void train(AnnoSentenceCollection goldSents) {
+        for (AnnoSentence sent : goldSents) {
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
@@ -38,7 +38,7 @@ public class PosTagDistancePruner implements Trainable, Annotator {
         mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
         mat.fill(0);
         // For each sentence...
-        for (AnnoSentence sent : sents) {
+        for (AnnoSentence sent : goldSents) {
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
             int[] tags = tagSeq.getLabelIds();
             int[] parents = sent.getParents();            
