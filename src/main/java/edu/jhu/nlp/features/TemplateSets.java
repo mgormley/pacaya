@@ -12,12 +12,15 @@ import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate1;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate2;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate3;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate4;
 import edu.jhu.nlp.features.TemplateLanguage.JoinTemplate;
 import edu.jhu.nlp.features.TemplateLanguage.ListModifier;
 import edu.jhu.nlp.features.TemplateLanguage.OtherFeat;
 import edu.jhu.nlp.features.TemplateLanguage.Position;
 import edu.jhu.nlp.features.TemplateLanguage.PositionList;
 import edu.jhu.nlp.features.TemplateLanguage.PositionModifier;
+import edu.jhu.nlp.features.TemplateLanguage.RulePiece;
+import edu.jhu.nlp.features.TemplateLanguage.SymbolProperty;
 import edu.jhu.nlp.features.TemplateLanguage.TokPropList;
 import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.util.collections.Lists;
@@ -73,6 +76,11 @@ public class TemplateSets {
                 }
             }
         }     
+        for (RulePiece piece : RulePiece.values()) {
+            for (SymbolProperty prop : SymbolProperty.values()) {
+                tpls.add(new FeatTemplate4(piece, prop));                
+            }
+        }
         for (OtherFeat feat : OtherFeat.values()) {
             tpls.add(new FeatTemplate0(feat));
         }
