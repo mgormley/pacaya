@@ -12,7 +12,7 @@ import edu.jhu.data.RelationMentions;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.parse.cky.data.BinaryTree;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.set.IntHashSet;

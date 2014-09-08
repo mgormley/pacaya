@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,9 +13,9 @@ import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.data.simple.AnnoSentenceReader;
 import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Timer;

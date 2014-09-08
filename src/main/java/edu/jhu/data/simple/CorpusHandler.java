@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.data.simple.AnnoSentenceWriter.AnnoSentenceWriterPrm;
-import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;

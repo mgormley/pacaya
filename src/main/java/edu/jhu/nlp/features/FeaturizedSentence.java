@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.nlp.CorpusStatistics;

@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +10,8 @@ import java.util.Set;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Prm;
 

@@ -8,7 +8,7 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.util.Alphabet;
 
 public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {

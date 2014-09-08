@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import static org.junit.Assert.*;
 

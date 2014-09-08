@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -11,8 +11,8 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceTest;
-import edu.jhu.featurize.TemplateLanguage.AT;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 
 public class TemplateLanguageTest {
 

@@ -4,7 +4,7 @@ import java.util.List;
 
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 
 /**
  * An annotator for a sentence.

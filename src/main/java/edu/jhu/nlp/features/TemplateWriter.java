@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.List;
 
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 
 public class TemplateWriter {
 

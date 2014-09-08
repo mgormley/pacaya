@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import java.util.ArrayList;
 import java.util.Collections;

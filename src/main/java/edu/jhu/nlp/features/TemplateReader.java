@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -10,24 +10,24 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.jhu.featurize.TemplateLanguage.Description;
-import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
-import edu.jhu.featurize.TemplateLanguage.JoinTemplate;
-import edu.jhu.featurize.TemplateLanguage.ListModifier;
-import edu.jhu.featurize.TemplateLanguage.OtherFeat;
-import edu.jhu.featurize.TemplateLanguage.Position;
-import edu.jhu.featurize.TemplateLanguage.PositionList;
-import edu.jhu.featurize.TemplateLanguage.PositionModifier;
-import edu.jhu.featurize.TemplateLanguage.RulePiece;
-import edu.jhu.featurize.TemplateLanguage.SymbolProperty;
-import edu.jhu.featurize.TemplateLanguage.TokPropList;
-import edu.jhu.featurize.TemplateLanguage.TokProperty;
+import edu.jhu.nlp.features.TemplateLanguage.Description;
+import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate1;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate2;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate3;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate4;
+import edu.jhu.nlp.features.TemplateLanguage.JoinTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.ListModifier;
+import edu.jhu.nlp.features.TemplateLanguage.OtherFeat;
+import edu.jhu.nlp.features.TemplateLanguage.Position;
+import edu.jhu.nlp.features.TemplateLanguage.PositionList;
+import edu.jhu.nlp.features.TemplateLanguage.PositionModifier;
+import edu.jhu.nlp.features.TemplateLanguage.RulePiece;
+import edu.jhu.nlp.features.TemplateLanguage.SymbolProperty;
+import edu.jhu.nlp.features.TemplateLanguage.TokPropList;
+import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 
 /**
  * Reader for the template little language.

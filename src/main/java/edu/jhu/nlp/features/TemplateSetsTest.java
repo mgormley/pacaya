@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.featurize.TemplateLanguage.AT;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 
 public class TemplateSetsTest {
 

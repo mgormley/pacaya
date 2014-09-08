@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.nlp.features;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,45 +6,45 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
-import edu.jhu.featurize.TemplateLanguage.JoinTemplate;
-import edu.jhu.featurize.TemplateLanguage.ListModifier;
-import edu.jhu.featurize.TemplateLanguage.OtherFeat;
-import edu.jhu.featurize.TemplateLanguage.Position;
-import edu.jhu.featurize.TemplateLanguage.PositionList;
-import edu.jhu.featurize.TemplateLanguage.PositionModifier;
-import edu.jhu.featurize.TemplateLanguage.TokPropList;
-import edu.jhu.featurize.TemplateLanguage.TokProperty;
+import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate1;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate2;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate3;
+import edu.jhu.nlp.features.TemplateLanguage.JoinTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.ListModifier;
+import edu.jhu.nlp.features.TemplateLanguage.OtherFeat;
+import edu.jhu.nlp.features.TemplateLanguage.Position;
+import edu.jhu.nlp.features.TemplateLanguage.PositionList;
+import edu.jhu.nlp.features.TemplateLanguage.PositionModifier;
+import edu.jhu.nlp.features.TemplateLanguage.TokPropList;
+import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.util.collections.Lists;
 
 public class TemplateSets {
 
     // Semantic Role Labeling feature sets.
-    public static final String bjorkelundArgFeatsResource = "/edu/jhu/featurize/bjorkelund-arg-feats.txt";
-    public static final String bjorkelundSenseFeatsResource = "/edu/jhu/featurize/bjorkelund-sense-feats.txt";
+    public static final String bjorkelundArgFeatsResource = "/edu/jhu/nlp/features/bjorkelund-arg-feats.txt";
+    public static final String bjorkelundSenseFeatsResource = "/edu/jhu/nlp/features/bjorkelund-sense-feats.txt";
 
-    public static final String naradowskyArgFeatsResource = "/edu/jhu/featurize/naradowsky-arg-feats.txt";
-    public static final String naradowskySenseFeatsResource = "/edu/jhu/featurize/naradowsky-sense-feats.txt";
+    public static final String naradowskyArgFeatsResource = "/edu/jhu/nlp/features/naradowsky-arg-feats.txt";
+    public static final String naradowskySenseFeatsResource = "/edu/jhu/nlp/features/naradowsky-sense-feats.txt";
     
-    public static final String zhaoCaArgFeatsResource = "/edu/jhu/featurize/zhao-ca-arg-feats.txt";
-    public static final String zhaoEnSenseFeatsResource = "/edu/jhu/featurize/zhao-en-sense-feats.txt";
+    public static final String zhaoCaArgFeatsResource = "/edu/jhu/nlp/features/zhao-ca-arg-feats.txt";
+    public static final String zhaoEnSenseFeatsResource = "/edu/jhu/nlp/features/zhao-en-sense-feats.txt";
 
     // Dependency Parsing feature sets.
-    public static final String mcdonaldDepFeatsResource = "/edu/jhu/featurize/mcdonald-dep-feats.txt";
-    public static final String kooBasicDepFeatsResource = "/edu/jhu/featurize/koo-basic-dep-feats.txt";
-    public static final String kooHybridDepFeatsResource = "/edu/jhu/featurize/koo-hybrid-dep-feats.txt";
-    public static final String carreras07Dep2FeatsResource = "/edu/jhu/featurize/carreras07-dep2-feats.txt";
+    public static final String mcdonaldDepFeatsResource = "/edu/jhu/nlp/features/mcdonald-dep-feats.txt";
+    public static final String kooBasicDepFeatsResource = "/edu/jhu/nlp/features/koo-basic-dep-feats.txt";
+    public static final String kooHybridDepFeatsResource = "/edu/jhu/nlp/features/koo-hybrid-dep-feats.txt";
+    public static final String carreras07Dep2FeatsResource = "/edu/jhu/nlp/features/carreras07-dep2-feats.txt";
     
     // Relation Extraction feature sets.
-    public static final String zhou05RelFeatsResource = "/edu/jhu/featurize/zhou05-en-rel-feats.txt";
+    public static final String zhou05RelFeatsResource = "/edu/jhu/nlp/features/zhou05-en-rel-feats.txt";
     
     // Constituency Parsing feature sets
-    public static final String finkel08FeatsResource = "/edu/jhu/featurize/finkel08-parse-feats.txt";
+    public static final String finkel08FeatsResource = "/edu/jhu/nlp/features/finkel08-parse-feats.txt";
     
     private TemplateSets() {
         // Private constructor.
