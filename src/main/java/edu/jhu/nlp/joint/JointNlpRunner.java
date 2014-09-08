@@ -20,7 +20,6 @@ import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.data.simple.CorpusHandler;
-import edu.jhu.eval.DepParseEvaluator;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -49,18 +48,18 @@ import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.nlp.CorpusStatistics;
-import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
+import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
-import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
+import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.joint.JointNlpAnnotator.InitParams;
 import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
@@ -248,6 +247,12 @@ public class JointNlpRunner {
     public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
     @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
     public static boolean acl14DepFeats = true;
+    
+    // Options for relation extraction.
+    @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
+    public static boolean includeRel = false;
+    @Opt(hasArg = true, description = "Relation feature templates.")
+    public static String relFeatTpls = TemplateSets.zhou05RelFeatsResource;
     
     // Options for data munging.
     @Deprecated
@@ -495,9 +500,10 @@ public class JointNlpRunner {
     private void eval(String name, AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
         printOracleAccuracyAfterPruning(predSents, goldSents, name);
         printPredArgSelfLoopStats(goldSents);
-
-        DepParseEvaluator eval = new DepParseEvaluator(name);
-        eval.evaluate(goldSents, predSents);
+        DepParseEvaluator depEval = new DepParseEvaluator(name);
+        depEval.evaluate(goldSents, predSents);
+        RelationEvaluator relEval = new RelationEvaluator(name);
+        relEval.evaluate(goldSents, predSents);
     }
 
     private static void printOracleAccuracyAfterPruning(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
@@ -573,8 +579,13 @@ public class JointNlpRunner {
         prm.fgPrm.srlPrm.predictSense = predictSense;
         prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
+        // Relation Feature extraction.
+        prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls);
+        prm.fgPrm.relPrm.featureHashMod = featureHashMod;
+        
         prm.fgPrm.includeDp = includeDp;
         prm.fgPrm.includeSrl = includeSrl;
+        prm.fgPrm.includeRel = includeRel;
         
         // Feature extraction.
         prm.fePrm = fePrm;

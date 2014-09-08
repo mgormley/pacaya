@@ -2,6 +2,7 @@ package edu.jhu.nlp.joint;
 
 
 import edu.jhu.data.DepEdgeMask;
+import edu.jhu.data.RelationMentions;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.app.Decoder;
@@ -13,6 +14,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.depparse.DepEdgeMaskDecoder;
 import edu.jhu.nlp.depparse.DepEdgeMaskDecoder.DepEdgeMaskDecoderPrm;
 import edu.jhu.nlp.depparse.DepParseDecoder;
+import edu.jhu.nlp.relations.RelationsDecoder;
 import edu.jhu.nlp.srl.SrlDecoder;
 
 /**
@@ -69,6 +71,11 @@ public class JointNlpDecoder implements Decoder<AnnoSentence, AnnoSentence> {
         DepEdgeMask depEdgeMask = (new DepEdgeMaskDecoder(prm.maskPrm)).decode(inf, ex, sent);
         if (depEdgeMask != null) {
             predSent.setDepEdgeMask(depEdgeMask);
+        }
+        // Get the relations.
+        RelationMentions rels = RelationsDecoder.getRelationsGraphFromVarConfig(mbrVarConfig);
+        if (rels != null) {
+            predSent.setRelations(rels);
         }
         
         return predSent;

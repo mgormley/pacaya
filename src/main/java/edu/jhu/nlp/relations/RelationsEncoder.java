@@ -22,7 +22,7 @@ import edu.jhu.util.collections.Lists;
 
 public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions> {
 
-    private static final String NO_RELATION_LABEL = "NO_RELATION";
+    public static final String NO_RELATION_LABEL = "NO_RELATION";
 
     public enum DatasetType {
         ACE2004, ACE2005
@@ -65,7 +65,7 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
         }
     }
 
-    private static void addRelVarAssignments(AnnoSentence sent, RelationMentions rels, RelationsFactorGraphBuilder rfgb,
+    public static void addRelVarAssignments(AnnoSentence sent, RelationMentions rels, RelationsFactorGraphBuilder rfgb,
             VarConfig vc) {
         // Iterate over all pairs of mentions, such that ne1 comes before ne2.
         // This code assumes that the mentions are already in sorted order.

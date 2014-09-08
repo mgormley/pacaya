@@ -24,6 +24,7 @@ import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
+import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.nlp.srl.SrlEncoder;
 import edu.jhu.nlp.srl.SrlFeatureExtractor;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
@@ -92,6 +93,9 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
         if (gold != null && gold.getSrlGraph() != null) {
             SrlEncoder.addSrlTrainAssignment(sent, gold.getSrlGraph(), fg.getSrlBuilder(), vc, prm.fgPrm.srlPrm.predictSense, prm.fgPrm.srlPrm.predictPredPos);
         }
+        if (gold != null && gold.getRelations() != null) {
+            RelationsEncoder.addRelVarAssignments(sent, gold.getRelations(), fg.getRelBuilder(), vc);
+        }
         
         // Create the example.
         LFgExample ex;
@@ -120,6 +124,9 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
             if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
                 TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
             }
+        }
+        if (prm.fgPrm.includeRel) {
+            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
         }
     }
     

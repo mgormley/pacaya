@@ -21,12 +21,14 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.Prm;
 
 public class RelationsFactorGraphBuilder {
 
     private static final Logger log = Logger.getLogger(RelationsFactorGraphBuilder.class);
 
-    public static class RelationsFactorGraphBuilderPrm {
+    public static class RelationsFactorGraphBuilderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public List<FeatTemplate> templates;
         public int featureHashMod = -1;
     }
@@ -76,6 +78,9 @@ public class RelationsFactorGraphBuilder {
         // This code assumes that the mentions are already in sorted order.
         List<RelVar> rvs = new ArrayList<>();
         NerMentions nes = sent.getNamedEntities();
+        if (nes == null) {
+            throw new IllegalArgumentException("Relation extraction requires named entities.");
+        }
         for (int i = 0; i < nes.size(); i++) {
             NerMention ne1 = nes.get(i);
             for (int j=i+1; j < nes.size(); j++) {

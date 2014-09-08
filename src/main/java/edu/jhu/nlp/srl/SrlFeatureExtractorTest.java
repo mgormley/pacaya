@@ -55,6 +55,7 @@ public class SrlFeatureExtractorTest {
         JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
         fgPrm.srlPrm.predictPredPos = true;
         fgPrm.srlPrm.binarySenseRoleFactors = true;
+        fgPrm.includeRel = false;
         JointNlpFactorGraph sfg = getSrlFg(fgPrm);
 
         FactorTemplateList fts = new FactorTemplateList();
@@ -109,6 +110,7 @@ public class SrlFeatureExtractorTest {
         
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.linkVarType = VarType.OBSERVED;
+        prm.fgPrm.includeRel = false;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
@@ -153,6 +155,7 @@ public class SrlFeatureExtractorTest {
         
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.linkVarType = VarType.OBSERVED;
+        prm.fgPrm.includeRel = false;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
@@ -172,6 +175,7 @@ public class SrlFeatureExtractorTest {
     @Test
     public void testCorrectNumFeaturesWithFeatureHashing() throws Exception {
         JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
+        fgPrm.includeRel = false;
         JointNlpFactorGraph sfg = getSrlFg(fgPrm);
 
         FactorTemplateList fts = new FactorTemplateList();        
@@ -225,10 +229,20 @@ public class SrlFeatureExtractorTest {
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---        
-        IntSet knownPreds = IntHashSet.fromArray(0, 2);
+        IntHashSet knownPreds = IntHashSet.fromArray(0, 2);
         List<String> words = Lists.getList("w1", "w2", "w3");
         DepEdgeMask depEdgeMask = new DepEdgeMask(words.size(), true);
-        return new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc, fe);
+        
+        AnnoSentence sent = new AnnoSentence();
+        sent.setWords(words);
+        sent.setLemmas(words);
+        sent.setKnownPreds(knownPreds);
+        sent.setDepEdgeMask(depEdgeMask);
+        
+        CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
+        cs.roleStateNames = Lists.getList("A1", "A2", "A3");
+        
+        return new JointNlpFactorGraph(prm, sent, cs, obsFe, ofc, fe);
     }
 
 }

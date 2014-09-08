@@ -1,4 +1,4 @@
-package edu.jhu.eval;
+package edu.jhu.nlp.eval;
 
 import org.apache.log4j.Logger;
 
