@@ -53,6 +53,14 @@ public class LocalObservations {
         return getIfDefined(rEndIdx, "End of a rule span");
     }
 
+    public NerMention getNe1() {
+        return getIfDefined(ne1, "Mention 1");
+    }
+    
+    public NerMention getNe2() {
+        return getIfDefined(ne2, "Mention 2");
+    }
+    
     private int getIfDefined(int idx, String obsName) {
         if (idx == UNDEF_INT) {
             throw new IllegalStateException("Local observation undefined: " + obsName);

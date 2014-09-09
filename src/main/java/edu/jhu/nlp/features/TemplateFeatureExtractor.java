@@ -152,7 +152,7 @@ public class TemplateFeatureExtractor {
         // Get a property of that symbol.
         String val;
         switch (prop) {
-        case TAG: val = symbol; break;
+        case TAG: val = symbol; break;        
         default: throw new IllegalStateException();
         }
         
@@ -189,6 +189,12 @@ public class TemplateFeatureExtractor {
         case RULE_START: return local.getRStartIdx();
         case RULE_MID: return local.getRMidIdx();
         case RULE_END: return local.getREndIdx();
+        case M_1_START: return local.getNe1().getSpan().start();
+        case M_1_END: return local.getNe1().getSpan().end();
+        case M_1_HEAD: return local.getNe1().getHead();
+        case M_2_START: return local.getNe2().getSpan().start();
+        case M_2_END: return local.getNe2().getSpan().end();
+        case M_2_HEAD: return local.getNe2().getHead();
         default: throw new IllegalStateException();
         }
     }
@@ -434,8 +440,12 @@ public class TemplateFeatureExtractor {
             return idx;
         case BEFORE1:
             return idx - 1;
+        case BEFORE2:
+            return idx - 2;
         case AFTER1:
             return idx + 1;
+        case AFTER2:
+            return idx + 2;
             // --------------------- DepTree ---------------------  
         case HEAD:
             return tok.getParent();

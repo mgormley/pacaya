@@ -30,7 +30,7 @@ public class TemplateLanguage {
     }
     
     /* -------------------- Structures of the Little Language ---------------- */
-    
+        
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
         INDEX, WORD, LEMMA, POS, CPOS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED, WORD_TOP_N,
@@ -57,8 +57,8 @@ public class TemplateLanguage {
         // Constituency parsing
         RULE_START, RULE_MID, RULE_END,
         // Mention start, end (inclusive), and head positions
-        //M_1_START, M_1_END, M_1_HEAD,
-        //M_2_START, M_2_END, M_2_HEAD,
+        M_1_START, M_1_END, M_1_HEAD,
+        M_2_START, M_2_END, M_2_HEAD,
     }
 
     /** Position List. Mapping from one or two positions to a position list. */
@@ -77,7 +77,7 @@ public class TemplateLanguage {
 
     /** Position Modifier. A mapping from one position to another. */
     public enum PositionModifier {
-        IDENTITY, BEFORE1, AFTER1,
+        IDENTITY, BEFORE1, BEFORE2, AFTER1, AFTER2,
         //
         HEAD, LNS, RNS, LMC, RMC, LNC, RNC,
         //
@@ -103,14 +103,25 @@ public class TemplateLanguage {
     
     /** The pieces of a CNF rule. */
     public enum RulePiece {
-        FULL_RULE, PARENT, LEFT_CHILD, RIGHT_CHILD
+        PARENT, LEFT_CHILD, RIGHT_CHILD
     }
     
     /** Symbol property. A mapping from a rule piece to a string. */
     public enum SymbolProperty {
-        TAG, BASE_TAG, PARENT_TAG, BASE_PARENT_TAG
+        TAG, 
+        // Not implemented: 
+        // BASE_TAG, PARENT_TAG, BASE_PARENT_TAG
     }
     
+    /** Named entity mentions. */
+    public enum Mention {
+        M_1, M_2,
+    }
+    
+    /** Mention properties. */
+    public enum MentionProperty {
+        ENTITY_TYPE, PHRASE_TYPE,
+    }
     
     /* -------------------- Descriptions of the Language Elements ---------------- */
 
@@ -170,10 +181,15 @@ public class TemplateLanguage {
         desc(Position.MODIFIER, "m", "Modifier");
         desc(Position.RULE_START, "ri", "Rule start");
         desc(Position.RULE_MID, "rj", "Rule mid");
-        desc(Position.RULE_END, "rk", "Rule end");        
-
+        desc(Position.RULE_END, "rk", "Rule end");
+        desc(Position.M_1_START, "m1s", "Mention 1 start"); // TODO: Change to start(span(m1))?
+        desc(Position.M_1_END, "m1e", "Mention 1 end");
+        desc(Position.M_1_HEAD, "m1h", "Mention 1 head");
+        desc(Position.M_2_START, "m2s", "Mention 2 start");
+        desc(Position.M_2_END, "m2e", "Mention 2 end");
+        desc(Position.M_2_HEAD, "m2h", "Mention 2 head");
+        
         /** CNF Rule pieces. */
-        desc(RulePiece.FULL_RULE, "rule", "Entire rule");
         desc(RulePiece.PARENT, "ruleP", "Rule parent");
         desc(RulePiece.LEFT_CHILD, "ruleLc", "Rule left child");
         desc(RulePiece.RIGHT_CHILD, "ruleRc", "Rule right child");
@@ -181,9 +197,17 @@ public class TemplateLanguage {
         /** Symbol property. A mapping from a rule piece to a string. */
         desc(SymbolProperty.TAG, "tag", "Symbol");
         // TODO: Add ATs
-        desc(SymbolProperty.BASE_TAG, "bTag", "Base symbol");
-        desc(SymbolProperty.PARENT_TAG, "pTag", "Parent symbol annotation");
-        desc(SymbolProperty.BASE_PARENT_TAG, "bpTag", "Base of parent symbol annotation");
+        //desc(SymbolProperty.BASE_TAG, "bTag", "Base symbol");
+        //desc(SymbolProperty.PARENT_TAG, "pTag", "Parent symbol annotation");
+        //desc(SymbolProperty.BASE_PARENT_TAG, "bpTag", "Base of parent symbol annotation");
+        
+        /** Named entity mentions. */
+        desc(Mention.M_1, "m1", "Mention 1");
+        desc(Mention.M_2, "m2", "Mention 2");
+        
+        /** Mention properties. */
+        desc(MentionProperty.ENTITY_TYPE, "entityType", "Entity type");
+        desc(MentionProperty.PHRASE_TYPE, "mentionType", "Phrase type");
         
         /** Word property. A mapping from a position to a string. */
         desc(TokProperty.WORD, "word", "Word", AT.WORD);
@@ -219,7 +243,9 @@ public class TemplateLanguage {
         /** Position Modifier. A mapping from one position to another. */
         desc(PositionModifier.IDENTITY, "0", "No modification", AT.WORD);
         desc(PositionModifier.BEFORE1, "-1", "1 before w", AT.WORD);
+        desc(PositionModifier.BEFORE2, "-2", "2 before w", AT.WORD);
         desc(PositionModifier.AFTER1, "1", "1 after w", AT.WORD);
+        desc(PositionModifier.AFTER2, "2", "2 after w", AT.WORD);
         //
         desc(PositionModifier.HEAD, "head", "Syntactic head of w", AT.DEP_TREE);
         desc(PositionModifier.LNS, "lns", "Left nearest sibling", AT.DEP_TREE);
