@@ -184,7 +184,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Comparison of CLL and ERMA training with varying models and iterations.
             # Here we use a small dataset and no pruning.
             exps = []
-            overrides = SrlExpParams(trainMaxNumSentences=20,
+            overrides = SrlExpParams(trainMaxNumSentences=2000,
                               trainMaxSentenceLength=15,
                               pruneByDist=False,
                               pruneByModel=False,
