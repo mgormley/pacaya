@@ -579,8 +579,12 @@ public class AnnoSentence {
         if (binaryTree != null) {
             binaryTree.intern();
         }
-        namedEntities.intern();
-        relations.intern();
+        if (namedEntities != null) {
+            namedEntities.intern();
+        }
+        if (relations != null) {
+            relations.intern();
+        }
         // TODO: this.srlGraph.intern();
     }
 

@@ -580,8 +580,10 @@ public class JointNlpRunner {
         prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
         // Relation Feature extraction.
-        prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls);
-        prm.fgPrm.relPrm.featureHashMod = featureHashMod;
+        if (includeRel) {
+            prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls);
+            prm.fgPrm.relPrm.featureHashMod = featureHashMod;
+        }
         
         prm.fgPrm.includeDp = includeDp;
         prm.fgPrm.includeSrl = includeSrl;

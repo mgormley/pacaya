@@ -103,7 +103,7 @@ public class AnnoSentenceReader {
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());
         log.info("Longest sentence: " + sents.getMaxLength());
-                
+        log.info("Average sentence length: " + sents.getAvgLength());
         reader.close();
     }
     

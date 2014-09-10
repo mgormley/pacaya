@@ -13,6 +13,7 @@
 # • HM2: head word of M2
 # • HM12: combination of HM1 and HM2
 
+#TODO: bag(word(...
 word(bag(line(m1s,m1e)))
 word(m1h)
 word(bag(line(m2s,m2e)))

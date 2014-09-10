@@ -124,6 +124,15 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
         return maxLen;
     }
     
+    /** Gets the average sentence length. */
+    public double getAvgLength() {
+        double avgLen = 0;
+        for (AnnoSentence sent : this) {
+            avgLen += sent.size();
+        }
+        return avgLen / this.size();
+    }
+    
     public static void copyShallow(AnnoSentenceCollection srcSents, AnnoSentenceCollection destSents, AT at) {
         for (int i=0; i<srcSents.size(); i++) {
             AnnoSentence src = srcSents.get(i);
