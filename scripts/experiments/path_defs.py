@@ -64,11 +64,13 @@ class PathDefinitions():
         for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:
             p.langs[lang_short] = ParamGroups()            
         
+        ldc_dir = get_first_that_exists("/export/common/data/corpora/LDC",
+                                        "/Users/mgormley/research/corpora/LDC",
+                                        self.root_dir + "/data/LDC")
+        
         # CoNLL'09 Shared Task datasets.
-        conll09_T03_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T03/data/",
-                                                self.root_dir + "/data/conll2009/LDC2012T03/data")
-        conll09_T04_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T04/data/",
-                                                self.root_dir + "/data/conll2009/LDC2012T04/data")
+        conll09_T03_dir = get_first_that_exists(ldc_dir + "/LDC2012T03/data")
+        conll09_T04_dir = get_first_that_exists(ldc_dir + "/LDC2012T04/data")
         
         self._set_paths_for_conll09_lang(p, "Spanish", "es", conll09_T03_dir, require=True)
         self._set_paths_for_conll09_lang(p, "German",  "de", conll09_T03_dir, require=False)
@@ -78,8 +80,7 @@ class PathDefinitions():
         self._set_paths_for_conll09_lang(p, "Chinese", "zh", conll09_T04_dir, require=False)
         
         # CoNLL'08 Shared Task dataset
-        conll08_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2009T12/data/",
-                                                self.root_dir + "/data/LDC/LDC2009T12/data")
+        conll08_dir = get_first_that_exists(ldc_dir + "/LDC2009T12/data")
         p.c08_pos_gold_train = os.path.join(conll08_dir, "train", "train.closed")
         p.c08_pos_gold_dev = os.path.join(conll08_dir, "devel", "devel.closed")
         p.c08_pos_gold_test_wsj = os.path.join(conll08_dir, "test.wsj", "test.wsj.closed.GOLD")
