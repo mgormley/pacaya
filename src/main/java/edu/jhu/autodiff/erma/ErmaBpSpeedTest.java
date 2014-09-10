@@ -1,7 +1,5 @@
 package edu.jhu.autodiff.erma;
 
-import org.apache.commons.math3.util.FastMath;
-
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -14,6 +12,17 @@ import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.Algebras;
 
+/**
+ * Results from 09/09/2014:
+ * 
+ * ErmaBp:
+ * r=1 t= 9000 avg(ms)=     0.322 tot(ms)=     2.901 tok/sec= 31023.785
+ * 
+ * BeliefPropagation:
+ * r=1 t= 9000 avg(ms)=     0.784 tot(ms)=     7.059 tok/sec= 29324.267
+ * 
+ * @author mgormley
+ */
 public class ErmaBpSpeedTest {
 
     // Number of tokens. 23 is avg sent length in sec 22 of PTB.
@@ -39,14 +48,9 @@ public class ErmaBpSpeedTest {
             }
         }
     }
-    
+        
     public static void runBp(FactorGraph fg, int t) {
         ErmaBpPrm prm = new ErmaBpPrm();
-//        if (t % 2 == 0) {
-//            prm.s = Algebras.REAL_ALGEBRA;
-//        } else {
-//            prm.s = Algebras.LOG_SEMIRING;
-//        }
         //prm.s = Algebras.LOG_SIGN_ALGEBRA;
         prm.s = Algebras.REAL_ALGEBRA;
         prm.maxIterations = 1;
