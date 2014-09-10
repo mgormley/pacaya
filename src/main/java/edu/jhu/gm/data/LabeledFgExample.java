@@ -3,6 +3,8 @@ package edu.jhu.gm.data;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -22,7 +24,8 @@ import edu.jhu.gm.model.VarSet;
  */
 // TODO: rename to CrfExample
 public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, Serializable {
-
+    
+    private static final Logger log = Logger.getLogger(LabeledFgExample.class);
     private static final long serialVersionUID = 1L;
     
     /** The factor graph with the OBSERVED and PREDICTED variables clamped to their values from the training example. */
@@ -76,6 +79,9 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
         for (Var var : fg.getVars()) {
             // Latent variables don't need to be specified in the gold variable assignment.
             if (var.getType() != VarType.LATENT && goldConfig.getState(var, -1) == -1) {
+                int numNonLat = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED).size()
+                        + VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED).size();
+                log.error(String.format("Missing vars. #non-latent=%d #assign=%d", numNonLat, goldConfig.size()));
                 throw new IllegalStateException("Vars missing from train configuration: " + var);
             }
         }

@@ -84,17 +84,23 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
         // Get the variable assignments given in the training data.
         VarConfig vc = new VarConfig();
-        if (gold != null && gold.getParents() != null) {
-            DepParseEncoder.addDepParseTrainAssignment(gold.getParents(), fg.getDpBuilder(), vc);
-        } else if (sent.getParents() != null && prm.fgPrm.includeDp && prm.fgPrm.dpPrm.linkVarType == VarType.OBSERVED) {
-            // If the dependency tree is given in the input sentence, we might have added OBSERVED variables for it.
-            DepParseEncoder.addDepParseTrainAssignment(sent.getParents(), fg.getDpBuilder(), vc);
+        if (prm.fgPrm.includeDp) {
+            if (gold != null && gold.getParents() != null) {
+                DepParseEncoder.addDepParseTrainAssignment(gold.getParents(), fg.getDpBuilder(), vc);
+            } else if (sent.getParents() != null && prm.fgPrm.includeDp && prm.fgPrm.dpPrm.linkVarType == VarType.OBSERVED) {
+                // If the dependency tree is given in the input sentence, we might have added OBSERVED variables for it.
+                DepParseEncoder.addDepParseTrainAssignment(sent.getParents(), fg.getDpBuilder(), vc);
+            }
         }
-        if (gold != null && gold.getSrlGraph() != null) {
-            SrlEncoder.addSrlTrainAssignment(sent, gold.getSrlGraph(), fg.getSrlBuilder(), vc, prm.fgPrm.srlPrm.predictSense, prm.fgPrm.srlPrm.predictPredPos);
+        if (prm.fgPrm.includeSrl) {
+            if (gold != null && gold.getSrlGraph() != null) {
+                SrlEncoder.addSrlTrainAssignment(sent, gold.getSrlGraph(), fg.getSrlBuilder(), vc, prm.fgPrm.srlPrm.predictSense, prm.fgPrm.srlPrm.predictPredPos);
+            }
         }
-        if (gold != null && gold.getRelations() != null) {
-            RelationsEncoder.addRelVarAssignments(sent, gold.getRelations(), fg.getRelBuilder(), vc);
+        if (prm.fgPrm.includeRel) {
+            if (gold != null && gold.getRelations() != null) {
+                RelationsEncoder.addRelVarAssignments(sent, gold.getRelations(), fg.getRelBuilder(), vc);
+            }
         }
         
         // Create the example.
@@ -125,7 +131,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
                 TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
             }
         }
-        if (prm.fgPrm.includeRel) {
+        if (prm.fgPrm.includeRel && prm.fgPrm.relPrm.templates != null) {
             TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
         }
     }

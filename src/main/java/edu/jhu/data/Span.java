@@ -19,24 +19,36 @@ public class Span implements Comparable<Span> {
         this.end = end;
     }
     
-    public boolean isBefore(Span other) {
+    /** Whether this span starts before another. */
+    public boolean startsBefore(Span other) {
         if (this.start < other.start) {
             return true;
         }
         return false;
     }
 
+    /** Whether this span contains another span. */
+    public boolean contains(Span other) {
+        return this.start <= other.start && other.end <= this.end;
+    }
+    
+    /** Whether this span contains the specified index. */
+    public boolean contains(int i) {
+        return start <= i && i < end;
+    }
+    
     /**
      * Gets the span intervening between two spans.
      */
     public static Span getSpanBtwn(Span span1, Span span2) {
-        Span btwn;
-        if (span1.isBefore(span2)) {
-            btwn = new Span(span1.end(), span2.start());
+        if (span1.end <= span2.start) {
+            return new Span(span1.end, span2.start);
+        } else if (span2.end <= span1.start) {
+            return new Span(span2.end, span1.start);
         } else {
-            btwn = new Span(span2.end(), span1.start());
+            // Return an empty span.
+            return new Span(span1.start, span1.start);
         }
-        return btwn;
     }
     
     public int start() {
@@ -100,6 +112,10 @@ public class Span implements Comparable<Span> {
             }
         }
         return sb.toString();
+    }
+
+    public int size() {
+        return end - start;
     }
     
 }

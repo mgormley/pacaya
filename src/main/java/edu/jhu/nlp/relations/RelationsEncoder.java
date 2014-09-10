@@ -85,7 +85,7 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
         RelationMention rm = rels.get(ne1, ne2);
         String relation;
         if (rm == null) {
-            relation = NO_RELATION_LABEL;
+            relation = String.format("%s:%s:%s", NO_RELATION_LABEL, "Arg-1", "Arg-1");
         } else if (isAsymmetric(rm.getType(), rm.getSubType(), DatasetType.ACE2005)) {
             String role1 = rm.getArgs().get(0).get1();
             String role2 = rm.getArgs().get(1).get1();

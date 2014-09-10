@@ -1,5 +1,7 @@
 package edu.jhu.data;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 /**
  * Mention of a named entity or a similarly labeled span in a sentence.
  * 
@@ -16,9 +18,10 @@ public class NerMention implements Comparable<NerMention> {
     private int head;
     private String id;
 
-    public NerMention(Span span, String entityType) {
+    public NerMention(Span span, String entityType, String entitySubType) {
         this.span = span;
         this.entityType = entityType;
+        this.entitySubType = entitySubType;
     }
 
     public NerMention(Span span, String entityType, String entitySubType, String phraseType, int head, String id) {
@@ -38,14 +41,6 @@ public class NerMention implements Comparable<NerMention> {
         this.phraseType = other.phraseType;
         this.head = other.head;
         this.id = other.id;
-    }
-
-    public int hashCode() {
-        throw new RuntimeException("not implemented");
-    }
-
-    public boolean equals() {
-        throw new RuntimeException("not implemented");
     }
 
     public Span getSpan() {
@@ -87,14 +82,70 @@ public class NerMention implements Comparable<NerMention> {
 
     @Override
     public int compareTo(NerMention other) {
-        if (this.span == null && other.span == null) {
-            return 0;
-        } else if (this.span == null) {
-            return -1;
-        } else if (other.span == null) {
-            return 1;
-        }
-        return this.span.compareTo(other.span);
+        int diff = ObjectUtils.compare(this.span, other.span);
+        if (diff != 0) { return diff; }
+        diff = ObjectUtils.compare(this.entityType, other.entityType);
+        if (diff != 0) { return diff; }
+        diff = ObjectUtils.compare(this.entitySubType, other.entitySubType);
+        if (diff != 0) { return diff; }
+        diff = ObjectUtils.compare(this.phraseType, other.phraseType);
+        if (diff != 0) { return diff; }
+        diff = ObjectUtils.compare(this.head, other.head);
+        if (diff != 0) { return diff; }
+        diff = ObjectUtils.compare(this.id, other.id);
+        return diff;        
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((entitySubType == null) ? 0 : entitySubType.hashCode());
+        result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
+        result = prime * result + head;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((phraseType == null) ? 0 : phraseType.hashCode());
+        result = prime * result + ((span == null) ? 0 : span.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        NerMention other = (NerMention) obj;
+        if (entitySubType == null) {
+            if (other.entitySubType != null)
+                return false;
+        } else if (!entitySubType.equals(other.entitySubType))
+            return false;
+        if (entityType == null) {
+            if (other.entityType != null)
+                return false;
+        } else if (!entityType.equals(other.entityType))
+            return false;
+        if (head != other.head)
+            return false;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (phraseType == null) {
+            if (other.phraseType != null)
+                return false;
+        } else if (!phraseType.equals(other.phraseType))
+            return false;
+        if (span == null) {
+            if (other.span != null)
+                return false;
+        } else if (!span.equals(other.span))
+            return false;
+        return true;
+    }    
 
 }

@@ -252,7 +252,7 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
     public static boolean includeRel = false;
     @Opt(hasArg = true, description = "Relation feature templates.")
-    public static String relFeatTpls = TemplateSets.zhou05RelFeatsResource;
+    public static String relFeatTpls = null;
     
     // Options for data munging.
     @Deprecated
@@ -581,7 +581,7 @@ public class JointNlpRunner {
         
         // Relation Feature extraction.
         if (includeRel) {
-            prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls);
+            if (relFeatTpls != null) { prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls); }
             prm.fgPrm.relPrm.featureHashMod = featureHashMod;
         }
         

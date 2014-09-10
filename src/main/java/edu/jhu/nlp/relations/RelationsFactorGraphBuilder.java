@@ -51,13 +51,13 @@ public class RelationsFactorGraphBuilder {
         NerMention ment1;
         NerMention ment2;     
         
-        public RelVar(VarType type, String name, NerMention arg1, NerMention arg2, List<String> stateNames) {
+        public RelVar(VarType type, String name, NerMention ment1, NerMention ment2, List<String> stateNames) {
             super(type, stateNames.size(), name, stateNames);
             if (ment1.compareTo(ment2) >= 0) {
                 log.warn("The first mention (ment1) should always preceed the second mention (ment2)");
             }
-            this.ment1 = arg1;
-            this.ment2 = arg2;
+            this.ment1 = ment1;
+            this.ment2 = ment2;
         }
 
         public static String getDefaultName(Span arg1, Span arg2) {
@@ -92,7 +92,7 @@ public class RelationsFactorGraphBuilder {
                 varMap.put(new Pair<NerMention,NerMention>(ne1, ne2), rv);
             }
         }
-                
+        
         // Create a unary factor for each relation variable.
         ObsFeatureExtractor obsFe = new RelObsFe(prm, sent, cj.getTemplates());
         for (RelVar rv : rvs) {

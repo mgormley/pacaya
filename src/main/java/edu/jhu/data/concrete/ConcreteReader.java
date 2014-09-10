@@ -1,16 +1,22 @@
 package edu.jhu.data.concrete;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
+import org.apache.log4j.Logger;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -51,6 +57,8 @@ import edu.jhu.prim.tuple.Pair;
  */
 public class ConcreteReader {
 
+    private static final Logger log = Logger.getLogger(ConcreteReader.class);
+
     public static class ConcreteReaderPrm {
         public int tokenizationTheory = 0;
         public int posTagTheory = 0;
@@ -75,7 +83,47 @@ public class ConcreteReader {
         this.prm = prm;
     }
 
-    public AnnoSentenceCollection toSentences(File concreteFile) throws IOException {
+    public AnnoSentenceCollection toSentences(File inFile) throws IOException {
+        if (inFile.getName().endsWith(".zip")) {
+            return sentsFromZipFile(inFile);
+        } else {
+            return sentsFromCommFile(inFile);
+        }
+    }
+    
+    public AnnoSentenceCollection sentsFromZipFile(File zipFile) throws IOException {
+        try {
+            AnnoSentenceCollection annoSents = new AnnoSentenceCollection();
+            try (ZipFile zf = new ZipFile(zipFile)) {
+                Enumeration<? extends ZipEntry> e = zf.entries();
+                while (e.hasMoreElements()) {
+                    ZipEntry ze = e.nextElement();
+                    log.trace("Reading communication: " + ze.getName());
+                    byte[] bytez = toBytes(zf.getInputStream(ze));
+                    TDeserializer deser = new TDeserializer(new TBinaryProtocol.Factory());
+                    Communication comm = new Communication();
+                    deser.deserialize(comm, bytez);
+                    addSentences(comm, annoSents);
+                }
+            }
+            return annoSents;
+        } catch (TException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    // Adapted from ThriftIO.
+    private static byte[] toBytes(InputStream input) throws IOException {
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        while ((bytesRead = input.read(buffer)) != -1) {
+            baos.write(buffer, 0, bytesRead);
+        }
+        return baos.toByteArray();
+    }
+    
+    public AnnoSentenceCollection sentsFromCommFile(File concreteFile) throws IOException {
         try {
             byte[] bytez = Files.readAllBytes(Paths.get(concreteFile.getAbsolutePath()));
             TDeserializer deser = new TDeserializer(new TBinaryProtocol.Factory());        
@@ -129,6 +177,10 @@ public class ConcreteReader {
     }
 
     private void addEntityMentions(Communication comm, List<AnnoSentence> tmpSents) {
+        if (comm.getEntityMentionSetsSize() == 0) {
+            return;
+        }
+        
         List<List<NerMention>> mentions = new ArrayList<>();
         for (int i=0; i<tmpSents.size(); i++) {
             mentions.add(new ArrayList<NerMention>());
@@ -168,6 +220,15 @@ public class ConcreteReader {
     }
 
     private void addSituationMentions(Communication comm, List<AnnoSentence> tmpSents) {
+
+        if (comm.getSituationMentionSetsSize() == 0) {
+            return;
+        }
+        
+        for (int i=0; i<tmpSents.size(); i++) {
+            tmpSents.get(i).setRelations(new RelationMentions());
+        }
+        
         Map<String, NerMention> emId2em = getUuid2ArgsMap(tmpSents);
         Map<String, Integer> emId2SentIdx = getUuid2SentIdxMap(tmpSents);
         
@@ -204,15 +265,16 @@ public class ConcreteReader {
             }
             
             // Situation's trigger extent.
-            int start = Collections.min(cSm.getTokens().getTokenIndexList());
-            int end = Collections.max(cSm.getTokens().getTokenIndexList()) + 1;
+            Span trigger = null;
+            if (cSm.getTokens() != null) {
+                int start = Collections.min(cSm.getTokens().getTokenIndexList());
+                int end = Collections.max(cSm.getTokens().getTokenIndexList()) + 1;            
+                trigger = new Span(start, end);
+            }
             
-            RelationMention aSm = new RelationMention(stateType, stateSubtype, aArgs, new Span(start, end));
+            RelationMention aSm = new RelationMention(stateType, stateSubtype, aArgs, trigger);
             AnnoSentence aSent = tmpSents.get(sentIdx);
             RelationMentions aRels = aSent.getRelations();
-            if (aRels == null) {
-                aRels = new RelationMentions();
-            }
             aRels.add(aSm);
             aSent.setRelations(aRels);            
         }

@@ -1,5 +1,6 @@
 package edu.jhu.nlp.relations;
 
+import java.util.Arrays;
 import java.util.List;
 
 import edu.jhu.data.NerMention;
@@ -47,7 +48,7 @@ public class RelationsDecoder implements Decoder<AnnoSentence, RelationMentions>
                RelVar rv = (RelVar) v;
                String relation = mbrVarConfig.getStateName(rv);
                String[] splits = relation.split(":");
-               assert splits.length == 3;
+               assert splits.length == 3 : Arrays.toString(splits);
                String type = splits[0];               
                List<Pair<String, NerMention>> args = Lists.getList(
                        new Pair<String,NerMention>(splits[1], rv.ment1), 
