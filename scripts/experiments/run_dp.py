@@ -179,7 +179,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 exp.update(bpMaxIterations=bpMaxIterations,
                                            pruneByDist=pruneByDist)
                                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                                if parser in [g.second_order, g.second_grand, g.second_sib]:
+                                if False: #TODO: parser in [g.second_order, g.second_grand, g.second_sib]:
                                     exps += get_oome_stages(exp)
                                 else:
                                     exps.append(exp)
