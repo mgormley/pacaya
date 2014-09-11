@@ -161,22 +161,28 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
-            for trainer in [g.erma_mse, g.cll]:
-                for bpMaxIterations in [2, 3, 5, 10]:
+            overrides = SrlExpParams(bpUpdateOrder="SEQUENTIAL", 
+                              bpSchedule="TREE_LIKE",
+                              useMseForValue=True)
+            for trainer in [g.erma_mse, g.cll, g.erma_dp, g.erma_er]:
+                for bpMaxIterations in [1, 2, 3, 5, 10]:
                     for lang_short in ["bg", "es", "en"]:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
-                        for parser in g.parsers:
-                            data = gl.cx_data
-                            data.update(l2variance=l2var_map[lang_short],
-                                        pruneModel=gl.pruneModel,
-                                        propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
-                            exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
-                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                            if parser in [g.second_order, g.second_grand, g.second_sib]:
-                                exps += get_oome_stages(exp)
-                            else:
-                                exps.append(exp)
+                        for parser in g.unpruned_parsers:
+                            for pruneByDist in [True, False]:
+                                data = gl.cx_data
+                                data.update(l2variance=l2var_map[lang_short],
+                                            pruneModel=gl.pruneModel,
+                                            propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
+                                exp = g.defaults + data + parser + trainer + overrides
+                                exp.update(bpMaxIterations=bpMaxIterations,
+                                           pruneByDist=pruneByDist)
+                                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                                if parser in [g.second_order, g.second_grand, g.second_sib]:
+                                    exps += get_oome_stages(exp)
+                                else:
+                                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         

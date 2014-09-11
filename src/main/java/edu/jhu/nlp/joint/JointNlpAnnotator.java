@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.Logger;
@@ -23,8 +24,8 @@ import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
-import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.util.Prm;
@@ -122,18 +123,31 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         for (int i = 0; i < sents.size(); i++) {
             UFgExample ex = data.get(i);
             AnnoSentence predSent = sents.get(i);
-            JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
-            decoder.decode(model, ex);
-            
-            // Update SRL graph on the sentence. 
-            SrlGraph srlGraph = decoder.getSrlGraph();
-            if (srlGraph != null) {
-                predSent.setSrlGraph(srlGraph);
-            }
-            // Update the dependency tree on the sentence.
-            int[] parents = decoder.getParents();
-            if (parents != null) {
-                predSent.setParents(parents);
+            try {
+                JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
+                decoder.decode(model, ex);
+                
+                // Update SRL graph on the sentence. 
+                SrlGraph srlGraph = decoder.getSrlGraph();
+                if (srlGraph != null) {
+                    predSent.setSrlGraph(srlGraph);
+                }
+                // Update the dependency tree on the sentence.
+                int[] parents = decoder.getParents();
+                if (parents != null) {
+                    predSent.setParents(parents);
+                }
+            } catch (Throwable t) {
+                // TODO: Maybe move this elsewhere.
+                log.error("Caught throwable: " + t.getMessage());
+                t.printStackTrace();
+                if (predSent.getParents() == null) {
+                    log.error("Setting parents to all point to the wall.");
+                    int[] parents = new int[predSent.size()];
+                    Arrays.fill(parents, -1);
+                    predSent.setParents(parents);
+                }
+                // TODO: Support failure of SRL.
             }
         }
         timer.stop();

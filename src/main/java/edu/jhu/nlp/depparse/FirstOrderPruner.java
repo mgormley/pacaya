@@ -73,8 +73,14 @@ public class FirstOrderPruner implements Annotator {
             AnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
             decoder.decode(model, ex);
-            
+                        
             // Update the dependency tree on the sentence.
+            int[] parents = decoder.getParents();
+            if (parents != null) {
+                predSent.setParents(parents);
+            }
+            
+            // Update the pruning mask.
             DepEdgeMask mask = decoder.getDepEdgeMask();
             if (mask != null) {
                 if (predSent.getDepEdgeMask() == null) {

@@ -53,6 +53,15 @@ public class CrfObjective implements ExampleObjective {
     // Assumed by caller to be threadsafe.
     @Override
     public void accum(FgModel model, int i, Accumulator ac) {
+        try {
+            accumWithException(model, i, ac);
+        } catch(Throwable t) {
+            log.error("Skipping example " + i + " due to throwable: " + t.getMessage());
+            t.printStackTrace();
+        }
+    }
+    
+    public void accumWithException(FgModel model, int i, Accumulator ac) {
         Timer t0 = new Timer(); t0.start();        
         LFgExample ex = data.get(i);
         Timer t = new Timer();
