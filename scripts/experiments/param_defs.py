@@ -403,7 +403,7 @@ class ParamDefinitions():
             elif exp.get("includeSrl") == False:
                 base_work_mem_megs = 5 * 1000
                 is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
-                if exp.get("pruneEdges") == False and is_higher_order: 
+                if is_higher_order: 
                     base_work_mem_megs = 10*1000
             else:
                 if exp.get("useProjDepTreeFactor"):

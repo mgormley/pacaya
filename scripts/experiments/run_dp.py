@@ -162,7 +162,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
             overrides = SrlExpParams(bpUpdateOrder="SEQUENTIAL", 
-                              bpSchedule="TREE_LIKE",
+                              bpSchedule="TREE_LIKE",                              
+                              trainMaxSentenceLength=50,
+                              devMaxSentenceLength=50,
+                              testMaxSentenceLength=50,
                               useMseForValue=True)
             for trainer in [g.erma_mse, g.cll, g.erma_dp, g.erma_er]:
                 for bpMaxIterations in [1, 2, 3, 5, 10]:
@@ -177,14 +180,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                             propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
                                 exp = g.defaults + data + parser + trainer + overrides
                                 exp.update(bpMaxIterations=bpMaxIterations,
-                                           pruneByDist=pruneByDist)
-                                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                                if False: #TODO: parser in [g.second_order, g.second_grand, g.second_sib]:
+                                           pruneByDist=pruneByDist,
+                                           work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                                if parser in [g.second_order, g.second_grand, g.second_sib]:
                                     exps += get_oome_stages(exp)
                                 else:
                                     exps.append(exp)
+            exps = [x for x in exps if exp.get("language") == "en"] #TODO Remove
             return self._get_pipeline_from_exps(exps)
-        
         
         elif self.expname == "dp-aware-small":
             # Comparison of CLL and ERMA training with varying models and iterations.
