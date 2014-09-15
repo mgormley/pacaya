@@ -23,6 +23,7 @@ public class BinaryTree {
     private BinaryTree leftChild;
     private BinaryTree rightChild;
     private boolean isLexical;
+    private BinaryTree parent;
     
     public BinaryTree(String symbol, int start, int end, BinaryTree leftChildNode,
             BinaryTree rightChildNode, boolean isLexical) {
@@ -32,6 +33,13 @@ public class BinaryTree {
         this.leftChild = leftChildNode;
         this.rightChild = rightChildNode;
         this.isLexical = isLexical;
+        this.parent = null;
+        if (leftChild != null) {
+            leftChild.parent = this;
+        }
+        if (rightChild != null) {
+            rightChild.parent = this;
+        }
     }
 
 //    public Span getSpan() {
@@ -163,6 +171,10 @@ public class BinaryTree {
         this.symbol = symbol;
     }
     
+    public BinaryTree getParent() {
+        return parent;
+    }
+    
     /**
      * Updates all the start end fields, treating the current node as the root.
      */
@@ -192,6 +204,17 @@ public class BinaryTree {
         LexicalLeafCollector leafCollector = new LexicalLeafCollector();
         postOrderTraversal(leafCollector);
         return leafCollector.leaves;
+    }
+
+    /** Gets the leaf containing the specified token index. */
+    public BinaryTree getLeafAt(int idx) {
+        BinaryTree leaf = null;
+        for (BinaryTree l : this.getLeaves()) {
+            if (l.start <= idx && idx < l.end) {
+                leaf = l;
+            }
+        }
+        return leaf;
     }
     
     /**
@@ -287,7 +310,7 @@ public class BinaryTree {
             children = new ArrayList<NaryTree>(queue);
         }
         
-        return new NaryTree(symbol, start, end, children, isLexical);         
+        return new NaryTree(symbol, start, end, children, isLexical);
     }
 
     private static void addToQueue(LinkedList<NaryTree> queue, BinaryTree child) {

@@ -29,11 +29,13 @@ import edu.jhu.data.Span;
 import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.hlt.concrete.Communication;
+import edu.jhu.hlt.concrete.Constituent;
 import edu.jhu.hlt.concrete.Dependency;
 import edu.jhu.hlt.concrete.DependencyParse;
 import edu.jhu.hlt.concrete.EntityMention;
 import edu.jhu.hlt.concrete.EntityMentionSet;
 import edu.jhu.hlt.concrete.MentionArgument;
+import edu.jhu.hlt.concrete.Parse;
 import edu.jhu.hlt.concrete.Section;
 import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
@@ -48,7 +50,11 @@ import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
 import edu.jhu.hlt.concrete.UUID;
+import edu.jhu.parse.cky.data.NaryTree;
+import edu.jhu.prim.Primitives.MutableInt;
+import edu.jhu.prim.map.IntIntHashMap;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.Lambda.LambdaOne;
 
 /**
  * Reader of Concrete protocol buffer files.
@@ -192,9 +198,9 @@ public class ConcreteReader {
         EntityMentionSet cEms = comm.getEntityMentionSets().get(0);
         for (EntityMention cEm : cEms.getMentionSet()) {
             TokenRefSequence cEmToks = cEm.getTokens();
+            Span span = getSpan(cEmToks);
+
             int sentIdx = toksUuid2SentIdx.get(cEmToks.getTokenizationId().getUuidString());
-            int start = Collections.min(cEmToks.getTokenIndexList());
-            int end = Collections.max(cEmToks.getTokenIndexList()) + 1;
             String entityType = cEm.getEntityType();
             String entitySubtype = null;
             if (entityType.contains(":")) {
@@ -203,7 +209,7 @@ public class ConcreteReader {
                 entitySubtype = splits[1];
             }
             NerMention aEm = new NerMention(
-                    new Span(start, end), 
+                    span, 
                     entityType,
                     entitySubtype,
                     cEm.getPhraseType(),
@@ -217,6 +223,13 @@ public class ConcreteReader {
             NerMentions ner = new NerMentions(aSent.size(), mentions.get(i));
             aSent.setNamedEntities(ner);
         }
+    }
+
+    private Span getSpan(TokenRefSequence toks) {
+        int start = Collections.min(toks.getTokenIndexList());
+        int end = Collections.max(toks.getTokenIndexList()) + 1;
+        Span span = new Span(start, end);
+        return span;
     }
 
     private void addSituationMentions(Communication comm, List<AnnoSentence> tmpSents) {
@@ -267,9 +280,7 @@ public class ConcreteReader {
             // Situation's trigger extent.
             Span trigger = null;
             if (cSm.getTokens() != null) {
-                int start = Collections.min(cSm.getTokens().getTokenIndexList());
-                int end = Collections.max(cSm.getTokens().getTokenIndexList()) + 1;            
-                trigger = new Span(start, end);
+                trigger = getSpan(cSm.getTokens());
             }
             
             RelationMention aSm = new RelationMention(stateType, stateSubtype, aArgs, trigger);
@@ -355,9 +366,62 @@ public class ConcreteReader {
             as.setParents(parents);
         }
         
+        // Constituency Parse
+        if (tokenization.isSetParse()) {
+            NaryTree tree = getParse(tokenization.getParse());
+            as.setNaryTree(tree);
+        }
+        
         // TODO: Semantic Role Labeling Graph
         
         return as;
+    }
+
+    private NaryTree getParse(Parse parse) {
+        IntIntHashMap id2idx = new IntIntHashMap();
+        
+        List<Constituent> cs = parse.getConstituentList();
+        // Create the node for each constituent.
+        NaryTree[] trees = new NaryTree[cs.size()];
+        for (int i=0; i<cs.size(); i++) {
+            Constituent c = cs.get(i);
+            id2idx.put(c.getId(), i);
+            Span span = new Span(NaryTree.NOT_INITIALIZED, NaryTree.NOT_INITIALIZED);
+            if (c.isSetTokenSequence()) {
+                span = getSpan(c.getTokenSequence());
+            }
+            boolean isLexical = (c.getChildList().size() == 0);
+            trees[i] = new NaryTree(c.getTag(), span.start(), span.end(), new ArrayList<NaryTree>(), isLexical);
+        }
+        
+        // Add the children for each node.
+        for (int i=0; i<cs.size(); i++) {
+            Constituent c = cs.get(i);
+            for (int id : c.getChildList()) {
+                int j = id2idx.get(id);
+                trees[i].addChild(trees[j]);
+            }
+        }
+        
+        // Find the root.
+        NaryTree root = trees[0];
+        while (root.getParent() != null) {
+            root = root.getParent();
+        }
+        
+        final MutableInt numNodes = new MutableInt(0);
+        root.preOrderTraversal(new LambdaOne<NaryTree>() {
+            @Override
+            public void call(NaryTree obj) {
+                numNodes.v++;
+            }
+        });
+        
+        if (numNodes.v != cs.size()) {
+            log.warn(String.format("Not all constituents were included in the tree: expected=%d actual=%d", cs.size(), numNodes.v));
+        }
+        
+        return root;
     }
 
     private List<String> getTagging(TokenTagging tagging) {

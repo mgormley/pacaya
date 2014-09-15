@@ -31,7 +31,7 @@ import edu.jhu.nlp.features.TemplateLanguage.TokPropList;
 import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.util.SafeEquals;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Defines a feature template extractor for templates based on a 'little
@@ -370,7 +370,7 @@ public class TemplateFeatureExtractor {
         case BAG:
             return bag(props);
         case NO_DUP:
-            return noDup(props);
+            return Lists.getUniq(props);
         default:
             throw new IllegalStateException();
         }
@@ -587,19 +587,6 @@ public class TemplateFeatureExtractor {
     protected static <T> Collection<T> bag(Collection<T> elements) {
         // bag, which removes all duplicated strings and sort the rest
         return new TreeSet<T>(elements);
-    }
-    
-    protected static <T> ArrayList<T> noDup(Collection<T> elements) {
-        // noDup, which removes all duplicated neighbored strings.
-        ArrayList<T> noDupElements = new ArrayList<T>();
-        T lastA = null;
-        for (T a : elements) {
-            if (!a.equals(lastA)) {
-                noDupElements.add(a);
-            }
-            lastA = a;
-        }
-        return noDupElements;
     }
     
     private FeaturizedToken getFeatTok(int idx) {

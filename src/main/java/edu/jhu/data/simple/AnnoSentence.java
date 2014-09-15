@@ -13,7 +13,7 @@ import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
-import edu.jhu.parse.cky.data.BinaryTree;
+import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.tuple.Pair;
@@ -51,8 +51,8 @@ public class AnnoSentence {
     private IntHashSet knownPreds;
     // TODO: This should be broken into semantic-roles and word senses.
     private SrlGraph srlGraph;
-    /** Constituency parse. */    
-    private BinaryTree binaryTree;
+    /** Constituency parse. */
+    private NaryTree naryTree;
     private NerMentions namedEntities;
     private RelationMentions relations;
     
@@ -87,7 +87,7 @@ public class AnnoSentence {
         // TODO: this should be a deep copy.
         this.srlGraph = other.srlGraph;
         // TODO: this should be a deep copy.
-        this.binaryTree = other.binaryTree;
+        this.naryTree = other.naryTree;
     }
     
     public AnnoSentence getShallowCopy() {
@@ -105,7 +105,7 @@ public class AnnoSentence {
         newSent.sourceSent = this.sourceSent;
         newSent.feats = this.feats;
         newSent.srlGraph = this.srlGraph;
-        newSent.binaryTree = this.binaryTree;
+        newSent.naryTree = this.naryTree;
         newSent.namedEntities = this.namedEntities;
         newSent.relations = this.relations;
         return newSent;
@@ -461,12 +461,12 @@ public class AnnoSentence {
         this.feats = feats;
     }
     
-    public BinaryTree getBinaryTree() {
-        return binaryTree;
+    public NaryTree getNaryTree() {
+        return naryTree;
     }
 
-    public void setBinaryTree(BinaryTree binaryTree) {
-        this.binaryTree = binaryTree;
+    public void setNaryTree(NaryTree naryTree) {
+        this.naryTree = naryTree;
     }
     
     /** Gets the original object (e.g. CoNLL09Sentence) used to create this sentence. */
@@ -515,7 +515,7 @@ public class AnnoSentence {
         case DEP_EDGE_MASK: this.depEdgeMask = null; break;
         case SRL_PRED_IDX: this.knownPreds = null; break;
         case SRL: this.srlGraph = null; break;
-        case BINARY_TREE: this.binaryTree = null; break;
+        case NARY_TREE: this.naryTree = null; break;
         case NER: this.namedEntities = null; break;
         case RELATIONS: this.relations = null; break;
         default: throw new RuntimeException("not implemented for " + at);
@@ -536,7 +536,7 @@ public class AnnoSentence {
         case DEP_EDGE_MASK: return this.depEdgeMask != null;
         case SRL_PRED_IDX: return this.knownPreds != null;
         case SRL: return this.srlGraph != null;
-        case BINARY_TREE: return this.binaryTree != null;
+        case NARY_TREE: return this.naryTree != null;
         case NER: return this.namedEntities != null;
         case RELATIONS: return this.relations != null;        
         default: throw new RuntimeException("not implemented for " + at);
@@ -557,7 +557,7 @@ public class AnnoSentence {
         case DEP_EDGE_MASK: dest.depEdgeMask = src.depEdgeMask; break;
         case SRL_PRED_IDX: dest.knownPreds = src.knownPreds; break;
         case SRL: dest.srlGraph = src.srlGraph; break;
-        case BINARY_TREE: dest.binaryTree = src.binaryTree; break;
+        case NARY_TREE: dest.naryTree = src.naryTree; break;
         case NER: dest.namedEntities = src.namedEntities; break;
         case RELATIONS: dest.namedEntities = src.namedEntities; break;
         default: throw new RuntimeException("not implemented for " + at);
@@ -576,8 +576,8 @@ public class AnnoSentence {
             }
         }
         Lists.intern(deprels);        
-        if (binaryTree != null) {
-            binaryTree.intern();
+        if (naryTree != null) {
+            naryTree.intern();
         }
         if (namedEntities != null) {
             namedEntities.intern();
@@ -608,7 +608,7 @@ public class AnnoSentence {
         appendIfNotNull(sb, "depEdgeMask", depEdgeMask);
         appendIfNotNull(sb, "srlGraph", srlGraph);
         appendIfNotNull(sb, "knownPreds", knownPreds);
-        appendIfNotNull(sb, "binaryTree", binaryTree);
+        appendIfNotNull(sb, "naryTree", naryTree);
         appendIfNotNull(sb, "namedEntities", namedEntities);
         if (namedEntities != null) { appendIfNotNull(sb, "namedEntities (context)", namedEntities.toString(words)); }
         appendIfNotNull(sb, "relations", relations);

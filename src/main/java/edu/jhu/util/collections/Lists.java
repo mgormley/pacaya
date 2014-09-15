@@ -2,6 +2,7 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -122,6 +123,19 @@ public class Lists {
 
     public static <T> List<T> reverse(List<T> list) {
         return com.google.common.collect.Lists.reverse(list);
+    }
+    
+    public static <T> ArrayList<T> getUniq(Collection<T> elements) {
+        // noDup, which removes all duplicated neighbored strings.
+        ArrayList<T> noDupElements = new ArrayList<T>();
+        T lastA = null;
+        for (T a : elements) {
+            if (!a.equals(lastA)) {
+                noDupElements.add(a);
+            }
+            lastA = a;
+        }
+        return noDupElements;
     }
     
 }

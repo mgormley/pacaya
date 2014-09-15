@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 
 import edu.jhu.data.NerMention;
 import edu.jhu.data.Span;
@@ -20,6 +23,9 @@ import edu.jhu.nlp.features.LocalObservations;
 import edu.jhu.nlp.features.TemplateFeatureExtractor;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
+import edu.jhu.parse.cky.data.NaryTree;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -231,7 +237,22 @@ public class RelObsFe implements ObsFeatureExtractor {
         // • ET12SameVP: combination of ET12 and
         // whether M1 and M2 included in the same VP
 
-        // TODO: Finish Dependency Tree features.
+        String depWord1 = getDepWord(fsent, sent, m1);
+        String dw1 = "dw1:"+depWord1;
+        features.add(combo("et1:"+m1.getEntityType(), dw1));
+        features.add(combo(hm1, dw1));
+        
+        String depWord2 = getDepWord(fsent, sent, m2);
+        String dw2 = "dw2:"+depWord2;
+        features.add(combo("et2:"+m2.getEntityType(), dw2));
+        features.add(combo(hm2, dw2));
+        
+        String sameNp = "sameNp:"+inSamePhrase(sent, m1.getHead(), m2.getHead(), "NP");
+        String samePp = "samePp:"+inSamePhrase(sent, m1.getHead(), m2.getHead(), "PP");
+        String sameVp = "sameVp:"+inSamePhrase(sent, m1.getHead(), m2.getHead(), "VP");
+        features.add(combo(et12, sameNp));
+        features.add(combo(et12, samePp));
+        features.add(combo(et12, sameVp));
         
         // =============================
         // 4.7 Parse Tree
@@ -242,7 +263,10 @@ public class RelObsFe implements ObsFeatureExtractor {
         // connecting M1 and M2 in the parse tree augmented 
         // with the head word of the top phrase in the path.
         
-        // TODO: Finish Parse Tree features.
+        String ptp = "ptp:"+ StringUtils.join(getPathSymbols(m1.getHead(), m2.getHead()), ":");
+        features.add(ptp);
+        int lca = getLca(sent.getParents(), m1.getHead(), m2.getHead());
+        features.add(combo(ptp, "lcaHead:" + fsent.getFeatTok(lca).getForm()));
 
         // =============================
         // 4.8 Semantic Resources
@@ -262,7 +286,111 @@ public class RelObsFe implements ObsFeatureExtractor {
         
     }
 
+    private int getLca(int[] parents, int a, int b) {
+        IntArrayList a2r = getPathToRoot(parents, a);
+        IntArrayList b2r = getPathToRoot(parents, b);
+        IntHashSet a2rSet = new IntHashSet(a2r);
+        int lca = -1;
+        for (int i=0; i<b2r.size(); i++) {
+            if (a2rSet.contains(b2r.get(i))) {
+                lca = b2r.get(i);
+            }
+        }
+        return lca;
+    }
+
+    private IntArrayList getPathToRoot(int[] parents, int a) {
+        IntArrayList a2r = new IntArrayList();
+        int i=a;
+        while (parents[i] >= 0) {
+            a2r.add(i);
+            i = parents[i];
+        }
+        return a2r;
+    }
+
+    private List<String> getPathSymbols(int m1, int m2) {
+        ArrayList<String> path = new ArrayList<>();
+        NaryTree tree = sent.getNaryTree();
+        List<NaryTree> m1ToRoot = getPathToRoot(tree.getLeafAt(m1));
+        List<NaryTree> m2ToRoot = getPathToRoot(tree.getLeafAt(m2));
+        NaryTree lca = getLca(m1ToRoot, m2ToRoot);
+        
+        for (NaryTree node : m1ToRoot) {
+            path.add(node.getSymbol());
+            if (node == lca) {
+                break;
+            }
+        }
+        
+        boolean recording = false;
+        Collections.reverse(m2ToRoot);
+        for (NaryTree node : m2ToRoot) {
+            if (recording) {
+                path.add(node.getSymbol());
+            }
+            if (node == lca) {
+                recording = true;
+            }
+        }
+        
+        return path;
+    }
+
+    /** 
+     * Returns the parent of the head of the mention.
+     * TODO: Maybe email Zhou et al. (2005) to ask what they meant by "dependent word".
+     */
+    private static String getDepWord(FeaturizedSentence fsent, AnnoSentence sent, NerMention m1) {
+        int[] parents = sent.getParents();
+        return fsent.getFeatTok(parents[m1.getHead()]).getForm();
+    }
+
+    private static boolean inSamePhrase(AnnoSentence sent, int m1, int m2, String phrase) {
+        NaryTree tree = sent.getNaryTree();
+        List<NaryTree> m1ToRoot = getPathToRoot(tree.getLeafAt(m1));
+        List<NaryTree> m2ToRoot = getPathToRoot(tree.getLeafAt(m2));
+        List<NaryTree> lcaToRoot = getLcaToRoot(m1ToRoot, m2ToRoot);
+        
+        return inSamePhrase(phrase, lcaToRoot);
+    }
+
+    private static boolean inSamePhrase(String phrase, List<NaryTree> lcaToRoot) {
+        for (NaryTree node : lcaToRoot) {
+            if (node.getSymbol().startsWith(phrase)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<NaryTree> getLcaToRoot(List<NaryTree> m1ToRoot, List<NaryTree> m2ToRoot) {
+        NaryTree lca = getLca(m1ToRoot, m2ToRoot);
+        assert lca != null;
+        List<NaryTree> lcaToRoot = getPathToRoot(lca);
+        return lcaToRoot;
+    }
+
+    private static NaryTree getLca(List<NaryTree> m1ToRoot, List<NaryTree> m2ToRoot) {
+        NaryTree lca = null;
+        Set<NaryTree> m1ToRootSet = new HashSet<>(m1ToRoot);
+        for (NaryTree node : m2ToRoot) {
+            if (m1ToRootSet.contains(node)) {
+                lca = node;
+            }
+        }
+        return lca;
+    }
     
+    private static List<NaryTree> getPathToRoot(NaryTree node) {
+        List<NaryTree> path = new ArrayList<>();
+        while (node != null) {
+            path.add(node);
+            node = node.getParent();
+        }
+        return path;
+    }
+
     private String combo(String hm1, String hm2) {
         return hm1 + "_" + hm2;
     }
