@@ -242,7 +242,7 @@ public class SrlFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.roleStateNames = Lists.getList("A1", "A2", "A3");
         
-        return new JointNlpFactorGraph(prm, sent, cs, obsFe, ofc, fe);
+        return new JointNlpFactorGraph(prm, sent, cs, obsFe, ofc, fe, null);
     }
 
 }

@@ -70,7 +70,7 @@ public class RelationsFactorGraphBuilder {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(AnnoSentence sent, ObsFeatureConjoiner cj, FactorGraph fg, CorpusStatistics cs) {
+    public void build(AnnoSentence sent, ObsFeatureConjoiner cj, FactorGraph fg, CorpusStatistics cs, ObsFeatureExtractor obsFe) {
         varMap = new HashMap<>();
         
         // Create relation variables.
@@ -95,12 +95,9 @@ public class RelationsFactorGraphBuilder {
         }
         
         // Create a unary factor for each relation variable.
-        ObsFeatureExtractor obsFe = new RelObsFe(prm, sent, cj.getTemplates());
-        //obsFe = new ObsFeatureCache(obsFe);
         for (RelVar rv : rvs) {
             fg.addFactor(new ObsFeTypedFactor(new VarSet(rv), RelationFactorType.RELATION, cj, obsFe));
         }
-        //obsFe.init(ex, fts);
     }
     
     public RelVar getVar(NerMention ne1, NerMention ne2) {

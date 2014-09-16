@@ -64,29 +64,30 @@ public class JointNlpFactorGraph extends FactorGraph {
     private SrlFactorGraphBuilder srl;
     private RelationsFactorGraphBuilder rel;
 
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
+    public JointNlpFactorGraph(JointFactorGraphPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor srlFe, ObsFeatureConjoiner ofc, FeatureExtractor dpFe, ObsFeatureExtractor relFe) {
         this.prm = prm;
-        build(sent, cs, obsFe, ofc, fe, this);
+        build(sent, cs, srlFe, ofc, dpFe, relFe, this);
     }
 
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
-            ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
+    public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor srlFe,
+            ObsFeatureConjoiner ofc, FeatureExtractor dpFe,  ObsFeatureExtractor relFe, 
+            FactorGraph fg) {
         this.n = sent.size();
 
         if (prm.includeDp) {
             dp = new DepParseFactorGraphBuilder(prm.dpPrm);
-            dp.build(sent, fe, fg);
+            dp.build(sent, dpFe, fg);
         }
         if (prm.includeSrl) {
             srl = new SrlFactorGraphBuilder(prm.srlPrm); 
-            srl.build(sent, cs, obsFe, ofc, fg);
+            srl.build(sent, cs, srlFe, ofc, fg);
         }
         if (prm.includeRel ) {
             rel = new RelationsFactorGraphBuilder(prm.relPrm);
-            rel.build(sent, ofc, fg, cs);
+            rel.build(sent, ofc, fg, cs, relFe);
         }
         
         if (prm.includeDp && prm.includeSrl) {
@@ -98,7 +99,7 @@ public class JointNlpFactorGraph extends FactorGraph {
                     if (i != -1) {
                         // Add binary factors between Roles and Links.
                         if (roleVars[i][j] != null && childVars[i][j] != null) {
-                            addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j], childVars[i][j]), JointFactorTemplate.LINK_ROLE_BINARY, ofc, obsFe));
+                            addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j], childVars[i][j]), JointFactorTemplate.LINK_ROLE_BINARY, ofc, srlFe));
                         }
                     }
                 }

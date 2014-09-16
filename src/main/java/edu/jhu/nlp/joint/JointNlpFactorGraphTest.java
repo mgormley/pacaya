@@ -361,7 +361,7 @@ public class JointNlpFactorGraphTest {
         cs.roleStateNames = Lists.getList("A1", "A2", "A3");
         cs.predSenseListMap = psMap;
         
-        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm, sent, cs, obsFe, ofc, fe);
+        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm, sent, cs, obsFe, ofc, fe, null);
         
         fe.init(new UnlabeledFgExample(fg, new VarConfig()));
         return fg;

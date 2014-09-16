@@ -15,15 +15,15 @@ import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.depparse.DepParseEncoder;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.features.TemplateLanguage;
-import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
+import edu.jhu.nlp.relations.RelObsFe;
 import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.nlp.srl.SrlEncoder;
 import edu.jhu.nlp.srl.SrlFeatureExtractor;
@@ -72,14 +72,15 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
     private LFgExample getExample(AnnoSentence sent, AnnoSentence gold, boolean labeledExample) {
         // Create a feature extractor for this example.
-        ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
-        obsFe = new ObsFeatureCache(obsFe);
-        
-        FeatureExtractor fe = new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
-        fe = new FeatureCache(fe);
+        ObsFeatureExtractor srlFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
+        srlFe = new ObsFeatureCache(srlFe);        
+        FeatureExtractor dpFe = new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
+        dpFe = new FeatureCache(dpFe);
+        ObsFeatureExtractor relFe = new RelObsFe(prm.fgPrm.relPrm, sent, ofc.getTemplates());
+        relFe = new ObsFeatureCache(relFe);
         
         // Construct the factor graph.
-        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);
+        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, srlFe, ofc, dpFe, relFe);
         log.trace("Number of variables: " + fg.getNumVars() + " Number of factors: " + fg.getNumFactors() + " Number of edges: " + fg.getNumEdges());
 
         // Get the variable assignments given in the training data.
@@ -107,11 +108,12 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
         LFgExample ex;
         FactorTemplateList fts = ofc.getTemplates();
         if (labeledExample) {
-            ex = new LabeledFgExample(fg, vc, obsFe, fts);
+            ex = new LabeledFgExample(fg, vc, srlFe, fts);
         } else {
-            ex = new UnlabeledFgExample(fg, vc, obsFe, fts);
+            ex = new UnlabeledFgExample(fg, vc, srlFe, fts);
         }
-        fe.init(ex);
+        dpFe.init(ex);
+        relFe.init(ex, fts);
         return ex;
     }
 

@@ -12,7 +12,9 @@ import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
@@ -51,7 +53,9 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
     private LFgExample getExample(AnnoSentence sent, RelationMentions rels, boolean labeledExample) {
         RelationsFactorGraphBuilder rfgb = new RelationsFactorGraphBuilder(prm);
         FactorGraph fg = new FactorGraph();
-        rfgb.build(sent, ofc, fg, cs);
+        ObsFeatureExtractor relFe = new RelObsFe(prm, sent, ofc.getTemplates());
+        relFe = new ObsFeatureCache(relFe);
+        rfgb.build(sent, ofc, fg, cs, relFe);
         
         VarConfig vc = new VarConfig();
         if (rels != null) {
