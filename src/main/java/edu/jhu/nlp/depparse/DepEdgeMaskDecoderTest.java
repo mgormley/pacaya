@@ -6,12 +6,12 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepEdgeMaskDecoder.DepEdgeMaskDecoderPrm;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.util.collections.Lists;

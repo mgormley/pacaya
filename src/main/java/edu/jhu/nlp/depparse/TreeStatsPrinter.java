@@ -5,9 +5,9 @@ import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.data.simple.CorpusHandler;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.joint.JointNlpRunner;
 import edu.jhu.prim.map.IntIntEntry;
 import edu.jhu.prim.map.IntIntHashMap;

@@ -2,12 +2,12 @@ package edu.jhu.nlp.depparse;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.LabelSequence;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.Trainable;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.LabelSequence;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.prim.matrix.DenseIntegerMatrix;
 import edu.jhu.util.Alphabet;
 

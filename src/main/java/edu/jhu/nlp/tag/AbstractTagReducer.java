@@ -5,9 +5,9 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepTree;
-import edu.jhu.data.DepTreeNode;
-import edu.jhu.data.DepTreebank;
+import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.DepTreeNode;
+import edu.jhu.nlp.data.DepTreebank;
 
 public abstract class AbstractTagReducer {
 

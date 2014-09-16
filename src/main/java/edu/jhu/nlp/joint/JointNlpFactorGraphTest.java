@@ -11,8 +11,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
@@ -37,6 +35,8 @@ import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;

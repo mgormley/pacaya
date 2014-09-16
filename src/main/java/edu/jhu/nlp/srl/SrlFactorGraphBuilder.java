@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
@@ -15,6 +14,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.set.IntSet;
 import edu.jhu.util.collections.Lists;

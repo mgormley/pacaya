@@ -6,8 +6,6 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepTree;
-import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
@@ -22,6 +20,8 @@ import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
+import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.WallDepTreeNode;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;

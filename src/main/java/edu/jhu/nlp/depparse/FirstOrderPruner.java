@@ -4,15 +4,15 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder;
 import edu.jhu.nlp.joint.JointNlpEncoder;

@@ -1,10 +1,5 @@
 package edu.jhu.nlp.srl;
 
-import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.conll.SrlGraph.SrlArg;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
@@ -13,6 +8,11 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.nlp.data.conll.SrlGraph;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlArg;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 

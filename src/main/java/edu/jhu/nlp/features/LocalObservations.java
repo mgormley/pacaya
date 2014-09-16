@@ -1,6 +1,6 @@
 package edu.jhu.nlp.features;
 
-import edu.jhu.data.NerMention;
+import edu.jhu.nlp.data.NerMention;
 import edu.jhu.parse.cky.Rule;
 
 /**

@@ -2,8 +2,6 @@ package edu.jhu.nlp.joint;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.app.Encoder;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
@@ -18,6 +16,8 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.depparse.DepParseEncoder;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;

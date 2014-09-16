@@ -1,8 +1,5 @@
 package edu.jhu.nlp.srl;
 
-import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.app.Encoder;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
@@ -20,6 +17,9 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.conll.SrlGraph;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseEncoder.DepParseEncoderPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;

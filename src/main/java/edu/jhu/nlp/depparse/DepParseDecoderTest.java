@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Factor;
@@ -22,6 +21,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;

@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.Annotator;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Alphabet;
 

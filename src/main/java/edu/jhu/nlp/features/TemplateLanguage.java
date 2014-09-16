@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.util.collections.Lists;
 
 /**

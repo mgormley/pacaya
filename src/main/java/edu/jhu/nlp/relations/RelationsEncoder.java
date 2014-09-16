@@ -2,11 +2,6 @@ package edu.jhu.nlp.relations;
 
 import java.util.List;
 
-import edu.jhu.data.NerMention;
-import edu.jhu.data.NerMentions;
-import edu.jhu.data.RelationMention;
-import edu.jhu.data.RelationMentions;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.app.Encoder;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
@@ -18,6 +13,11 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.NerMention;
+import edu.jhu.nlp.data.NerMentions;
+import edu.jhu.nlp.data.RelationMention;
+import edu.jhu.nlp.data.RelationMentions;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
 import edu.jhu.util.collections.Lists;

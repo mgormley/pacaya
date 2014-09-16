@@ -9,15 +9,15 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
-import edu.jhu.data.NerMention;
-import edu.jhu.data.Span;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.nlp.data.NerMention;
+import edu.jhu.nlp.data.Span;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.FeaturizedSentence;
 import edu.jhu.nlp.features.LocalObservations;
 import edu.jhu.nlp.features.TemplateFeatureExtractor;

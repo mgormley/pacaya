@@ -1,6 +1,5 @@
 package edu.jhu.nlp.depparse;
 
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.app.Encoder;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
@@ -13,6 +12,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;

@@ -8,13 +8,13 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.data.simple.AnnoSentenceReader;
-import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
-import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.simple.AnnoSentenceReader;
+import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
+import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;

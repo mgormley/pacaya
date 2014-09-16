@@ -2,9 +2,9 @@ package edu.jhu.nlp.eval;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.app.Loss;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 /**
  * Computes the unlabeled directed dependency accuracy. This is simply the

@@ -7,11 +7,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceTest;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.data.DepTree.Dir;
+import edu.jhu.nlp.data.conll.CoNLL09Sentence;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceTest;
 import edu.jhu.prim.tuple.Pair;
 
 public class FeaturizedTokenPairTest {

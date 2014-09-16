@@ -6,11 +6,11 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import edu.jhu.data.DepTree;
-import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.conll.LanguageConstants;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.DepTree.Dir;
+import edu.jhu.nlp.data.conll.LanguageConstants;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.prim.tuple.Pair;
 
 /**

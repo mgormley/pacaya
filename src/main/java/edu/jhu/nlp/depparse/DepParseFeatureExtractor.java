@@ -6,7 +6,6 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -20,6 +19,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.FeTypedFactor;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.O2FeTypedFactor;
 import edu.jhu.nlp.features.FeaturizedSentence;

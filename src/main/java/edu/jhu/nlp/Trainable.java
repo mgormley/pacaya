@@ -1,6 +1,6 @@
 package edu.jhu.nlp;
 
-import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 public interface Trainable {
 

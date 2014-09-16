@@ -9,9 +9,9 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
-import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.DepTree.Dir;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;

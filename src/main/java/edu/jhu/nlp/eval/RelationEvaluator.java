@@ -2,11 +2,11 @@ package edu.jhu.nlp.eval;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.NerMention;
-import edu.jhu.data.NerMentions;
-import edu.jhu.data.RelationMentions;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.NerMention;
+import edu.jhu.nlp.data.NerMentions;
+import edu.jhu.nlp.data.RelationMentions;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsEncoder;
 
 /**
