@@ -1,10 +1,6 @@
 package edu.jhu.hypergraph;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 
 /** A hyperedge in a hypergraph. */
 public class Hyperedge {

@@ -1,6 +1,6 @@
 package edu.jhu.gm.model.globalfac;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -9,11 +9,11 @@ import org.junit.Test;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BruteForceInferencer;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExplicitExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
 
 public class ConstituencyTreeFactorTest {

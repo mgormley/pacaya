@@ -1,9 +1,7 @@
 package edu.jhu.gm.model.globalfac;
 
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarTensor;
 

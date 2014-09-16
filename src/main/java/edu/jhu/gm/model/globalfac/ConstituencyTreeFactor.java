@@ -7,10 +7,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;

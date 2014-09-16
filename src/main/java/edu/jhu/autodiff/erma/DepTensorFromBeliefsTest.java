@@ -5,11 +5,9 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
-import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.autodiff.TensorUtils;
-import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;

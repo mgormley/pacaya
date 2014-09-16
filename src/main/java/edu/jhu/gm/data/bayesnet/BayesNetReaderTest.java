@@ -7,8 +7,6 @@ import java.io.InputStream;
 
 import org.junit.Test;
 
-import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 
 public class BayesNetReaderTest {

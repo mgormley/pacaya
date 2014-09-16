@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -21,8 +21,8 @@ import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.nlp.CorpusStatistics;

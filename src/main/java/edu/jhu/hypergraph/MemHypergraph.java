@@ -1,13 +1,9 @@
 package edu.jhu.hypergraph;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
-
-import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 
 /**
  * A hypergraph with all nodes and edges stored in memory.

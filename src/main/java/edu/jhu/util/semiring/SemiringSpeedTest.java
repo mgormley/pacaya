@@ -1,7 +1,5 @@
 package edu.jhu.util.semiring;
 
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
 
 import edu.jhu.util.Timer;

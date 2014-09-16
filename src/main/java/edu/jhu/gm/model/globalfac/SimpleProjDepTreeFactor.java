@@ -6,17 +6,13 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
@@ -32,7 +28,6 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.LogSignAlgebra;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective

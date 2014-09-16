@@ -13,7 +13,6 @@ import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -21,6 +20,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.util.collections.Lists;
 

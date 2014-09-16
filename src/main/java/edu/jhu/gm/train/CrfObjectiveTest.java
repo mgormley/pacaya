@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -55,7 +54,6 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 

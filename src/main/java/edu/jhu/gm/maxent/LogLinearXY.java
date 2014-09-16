@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
@@ -18,7 +18,6 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -26,6 +25,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.functions.L2;

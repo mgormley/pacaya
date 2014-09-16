@@ -8,7 +8,6 @@ import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;

@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -28,7 +27,7 @@ import edu.jhu.nlp.relations.FeatureUtils;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
 
 /**
@@ -85,7 +84,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         
         // Get the observation features.
         ArrayList<String> obsFeats;
-        Alphabet<Feature> alphabet;
+        FeatureNames alphabet;
         if (ft == JointFactorTemplate.LINK_ROLE_BINARY || ft == DepParseFactorTemplate.LINK_UNARY 
                 || ft == SrlFactorTemplate.ROLE_UNARY || ft == SrlFactorTemplate.SENSE_ROLE_BINARY) {
             // Look at the variables to determine the parent and child.

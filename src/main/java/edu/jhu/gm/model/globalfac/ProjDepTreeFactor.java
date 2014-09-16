@@ -9,10 +9,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.erma.ProjDepTreeModule;
-import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -29,7 +26,6 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
 
 /**

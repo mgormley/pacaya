@@ -23,7 +23,7 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.Triple;
 import edu.jhu.prim.tuple.Tuple;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash3;
 
@@ -80,7 +80,7 @@ public class FeatureCreationSpeedTest {
             hashTimer = new Timer();
             extTimer = new Timer();
             
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            FeatureNames alphabet = new FeatureNames();
             try {
                 for (int i=0; i<sents.size(); i++) {
                     AnnoSentence sent = sents.get(i);
@@ -213,7 +213,7 @@ public class FeatureCreationSpeedTest {
             hashTimer = new Timer();
             extTimer = new Timer();
             
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            FeatureNames alphabet = new FeatureNames();
             try {
                 for (int i=0; i<sents.size(); i++) {
                     AnnoSentence sent = sents.get(i);

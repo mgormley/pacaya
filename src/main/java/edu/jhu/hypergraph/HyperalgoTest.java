@@ -14,11 +14,11 @@ import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.dist.Dirichlet;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.Algebras;
 
 public class HyperalgoTest {
 

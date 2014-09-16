@@ -18,14 +18,13 @@ import data.FeatureFile;
 import data.RV;
 import data.VariableSet;
 import dataParser.DataParser;
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import featParser.FeatureFileParser;
 
 public class ErmaReaderTest {
@@ -49,7 +48,7 @@ public class ErmaReaderTest {
         
         // Read the ERMA files to get our objects.
         ErmaReader er = new ErmaReader();
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FeatureNames alphabet = new FeatureNames();
         FgExampleList data = er.read(SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_FEATURE_FILE), 
                                      SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_TRAIN_DATA_FILE), alphabet);
 

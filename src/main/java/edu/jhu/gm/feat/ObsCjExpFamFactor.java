@@ -1,6 +1,5 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.IndexForVc;
 import edu.jhu.gm.model.ObsFeatureCarrier;
@@ -8,6 +7,7 @@ import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 
 /**

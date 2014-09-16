@@ -2,13 +2,11 @@ package edu.jhu.hypergraph;
 
 import java.util.Arrays;
 
-import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.hypergraph.Hypergraph.HyperedgeFn;
-import edu.jhu.util.semiring.Semiring;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Semiring;
 
 public class Hyperalgo {
 

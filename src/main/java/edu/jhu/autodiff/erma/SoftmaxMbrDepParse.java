@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
-import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.TopoOrder;
 import edu.jhu.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.autodiff.tensor.ElemMultiply;

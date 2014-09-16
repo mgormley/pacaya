@@ -1,21 +1,11 @@
 package edu.jhu.gm.maxent;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.maxent.LogLinearXY.LogLinearXYPrm;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.train.AvgBatchObjective;
-import edu.jhu.gm.train.CrfObjective;
-import edu.jhu.gm.train.CrfObjectiveTest;
-import edu.jhu.hlt.optimize.function.DifferentiableFunction;
-import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash3;
 

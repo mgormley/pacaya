@@ -13,7 +13,6 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -21,7 +20,6 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
@@ -33,8 +31,8 @@ import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.nlp.CorpusStatistics;
-import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
@@ -44,8 +42,7 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.set.IntHashSet;
-import edu.jhu.prim.set.IntSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -331,7 +328,7 @@ public class JointNlpFactorGraphTest {
     public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
-        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new Alphabet<Feature>()); 
+        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new FeatureNames()); 
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---                                         ---

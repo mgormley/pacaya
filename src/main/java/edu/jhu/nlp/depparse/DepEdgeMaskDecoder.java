@@ -6,8 +6,6 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.decode.MbrDecoder;
-import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.nlp.data.DepEdgeMask;

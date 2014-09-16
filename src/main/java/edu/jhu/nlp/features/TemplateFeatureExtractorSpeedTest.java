@@ -1,6 +1,5 @@
 package edu.jhu.nlp.features;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +11,6 @@ import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
-import edu.jhu.nlp.data.simple.AnnoSentenceReader;
-import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
-import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.util.math.FastMath;

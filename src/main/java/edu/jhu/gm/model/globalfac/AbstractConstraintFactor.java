@@ -1,12 +1,9 @@
 package edu.jhu.gm.model.globalfac;
 
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.inf.Messages;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 
 /**
  * A constraint global factor.

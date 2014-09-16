@@ -16,10 +16,10 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.Feature;
@@ -32,7 +32,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import featParser.FeatureFileParser;
 
 /**
@@ -61,7 +61,7 @@ public class ErmaReader {
         this.includeUnsupportedFeatures = includeUnsupportedFeatures;
     }
     
-    public FgExampleList read(File featureTemplate, File dataFile, Alphabet<Feature> alphabet) {
+    public FgExampleList read(File featureTemplate, File dataFile, FeatureNames alphabet) {
         return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), alphabet);
     }
     
@@ -75,7 +75,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExampleList read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
+    public FgExampleList read(String featureTemplate, String dataFile, FeatureNames alphabet) {
         log.info("Feature template file: " + featureTemplate);
         log.info("Data file: " + dataFile);  
         try {
@@ -85,7 +85,7 @@ public class ErmaReader {
         }
     }
     
-    public FgExampleList read(InputStream featureTemplate, InputStream dataFile, Alphabet<Feature> alphabet) {
+    public FgExampleList read(InputStream featureTemplate, InputStream dataFile, FeatureNames alphabet) {
         FeatureFile ff;
         log.info("Reading features");
         try {
@@ -127,9 +127,9 @@ public class ErmaReader {
     private static class ConvertingDataParser extends DataParser {
         
         private FgExampleStore data;
-        private Alphabet<Feature> alphabet;
+        private FeatureNames alphabet;
         
-        public ConvertingDataParser(InputStream is, FeatureFile ff, FgExampleStore data, Alphabet<Feature> alphabet) throws FileNotFoundException {
+        public ConvertingDataParser(InputStream is, FeatureFile ff, FgExampleStore data, FeatureNames alphabet) throws FileNotFoundException {
             super(is, ff);
             this.data = data;
             this.alphabet = alphabet;
@@ -200,7 +200,7 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static LFgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
+    private static LFgExample toFgExample(DataSample s, FeatureFile ff, FeatureNames alphabet){
         //Saves the variable set to factor HashMappings
         HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a

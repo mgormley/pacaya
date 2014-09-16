@@ -3,22 +3,9 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.data.LFgExample;
-import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FactorTemplate;
-import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.ExpFamFactor;
-import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
-import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 
 /**
  * Factory for log-linear model instances, specifying binary features of the
@@ -58,7 +45,7 @@ public class LogLinearObsFeatsData {
         }
     }
     
-    private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
+    private final FeatureNames alphabet = new FeatureNames();
     private List<LogLinearExample> exList = new ArrayList<LogLinearExample>();
 
     public LogLinearObsFeatsData() {
@@ -80,7 +67,7 @@ public class LogLinearObsFeatsData {
         exList.add(ex);
     }
 
-    public Alphabet<Feature> getAlphabet() {
+    public FeatureNames getAlphabet() {
         return alphabet;
     }
 

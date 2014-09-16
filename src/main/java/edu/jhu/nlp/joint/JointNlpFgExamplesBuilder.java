@@ -9,7 +9,6 @@ import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -21,7 +20,7 @@ import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpEncoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
 
 /**
@@ -79,7 +78,7 @@ public class JointNlpFgExamplesBuilder {
         if (jePrm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
         }
         
         if (!ofc.isInitialized()) {

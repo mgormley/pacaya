@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
-
 import edu.jhu.util.collections.Lists;
 
 /**

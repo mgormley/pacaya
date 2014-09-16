@@ -1,12 +1,8 @@
 package edu.jhu.nlp.depparse;
 
 import edu.jhu.autodiff.erma.ErmaBp;
-import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;

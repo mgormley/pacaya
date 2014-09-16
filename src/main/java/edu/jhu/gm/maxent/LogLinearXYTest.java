@@ -10,10 +10,9 @@ import org.junit.Test;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.util.JUnitUtils;
 
 public class LogLinearXYTest {
     

@@ -5,7 +5,7 @@ import java.util.Collection;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.hash.MurmurHash3;
 
 public class FeatureUtils {
@@ -13,7 +13,7 @@ public class FeatureUtils {
     /**
      * Adds each feature to fv using the given alphabet.
      */
-    public static void addFeatures(Collection<String> obsFeats, Alphabet<Feature> alphabet, FeatureVector fv, boolean isBiasFeat, int featureHashMod) {
+    public static void addFeatures(Collection<String> obsFeats, FeatureNames alphabet, FeatureVector fv, boolean isBiasFeat, int featureHashMod) {
         if (featureHashMod <= 0) {
             // Just use the features as-is.
             for (String fname : obsFeats) {

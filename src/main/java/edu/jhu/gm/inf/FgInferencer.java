@@ -1,9 +1,8 @@
 package edu.jhu.gm.inf;
 
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 
 /**
  * An inference algorithm for a factor graph.

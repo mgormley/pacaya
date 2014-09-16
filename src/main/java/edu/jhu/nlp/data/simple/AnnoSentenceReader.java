@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.nlp.data.concrete.ConcreteIterable;
-import edu.jhu.nlp.data.concrete.ConcreteReader;
 import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.nlp.data.conll.CoNLL08FileReader;
 import edu.jhu.nlp.data.conll.CoNLL08Sentence;

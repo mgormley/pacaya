@@ -1,6 +1,5 @@
 package edu.jhu.gm.model;
 
-import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.util.semiring.Algebras;
 
 

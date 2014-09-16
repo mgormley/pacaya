@@ -8,7 +8,8 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.CountingAlphabet;
+import edu.jhu.util.CountingFeatureNames;
+import edu.jhu.util.FeatureNames;
 
 public class FactorTemplateList implements Serializable {
 
@@ -106,7 +107,7 @@ public class FactorTemplateList implements Serializable {
         int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
         if (index >= fts.size()) {
             // Add the template.
-            Alphabet<Feature> alphabet = useCountingAlphabets ? new CountingAlphabet<Feature>() : new Alphabet<Feature>();
+            FeatureNames alphabet = useCountingAlphabets ? new CountingFeatureNames() : new FeatureNames();
             fts.add(new FactorTemplate(f.getVars(), alphabet, f.getTemplateKey()));
         } else if (index == -1) {
             throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());

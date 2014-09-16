@@ -11,7 +11,6 @@ import org.apache.commons.lang.StringUtils;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -26,7 +25,7 @@ import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBui
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 
 /**
  * Feature extraction for relations.
@@ -59,7 +58,7 @@ public class RelObsFe implements ObsFeatureExtractor {
 
         addFeatures(local, obsFeats);
         
-        Alphabet<Feature> alphabet = fts.getTemplate(factor).getAlphabet();
+        FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
         
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
         ArrayList<String> biasFeats = new ArrayList<String>(1);

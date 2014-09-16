@@ -3,9 +3,8 @@ package edu.jhu.autodiff.tensor;
 import java.util.List;
 
 import edu.jhu.autodiff.AbstractModule;
-import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.MVec;
-import edu.jhu.autodiff.Tensor;
+import edu.jhu.autodiff.Module;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 

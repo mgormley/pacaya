@@ -2,20 +2,18 @@ package edu.jhu.hypergraph.depparse;
 
 import edu.jhu.hypergraph.Hyperalgo;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph.PCBasicHypernode;
 import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.HyperpotentialFoe;
-import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseType;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
-import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.LogSignAlgebra;
 import edu.jhu.util.semiring.Semiring;
 
 public class HyperDepParser {

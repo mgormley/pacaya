@@ -1,5 +1,6 @@
 package edu.jhu.util;
 
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.prim.list.IntArrayList;
 
 /**
@@ -10,23 +11,23 @@ import edu.jhu.prim.list.IntArrayList;
  * @author mmitchell
  * 
  */
-public class CountingAlphabet<T> extends Alphabet<T> {
+public class CountingFeatureNames extends FeatureNames {
 
     private static final long serialVersionUID = 1L;
     private IntArrayList idxCountMap;
 	
-	public CountingAlphabet() {
+	public CountingFeatureNames() {
 	    super();
 	    idxCountMap = new IntArrayList();
 	}
 	
-	public CountingAlphabet(CountingAlphabet<T> other) {
+	public CountingFeatureNames(CountingFeatureNames other) {
 	    super(other);
 	    idxCountMap = new IntArrayList(other.idxCountMap);
 	}
 
 	@Override
-    public int lookupIndex(T object, boolean addIfMissing) {
+    public int lookupIndex(Feature object, boolean addIfMissing) {
 	    int index = super.lookupIndex(object, addIfMissing);
 	    if (index != MISSING_OBJECT_INDEX) {
 	        while (index+1 > idxCountMap.size()) {
@@ -41,5 +42,5 @@ public class CountingAlphabet<T> extends Alphabet<T> {
 	public int lookupObjectCount(int index) {
 	    return idxCountMap.get(index);
 	}
-	
+
 }

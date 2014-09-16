@@ -1,6 +1,6 @@
 package edu.jhu.nlp.data;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 

@@ -16,7 +16,6 @@ import edu.jhu.autodiff.tensor.Prod;
 import edu.jhu.autodiff.tensor.ScalarFill;
 import edu.jhu.autodiff.tensor.ScalarMultiply;
 import edu.jhu.autodiff.tensor.Select;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;

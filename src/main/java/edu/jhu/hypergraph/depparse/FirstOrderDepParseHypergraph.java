@@ -6,7 +6,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hypergraph.BasicHypernode;
-import edu.jhu.hypergraph.Hyperalgo;
 import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypergraph;
 import edu.jhu.hypergraph.Hypernode;

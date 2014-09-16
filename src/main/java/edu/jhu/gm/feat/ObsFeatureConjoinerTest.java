@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.FactorGraph;
@@ -13,7 +13,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.collections.Lists;
 
 public class ObsFeatureConjoinerTest {
@@ -84,7 +84,7 @@ public class ObsFeatureConjoinerTest {
         @Override
         public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            Alphabet<Feature> alphabet = fts.getTemplate(factor).getAlphabet();
+            FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
 
             int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
             fv.set(featIdx, 1.0);
@@ -118,12 +118,12 @@ public class ObsFeatureConjoinerTest {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            FeatureNames alphabet = new FeatureNames();
             alphabet.lookupIndex(new Feature("feat1"));
             fts.add(new FactorTemplate(new VarSet(v1), alphabet, "key1"));
         }
         {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            FeatureNames alphabet = new FeatureNames();
             alphabet.lookupIndex(new Feature("feat2a"));
             alphabet.lookupIndex(new Feature("feat2b"));
             fts.add(new FactorTemplate(new VarSet(v1, v2), alphabet, "key2"));

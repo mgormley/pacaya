@@ -7,7 +7,6 @@ import org.junit.Test;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts.NegateFunction;
-import edu.jhu.hlt.optimize.function.FunctionOpts;
 import edu.jhu.hlt.optimize.functions.SumSquares;
 import edu.jhu.hlt.optimize.functions.XSquared;
 import edu.jhu.hlt.util.math.Vectors;

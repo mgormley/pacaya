@@ -1,7 +1,6 @@
 package edu.jhu.gm.model;
 
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Semiring;
 
 public class ClampFactor extends ExplicitFactor implements Factor {

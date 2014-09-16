@@ -3,9 +3,9 @@ package edu.jhu.autodiff.tensor;
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
+import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
-import edu.jhu.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;

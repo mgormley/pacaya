@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.jhu.nlp.features.TemplateLanguage.Description;
 import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;

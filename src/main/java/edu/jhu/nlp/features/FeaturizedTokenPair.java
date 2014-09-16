@@ -6,7 +6,6 @@ import java.util.List;
 
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.DepTree.Dir;
-import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.prim.tuple.Pair;
 

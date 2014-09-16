@@ -1,6 +1,6 @@
 package edu.jhu.nlp.data.simple;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.util.ArrayList;
 import java.util.List;

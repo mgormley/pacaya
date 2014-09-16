@@ -6,9 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.FactorGraph.FgNode;
-
 /**
  * Undirected bipartite graph.
  * 

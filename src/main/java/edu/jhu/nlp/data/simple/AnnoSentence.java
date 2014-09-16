@@ -6,10 +6,10 @@ import java.util.List;
 
 import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.DepTree.Dir;
 import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.Span;
-import edu.jhu.nlp.data.DepTree.Dir;
 import edu.jhu.nlp.data.conll.SrlGraph;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.features.TemplateLanguage.AT;

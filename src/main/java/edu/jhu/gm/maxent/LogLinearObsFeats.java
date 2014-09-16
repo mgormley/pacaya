@@ -7,16 +7,15 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureCache;
@@ -27,7 +26,6 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -35,11 +33,12 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 
 /**
  * Log-linear model trainer and decoder.
@@ -62,7 +61,7 @@ public class LogLinearObsFeats {
     
     private static final Object TEMPLATE_KEY = "loglin";
 
-    private Alphabet<Feature> alphabet = null;
+    private FeatureNames alphabet = null;
     private FactorTemplateList fts = null;
     private List<String> stateNames = null;
     private ObsFeatureConjoiner ofc;
@@ -78,7 +77,7 @@ public class LogLinearObsFeats {
         return train(data.getAlphabet(), data.getData());
     }
     
-    public FgModel train(Alphabet<Feature> alphabet, List<LogLinearExample> exList) {
+    public FgModel train(FeatureNames alphabet, List<LogLinearExample> exList) {
         FgExampleList data = getData(alphabet, exList);
         log.info("Number of unweighted train instances: " + data.size());
         BeliefPropagationPrm bpPrm = getBpPrm();
@@ -121,7 +120,7 @@ public class LogLinearObsFeats {
         return getData(data.getAlphabet(), data.getData());
     }
     
-    public FgExampleList getData(Alphabet<Feature> alphabet, List<LogLinearExample> exList) {    
+    public FgExampleList getData(FeatureNames alphabet, List<LogLinearExample> exList) {    
         if (fts == null) {
             this.alphabet = alphabet;  
             fts = new FactorTemplateList();

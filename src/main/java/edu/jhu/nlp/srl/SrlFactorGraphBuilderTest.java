@@ -1,6 +1,8 @@
 package edu.jhu.nlp.srl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -8,14 +10,12 @@ import org.junit.Test;
 
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.joint.JointNlpFactorGraph;
-import edu.jhu.nlp.joint.JointNlpFactorGraphTest;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
+import edu.jhu.nlp.joint.JointNlpFactorGraphTest;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
-import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 
 public class SrlFactorGraphBuilderTest {
 

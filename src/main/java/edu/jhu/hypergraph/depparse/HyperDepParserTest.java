@@ -11,10 +11,10 @@ import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
-import edu.jhu.util.semiring.LogSignAlgebra;
-import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.LogSignAlgebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class HyperDepParserTest {
 

@@ -52,7 +52,7 @@ import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
@@ -70,9 +70,9 @@ public class CrfTrainerTest {
      */
     public static class SimpleVCFeatureExtractor2 extends SlowFeatureExtractor {
 
-        private Alphabet<Feature> alphabet;
+        private FeatureNames alphabet;
 
-        public SimpleVCFeatureExtractor2(Alphabet<Feature> alphabet) {
+        public SimpleVCFeatureExtractor2(FeatureNames alphabet) {
             super();
             this.alphabet = alphabet;          
         }
@@ -128,7 +128,7 @@ public class CrfTrainerTest {
         @Override
         public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            Alphabet<Feature> alphabet = fts.getTemplate(factor).getAlphabet();
+            FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
 
             if (varConfig.size() > 0) {
                 String[] strs = new String[varConfig.getVars().size()];
