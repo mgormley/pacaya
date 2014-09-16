@@ -15,6 +15,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
+import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
@@ -26,17 +27,20 @@ public class FeatureExtractorSpeedTest {
     private static final Logger log = Logger.getLogger(FeatureExtractorSpeedTest.class);
     private static final int featureHashMod = 1000000;
     
+    /**
+     * Speed test results.
+     * 
+     * With feature hashing: (i.e. addFeatures())
+     *    s=800 n=19560 Toks / sec: 238.92119020862853
+     *    
+     * Without feature hasing:
+     *    s=800 n=19560 Toks / sec: 514.4254793151513
+
+     */
     //@Test
     public void testSpeed() throws ParseException, IOException {
         List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
-        File train = new File("data/conllx/CoNLL-X/test/data/english/ptb/test/english_ptb_test.conll");
-
-        AnnoSentenceReaderPrm prm = new AnnoSentenceReaderPrm();
-        //prm.maxNumSentences = 100;
-        prm.name = train.getName();
-        AnnoSentenceReader reader = new AnnoSentenceReader(prm );
-        reader.loadSents(train, DatasetType.CONLL_X);
-        AnnoSentenceCollection sents = reader.getData();
+        AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.readPtbYmConllx();
         
         int trials = 3;
         
@@ -46,7 +50,8 @@ public class FeatureExtractorSpeedTest {
         timer.start();
         int n=0;
         for (int trial = 0; trial < trials; trial++) {
-            for (AnnoSentence sent : sents) {
+            for (int s=0; s<sents.size(); s++) {
+                AnnoSentence sent = sents.get(s);
                 TemplateFeatureExtractor ext = new TemplateFeatureExtractor(sent, null);
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
@@ -54,14 +59,14 @@ public class FeatureExtractorSpeedTest {
                         ArrayList<String> feats = new ArrayList<String>();
                         ext.addFeatures(tpls, local, feats );
                         
-                        FeatureVector fv = new FeatureVector();
-                        addFeatures(feats, alphabet, "1_", fv, false);
+                        //FeatureVector fv = new FeatureVector();
+                        //addFeatures(feats, alphabet, "1_", fv, false);
                     }
                 }
                 timer.stop();
                 n += sent.size();
-                if (n % 100 == 0) {
-                    log.info("n=" + n + " Toks / sec: " + (n / timer.totSec())); 
+                if (s % 100 == 0) {
+                    log.info("s="+s+" n=" + n + " Toks / sec: " + (n / timer.totSec())); 
                 }
                 timer.start();
             }

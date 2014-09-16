@@ -29,10 +29,15 @@ public class ProjectiveDependencyParserTest {
      * Total time: 317.0
      * Sentences per second: 315.45741324921136
      * Tokens per second: 8955.223880597014
+     * 
+     * After increasing to 1000 trials:
+     * Total time: 916.0
+     * Sentences per second: 1091.703056768559
+     * Tokens per second: 32751.09170305677
      */
     @Test
     public void testParseSpeed() {
-        int trials = 100;
+        int trials = 1000;
         int n = 30;
 
         // Just create one tree.

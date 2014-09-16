@@ -54,7 +54,8 @@ public class TemplateFeatureExtractor {
      */
     public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {        
         this.cs = cs;
-        this.sig = cs.sig;
+        if (cs != null) { this.sig = cs.sig; }
+        else { this.sig = null; }
         this.fSent = fSent;
     }
     
