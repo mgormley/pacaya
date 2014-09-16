@@ -22,9 +22,9 @@ import edu.jhu.util.Alphabet;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash3;
 
-public class FeatureExtractorSpeedTest {
+public class TemplateFeatureExtractorSpeedTest {
     
-    private static final Logger log = Logger.getLogger(FeatureExtractorSpeedTest.class);
+    private static final Logger log = Logger.getLogger(TemplateFeatureExtractorSpeedTest.class);
     private static final int featureHashMod = 1000000;
     
     /**
@@ -120,7 +120,7 @@ public class FeatureExtractorSpeedTest {
     }
     
     public static void main(String[] args) throws ParseException, IOException {
-        (new FeatureExtractorSpeedTest()).testSpeed();
+        (new TemplateFeatureExtractorSpeedTest()).testSpeed();
     }
     
 }
