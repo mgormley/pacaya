@@ -112,14 +112,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.remove("testPredOut")
         g.defaults += g.adagrad 
         
-        defaults = ReExpParams()        
+        defaults = g.adagrad  + ReExpParams()        
         defaults.set("expname", self.expname, False, False)
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
         defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
                    featCountCutoff=2,
-                   l2variance=1.0, #TODO: Choose a reasonable value.
+                   l2variance=6000,
                    #useRelationSubtype=False,
                    usePosTagFeatures=True,
                    useSyntaxFeatures=True,
