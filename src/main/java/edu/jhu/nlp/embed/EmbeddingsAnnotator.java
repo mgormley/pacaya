@@ -44,7 +44,7 @@ public class EmbeddingsAnnotator implements Annotator {
             List<double[]> embeds = new ArrayList<>(sent.size());
             for (int i=0; i<sent.size(); i++) {
                 String word = sent.getWord(i);
-                embeds.set(i, embeddings.getEmbedding(word));
+                embeds.add(embeddings.getEmbedding(word));
                 if (embeds.get(i) == null) {
                     numMisses++;
                 }

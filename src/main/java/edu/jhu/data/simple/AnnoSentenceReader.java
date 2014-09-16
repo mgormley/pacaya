@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.concrete.ConcreteIterable;
 import edu.jhu.data.concrete.ConcreteReader;
 import edu.jhu.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.data.conll.CoNLL08FileReader;
@@ -64,20 +65,7 @@ public class AnnoSentenceReader {
     
     public void loadSents(File dataFile, DatasetType type) throws IOException {
         log.info("Reading " + prm.name + " data of type " + type + " from " + dataFile);
-        if (type == DatasetType.CONCRETE) {
-            if (prm.maxNumSentences < Integer.MAX_VALUE || prm.maxSentenceLength < Integer.MAX_VALUE) {
-                log.warn("Currently, we always take all sentences from the Concrete communication." 
-                          + " This doesn't permit downselection of the number of sentences or sentence length.");
-            }
-            ConcreteReader cc = new ConcreteReader(new ConcreteReaderPrm());
-            assert sents.size() == 0;
-            sents = cc.toSentences(dataFile);
-        } else {
-            loadSents(new FileInputStream(dataFile), type);
-        }
-    }
 
-    public void loadSents(InputStream fis, DatasetType type) throws UnsupportedEncodingException, IOException {
         if (prm.normalizeRoleNames) {
             if (type == DatasetType.CONLL_2008 || type == DatasetType.CONLL_2009) {
                 log.info("Normalizing role names");
@@ -85,17 +73,22 @@ public class AnnoSentenceReader {
         }
         
         CloseableIterable<AnnoSentence> reader = null;
-        if (type == DatasetType.CONLL_2009) {
-            reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(fis), new CoNLL092Anno());
-        } else if (type == DatasetType.CONLL_2008) {
-            reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(fis), new CoNLL082Anno());
-        } else if (type == DatasetType.CONLL_X) {
-            reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(fis), new CoNLLX2Anno());
-        //} else if (type == DatasetType.PTB) {
-            //reader = new Ptb2Anno(new PtbFileReader(dataFile));
+        if (type == DatasetType.CONCRETE) {
+            reader = new ConcreteIterable(new ConcreteReaderPrm(), dataFile);
         } else {
-            fis.close();
-            throw new IllegalStateException("Unsupported data type: " + type);
+            InputStream fis = new FileInputStream(dataFile);
+            if (type == DatasetType.CONLL_2009) {
+                reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(fis), new CoNLL092Anno());
+            } else if (type == DatasetType.CONLL_2008) {
+                reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(fis), new CoNLL082Anno());
+            } else if (type == DatasetType.CONLL_X) {
+                reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(fis), new CoNLLX2Anno());
+            //} else if (type == DatasetType.PTB) {
+                //reader = new Ptb2Anno(new PtbFileReader(dataFile));
+            } else {
+                fis.close();
+                throw new IllegalStateException("Unsupported data type: " + type);
+            }
         }
         
         loadSents(reader);

@@ -55,16 +55,17 @@ import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.eval.DepParseEvaluator;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.features.TemplateLanguage;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.features.TemplateReader;
 import edu.jhu.nlp.features.TemplateSets;
 import edu.jhu.nlp.features.TemplateWriter;
-import edu.jhu.nlp.features.TemplateLanguage.AT;
-import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.joint.JointNlpAnnotator.InitParams;
 import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
@@ -806,6 +807,7 @@ public class JointNlpRunner {
             ArgParser parser = new ArgParser(JointNlpRunner.class);
             parser.addClass(JointNlpRunner.class);
             parser.addClass(CorpusHandler.class);
+            parser.addClass(RelationsOptions.class);
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {

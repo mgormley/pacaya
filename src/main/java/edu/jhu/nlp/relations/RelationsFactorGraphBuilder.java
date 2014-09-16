@@ -11,6 +11,7 @@ import edu.jhu.data.NerMention;
 import edu.jhu.data.NerMentions;
 import edu.jhu.data.Span;
 import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
@@ -95,9 +96,11 @@ public class RelationsFactorGraphBuilder {
         
         // Create a unary factor for each relation variable.
         ObsFeatureExtractor obsFe = new RelObsFe(prm, sent, cj.getTemplates());
+        //obsFe = new ObsFeatureCache(obsFe);
         for (RelVar rv : rvs) {
             fg.addFactor(new ObsFeTypedFactor(new VarSet(rv), RelationFactorType.RELATION, cj, obsFe));
         }
+        //obsFe.init(ex, fts);
     }
     
     public RelVar getVar(NerMention ne1, NerMention ne2) {

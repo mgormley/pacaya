@@ -48,14 +48,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
             sys.stderr.write("Unknown experiment setting.\n")
             parser.print_help()
             sys.exit()
-        #if options.fast: name = 
         name = options.expname if not options.fast else "fast_" + options.expname 
         ExpParamsRunner.__init__(self, name, options.queue, print_to_console=True, dry_run=options.dry_run)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
         self.hprof = options.hprof   
-        self.eval = options.eval
         self.big_machine = (multiprocessing.cpu_count() > 2)
         self.prm_defs = ParamDefinitions(options) 
 
@@ -76,6 +74,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
         
+        # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
                                    #bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
@@ -89,11 +88,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
+        # Trainers
         g.erma_dp = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
         g.erma_mse = SrlExpParams(trainer="ERMA", dpLoss="MSE")
         g.erma_er = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL")
         g.cll = SrlExpParams(trainer="CLL")
-        
+                
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_000"),
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"),
@@ -342,30 +342,31 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
-                # Uncomment next line for multiple threads on a fast run: 
-                # stage.update(threads=2)
             if isinstance(stage, SrlExpParams) and not self.big_machine and not self.dry_run:
                 stage.update(work_mem_megs=1100, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
-                # Update the thread count
-                threads = stage.get("threads")
-                if threads != None: 
-                    # Add an extra thread just as a precaution.
-                    stage.threads = threads + 1
-                work_mem_megs = stage.get("work_mem_megs")
-                if work_mem_megs != None:
-                    stage.work_mem_megs = work_mem_megs
-                # Update the runtime
-                timeoutSeconds = stage.get("timeoutSeconds")
-                if timeoutSeconds != None:
-                    stage.minutes = (timeoutSeconds / 60.0)
-                    # Add some extra time in case some other part of the experiment
-                    # (e.g. evaluation) takes excessively long.
-                    stage.minutes = (stage.minutes * 2.0) + 10
+                self.update_qsub_fields(stage)
             if self.hprof:
                 if isinstance(stage, experiment_runner.JavaExpParams):
                     stage.hprof = self.hprof
         return root_stage
+    
+    def update_qsub_fields(self, stage):
+        # Update the thread count
+        threads = stage.get("threads")
+        if threads != None: 
+            # Add an extra thread just as a precaution.
+            stage.threads = threads + 1
+        work_mem_megs = stage.get("work_mem_megs")
+        if work_mem_megs != None:
+            stage.work_mem_megs = work_mem_megs
+        # Update the runtime
+        timeoutSeconds = stage.get("timeoutSeconds")
+        if timeoutSeconds != None:
+            stage.minutes = (timeoutSeconds / 60.0)
+            # Add some extra time in case some other part of the experiment
+            # (e.g. evaluation) takes excessively long.
+            stage.minutes = (stage.minutes * 2.0) + 10
     
     def make_stage_fast(self, stage):       
         ''' Makes the stage run in a very short period of time (under 5 seconds).
@@ -379,6 +380,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      testMaxNumSentences=3,
                      work_mem_megs=2000,
                      timeoutSeconds=20)
+        # Uncomment next line for multiple threads on a fast run: 
+        # stage.update(threads=2)
 
 if __name__ == "__main__":
     usage = "%prog "
@@ -387,13 +390,9 @@ if __name__ == "__main__":
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
     parser.add_option('-e', '--expname',  help="Experiment name. [" + ", ".join(SrlExpParamsRunner.known_exps) + "]")
-    parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
+    parser.add_option(      '--hprof',  help="What type of profiling to use [cpu, heap]")
     parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
-    parser.add_option('-v', '--eval', help="Experiment directory to use as input for eval")
-    parser.add_option('-r', '--remote',  action="store_true", help="Whether to run remotely.")
     (options, args) = parser.parse_args(sys.argv)
-    # TODO: Above, we still want to list the experiment names in the usage printout, but we should
-    # somehow pull them from SrlExpParamsRunner so that they are less likely to get stale.
 
     if len(args) != 1:
         parser.print_help()
