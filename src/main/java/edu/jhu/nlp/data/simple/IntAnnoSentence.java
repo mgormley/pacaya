@@ -1,21 +1,26 @@
 package edu.jhu.nlp.data.simple;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.jhu.nlp.data.DepEdgeMask;
-import edu.jhu.nlp.data.LabelSequence;
-import edu.jhu.parse.cky.intdata.IntBinaryTree;
+import edu.jhu.nlp.data.NerMentions;
+import edu.jhu.nlp.data.RelationMentions;
+import edu.jhu.nlp.data.conll.SrlGraph;
+import edu.jhu.parse.cky.intdata.IntNaryTree;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
 
 public class IntAnnoSentence {
 
-    private LabelSequence<String> words;
-    private LabelSequence<String> lemmas;
-    private LabelSequence<String> posTags;
-    private LabelSequence<String> cposTags;
-    private LabelSequence<String> clusters;
-    private ArrayList<LabelSequence<String>> feats;
-    private LabelSequence<String> deprels;
+    private IntArrayList words;
+    private IntArrayList lemmas;
+    private IntArrayList posTags;
+    private IntArrayList cposTags;
+    private IntArrayList clusters;
+    private List<double[]> embeds;
+    private ArrayList<IntArrayList> feats;
+    private IntArrayList deprels;
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
      * of the parent of the word at index i. The Wall node has index -1. If a
@@ -24,9 +29,14 @@ public class IntAnnoSentence {
      */
     private int[] parents;
     private DepEdgeMask depEdgeMask;
-    //private SrlGraph srlGraph;
-    private IntHashSet knownPreds; 
+    private IntHashSet knownPreds;
+    // TODO: This should be broken into semantic-roles and word senses.
+    private SrlGraph srlGraph;
     /** Constituency parse. */
-    private IntBinaryTree binaryTree;
+    private IntNaryTree naryTree;
+    private NerMentions namedEntities;
+    private RelationMentions relations;
+    
+    
 
 }

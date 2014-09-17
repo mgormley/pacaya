@@ -29,7 +29,7 @@ public class TemplateFeatureExtractorSpeedTest {
      *    w/o    s=800 n=19560 Toks / sec: 514.42
      *    
      * Shasta:
-     * 	  w/hash s=800 n=19560 Toks / sec: 375.66
+     * 	  w/hash s=800 n=19560 Toks / sec: 375.66 (was 338.00 w/Feature object)
      * 	  w/o    s=800 n=19560 Toks / sec: 723.21
      */
     //@Test
