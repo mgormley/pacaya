@@ -9,7 +9,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.conll.CoNLL09FileReader;
@@ -124,14 +123,12 @@ public class FeatureCreationSpeedTest {
                                 extTimer.stop();
                                 
                                 hashTimer.start();
-                                Feature feat = null;
-                                feat = new Feature(featName);
-                                hashSum += feat.hashCode();
+                                hashSum += featName.hashCode();
                                 hashTimer.stop();
                                 
                                 if (lookup) {
                                     lookupTimer.start();
-                                    alphabet.lookupIndex(feat);
+                                    alphabet.lookupIndex(featName);
                                     lookupTimer.stop();
                                 }
                             }
@@ -238,14 +235,12 @@ public class FeatureCreationSpeedTest {
                                     String data = (String) featName;
                                     featName = FastMath.mod(MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789), 200000);
                                 }
-                                Feature feat = null;
-                                feat = new Feature(featName);
-                                hashSum += feat.hashCode();
+                                hashSum += featName.hashCode();
                                 hashTimer.stop();
                                 
                                 if (lookup) {
                                     lookupTimer.start();
-                                    alphabet.lookupIndex(feat);
+                                    alphabet.lookupIndex(featName);
                                     lookupTimer.stop();
                                 }
                             }

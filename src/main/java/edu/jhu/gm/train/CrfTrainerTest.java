@@ -15,7 +15,6 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -90,12 +89,12 @@ public class CrfTrainerTest {
                     i++;
                 }
                 Arrays.sort(strs);
-                Feature feat = new Feature(StringUtils.join(strs, ":"));
-                int featIdx = alphabet.lookupIndex(feat);
+                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
                 fv.set(featIdx, 1.0);
             }
             
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
+            alphabet.setIsBias(featIdx);
             fv.set(featIdx, 1.0);
             
             return fv;
@@ -138,12 +137,12 @@ public class CrfTrainerTest {
                     i++;
                 }
                 Arrays.sort(strs);
-                Feature feat = new Feature(StringUtils.join(strs, ":"));
-                int featIdx = alphabet.lookupIndex(feat);
+                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
                 fv.set(featIdx, 1.0);
             }
             
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
+            alphabet.setIsBias(featIdx);
             fv.set(featIdx, 1.0);
             
             return fv;

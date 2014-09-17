@@ -1,8 +1,8 @@
 package edu.jhu.nlp.relations;
 
 import java.util.Collection;
+import java.util.List;
 
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.FeatureNames;
@@ -17,7 +17,8 @@ public class FeatureUtils {
         if (featureHashMod <= 0) {
             // Just use the features as-is.
             for (String fname : obsFeats) {
-                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
+                int fidx = alphabet.lookupIndex(fname);
+                if (isBiasFeat) { alphabet.setIsBias(fidx); }
                 if (fidx != -1) {
                     fv.add(fidx, 1.0);
                 }
@@ -27,7 +28,8 @@ public class FeatureUtils {
             for (String fname : obsFeats) {
                 int hash = MurmurHash3.murmurhash3_x86_32(fname);
                 hash = FastMath.mod(hash, featureHashMod);
-                int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
+                int fidx = alphabet.lookupIndex(hash);
+                if (isBiasFeat) { alphabet.setIsBias(fidx); }
                 if (fidx != -1) {
                     int revHash = FeatureUtils.reverseHashCode(fname);
                     if (revHash < 0) {
@@ -50,6 +52,13 @@ public class FeatureUtils {
             hash += 31 * hash + fname.charAt(i);
         }
         return hash;
+    }
+    
+    /** Prepends a prefix to each string. */
+    public static void addPrefix(List<String> strs, String prefix) {
+        for (int i=0; i<strs.size(); i++) {
+            strs.set(i, prefix + strs.get(i));
+        }
     }
 
 }

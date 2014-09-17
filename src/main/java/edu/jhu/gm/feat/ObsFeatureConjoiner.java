@@ -29,7 +29,6 @@ import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.vector.IntIntDenseVector;
-import edu.jhu.util.Alphabet;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
 import edu.jhu.util.semiring.Algebras;
@@ -76,7 +75,7 @@ public class ObsFeatureConjoiner implements Serializable {
     /** Whether this object is initialized. */
     private boolean initialized;
     /** Alphabet for standard (non-observation function) features. */
-    private Alphabet<Object> feAlphabet;
+    private FeatureNames feAlphabet;
     
     private ObsFeatureConjoinerPrm prm;
     
@@ -84,10 +83,10 @@ public class ObsFeatureConjoiner implements Serializable {
         this.prm = prm;
         initialized = false;
         this.templates = fts;
-        this.feAlphabet = new Alphabet<Object>();
+        this.feAlphabet = new FeatureNames();
     }
         
-    public Alphabet<Object> getFeAlphabet() {
+    public FeatureNames getFeAlphabet() {
         return feAlphabet;
     }
     
@@ -137,7 +136,7 @@ public class ObsFeatureConjoiner implements Serializable {
             FactorTemplate template = templates.get(t);
             FeatureNames alphabet = template.getAlphabet();            
             for (int k = 0; k < alphabet.size(); k++) {
-                if (alphabet.lookupObject(k).isBiasFeature()) {
+                if (alphabet.isBiasFeature(k)) {
                     for (int c = 0; c < included[t].length; c++) {
                         included[t][c][k] = true;
                     }

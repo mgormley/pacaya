@@ -86,9 +86,10 @@ public class ObsFeatureConjoinerTest {
             FeatureVector fv = new FeatureVector();
             FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
 
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int featIdx = alphabet.lookupIndex("BIAS_FEATURE", true);
+            alphabet.setIsBias(featIdx);
             fv.set(featIdx, 1.0);
-            featIdx = alphabet.lookupIndex(new Feature("feat2a"));
+            featIdx = alphabet.lookupIndex("feat2a");
             fv.set(featIdx, 1.0);
             
             return fv;
@@ -119,13 +120,13 @@ public class ObsFeatureConjoinerTest {
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         {
             FeatureNames alphabet = new FeatureNames();
-            alphabet.lookupIndex(new Feature("feat1"));
+            alphabet.lookupIndex("feat1");
             fts.add(new FactorTemplate(new VarSet(v1), alphabet, "key1"));
         }
         {
             FeatureNames alphabet = new FeatureNames();
-            alphabet.lookupIndex(new Feature("feat2a"));
-            alphabet.lookupIndex(new Feature("feat2b"));
+            alphabet.lookupIndex("feat2a");
+            alphabet.lookupIndex("feat2b");
             fts.add(new FactorTemplate(new VarSet(v1, v2), alphabet, "key2"));
         }
         return fts;

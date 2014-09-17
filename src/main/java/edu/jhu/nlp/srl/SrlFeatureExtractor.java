@@ -1,7 +1,6 @@
 package edu.jhu.nlp.srl;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -134,7 +133,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         FeatureUtils.addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
         
         // Add the other features.
-        addPrefix(obsFeats, prefix);
+        FeatureUtils.addPrefix(obsFeats, prefix);
         FeatureUtils.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
         
         return fv;
@@ -161,13 +160,6 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         } else {
             throw new RuntimeException("This is probably a bug. We should only be considering OBSERVED variables.");
             //return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
-        }
-    }
-    
-    /** Prepends a prefix to each string. */
-    private static void addPrefix(List<String> strs, String prefix) {
-        for (int i=0; i<strs.size(); i++) {
-            strs.set(i, prefix + strs.get(i));
         }
     }
     

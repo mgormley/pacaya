@@ -7,16 +7,14 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
-import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Alphabet;
+import edu.jhu.nlp.relations.FeatureUtils;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
-import edu.jhu.util.hash.MurmurHash3;
 
 public class TemplateFeatureExtractorSpeedTest {
     
@@ -26,12 +24,13 @@ public class TemplateFeatureExtractorSpeedTest {
     /**
      * Speed test results.
      * 
-     * With feature hashing: (i.e. addFeatures())
-     *    s=800 n=19560 Toks / sec: 238.92119020862853
+     * Gilim:
+     *    w/hash s=800 n=19560 Toks / sec: 238.92
+     *    w/o    s=800 n=19560 Toks / sec: 514.42
      *    
-     * Without feature hasing:
-     *    s=800 n=19560 Toks / sec: 514.4254793151513
-
+     * Shasta:
+     * 	  w/hash s=800 n=19560 Toks / sec: 375.66
+     * 	  w/o    s=800 n=19560 Toks / sec: 723.21
      */
     //@Test
     public void testSpeed() throws ParseException, IOException {
@@ -40,7 +39,7 @@ public class TemplateFeatureExtractorSpeedTest {
         
         int trials = 3;
         
-        Alphabet<Object> alphabet = new Alphabet<Object>();
+        FeatureNames alphabet = new FeatureNames();
         
         Timer timer = new Timer();
         timer.start();
@@ -56,7 +55,7 @@ public class TemplateFeatureExtractorSpeedTest {
                         ext.addFeatures(tpls, local, feats );
                         
                         //FeatureVector fv = new FeatureVector();
-                        //addFeatures(feats, alphabet, "1_", fv, false);
+                        //FeatureUtils.addFeatures(feats, alphabet, fv, false, featureHashMod);
                     }
                 }
                 timer.stop();
@@ -72,35 +71,6 @@ public class TemplateFeatureExtractorSpeedTest {
         log.info("Average ms per sent: " + (timer.totMs() / sents.size() / trials));
         log.info("Toks / sec: " + (sents.getNumTokens() * trials / timer.totSec())); 
         log.info("Alphabet.size(): " + alphabet.size());
-    }
- 
-    private void addFeatures(ArrayList<String> obsFeats, Alphabet<Object> alphabet, String prefix, FeatureVector fv, boolean isBiasFeat) {
-        if (featureHashMod <= 0) {
-            // Just use the features as-is.
-            for (String obsFeat : obsFeats) {
-                String fname = prefix + obsFeat;
-                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
-                if (fidx != -1) {
-                    fv.add(fidx, 1.0);
-                }
-            }
-        } else {
-            // Apply the feature-hashing trick.
-            for (String obsFeat : obsFeats) {
-                String fname = prefix + obsFeat;
-                int hash = MurmurHash3.murmurhash3_x86_32(fname, 0, fname.length(), 123456789);
-                hash = FastMath.mod(hash, featureHashMod);
-                int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
-                if (fidx != -1) {
-                    int revHash = reverseHashCode(fname);
-                    if (revHash < 0) {
-                        fv.add(fidx, -1.0);
-                    } else {
-                        fv.add(fidx, 1.0);
-                    }
-                }
-            }
-        }
     }
 
     /**

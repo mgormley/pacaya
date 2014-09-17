@@ -22,7 +22,6 @@ import edu.jhu.gm.data.FgExampleStore;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.model.ExpFamFactor;
@@ -108,7 +107,7 @@ public class ErmaReader {
         if (includeUnsupportedFeatures) {
             log.info("Including unsupported features in the model.");
             for (data.Feature feat : ff.getFeatures()) {
-                alphabet.lookupIndex(new Feature(feat.getName()));
+                alphabet.lookupIndex(feat.getName());
             }
         } else {
             log.info("Excluding unsupported features from the model.");
@@ -308,7 +307,7 @@ public class ErmaReader {
                 // MRG: ERMA WAY: featRef.get(state).put(feat,featRef.get(state).containsKey(feat)?featRef.get(state).get(feat)+fi.getWeight():fi.getWeight());
                 
                 // MRG: Convert the ERMA feature to our feature and lookup its index.                               
-                int featIdx = alphabet.lookupIndex(new Feature(feat.getName()));           
+                int featIdx = alphabet.lookupIndex(feat.getName());           
                 FeatureVector featureVector = featRef.get(state);
                 // Add the feature weight for this feature to the feature vector.
                 featureVector.add(featIdx, fi.getWeight());                

@@ -3,7 +3,6 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.util.FeatureNames;
 
@@ -61,7 +60,7 @@ public class LogLinearObsFeatsData {
     public void addEx(double weight, String label, List<? extends Object> featNames) {
         FeatureVector features = new FeatureVector();
         for (Object featName : featNames) {
-            features.add(alphabet.lookupIndex(new Feature(featName)), 1.0);
+            features.add(alphabet.lookupIndex(featName), 1.0);
         }
         LogLinearExample ex = new LogLinearExample(weight, label, features);
         exList.add(ex);

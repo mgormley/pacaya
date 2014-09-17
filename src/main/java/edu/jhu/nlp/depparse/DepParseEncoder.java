@@ -15,7 +15,7 @@ import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 
 /**
  * Encodes a dependency tree factor graph and variable assignment from the words and pruning mask
@@ -33,9 +33,9 @@ public class DepParseEncoder implements Encoder<AnnoSentence, int[]> {
     
     private DepParseEncoderPrm prm;
     private CorpusStatistics cs;
-    private Alphabet<Object> feAlphabet;
+    private FeatureNames feAlphabet;
     
-    public DepParseEncoder(DepParseEncoderPrm prm, CorpusStatistics cs, Alphabet<Object> feAlphabet) {
+    public DepParseEncoder(DepParseEncoderPrm prm, CorpusStatistics cs, FeatureNames feAlphabet) {
         this.cs = cs;
         this.feAlphabet = feAlphabet;
         this.prm = prm;

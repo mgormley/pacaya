@@ -1,6 +1,5 @@
 package edu.jhu.util;
 
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.prim.list.IntArrayList;
 
 /**
@@ -27,7 +26,7 @@ public class CountingFeatureNames extends FeatureNames {
 	}
 
 	@Override
-    public int lookupIndex(Feature object, boolean addIfMissing) {
+    public int lookupIndex(Object object, boolean addIfMissing) {
 	    int index = super.lookupIndex(object, addIfMissing);
 	    if (index != MISSING_OBJECT_INDEX) {
 	        while (index+1 > idxCountMap.size()) {
