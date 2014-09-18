@@ -22,12 +22,14 @@ public class CorpusHandler {
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
-    @Opt(hasArg = true, description = "Type of training data.")
-    public static DatasetType trainType = DatasetType.CONLL_2009;
+    @Opt(hasArg = true, description = "Type of training data input.")
+    public static DatasetType trainType = null;
     @Opt(hasArg = true, description = "Training data predictions output file.")
     public static File trainPredOut = null;
     @Opt(hasArg = true, description = "Training data gold output file.")
     public static File trainGoldOut = null;
+    @Opt(hasArg = true, description = "Type of training data ouput (predicted and gold). null implies same as trainType.")
+    public static DatasetType trainTypeOut = null;
     @Opt(hasArg = true, description = "Maximum sentence length for train.")
     public static int trainMaxSentenceLength = Integer.MAX_VALUE;
     @Opt(hasArg = true, description = "Minimum sentence length for train.")
@@ -46,6 +48,8 @@ public class CorpusHandler {
     public static File devPredOut = null;
     @Opt(hasArg = true, description = "Testing data gold output file.")
     public static File devGoldOut = null;
+    @Opt(hasArg = true, description = "Type of dev data ouput (predicted and gold). null implies same as trainType.")
+    public static DatasetType devTypeOut = null;
     @Opt(hasArg = true, description = "Maximum sentence length for dev.")
     public static int devMaxSentenceLength = Integer.MAX_VALUE;
     @Opt(hasArg = true, description = "Maximum number of sentences to include in dev.")
@@ -60,6 +64,8 @@ public class CorpusHandler {
     public static File testPredOut = null;
     @Opt(hasArg = true, description = "Testing data gold output file.")
     public static File testGoldOut = null;
+    @Opt(hasArg = true, description = "Type of test data ouput (predicted and gold). null implies same as trainType.")
+    public static DatasetType testTypeOut = null;
     @Opt(hasArg = true, description = "Maximum sentence length for test.")
     public static int testMaxSentenceLength = Integer.MAX_VALUE;
     @Opt(hasArg = true, description = "Maximum number of sentences to include in test.")
@@ -127,8 +133,12 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted train";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(trainPredOut, trainType, trainPredSents);
+            writer.write(trainPredOut, getTrainTypeOut(), trainPredSents);
         }
+    }
+
+    public DatasetType getTrainTypeOut() {
+        return (trainTypeOut != null) ? trainTypeOut : trainType;
     }
     
     private void loadTrain() throws IOException {
@@ -158,7 +168,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold train";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(trainGoldOut, trainType, trainGoldSents);
+            writer.write(trainGoldOut, getTrainTypeOut(), trainGoldSents);
         }
         
         // Cache input train data.
@@ -219,8 +229,12 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted dev";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(devPredOut, devType, devPredSents);
+            writer.write(devPredOut, getDevTypeOut(), devPredSents);
         }
+    }
+
+    public DatasetType getDevTypeOut() {
+        return (devTypeOut != null) ? devTypeOut : devType;
     }
     
     private void loadDev() throws IOException {
@@ -236,7 +250,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold dev";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(devGoldOut, devType, devGoldSents);
+            writer.write(devGoldOut, getDevTypeOut(), devGoldSents);
         }
     }    
     
@@ -300,8 +314,12 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted test";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(testPredOut, testType, testPredSents);
+            writer.write(testPredOut, getTestTypeOut(), testPredSents);
         }
+    }
+
+    public DatasetType getTestTypeOut() {
+        return (testTypeOut != null) ? testTypeOut : testType;
     }
     
     private void loadTest() throws IOException {
@@ -321,7 +339,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold test";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(testGoldOut, testType, testGoldSents);
+            writer.write(testGoldOut, getTestTypeOut(), testGoldSents);
         }
         
         // Cache input test data.

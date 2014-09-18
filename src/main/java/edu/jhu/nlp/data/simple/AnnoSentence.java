@@ -7,6 +7,7 @@ import java.util.List;
 import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.DepTree.Dir;
+import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.Span;
@@ -53,7 +54,14 @@ public class AnnoSentence {
     private SrlGraph srlGraph;
     /** Constituency parse. */
     private NaryTree naryTree;
+    // The standard set of named entities.
     private NerMentions namedEntities;
+    // Pairs of named entities to be considered for relation extraction.
+    // This set could be all pairs, all ordered pairs, or some other definition.
+    private List<Pair<NerMention,NerMention>> nePairs;
+    // Labels for the pairs of named entities.
+    private List<String> relLabels;
+    // The standard set of relation mentions.
     private RelationMentions relations;
     
     /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
@@ -68,48 +76,183 @@ public class AnnoSentence {
      * source sentence and the SRL graph, the features, and the constituency parse.
      */
     @Deprecated
-    public AnnoSentence(AnnoSentence other) {
-        this.words = Lists.copyOf(other.words);
-        this.lemmas = Lists.copyOf(other.lemmas);
-        this.posTags = Lists.copyOf(other.posTags);
-        this.cposTags = Lists.copyOf(other.cposTags);
-        this.clusters = Lists.copyOf(other.clusters);
-        this.embeds = Lists.copyOf(other.embeds);
-        this.deprels = Lists.copyOf(other.deprels);
-        this.parents = IntArrays.copyOf(other.parents);
-        this.depEdgeMask = (other.depEdgeMask == null) ? null : new DepEdgeMask(other.depEdgeMask);
-        this.knownPreds = (other.knownPreds == null) ? null : new IntHashSet(other.knownPreds);
-        this.namedEntities = new NerMentions(other.namedEntities);
-        this.relations = new RelationMentions(other.relations);
-        this.sourceSent = other.sourceSent;
+    public AnnoSentence getFairlyDeepCopy() {
+        AnnoSentence newSent = new AnnoSentence();
+        newSent.words = Lists.copyOf(this.words);
+        newSent.lemmas = Lists.copyOf(this.lemmas);
+        newSent.posTags = Lists.copyOf(this.posTags);
+        newSent.cposTags = Lists.copyOf(this.cposTags);
+        newSent.clusters = Lists.copyOf(this.clusters);
+        newSent.embeds = Lists.copyOf(this.embeds);
+        newSent.deprels = Lists.copyOf(this.deprels);
+        newSent.parents = IntArrays.copyOf(this.parents);
+        newSent.depEdgeMask = (this.depEdgeMask == null) ? null : new DepEdgeMask(this.depEdgeMask);
+        newSent.knownPreds = (this.knownPreds == null) ? null : new IntHashSet(this.knownPreds);
+        newSent.namedEntities = new NerMentions(this.namedEntities);
+        newSent.nePairs = Lists.copyOf(nePairs);
+        newSent.relLabels = Lists.copyOf(relLabels);
+        newSent.relations = new RelationMentions(this.relations);
+        newSent.sourceSent = this.sourceSent;
         // TODO: this should be a deep copy.
-        this.feats = Lists.copyOf(other.feats);
+        newSent.feats = Lists.copyOf(this.feats);
         // TODO: this should be a deep copy.
-        this.srlGraph = other.srlGraph;
+        newSent.srlGraph = this.srlGraph;
         // TODO: this should be a deep copy.
-        this.naryTree = other.naryTree;
+        newSent.naryTree = this.naryTree;
+        return newSent;
     }
     
     public AnnoSentence getShallowCopy() {
         AnnoSentence newSent = new AnnoSentence();
-        newSent.words = this.words;
-        newSent.lemmas = this.lemmas;
-        newSent.posTags = this.posTags;
-        newSent.cposTags = this.cposTags;
-        newSent.clusters = this.clusters;
-        newSent.embeds = this.embeds;
-        newSent.deprels = this.deprels;
-        newSent.parents = this.parents;
-        newSent.depEdgeMask = this.depEdgeMask;
-        newSent.knownPreds = this.knownPreds;
-        newSent.sourceSent = this.sourceSent;
-        newSent.feats = this.feats;
-        newSent.srlGraph = this.srlGraph;
-        newSent.naryTree = this.naryTree;
-        newSent.namedEntities = this.namedEntities;
-        newSent.relations = this.relations;
+        for (AT at : AT.values()) {
+        	copyShallow(this, newSent, at);
+        }
         return newSent;
     }
+
+    public static void copyShallow(AnnoSentence src, AnnoSentence dest, AT at) {
+        switch (at) {
+        case WORD: dest.words = src.words; break;
+        case LEMMA: dest.lemmas = src.lemmas; break;
+        case POS: dest.posTags = src.posTags; break;
+        case CPOS: dest.cposTags = src.cposTags; break;
+        case BROWN: dest.clusters = src.clusters; break;
+        case EMBED: dest.embeds = src.embeds; break;
+        case MORPHO: dest.feats = src.feats; break;
+        case DEP_TREE: dest.parents = src.parents; break;
+        case DEPREL: dest.deprels = src.deprels; break;
+        case DEP_EDGE_MASK: dest.depEdgeMask = src.depEdgeMask; break;
+        case SRL_PRED_IDX: dest.knownPreds = src.knownPreds; break;
+        case SRL: dest.srlGraph = src.srlGraph; break;
+        case NARY_TREE: dest.naryTree = src.naryTree; break;
+        case NER: dest.namedEntities = src.namedEntities; break;
+        case NE_PAIRS: dest.nePairs = src.nePairs; break;
+        case REL_LABELS: dest.relLabels = src.relLabels; break;
+        case RELATIONS: dest.namedEntities = src.namedEntities; break;
+        default: throw new RuntimeException("not implemented for " + at);
+        }
+    }
+
+    public void removeAts(List<AT> removeAts) {
+        for (AT at : removeAts) {
+            removeAt(at);
+        }
+    }
+
+    public void removeAt(AT at) {
+        switch (at) {
+        case WORD: this.words = null; break;
+        case LEMMA: this.lemmas = null; break;
+        case POS: this.posTags = null; break;
+        case CPOS: this.cposTags = null; break;
+        case BROWN: this.clusters = null; break;
+        case EMBED: this.embeds = null; break;
+        case MORPHO: this.feats = null; break;
+        case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
+        case DEPREL: this.deprels = null; break;
+        case DEP_EDGE_MASK: this.depEdgeMask = null; break;
+        case SRL_PRED_IDX: this.knownPreds = null; break;
+        case SRL: this.srlGraph = null; break;
+        case NARY_TREE: this.naryTree = null; break;
+        case NER: this.namedEntities = null; break;
+        case NE_PAIRS: this.nePairs = null; break;
+        case REL_LABELS: this.relLabels = null; break;
+        case RELATIONS: this.relations = null; break;
+        default: throw new RuntimeException("not implemented for " + at);
+        }
+    }
+    
+    public boolean hasAt(AT at) {
+        switch (at) {
+        case WORD: return this.words != null;
+        case LEMMA: return this.lemmas != null;
+        case POS: return this.posTags != null;
+        case CPOS: return this.cposTags != null;
+        case BROWN: return this.clusters != null;
+        case EMBED: return this.embeds != null;
+        case MORPHO: return this.feats != null;
+        case DEP_TREE: return this.parents != null;
+        case DEPREL: return this.deprels != null;
+        case DEP_EDGE_MASK: return this.depEdgeMask != null;
+        case SRL_PRED_IDX: return this.knownPreds != null;
+        case SRL: return this.srlGraph != null;
+        case NARY_TREE: return this.naryTree != null;
+        case NER: return this.namedEntities != null;
+        case NE_PAIRS: return this.nePairs != null;
+        case REL_LABELS: return this.relLabels != null;
+        case RELATIONS: return this.relations != null;        
+        default: throw new RuntimeException("not implemented for " + at);
+        }
+    }
+    
+    public void intern() {
+        Lists.intern(words);
+        Lists.intern(lemmas);
+        Lists.intern(posTags);
+        Lists.intern(cposTags);
+        Lists.intern(clusters);
+        if (feats != null) {
+            for (int i=0; i<feats.size(); i++) {
+                Lists.intern(feats.get(i));
+            }
+        }
+        Lists.intern(deprels);        
+        if (naryTree != null) {
+            naryTree.intern();
+        }
+        if (namedEntities != null) {
+            namedEntities.intern();
+        }
+        // TODO: Lists.intern(nePairs);
+        Lists.intern(relLabels);
+        if (relations != null) {
+            relations.intern();
+        }
+        // TODO: this.srlGraph.intern();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        appendIfNotNull(sb, "words", words);
+        appendIfNotNull(sb, "lemmas", lemmas);
+        appendIfNotNull(sb, "tags", posTags);
+        appendIfNotNull(sb, "cposTags", cposTags);
+        appendIfNotNull(sb, "clusters", clusters);
+        appendIfNotNull(sb, "embeds", embeds);
+        appendIfNotNull(sb, "feats", feats);
+        if (parents != null) {
+            sb.append("parents=");
+            sb.append(Arrays.toString(parents));
+            sb.append(",\n");
+        }
+        appendIfNotNull(sb, "deprels", deprels);
+        appendIfNotNull(sb, "depEdgeMask", depEdgeMask);
+        appendIfNotNull(sb, "srlGraph", srlGraph);
+        appendIfNotNull(sb, "knownPreds", knownPreds);
+        appendIfNotNull(sb, "naryTree", naryTree);
+        appendIfNotNull(sb, "namedEntities", namedEntities);
+        if (namedEntities != null) { appendIfNotNull(sb, "namedEntities (context)", namedEntities.toString(words)); }
+        appendIfNotNull(sb, "nePairs", nePairs);
+        appendIfNotNull(sb, "relLabels", relLabels);
+        appendIfNotNull(sb, "relations", relations);
+        if (relations != null) { appendIfNotNull(sb, "relations (context)", relations.toString(words)); }
+        appendIfNotNull(sb, "sourceSent", sourceSent);
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private void appendIfNotNull(StringBuilder sb, String name, Object l) {
+        if (l != null) {
+            sb.append(name);
+            sb.append("=");
+            sb.append(l);
+            sb.append(",\n");
+        }
+    }
+    
+    /* -------------------------------- Interesting getters / setters ---------------------------- */
     
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
@@ -482,9 +625,25 @@ public class AnnoSentence {
     public NerMentions getNamedEntities() {
         return namedEntities;
     }
-
+    
     public void setNamedEntities(NerMentions namedEntities) {
         this.namedEntities = namedEntities;
+    }
+    
+    public List<Pair<NerMention, NerMention>> getNePairs() {
+		return nePairs;
+	}
+
+	public void setNePairs(List<Pair<NerMention, NerMention>> nePairs) {
+		this.nePairs = nePairs;
+	}
+
+	public List<String> getRelLabels() {
+        return relLabels;
+    }
+
+    public void setRelLabels(List<String> relLabels) {
+        this.relLabels = relLabels;
     }
 
     public RelationMentions getRelations() {
@@ -493,138 +652,6 @@ public class AnnoSentence {
 
     public void setRelations(RelationMentions relations) {
         this.relations = relations;
-    }
-
-    public void removeAts(List<AT> removeAts) {
-        for (AT at : removeAts) {
-            removeAt(at);
-        }
-    }
-
-    public void removeAt(AT at) {
-        switch (at) {
-        case WORD: this.words = null; break;
-        case LEMMA: this.lemmas = null; break;
-        case POS: this.posTags = null; break;
-        case CPOS: this.cposTags = null; break;
-        case BROWN: this.clusters = null; break;
-        case EMBED: this.embeds = null; break;
-        case MORPHO: this.feats = null; break;
-        case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
-        case DEPREL: this.deprels = null; break;
-        case DEP_EDGE_MASK: this.depEdgeMask = null; break;
-        case SRL_PRED_IDX: this.knownPreds = null; break;
-        case SRL: this.srlGraph = null; break;
-        case NARY_TREE: this.naryTree = null; break;
-        case NER: this.namedEntities = null; break;
-        case RELATIONS: this.relations = null; break;
-        default: throw new RuntimeException("not implemented for " + at);
-        }
-    }
-    
-    public boolean hasAt(AT at) {
-        switch (at) {
-        case WORD: return this.words != null;
-        case LEMMA: return this.lemmas != null;
-        case POS: return this.posTags != null;
-        case CPOS: return this.cposTags != null;
-        case BROWN: return this.clusters != null;
-        case EMBED: return this.embeds != null;
-        case MORPHO: return this.feats != null;
-        case DEP_TREE: return this.parents != null;
-        case DEPREL: return this.deprels != null;
-        case DEP_EDGE_MASK: return this.depEdgeMask != null;
-        case SRL_PRED_IDX: return this.knownPreds != null;
-        case SRL: return this.srlGraph != null;
-        case NARY_TREE: return this.naryTree != null;
-        case NER: return this.namedEntities != null;
-        case RELATIONS: return this.relations != null;        
-        default: throw new RuntimeException("not implemented for " + at);
-        }
-    }
-
-    public static void copyShallow(AnnoSentence src, AnnoSentence dest, AT at) {
-        switch (at) {
-        case WORD: dest.words = src.words; break;
-        case LEMMA: dest.lemmas = src.lemmas; break;
-        case POS: dest.posTags = src.posTags; break;
-        case CPOS: dest.cposTags = src.cposTags; break;
-        case BROWN: dest.clusters = src.clusters; break;
-        case EMBED: dest.embeds = src.embeds; break;
-        case MORPHO: dest.feats = src.feats; break;
-        case DEP_TREE: dest.parents = src.parents; break;
-        case DEPREL: dest.deprels = src.deprels; break;
-        case DEP_EDGE_MASK: dest.depEdgeMask = src.depEdgeMask; break;
-        case SRL_PRED_IDX: dest.knownPreds = src.knownPreds; break;
-        case SRL: dest.srlGraph = src.srlGraph; break;
-        case NARY_TREE: dest.naryTree = src.naryTree; break;
-        case NER: dest.namedEntities = src.namedEntities; break;
-        case RELATIONS: dest.namedEntities = src.namedEntities; break;
-        default: throw new RuntimeException("not implemented for " + at);
-        }
-    }
-    
-    public void intern() {
-        Lists.intern(words);
-        Lists.intern(lemmas);
-        Lists.intern(posTags);
-        Lists.intern(cposTags);
-        Lists.intern(clusters);
-        if (feats != null) {
-            for (int i=0; i<feats.size(); i++) {
-                Lists.intern(feats.get(i));
-            }
-        }
-        Lists.intern(deprels);        
-        if (naryTree != null) {
-            naryTree.intern();
-        }
-        if (namedEntities != null) {
-            namedEntities.intern();
-        }
-        if (relations != null) {
-            relations.intern();
-        }
-        // TODO: this.srlGraph.intern();
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        appendIfNotNull(sb, "words", words);
-        appendIfNotNull(sb, "lemmas", lemmas);
-        appendIfNotNull(sb, "tags", posTags);
-        appendIfNotNull(sb, "cposTags", cposTags);
-        appendIfNotNull(sb, "clusters", clusters);
-        appendIfNotNull(sb, "embeds", embeds);
-        appendIfNotNull(sb, "feats", feats);
-        if (parents != null) {
-            sb.append("parents=");
-            sb.append(Arrays.toString(parents));
-            sb.append(",\n");
-        }
-        appendIfNotNull(sb, "deprels", deprels);
-        appendIfNotNull(sb, "depEdgeMask", depEdgeMask);
-        appendIfNotNull(sb, "srlGraph", srlGraph);
-        appendIfNotNull(sb, "knownPreds", knownPreds);
-        appendIfNotNull(sb, "naryTree", naryTree);
-        appendIfNotNull(sb, "namedEntities", namedEntities);
-        if (namedEntities != null) { appendIfNotNull(sb, "namedEntities (context)", namedEntities.toString(words)); }
-        appendIfNotNull(sb, "relations", relations);
-        if (relations != null) { appendIfNotNull(sb, "relations (context)", relations.toString(words)); }
-        appendIfNotNull(sb, "sourceSent", sourceSent);
-        sb.append("]");
-        return sb.toString();
-    }
-
-    private void appendIfNotNull(StringBuilder sb, String name, Object l) {
-        if (l != null) {
-            sb.append(name);
-            sb.append("=");
-            sb.append(l);
-            sb.append(",\n");
-        }
     }
     
 }

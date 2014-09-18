@@ -131,7 +131,7 @@ public class TemplateLanguage {
      */
     public enum AT {
         WORD, LEMMA, POS, CPOS, BROWN, EMBED, MORPHO, DEP_TREE, DEPREL, 
-        DEP_EDGE_MASK, SRL_PRED_IDX, SRL, NARY_TREE, NER, RELATIONS;
+        DEP_EDGE_MASK, SRL_PRED_IDX, SRL, NARY_TREE, NER, NE_PAIRS, RELATIONS, REL_LABELS;
     }
         
     public static Description getDescByName(String name) {

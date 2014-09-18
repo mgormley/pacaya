@@ -38,7 +38,7 @@ public class RelationsFactorGraphBuilder {
     }
     
     private RelationsFactorGraphBuilderPrm prm;
-    private Map<Pair<NerMention, NerMention>, RelVar> varMap;
+    private List<RelVar> relVars;
     
     public RelationsFactorGraphBuilder(RelationsFactorGraphBuilderPrm prm) {
         this.prm = prm;
@@ -70,27 +70,24 @@ public class RelationsFactorGraphBuilder {
      * Adds factors and variables to the given factor graph.
      */
     public void build(AnnoSentence sent, ObsFeatureConjoiner cj, FactorGraph fg, CorpusStatistics cs, ObsFeatureExtractor obsFe) {
-        varMap = new HashMap<>();
+        relVars = new ArrayList<>();
         
         // Create relation variables.
         //
         // Iterate over all pairs of mentions, such that ne1 comes before ne2.
         // This code assumes that the mentions are already in sorted order.
         List<RelVar> rvs = new ArrayList<>();
-        NerMentions nes = sent.getNamedEntities();
-        if (nes == null) {
-            throw new IllegalArgumentException("Relation extraction requires named entities.");
+        if (sent.getNePairs() == null) {
+            throw new IllegalArgumentException("Relation extraction requires named entity pairs.");
         }
-        for (int i = 0; i < nes.size(); i++) {
-            NerMention ne1 = nes.get(i);
-            for (int j=i+1; j < nes.size(); j++) {
-                NerMention ne2 = nes.get(j);
-                // Create relation variable.
-                String name = RelVar.getDefaultName(ne1.getSpan(), ne2.getSpan());
-                RelVar rv = new RelVar(VarType.PREDICTED, name, ne1, ne2, cs.relationStateNames);
-                rvs.add(rv);
-                varMap.put(new Pair<NerMention,NerMention>(ne1, ne2), rv);
-            }
+    	for (Pair<NerMention,NerMention> pair : sent.getNePairs()) {
+    		NerMention ne1 = pair.get1();
+    		NerMention ne2 = pair.get2();
+            // Create relation variable.
+            String name = RelVar.getDefaultName(ne1.getSpan(), ne2.getSpan());
+            RelVar rv = new RelVar(VarType.PREDICTED, name, ne1, ne2, cs.relationStateNames);
+            rvs.add(rv);
+            relVars.add(rv);
         }
         
         // Create a unary factor for each relation variable.
@@ -99,8 +96,8 @@ public class RelationsFactorGraphBuilder {
         }
     }
     
-    public RelVar getVar(NerMention ne1, NerMention ne2) {
-        return varMap.get(new Pair<NerMention,NerMention>(ne1, ne2));
+    public List<RelVar> getRelVars() {
+        return relVars;
     }
     
 }

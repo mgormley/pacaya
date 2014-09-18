@@ -335,8 +335,11 @@ public class JointNlpRunner {
         
         PosTagDistancePruner ptdPruner = null;
         // Get a model.
+        if (modelIn == null && !corpus.hasTrain()) {
+        	throw new ParseException("Either --modelIn or --train must be specified.");
+        }
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
-        if (modelIn == null) {
+        if (modelIn == null && corpus.hasTrain()) {
             // Feature selection.
             featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
         }
@@ -350,8 +353,10 @@ public class JointNlpRunner {
             AnnoSentenceCollection goldSents = corpus.getTrainGold();
             AnnoSentenceCollection inputSents = corpus.getTrainInput();
 
+            // Add brown clusters, word embeddings.            
             addClustersAndEmbeddings(inputSents);
             AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
+            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.EMBED);
             // Train the distance-based pruner. 
             if (pruneByDist) {
                 ptdPruner = new PosTagDistancePruner();
@@ -371,7 +376,7 @@ public class JointNlpRunner {
             eval(name, goldSents, inputSents);
             corpus.clearTrainCache();
         }
-          
+        
         if (modelOut != null) {
             jointAnno.saveModel(modelOut);
         }
@@ -380,28 +385,28 @@ public class JointNlpRunner {
         }
 
         if (corpus.hasDev()) {
-            // Test the model on dev data.
+            // Decode dev data.
             String name = "dev";
             AnnoSentenceCollection inputSents = corpus.getDevInput();
             addClustersAndEmbeddings(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
-            // Decode and evaluate the dev data.
-            jointAnno.annotate(inputSents);            
+            jointAnno.annotate(inputSents);
             corpus.writeDevPreds(inputSents);
+            // Evaluate dev data.
             AnnoSentenceCollection goldSents = corpus.getDevGold();
             eval(name, goldSents, inputSents);
             corpus.clearDevCache();
         }
         
         if (corpus.hasTest()) {
-            // Test the model on test data.
+            // Decode test data.
             String name = "test";
             AnnoSentenceCollection inputSents = corpus.getTestInput();
             addClustersAndEmbeddings(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
-            // Decode and evaluate the test data.
             jointAnno.annotate(inputSents);
             corpus.writeTestPreds(inputSents);
+            // Evaluate test data.
             AnnoSentenceCollection goldSents = corpus.getTestGold();
             eval(name, goldSents, inputSents);
             corpus.clearTestCache();

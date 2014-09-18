@@ -69,13 +69,25 @@ public class RelationMentions implements Iterable<RelationMention> {
     public RelationMention get(NerMention ne1, NerMention ne2) {
         for (RelationMention rm : ments) {
             List<Pair<String, NerMention>> args = rm.getArgs();
-            if (args.size() == 2
-                    && args.get(0).get2().equals(ne1) 
-                    && args.get(1).get2().equals(ne2)) {
+            NerMention arg1 = args.get(1).get2();
+			NerMention arg0 = args.get(0).get2();
+			assert args.size() == 2;
+			if (args.size() == 2 && 
+                    ((arg1.equals(ne1) && arg0.equals(ne2)) ||
+                   	 (arg0.equals(ne1) && arg1.equals(ne2))    )
+                   	 ) {
                 return rm;
             }
         }
         return null;
     }
+
+	public int size() {
+		return ments.size();
+	}
+
+	public List<RelationMention> getMentions() {
+		return ments;
+	}
 
 }

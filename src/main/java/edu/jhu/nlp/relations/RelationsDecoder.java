@@ -50,6 +50,7 @@ public class RelationsDecoder implements Decoder<AnnoSentence, RelationMentions>
                String[] splits = relation.split(":");
                assert splits.length == 3 : Arrays.toString(splits);
                String type = splits[0];               
+               assert rv.ment1.compareTo(rv.ment2) <= 0;
                List<Pair<String, NerMention>> args = Lists.getList(
                        new Pair<String,NerMention>(splits[1], rv.ment1), 
                        new Pair<String,NerMention>(splits[2], rv.ment2));

@@ -50,6 +50,7 @@ import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.map.IntIntHashMap;
@@ -84,17 +85,23 @@ public class ConcreteReader {
     private static final int SKIP = -1;
 
     private ConcreteReaderPrm prm;
-
+    private int numEntityMentions = 0;
+    private int numSituationMentions = 0;
+    
     public ConcreteReader(ConcreteReaderPrm prm) {
         this.prm = prm;
     }
 
     public AnnoSentenceCollection toSentences(File inFile) throws IOException {
+    	AnnoSentenceCollection sents;
         if (inFile.getName().endsWith(".zip")) {
-            return sentsFromZipFile(inFile);
+            sents = sentsFromZipFile(inFile);
         } else {
-            return sentsFromCommFile(inFile);
+            sents = sentsFromCommFile(inFile);
         }
+        log.debug("Num entity mentions: " + numEntityMentions);
+        log.debug("Num situation mentions: " + numSituationMentions);
+        return sents;
     }
     
     public AnnoSentenceCollection sentsFromZipFile(File zipFile) throws IOException {
@@ -176,6 +183,11 @@ public class ConcreteReader {
 
             if (comm.getSituationMentionSetsSize() > 0) {
                 addSituationMentions(comm, tmpSents);
+                
+                for (AnnoSentence aSent : tmpSents) {                     
+                    // Add the named entity pairs.
+                    RelationsEncoder.addNePairsAndRelLabels(aSent);
+                }                    
             }            
         }
         
@@ -223,6 +235,8 @@ public class ConcreteReader {
             NerMentions ner = new NerMentions(aSent.size(), mentions.get(i));
             aSent.setNamedEntities(ner);
         }
+        
+        numEntityMentions += cEms.getMentionSet().size();
     }
 
     private Span getSpan(TokenRefSequence toks) {
@@ -244,7 +258,7 @@ public class ConcreteReader {
         
         Map<String, NerMention> emId2em = getUuid2ArgsMap(tmpSents);
         Map<String, Integer> emId2SentIdx = getUuid2SentIdxMap(tmpSents);
-        
+                
         assert comm.getSituationMentionSetsSize() == 1;
         SituationMentionSet cSms = comm.getSituationMentionSets().get(0);
         for (SituationMention cSm : cSms.getMentionList()) {
@@ -287,8 +301,9 @@ public class ConcreteReader {
             AnnoSentence aSent = tmpSents.get(sentIdx);
             RelationMentions aRels = aSent.getRelations();
             aRels.add(aSm);
-            aSent.setRelations(aRels);            
-        }
+            aSent.setRelations(aRels);
+        }        
+        numSituationMentions += cSms.getMentionList().size();
     }
 
     /** Get a map from UUIDs to our entity mentions. */

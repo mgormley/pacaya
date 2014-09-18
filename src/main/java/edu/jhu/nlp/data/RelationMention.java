@@ -1,7 +1,11 @@
 package edu.jhu.nlp.data;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+
+import org.apache.commons.lang.ObjectUtils;
 
 import edu.jhu.prim.tuple.Pair;
 
@@ -53,6 +57,19 @@ public class RelationMention {
 
     public List<Pair<String, NerMention>> getArgs() {
         return args;
+    }
+    
+    public List<Pair<String, NerMention>> getNerOrderedArgs() {
+        List<Pair<String, NerMention>> argsOrd = new ArrayList<>(args);
+        Collections.sort(argsOrd, new Comparator<Pair<String,NerMention>>(){
+            @Override
+            public int compare(Pair<String, NerMention> o1, Pair<String, NerMention> o2) {
+                int diff = ObjectUtils.compare(o1.get2(), o2.get2());
+                if (diff != 0) { return diff; }
+                return ObjectUtils.compare(o1.get1(), o2.get1());
+            }
+        });
+        return argsOrd;
     }
 
     public Span getTrigger() {

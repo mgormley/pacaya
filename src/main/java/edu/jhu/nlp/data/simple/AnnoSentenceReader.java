@@ -15,6 +15,8 @@ import edu.jhu.nlp.data.conll.CoNLL09FileReader;
 import edu.jhu.nlp.data.conll.CoNLL09Sentence;
 import edu.jhu.nlp.data.conll.CoNLLXFileReader;
 import edu.jhu.nlp.data.conll.CoNLLXSentence;
+import edu.jhu.nlp.data.semeval.SemEval2010Reader;
+import edu.jhu.nlp.data.semeval.SemEval2010Sentence;
 
 /**
  * Generic reader of AnnoSentence objects from many different corpora. 
@@ -41,7 +43,7 @@ public class AnnoSentenceReader {
         public ConcreteReaderPrm conPrm = new ConcreteReaderPrm();        
     }
     
-    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE };
+    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE, SEMEVAL_2010 };
     
     public interface SASReader extends Iterable<AnnoSentence> {
         public void close();        
@@ -81,6 +83,8 @@ public class AnnoSentenceReader {
                 reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(fis), new CoNLL082Anno());
             } else if (type == DatasetType.CONLL_X) {
                 reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(fis), new CoNLLX2Anno());
+            } else if (type == DatasetType.SEMEVAL_2010) {
+                reader = ConvCloseableIterable.getInstance(new SemEval2010Reader(fis), new SemEval20102Anno());
             //} else if (type == DatasetType.PTB) {
                 //reader = new Ptb2Anno(new PtbFileReader(dataFile));
             } else {
@@ -141,6 +145,15 @@ public class AnnoSentenceReader {
         @Override
         public AnnoSentence convert(CoNLLXSentence x) {
             return x.toAnnoSentence(prm.useCoNLLXPhead);
+        }
+        
+    }
+    
+    public class SemEval20102Anno implements Converter<SemEval2010Sentence, AnnoSentence> {
+
+        @Override
+        public AnnoSentence convert(SemEval2010Sentence x) {
+            return x.toAnnoSentence();
         }
         
     }

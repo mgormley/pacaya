@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.NerMentions;
+import edu.jhu.nlp.data.RelationMention;
 import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
@@ -93,7 +94,7 @@ public class CorpusStatistics implements Serializable {
         Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
         Set<String> knownRoles = new HashSet<String>();
         Set<String> knownLinks = new HashSet<String>();
-        Set<String> knownRelations = new HashSet<String>();
+        Set<String> knownRelations = new TreeSet<String>();
         Map<String, MutableInt> words = new HashMap<String, MutableInt>();
         Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
         initialized = true;
@@ -108,6 +109,7 @@ public class CorpusStatistics implements Serializable {
         // This is a hack:  '_' won't actually be in any of the defined edges.
         // However, removing this messes up what we assume as default.
         knownRoles.add("_");
+        int numTruePosRels = 0;
         for (AnnoSentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in
@@ -154,19 +156,36 @@ public class CorpusStatistics implements Serializable {
             }
             
             // Relation stats.
-            if (sent.getRelations() != null && sent.getNamedEntities() != null) {
-                NerMentions nes = sent.getNamedEntities();
-                RelationMentions rels = sent.getRelations();                
-                // Iterate over all pairs of mentions, such that ne1 comes before ne2.
-                // This code assumes that the mentions are already in sorted order.
-                for (int i = 0; i < nes.size(); i++) {
-                    NerMention ne1 = nes.get(i);
-                    for (int j=i+1; j < nes.size(); j++) {
-                        NerMention ne2 = nes.get(j);
-                        String relation = RelationsEncoder.getRelation(rels, ne1, ne2);
-                        knownRelations.add(relation);
+            if (sent.getRelations() != null && sent.getNePairs() != null) {
+                RelationMentions rels = sent.getRelations();
+                Set<RelationMention> matched = new HashSet<>();
+                int k=0;
+            	for (Pair<NerMention,NerMention> pair : sent.getNePairs()) {
+            		NerMention ne1 = pair.get1();
+            		NerMention ne2 = pair.get2();
+                    RelationMention rm = rels.get(ne1, ne2);
+                    if (rm != null) {
+                    	matched.add(rm);
+                    }
+                    String relation = RelationsEncoder.getRelation(rels, ne1, ne2);
+                    knownRelations.add(relation);
+                    if (!relation.equals(RelationsEncoder.NO_RELATION_LABEL)) {
+                    	numTruePosRels++;
                     }
                 }
+                if (matched.size() != rels.size()) {
+                	Set<RelationMention> missed = new HashSet<>(rels.getMentions());
+                	missed.removeAll(matched);
+                	RelationMentions tmp = new RelationMentions();
+                	for (RelationMention m : missed) { tmp.add(m); }
+					log.warn("Missed "+missed.size()+" relations: "
+							+ tmp.toString(sent.getWords())
+									.replaceAll("SituationMent",
+											"\nSituationMent")
+									.replaceAll("FancySpan", "\n\tFancySpan"));
+					RelationMention rm = missed.iterator().next();
+					rels.get(rm.getArgs().get(0).get2(), rm.getArgs().get(1).get2());
+				}
             }
         }
         
@@ -186,6 +205,10 @@ public class CorpusStatistics implements Serializable {
         log.info("Num known roles: " + roleStateNames.size());
         log.info("Known roles: " + roleStateNames);
         log.info("Num known predicates: " + predSenseListMap.size());
+        
+        log.info("Num true positive relations: " + numTruePosRels);
+        log.info("Num known relations: " + relationStateNames.size());
+        log.info("Known relations: " + relationStateNames);
     }
     
     // ------------------- private ------------------- //

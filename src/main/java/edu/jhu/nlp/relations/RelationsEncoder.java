@@ -1,5 +1,6 @@
 package edu.jhu.nlp.relations;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.gm.app.Encoder;
@@ -20,11 +21,12 @@ import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 
 public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions> {
 
-    public static final String NO_RELATION_LABEL = "NO_RELATION";
+    public static final String NO_RELATION_LABEL = String.format("%s:%s:%s", "NO_RELATION", "Arg-1", "Arg-1");
 
     public enum DatasetType {
         ACE2004, ACE2005
@@ -71,28 +73,69 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
 
     public static void addRelVarAssignments(AnnoSentence sent, RelationMentions rels, RelationsFactorGraphBuilder rfgb,
             VarConfig vc) {
+        for (RelVar var : rfgb.getRelVars()) {    	
+    		NerMention ne1 = var.ment1;
+    		NerMention ne2 = var.ment2;
+            String relation = getRelation(rels, ne1, ne2);
+            assert var != null;
+            vc.put(var, relation);
+    	}
+    }
+    
+    public static void addNePairsAndRelLabels(AnnoSentence sent) {
+        if (sent.getRelations() == null || sent.getNamedEntities() == null) {
+            throw new RuntimeException("Missing relations or named entities");
+        }
+        List<Pair<NerMention,NerMention>> nePairs = new ArrayList<>();
+        List<String> relLabels = new ArrayList<>();
+        
+        NerMentions nes = sent.getNamedEntities();
+        RelationMentions rels = sent.getRelations();
+        // Add positive instances.
+        // 
+        // Note: we require gold instances here since, on the ACE '05 data, there are 28 relations
+        // which appear in the gold data but wouldn't be added just by iterating over all pairs 
+        // of named entities as below. These include relations between an entity and itself, and cases
+        // where the original training data contains multiple copies of the same relation.
+        for (RelationMention rm : rels) {
+            List<Pair<String, NerMention>> argsOrd = rm.getNerOrderedArgs();
+            NerMention ne1 = argsOrd.get(0).get2();
+            NerMention ne2 = argsOrd.get(1).get2();
+            nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
+            String relation = getRelation(rels, ne1, ne2);
+            relLabels.add(relation);
+        }
+        // Add negative instances. 
+        //
         // Iterate over all pairs of mentions, such that ne1 comes before ne2.
         // This code assumes that the mentions are already in sorted order.
-        NerMentions nes = sent.getNamedEntities();
         for (int i = 0; i < nes.size(); i++) {
             NerMention ne1 = nes.get(i);
-            for (int j=i+1; j < nes.size(); j++) {
+            for (int j = i + 1; j < nes.size(); j++) {
                 NerMention ne2 = nes.get(j);
                 String relation = getRelation(rels, ne1, ne2);
-                RelVar var = rfgb.getVar(ne1, ne2);
-                vc.put(var, relation);
+                if (NO_RELATION_LABEL.equals(relation)) {
+                    nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
+                    relLabels.add(relation);
+                }
             }
         }
+        sent.setNePairs(nePairs);
+        sent.setRelLabels(relLabels);
     }
-
+    
     public static String getRelation(RelationMentions rels, NerMention ne1, NerMention ne2) {
         RelationMention rm = rels.get(ne1, ne2);
         String relation;
         if (rm == null) {
-            relation = String.format("%s:%s:%s", NO_RELATION_LABEL, "Arg-1", "Arg-1");
+            relation = NO_RELATION_LABEL;
         } else if (isAsymmetric(rm.getType(), rm.getSubType(), DatasetType.ACE2005)) {
-            String role1 = rm.getArgs().get(0).get1();
-            String role2 = rm.getArgs().get(1).get1();
+            List<Pair<String, NerMention>> argsOrd = rm.getNerOrderedArgs();
+            Pair<String, NerMention> arg1 = argsOrd.get(0);
+            Pair<String, NerMention> arg2 = argsOrd.get(1);
+        	String role1 = arg2.get1();
+        	String role2 = arg1.get1();
+        	assert arg1.get2().compareTo(arg2.get2()) <= 0;
             relation = String.format("%s:%s:%s", rm.getType(), role1, role2);
         } else {
             relation = String.format("%s:%s:%s", rm.getType(), "Arg-1", "Arg-1");
