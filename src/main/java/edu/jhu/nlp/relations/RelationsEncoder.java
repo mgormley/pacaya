@@ -24,10 +24,10 @@ import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBui
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 
-public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions> {
+public class RelationsEncoder implements Encoder<AnnoSentence, List<String>> {
 
-    public static final String NO_RELATION_LABEL = String.format("%s:%s:%s", "NO_RELATION", "Arg-1", "Arg-1");
-
+    private static String NO_RELATION_LABEL = null;
+    
     public enum DatasetType {
         ACE2004, ACE2005
     }
@@ -43,7 +43,7 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
     }
     
     @Override
-    public LFgExample encode(AnnoSentence sent, RelationMentions rels) {
+    public LFgExample encode(AnnoSentence sent, List<String> rels) {
         return getExample(sent, rels, true);
     }
 
@@ -52,7 +52,7 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
         return getExample(sent, null, false);
     }
 
-    private LFgExample getExample(AnnoSentence sent, RelationMentions rels, boolean labeledExample) {
+    private LFgExample getExample(AnnoSentence sent, List<String> rels, boolean labeledExample) {
         RelationsFactorGraphBuilder rfgb = new RelationsFactorGraphBuilder(prm);
         FactorGraph fg = new FactorGraph();
         ObsFeatureExtractor relFe = new RelObsFe(prm, sent, ofc.getTemplates());
@@ -71,12 +71,14 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
         }
     }
 
-    public static void addRelVarAssignments(AnnoSentence sent, RelationMentions rels, RelationsFactorGraphBuilder rfgb,
+    public static void addRelVarAssignments(AnnoSentence sent, List<String> rels, RelationsFactorGraphBuilder rfgb,
             VarConfig vc) {
+        List<Pair<NerMention, NerMention>> nePairs = sent.getNePairs();
         for (RelVar var : rfgb.getRelVars()) {    	
     		NerMention ne1 = var.ment1;
     		NerMention ne2 = var.ment2;
-            String relation = getRelation(rels, ne1, ne2);
+            int k = nePairs.indexOf(new Pair<NerMention,NerMention>(ne1, ne2));
+            String relation = rels.get(k);
             assert var != null;
             vc.put(var, relation);
     	}
@@ -113,22 +115,41 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
             NerMention ne1 = nes.get(i);
             for (int j = i + 1; j < nes.size(); j++) {
                 NerMention ne2 = nes.get(j);
-                String relation = getRelation(rels, ne1, ne2);
-                if (NO_RELATION_LABEL.equals(relation)) {
-                    nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
-                    relLabels.add(relation);
+                
+                int numMentsBtwn = RelObsFe.getNumBtwn(sent, ne1, ne2);
+                if (numMentsBtwn <= RelationsOptions.maxInterveningEntities) {                
+                    String relation = getRelation(rels, ne1, ne2);
+                    if (getNoRelationLabel().equals(relation)) {
+                        nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
+                        relLabels.add(relation);
+                    }
                 }
             }
         }
         sent.setNePairs(nePairs);
         sent.setRelLabels(relLabels);
+        
+        if (RelationsOptions.removeEntityTypes) {
+            // Replace entity types with POS tags.
+            for (NerMention ne : nes) {
+                ne.setEntityType(sent.getPosTag(ne.getHead()));
+                ne.setEntitySubType(sent.getPosTag(ne.getHead()));
+            }
+        }
     }
     
-    public static String getRelation(RelationMentions rels, NerMention ne1, NerMention ne2) {
+    public static String getNoRelationLabel() {
+        if (NO_RELATION_LABEL == null) {
+            NO_RELATION_LABEL = getRelation("NO_RELATION", "", "Arg-1", "Arg-1");                 
+        }
+        return NO_RELATION_LABEL;
+    }
+    
+    private static String getRelation(RelationMentions rels, NerMention ne1, NerMention ne2) {
         RelationMention rm = rels.get(ne1, ne2);
         String relation;
         if (rm == null) {
-            relation = NO_RELATION_LABEL;
+            relation = getNoRelationLabel();
         } else if (isAsymmetric(rm.getType(), rm.getSubType(), DatasetType.ACE2005)) {
             List<Pair<String, NerMention>> argsOrd = rm.getNerOrderedArgs();
             Pair<String, NerMention> arg1 = argsOrd.get(0);
@@ -136,11 +157,23 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
         	String role1 = arg2.get1();
         	String role2 = arg1.get1();
         	assert arg1.get2().compareTo(arg2.get2()) <= 0;
-            relation = String.format("%s:%s:%s", rm.getType(), role1, role2);
+            relation = getRelation(rm.getType(), rm.getSubType(), role1, role2);
         } else {
-            relation = String.format("%s:%s:%s", rm.getType(), "Arg-1", "Arg-1");
+            relation = getRelation(rm.getType(), rm.getSubType(), "Arg-1", "Arg-1");
         }
         return relation;
+    }
+
+    private static String getRelation(String type, String subtype, String role1, String role2) {
+        String relation = type;
+        if (RelationsOptions.useRelationSubtype) {
+            relation += "-" + subtype;
+        }
+        if (RelationsOptions.predictArgRoles) {
+            return String.format("%s(%s,%s)", relation, role1, role2);
+        } else {
+            return String.format("%s", relation, role1, role2);
+        }
     }
     
     private static boolean isAsymmetric(String relType, String relSubtype, DatasetType dataType) {
@@ -165,6 +198,23 @@ public class RelationsEncoder implements Encoder<AnnoSentence, RelationMentions>
             // TODO: Implement case for ACE '04 subtypes.
             throw new RuntimeException("Not yet implemented");
         }
+    }
+
+    public static List<AnnoSentence> getSingletons(List<AnnoSentence> sents) {
+        List<AnnoSentence> singles = new ArrayList<>();
+        for (int i=0; i<sents.size(); i++) {
+            AnnoSentence sent = sents.get(i);
+            for (int k=0; k<sent.getRelLabels().size(); k++) {
+                AnnoSentence single = sent.getShallowCopy();
+                single.setNePairs(Lists.getList(sent.getNePairs().get(k)));
+                single.setRelLabels(Lists.getList(sent.getRelLabels().get(k)));
+                // TODO: Remove these.
+                //single.removeAt(AT.NER);
+                //single.removeAt(AT.RELATIONS);
+                singles.add(single);
+            }
+        }
+        return singles;
     }
         
 }

@@ -187,8 +187,9 @@ public class ConcreteReader {
                 for (AnnoSentence aSent : tmpSents) {                     
                     // Add the named entity pairs.
                     RelationsEncoder.addNePairsAndRelLabels(aSent);
-                }                    
-            }            
+                }
+                tmpSents = RelationsEncoder.getSingletons(tmpSents);
+            }
         }
         
         aSents.addAll(tmpSents);

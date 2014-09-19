@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
@@ -11,7 +12,6 @@ import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
 import edu.jhu.hlt.concrete.Communication;
-import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.concrete.ConcreteWriter;
 import edu.jhu.nlp.data.conll.CoNLL08Sentence;
 import edu.jhu.nlp.data.conll.CoNLL08Writer;
@@ -23,7 +23,6 @@ import edu.jhu.nlp.data.semeval.SemEval2010Sentence;
 import edu.jhu.nlp.data.semeval.SemEval2010Writer;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
-import edu.jhu.prim.tuple.Pair;
 
 public class AnnoSentenceWriter {
 
@@ -70,12 +69,14 @@ public class AnnoSentenceWriter {
                 if (!sent.hasAt(AT.NE_PAIRS)) {
                     throw new RuntimeException("Sentence missing required annotation: " + AT.NE_PAIRS);
                 }
-                for (Pair<NerMention, NerMention> pair : sent.getNePairs()) {
-                    if (!sent.hasAt(AT.RELATIONS)) {
-                        throw new RuntimeException("Sentence missing required annotation: " + AT.RELATIONS);
+                if (sent.getNePairs().size() > 0) {
+                    if (!sent.hasAt(AT.REL_LABELS)) {
+                        throw new RuntimeException("Sentence missing required annotation: " + AT.REL_LABELS);
                     }
-                    SemEval2010Sentence seSent = SemEval2010Sentence.fromAnnoSentence(sent, i++, pair.get1(), pair.get2());
-                    sw.write(seSent);
+                    List<SemEval2010Sentence> seSents = SemEval2010Sentence.fromAnnoSentence(sent, i++);
+                    for (SemEval2010Sentence seSent : seSents) {                        
+                        sw.write(seSent);
+                    }
                 }
             }
             sw.close();

@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
@@ -22,6 +23,7 @@ import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
@@ -89,6 +91,8 @@ public class JointNlpRunner {
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
+    public enum Inference { BRUTE_FORCE, BP };
+    
     public enum AlgebraType {
         REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA),
         // SHIFTED_REAL and SPLIT algebras are for testing only.
@@ -128,6 +132,8 @@ public class JointNlpRunner {
     public static InitParams initParams = InitParams.UNIFORM;
     
     // Options for inference.
+    @Opt(hasArg = true, description = "Type of inference method.")
+    public static Inference inference = Inference.BP;
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static AlgebraType algebra = AlgebraType.REAL;
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
@@ -435,7 +441,7 @@ public class JointNlpRunner {
         }
     }
 
-    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) {
+    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) throws ParseException {
         if (pruneByDist) {
             // Prune via the distance-based pruner.
             ptdPruner.annotate(inputSents);
@@ -553,7 +559,7 @@ public class JointNlpRunner {
 
     /* --------- Factory Methods ---------- */
 
-    private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() {
+    private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() throws ParseException {
         JointNlpAnnotatorPrm prm = new JointNlpAnnotatorPrm();
         prm.crfPrm = getCrfTrainerPrm();
         prm.csPrm = getCorpusStatisticsPrm();
@@ -693,12 +699,15 @@ public class JointNlpRunner {
         return prm;
     }
     
-    private static CrfTrainerPrm getCrfTrainerPrm() {
+    private static CrfTrainerPrm getCrfTrainerPrm() throws ParseException {
         FgInferencerFactory infPrm = getInfFactory();
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = infPrm;
-        prm.bFactory = (ErmaBpPrm) infPrm; // TODO: This is a temporary hack to which assumes we always use ErmaBp.
+        if (infPrm instanceof BeliefsModuleFactory) {
+            // TODO: This is a temporary hack to which assumes we always use ErmaBp.
+            prm.bFactory = (BeliefsModuleFactory) infPrm;
+        }
         if (optimizer == Optimizer.LBFGS) {
             prm.optimizer = getLbfgs();
             prm.batchOptimizer = null;
@@ -768,23 +777,30 @@ public class JointNlpRunner {
         return prm;
     }
 
-    private static FgInferencerFactory getInfFactory() {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
-        bpPrm.logDomain = logDomain;
-        bpPrm.s = algebra.getAlgebra();
-        bpPrm.schedule = bpSchedule;
-        bpPrm.updateOrder = bpUpdateOrder;
-        bpPrm.normalizeMessages = normalizeMessages;
-        bpPrm.maxIterations = bpMaxIterations;
-        bpPrm.convergenceThreshold = bpConvergenceThreshold;
-        bpPrm.keepTape = (trainer == Trainer.ERMA);
-        if (bpDumpDir != null) {
-            bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+    private static FgInferencerFactory getInfFactory() throws ParseException {
+        if (inference == Inference.BRUTE_FORCE) {
+            BruteForceInferencerPrm prm = new BruteForceInferencerPrm(algebra.getAlgebra());
+            return prm;
+        } else if (inference == Inference.BP) {
+            ErmaBpPrm bpPrm = new ErmaBpPrm();
+            bpPrm.logDomain = logDomain;
+            bpPrm.s = algebra.getAlgebra();
+            bpPrm.schedule = bpSchedule;
+            bpPrm.updateOrder = bpUpdateOrder;
+            bpPrm.normalizeMessages = normalizeMessages;
+            bpPrm.maxIterations = bpMaxIterations;
+            bpPrm.convergenceThreshold = bpConvergenceThreshold;
+            bpPrm.keepTape = (trainer == Trainer.ERMA);
+            if (bpDumpDir != null) {
+                bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+            }
+            return bpPrm;
+        } else {
+            throw new ParseException("Unsupported inference method: " + inference);
         }
-        return bpPrm;
     }
 
-    private static JointNlpDecoderPrm getDecoderPrm() {
+    private static JointNlpDecoderPrm getDecoderPrm() throws ParseException {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
         mbrPrm.loss = Loss.L1;

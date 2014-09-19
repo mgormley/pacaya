@@ -156,36 +156,14 @@ public class CorpusStatistics implements Serializable {
             }
             
             // Relation stats.
-            if (sent.getRelations() != null && sent.getNePairs() != null) {
-                RelationMentions rels = sent.getRelations();
-                Set<RelationMention> matched = new HashSet<>();
-                int k=0;
-            	for (Pair<NerMention,NerMention> pair : sent.getNePairs()) {
-            		NerMention ne1 = pair.get1();
-            		NerMention ne2 = pair.get2();
-                    RelationMention rm = rels.get(ne1, ne2);
-                    if (rm != null) {
-                    	matched.add(rm);
-                    }
-                    String relation = RelationsEncoder.getRelation(rels, ne1, ne2);
+            if (sent.getRelLabels() != null) {
+            	for (int k=0; k<sent.getRelLabels().size(); k++) {
+                    String relation = sent.getRelLabels().get(k);
                     knownRelations.add(relation);
-                    if (!relation.equals(RelationsEncoder.NO_RELATION_LABEL)) {
+                    if (!relation.equals(RelationsEncoder.getNoRelationLabel())) {
                     	numTruePosRels++;
                     }
                 }
-                if (matched.size() != rels.size()) {
-                	Set<RelationMention> missed = new HashSet<>(rels.getMentions());
-                	missed.removeAll(matched);
-                	RelationMentions tmp = new RelationMentions();
-                	for (RelationMention m : missed) { tmp.add(m); }
-					log.warn("Missed "+missed.size()+" relations: "
-							+ tmp.toString(sent.getWords())
-									.replaceAll("SituationMent",
-											"\nSituationMent")
-									.replaceAll("FancySpan", "\n\tFancySpan"));
-					RelationMention rm = missed.iterator().next();
-					rels.get(rm.getArgs().get(0).get2(), rm.getArgs().get(1).get2());
-				}
             }
         }
         

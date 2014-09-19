@@ -46,38 +46,35 @@ public class RelationEvaluator {
             AnnoSentence gold = goldSents.get(s);
             AnnoSentence pred = predSents.get(s);
             
-            RelationMentions goldRels = gold.getRelations();
-            RelationMentions predRels = pred.getRelations();
-            
-            // For each pair of named entities.
-        	for (Pair<NerMention,NerMention> pair : pred.getNePairs()) {
-        		NerMention ne1 = pair.get1();
-        		NerMention ne2 = pair.get2();
-                
-                String goldLabel = RelationsEncoder.getRelation(goldRels, ne1, ne2);
-                String predLabel = RelationsEncoder.getRelation(predRels, ne1, ne2);
-                
-                if (predLabel.equals(goldLabel)) {
-                    if (!goldLabel.equals(RelationsEncoder.NO_RELATION_LABEL)) {
-                        numCorrectPositive++;
-                    } else {
-                        numCorrectNegative++;
+            if (pred.getRelLabels() != null) {
+                // For each pair of named entities.
+                for (int k=0; k<pred.getRelLabels().size(); k++) {                
+                    String goldLabel = gold.getRelLabels().get(k);
+                    String predLabel = pred.getRelLabels().get(k);
+                    
+                    if (predLabel.equals(goldLabel)) {
+                        if (!goldLabel.equals(RelationsEncoder.getNoRelationLabel())) {
+                            numCorrectPositive++;
+                        } else {
+                            numCorrectNegative++;
+                        }
                     }
+                    if (!goldLabel.equals(RelationsEncoder.getNoRelationLabel())) {
+                        numTruePositive++;
+                    }
+                    if (!predLabel.equals(RelationsEncoder.getNoRelationLabel())) {
+                        numPredictPositive++;
+                    }
+                    numInstances++;
+                    log.trace(String.format("goldLabel=%s predLabel=%s", goldLabel, predLabel));                    
                 }
-                if (!goldLabel.equals(RelationsEncoder.NO_RELATION_LABEL)) {
-                    numTruePositive++;
-                }
-                if (!predLabel.equals(RelationsEncoder.NO_RELATION_LABEL)) {
-                    numPredictPositive++;
-                }
-                numInstances++;
-                log.trace(String.format("goldLabel=%s predLabel=%s", goldLabel, predLabel));                    
             }
         }
         precision = (double) numCorrectPositive / numPredictPositive;
         recall = (double) numCorrectPositive / numTruePositive;
         f1 = (double) (2 * precision * recall) / (precision + recall);
         
+        log.info(String.format("Relation accuracy on %s: %.4f", dataName, (double)(numCorrectPositive + numCorrectNegative)/numInstances));
         log.info(String.format("Num relation instances on %s: %d", dataName, numInstances));
         log.info(String.format("Num true positives on %s: %d", dataName, numTruePositive));
         log.info(String.format("Precision on %s: %.4f", dataName, precision));

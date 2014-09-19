@@ -66,6 +66,30 @@ public class NerMention implements Comparable<NerMention> {
     public String getId() {
         return id;
     }
+    
+    public void setSpan(Span span) {
+        this.span = span;
+    }
+
+    public void setEntityType(String entityType) {
+        this.entityType = entityType;
+    }
+
+    public void setEntitySubType(String entitySubType) {
+        this.entitySubType = entitySubType;
+    }
+
+    public void setPhraseType(String phraseType) {
+        this.phraseType = phraseType;
+    }
+
+    public void setHead(int head) {
+        this.head = head;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public void intern() {
         entityType = entityType.intern();

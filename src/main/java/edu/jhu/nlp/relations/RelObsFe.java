@@ -14,10 +14,12 @@ import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.FeaturizedSentence;
+import edu.jhu.nlp.features.FeaturizedTokenPair;
 import edu.jhu.nlp.features.LocalObservations;
 import edu.jhu.nlp.features.TemplateFeatureExtractor;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
@@ -25,6 +27,7 @@ import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBui
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.FeatureNames;
 
 /**
@@ -69,6 +72,10 @@ public class RelObsFe implements ObsFeatureExtractor {
         
         // Add the other features.
         FeatureUtils.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
+        
+        if (RelationsOptions.useEmbeddingFeatures) {
+            addEmbeddingFeatures(local, alphabet, fv);
+        }
         
         return fv;
     }
@@ -172,12 +179,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         // 2) ET12+M1<M2; 
         // 3) HM12+M1>M2; 
         // 4) HM12+M1<M2.
-        int numMentsBtwn = 0;
-        for (NerMention m : sent.getNamedEntities()) {
-            if (m != m1 && m != m2 && btwn.contains(m.getSpan().start())) {
-                numMentsBtwn++;
-            }
-        }
+        int numMentsBtwn = getNumBtwn(sent, m1, m2);
         features.add("#MB:"+numMentsBtwn);
         int numWordsBtwn = btwn.size();
         features.add("#WB:"+numWordsBtwn);
@@ -283,6 +285,17 @@ public class RelObsFe implements ObsFeatureExtractor {
         
         // TODO: Finish other features.
         
+    }
+
+    public static int getNumBtwn(AnnoSentence sent, NerMention m1, NerMention m2) {
+        Span btwn = Span.getSpanBtwn(m1.getSpan(), m2.getSpan());
+        int numMentsBtwn = 0;
+        for (NerMention m : sent.getNamedEntities()) {
+            if (m != m1 && m != m2 && btwn.contains(m.getSpan().start())) {
+                numMentsBtwn++;
+            }
+        }
+        return numMentsBtwn;
     }
 
     private int getLca(int[] parents, int a, int b) {
@@ -431,6 +444,100 @@ public class RelObsFe implements ObsFeatureExtractor {
         ArrayList<String> uniq = new ArrayList<>(new HashSet<>(words));
         Collections.sort(uniq);
         return words;
+    }
+
+    private void addEmbeddingFeatures(LocalObservations local, FeatureNames alphabet, FeatureVector fv) {
+        //  - Per word, we have various features, such as whether a word is in between
+        //    the entities or on the dependency path between them.
+        //    - For each of the above features, if the feature fires, set the
+        //      values to the embedding for that word.
+        //    - For each of the above features, if the feature fires, set the
+        //      values to the embedding for the word's super sense tag.
+        NerMention m1 = local.getNe1();
+        NerMention m2 = local.getNe2();
+        Span m1span = m1.getSpan();
+        Span m2span = m2.getSpan();
+        
+        FeaturizedSentence fsent = new FeaturizedSentence(sent, null);
+        
+        String ne1 = m1.getEntityType();
+        String ne2 = m2.getEntityType();
+        String ne1ne2 = ne1 + ne2;
+                
+        switch (RelationsOptions.embFeatType) {
+        case FULL:        
+            //     - in_between: is the word in between entities
+            //     - in_between+ne1 if in_between = T: ne1 is the entity type
+            //     - in_between+ne2 if in_between = T
+            //     - in_between+ne1+ne2 if in_between = T
+            Span btwn = Span.getSpanBtwn(m1span, m2span);
+            for (int i=btwn.start(); i<btwn.end(); i++) {
+                addEmbFeat("in_between", i, alphabet, fv);
+                addEmbFeat("in_between"+ne1, i, alphabet, fv);
+                addEmbFeat("in_between"+ne2, i, alphabet, fv);
+                addEmbFeat("in_between"+ne1ne2, i, alphabet, fv);
+            }                
+    
+            //     - on_path
+            //     - on_path+ne1 if on_path = T
+            //     - on_path+ne2 if on_path = T
+            //     - on_path+ne1+ne2 if on_path = T
+            FeaturizedTokenPair ftp = fsent.getFeatTokPair(m1.getHead(), m2.getHead());        
+            for (Pair<Integer,DepTree.Dir> pair : ftp.getDependencyPath()) {
+                int i = pair.get1();
+                addEmbFeat("on_path", i, alphabet, fv);
+                addEmbFeat("on_path"+ne1, i, alphabet, fv);
+                addEmbFeat("on_path"+ne2, i, alphabet, fv);
+                addEmbFeat("on_path"+ne1ne2, i, alphabet, fv);
+            }
+            
+            //     - -1_ne1: immediately to the left of the ne1 head
+            //     - +1_ne1: immediately to the right of the ne1 head
+            //     - -2_ne1: two to the left of the ne1 head
+            //     - +2_ne1: two to the right of the ne1 head
+            addEmbFeat("-1_ne1", m1.getHead()-1, alphabet, fv);
+            addEmbFeat("+1_ne1", m1.getHead()+1, alphabet, fv);
+            addEmbFeat("-2_ne1", m1.getHead()-2, alphabet, fv);
+            addEmbFeat("+2_ne1", m1.getHead()+2, alphabet, fv);
+            
+            //     - -1_ne2: immediately to the left of the ne1 head
+            //     - +1_ne2: immediately to the right of the ne1 head
+            //     - -2_ne2: two to the left of the ne1 head
+            //     - +2_ne2: two to the right of the ne1 head
+            addEmbFeat("-1_ne2", m2.getHead()-1, alphabet, fv);
+            addEmbFeat("+1_ne2", m2.getHead()+1, alphabet, fv);
+            addEmbFeat("-2_ne2", m2.getHead()-2, alphabet, fv);
+            addEmbFeat("+2_ne2", m2.getHead()+2, alphabet, fv);
+                    
+        case HEAD_TYPE:
+            //     - ne1_head+ne1
+            //     - ne1_head+ne2
+            //     - ne1_head+ne1+ne2
+            addEmbFeat("ne1_head"+ne1,    m1.getHead(), alphabet, fv);
+            addEmbFeat("ne1_head"+ne2,    m1.getHead(), alphabet, fv);
+            addEmbFeat("ne1_head"+ne1ne2, m1.getHead(), alphabet, fv);
+            
+            //     - ne2_head+ne1
+            //     - ne2_head+ne2
+            //     - ne2_head+ne1+ne2
+            addEmbFeat("ne2_head"+ne1,    m2.getHead(), alphabet, fv);
+            addEmbFeat("ne2_head"+ne2,    m2.getHead(), alphabet, fv);
+            addEmbFeat("ne2_head"+ne1ne2, m2.getHead(), alphabet, fv);
+            
+        case HEAD_ONLY:
+            //     - ne1_head: true if is the head of the first entity
+            addEmbFeat("ne1_head",        m1.getHead(), alphabet, fv);
+            //     - ne2_head: true if is the head of the second entity
+            addEmbFeat("ne2_head",        m2.getHead(), alphabet, fv);
+        }
+    }
+    
+    private void addEmbFeat(String fname, int i, FeatureNames alphabet, FeatureVector fv) {
+        double[] embed = sent.getEmbed(i);
+        for (int d=0; d<embed.length; d++) {
+            int fidx = alphabet.lookupIndex(fname+"_"+d);
+            fv.add(fidx, embed[d]);
+        }
     }
     
 }

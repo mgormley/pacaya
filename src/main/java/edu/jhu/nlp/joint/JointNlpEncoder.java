@@ -99,8 +99,8 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
             }
         }
         if (prm.fgPrm.includeRel) {
-            if (gold != null && gold.getRelations() != null) {
-                RelationsEncoder.addRelVarAssignments(sent, gold.getRelations(), fg.getRelBuilder(), vc);
+            if (gold != null && gold.getRelLabels() != null) {
+                RelationsEncoder.addRelVarAssignments(sent, gold.getRelLabels(), fg.getRelBuilder(), vc);
             }
         }
         
