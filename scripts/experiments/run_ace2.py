@@ -93,7 +93,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             sys.exit()
         name = options.expname if not options.fast else "fast_" + options.expname 
         ExpParamsRunner.__init__(self, name, options.queue, print_to_console=True, dry_run=options.dry_run)
-        self.root_dir = os.path.abspath(get_root_dir())
+        self.root_dir = get_root_dir()
         self.fast = options.fast
         self.expname = options.expname
         self.hprof = options.hprof   
@@ -112,31 +112,49 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.remove("testPredOut")
         g.defaults += g.adagrad 
         
-        defaults = g.adagrad  + ReExpParams()        
+        defaults = g.lbfgs  + ReExpParams()        
         defaults.set("expname", self.expname, False, False)
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
         defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
-                   featCountCutoff=2,
-                   l2variance=6000,
-                   #useRelationSubtype=False,
-                   usePosTagFeatures=True,
-                   useSyntaxFeatures=True,
-                   useEmbeddingFeatures=True,
+                   featCountCutoff=0,
+                   featureHashMod=-1,
+                   includeUnsupportedFeatures=True,
+                   l2variance=40000,
+                   sgdNumPasses=10,
+                   useRelationSubtype=False,
                    includeDp=False,
                    includeSrl=False,
                    includeRel=True,
-                   cacheType="MEMORY_STORE" # Store all the examples in memory.
+                   cacheType="MEMORY_STORE", # Store all the examples in memory.
+                   predAts="RELATIONS,REL_LABELS",
+                   inference="BRUTE_FORCE",
+                   trainTypeOut="SEMEVAL_2010",
+                   devTypeOut="SEMEVAL_2010",
+                   testTypeOut="SEMEVAL_2010",
+                   printModel="./model.txt.gz",                      
+                   trainPredOut="./train-pred.txt",
+                   devPredOut="./dev-pred.txt",
+                   testPredOut="./test-pred.txt",
+                   trainGoldOut="./train-gold.txt",
+                   devGoldOut="./dev-gold.txt",
+                   testGoldOut="./test-gold.txt",
+                   modelOut="./model.binary.gz",
+                   # TO REMOVE
+                   usePosTagFeatures=True,
+                   useSyntaxFeatures=True,
+                   useEmbeddingFeatures=True,
                    )
         defaults.update(printModel="model.txt")
         
         # Datasets
-        #data_dir = get_first_that_exists(os.path.join(self.root_dir, "data"))
-        data_dir = get_first_that_exists(os.path.join("/Users/mgormley/research/acere/", "data"))
+        data_dir = get_first_that_exists(os.path.join(self.root_dir, "data"))
+        #data_dir = get_first_that_exists(os.path.join("/Users/mgormley/research/acere/", "data"))
         
         # ACE 2005
-        ace05_concrete_dir = os.path.join(data_dir,"concrete")
+        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "concrete/ace_05"),
+                                                   os.path.join(data_dir,"concrete"))
         
         # ACE 2005 full domains:  bc bn cts nw un wl
         ace05_bc = get_ace05_data(ace05_concrete_dir, "bc")
@@ -183,17 +201,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
-            setup= ReExpParams(useEntityTypeFeatures=False, 
-                               #DISABLED: maxInterveningEntities=3,
+            setup= ReExpParams(removeEntityTypes=True, 
+                               maxInterveningEntities=3,
                                propTrainAsDev=0.0)
-            feats_no_embed  = ReExpParams(embTmplPath=False, embTmplType=False,
-                                          embSlotPath=False, embSlotHead=False)
-            feats_head_only = ReExpParams(embTmplPath=False, embTmplType=False,
-                                          embSlotPath=False, embSlotHead=True)
-            feats_head_type = ReExpParams(embTmplPath=False, embTmplType=True,
-                                          embSlotPath=False, embSlotHead=True)
+            feats_no_embed  = ReExpParams(useEmbeddingFeatures=False)
+            feats_head_only = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+            feats_head_type = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+            feats_full = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL")
+            
             for embed in [polyglot_en]:
-                for feats in [feats_no_embed, feats_head_only, feats_head_type]: 
+                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full]: 
                     for predictArgRoles in [True, False]:
                         setup.update(predictArgRoles=predictArgRoles)
                         defaults.set("group", "PM13" if predictArgRoles else "NG14", incl_name=True, incl_arg=False)
@@ -227,11 +244,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 defaults.set("group", "broad", incl_name=True, incl_arg=False)
                 for usePosTagFeatures in [True, False]:
                     for useSyntaxFeatures in [True, False]:
-                        for useEntityTypeFeatures in [True, False]:
+                        for removeEntityTypes in [True, False]:
                             for useEmbeddingFeatures in [True, False]:
                                 feats = ReExpParams(usePosTagFeatures=usePosTagFeatures, 
                                                     useSyntaxFeatures=useSyntaxFeatures,
-                                                    useEntityTypeFeatures=useEntityTypeFeatures,
+                                                    removeEntityTypes=removeEntityTypes,
                                                     useEmbeddingFeatures=useEmbeddingFeatures)
                                 train = get_annotation_as_train(ace05_bn_nw)
                                 experiment = defaults + setup + train + test + feats
