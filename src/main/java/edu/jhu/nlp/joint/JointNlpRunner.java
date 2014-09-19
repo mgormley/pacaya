@@ -38,6 +38,7 @@ import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
@@ -87,7 +88,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class JointNlpRunner {
 
-    public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
+    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA };
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
@@ -709,8 +710,11 @@ public class JointNlpRunner {
             prm.bFactory = (BeliefsModuleFactory) infPrm;
         }
         if (optimizer == Optimizer.LBFGS) {
-            prm.optimizer = getLbfgs();
+            prm.optimizer = getMalletLbfgs();
             prm.batchOptimizer = null;
+        } else if (optimizer == Optimizer.QN) {
+            prm.optimizer = getStanfordLbfgs();
+            prm.batchOptimizer = null;            
         } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.optimizer = null;
             SGDPrm sgdPrm = getSgdPrm();
@@ -757,10 +761,14 @@ public class JointNlpRunner {
         return prm;
     }
 
-    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getLbfgs() {
+    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getMalletLbfgs() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         prm.maxIterations = maxLbfgsIterations;
         return new MalletLBFGS(prm);
+    }
+
+    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getStanfordLbfgs() {
+        return new StanfordQNMinimizer(maxLbfgsIterations);
     }
     
     private static SGDPrm getSgdPrm() {

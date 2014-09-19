@@ -32,8 +32,6 @@ public class RelationsOptions {
     public static boolean usePosTagFeatures = true;
     @Opt(hasArg=true, description="Whether to use the syntactic features.")
     public static boolean useSyntaxFeatures = true;
-    @Opt(hasArg=true, description="Whether to use the entity type features.")
-    public static boolean useEntityTypeFeatures = true;
     //
     // ---------------------------------------------
     
