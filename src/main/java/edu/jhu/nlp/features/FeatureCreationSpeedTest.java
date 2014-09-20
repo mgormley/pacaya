@@ -41,7 +41,7 @@ import edu.jhu.util.hash.MurmurHash3;
  */
 public class FeatureCreationSpeedTest {
 
-    private final int OPT = 6;
+    private final int OPT = 4;
 
     //@Test
     public void testSpeedOfFeatureCreation() throws UnsupportedEncodingException, FileNotFoundException {
@@ -158,15 +158,14 @@ public class FeatureCreationSpeedTest {
                                     lookupTimer.stop();   
                                 } else {
                                     extTimer.start();
-                                    Object data = null;
                                     byte[] barr = null;
                                     int hash = 0;
                                     if (OPT == 3) {
-                                        data = t + "_" + pWord + "_" + aWord + "_" + pPos + "_" + aPos;                                        
+                                        String data = t + "_" + pWord + "_" + aWord + "_" + pPos + "_" + aPos;                                        
                                         //hash = MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
                                         hash = data.hashCode();
                                     } else if (OPT == 4) {
-                                        StringBuilder sb = new StringBuilder();
+                                        StringBuilder sb = new StringBuilder(3+4+pWord.length()+aWord.length()+pPos.length()+aPos.length());
                                         sb.append(t);
                                         sb.append("_");
                                         sb.append(pWord);
@@ -176,7 +175,7 @@ public class FeatureCreationSpeedTest {
                                         sb.append(pPos);
                                         sb.append("_");
                                         sb.append(aPos);
-                                        data = sb.toString();
+                                        String data = sb.toString();
                                         //hash = MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
                                         hash = data.hashCode();
                                     } else if (OPT == 5) {
@@ -218,7 +217,7 @@ public class FeatureCreationSpeedTest {
                                     hashTimer.stop();
 
                                     lookupTimer.start();
-                                    final int alpha = 0;
+                                    final int alpha = 2;
                                     if (alpha == 0) {
                                         featIdx = hash;
                                     } else if (alpha == 1) {
