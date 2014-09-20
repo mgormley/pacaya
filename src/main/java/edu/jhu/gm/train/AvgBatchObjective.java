@@ -103,7 +103,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
 
     private void accum(IntDoubleVector params, int[] batch, final Accumulator ac) {
         boolean isFullDataset = (batch.length == numExamples);
-
+        
         if (isFullDataset) {
             // Include some additional accumulators so that we can report at the end.
             ac.accumValue = true;
@@ -112,8 +112,12 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
             ac.accumWeight = true;
         }
         if (ac.accumGradient) {
-            this.gradient.zero();
-            ac.gradient = this.gradient;
+            if (isFullDataset) {
+                this.gradient.zero();
+                ac.gradient = this.gradient;
+            } else {
+                ac.gradient = this.gradient.getSparseZeroedCopy();
+            }
         }
         
         model.setParams(params);        
