@@ -1,0 +1,165 @@
+package edu.jhu.nlp.data.simple;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.CountingAlphabet;
+import edu.jhu.util.collections.Lists;
+
+public class AlphabetStore {
+
+    private static final Logger log = Logger.getLogger(AlphabetStore.class);
+
+    public static String UNKNOWN_STR = "UNKNOWN_LABEL";
+    public static int UNKNOWN_INT = 0; 
+    
+    Alphabet<String> words;
+    Alphabet<String> lemmas;
+    Alphabet<String> posTags;
+    Alphabet<String> cposTags;
+    Alphabet<String> clusters;
+    Alphabet<String> feats;
+    Alphabet<String> deprels;
+    // TODO: 
+    //Alphabet<String> lexAlphabet;
+    //Alphabet<String> ntAlphabet;    
+    private List<Alphabet<String>> as;
+        
+    public AlphabetStore(AnnoSentenceCollection sents) {
+        words = getInitAlphabet("word", wordGetter, IntAnnoSentence.MAX_WORD, sents);
+        lemmas = getInitAlphabet("lemma", lemmaGetter, IntAnnoSentence.MAX_LEMMA, sents);
+        posTags = getInitAlphabet("pos", posTagGetter, IntAnnoSentence.MAX_POS, sents);
+        cposTags = getInitAlphabet("cpos", cposTagGetter, IntAnnoSentence.MAX_CPOS, sents);
+        clusters = getInitAlphabet("cluster", clusterGetter, IntAnnoSentence.MAX_CLUSTER, sents);
+        feats = getInitAlphabet("feat", featGetter, IntAnnoSentence.MAX_FEAT, sents);
+        deprels= getInitAlphabet("deprel", deprelGetter, IntAnnoSentence.MAX_DEPREL, sents);
+        
+        as = Lists.getList(words, lemmas, posTags, cposTags, clusters, feats, deprels);
+        this.stopGrowth();
+    }
+
+    private static Alphabet<String> getInitAlphabet(String name, StrGetter sg, int maxIdx, AnnoSentenceCollection sents) {
+        CountingAlphabet<String> counter = new CountingAlphabet<>();
+        for (AnnoSentence sent : sents) {
+            List<String> strs = sg.getStrs(sent);
+            if (strs != null) {
+                for (String str : strs) {
+                    counter.lookupIndex(str);
+                }
+            }
+        }
+        Alphabet<String> alphabet;
+        for (int cutoff = 1; ; cutoff++) {
+            alphabet = getInitAlphabet();
+            for (int idx=0; idx<counter.size(); idx++) {
+                String str = counter.lookupObject(idx);
+                int count = counter.lookupObjectCount(idx);
+                if (count >= cutoff) {
+                    alphabet.lookupIndex(str);
+                }
+            }
+            if (alphabet.size()-1 <= maxIdx) {
+                log.info(String.format("For %s: Actual count = %d Reduced count = %d Cutoff = %d", 
+                        name, counter.size(), alphabet.size(), cutoff));
+                break;
+            }
+        }
+        return alphabet;
+    }
+    
+    private static Alphabet<String> getInitAlphabet() {
+        Alphabet<String> alphabet = new Alphabet<String>();
+        int idx = alphabet.lookupIndex(UNKNOWN_STR);
+        if (idx != UNKNOWN_INT) {
+            throw new RuntimeException("Expecting first index from alphabet to be 0");
+        }
+        return alphabet;
+    }
+
+    public void startGrowth() {
+        for (Alphabet<String> a : as) {
+            a.startGrowth();
+        }
+    }
+    
+    public void stopGrowth() {
+        for (Alphabet<String> a : as) {
+            a.stopGrowth();
+        }
+    }
+    
+    static int safeLookup(Alphabet<String> alphabet, String word) {
+        int idx = alphabet.lookupIndex(word);
+        if (idx == -1) {
+            idx = UNKNOWN_INT;
+        }
+        return idx;
+    }
+    
+    public int getWordIdx(String word) {
+        return safeLookup(words, word);
+    }
+    
+    public int getLemmaIdx(String lemma) {
+        return safeLookup(lemmas, lemma);
+    }
+
+    public int getPosTagIdx(String pos) {
+        return safeLookup(posTags, pos);
+    }
+
+    public int getCposTagIdx(String cpos) {
+        return safeLookup(cposTags, cpos);
+    }
+
+    public int getClusterIdx(String cluster) {
+        return safeLookup(clusters, cluster);
+    }
+
+    public int getFeatIdx(String feat) {
+        return safeLookup(feats, feat);
+    }
+
+    public int getDeprelIdx(String deprel) {
+        return safeLookup(deprels, deprel);
+    }
+    
+
+    private interface StrGetter {
+        List<String> getStrs(AnnoSentence sent);
+    }
+    private StrGetter wordGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getWords(); }
+    };
+    private StrGetter lemmaGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getLemmas(); }
+    };
+    private StrGetter posTagGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getPosTags(); }
+    };
+    private StrGetter cposTagGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getCposTags(); }
+    };
+    private StrGetter clusterGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getClusters(); }
+    };
+    private StrGetter featGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) {
+            if (sent.getFeats() == null) { return null; }
+            ArrayList<String> strs = new ArrayList<>();
+            for (List<String> featList : sent.getFeats()) {
+                if (featList != null) {
+                    strs.addAll(featList);
+                }
+            }
+            return strs;
+        }
+    };
+    private StrGetter deprelGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getDeprels(); }
+    };
+    
+}

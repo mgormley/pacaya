@@ -39,7 +39,7 @@ public class AnnoSentence {
     private List<String> cposTags;
     private List<String> clusters;
     private List<double[]> embeds;
-    private ArrayList<List<String>> feats;
+    private List<List<String>> feats;
     private List<String> deprels;
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
@@ -596,11 +596,11 @@ public class AnnoSentence {
         this.deprels = deprels;
     }
 
-    public ArrayList<List<String>> getFeats() {
+    public List<List<String>> getFeats() {
         return feats;
     }
 
-    public void setFeats(ArrayList<List<String>> feats) {
+    public void setFeats(List<List<String>> feats) {
         this.feats = feats;
     }
     

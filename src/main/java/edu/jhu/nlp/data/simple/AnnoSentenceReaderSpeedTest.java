@@ -39,13 +39,18 @@ public class AnnoSentenceReaderSpeedTest {
     /**
      * Speed test results:
      * # sents: 39832
-     * Tokens / sec: 106961.04480972754
+     * Tokens / sec: 114240.98124098123
      */
     //@Test
     public void testReaderSpeed() {
         Timer t = new Timer();
         t.start();
         AnnoSentenceCollection sents = read(ptbYmTrain, DatasetType.CONLL_X);
+        AlphabetStore store = new AlphabetStore(sents);
+        // Include convertion to IntAnnoSentence.
+        for (AnnoSentence sent : sents) {
+            new IntAnnoSentence(sent, store);
+        }
         t.stop();
         System.out.println("# sents: "+ sents.size());
         System.out.println("Tokens / sec: " + (sents.getNumTokens() / t.totSec()));
