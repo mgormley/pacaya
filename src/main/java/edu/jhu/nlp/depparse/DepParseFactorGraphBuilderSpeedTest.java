@@ -46,7 +46,7 @@ public class DepParseFactorGraphBuilderSpeedTest {
         fePrm.featureHashMod = numParams;
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         FeatureExtractor fe = onlyFast?
-                new FastDepParseFeatureExtractor(sent, cs, numParams) :
+                new FastDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();

@@ -53,7 +53,7 @@ public class DepParseEncoder implements Encoder<AnnoSentence, int[]> {
 
     private LFgExample getExample(AnnoSentence sent, int[] parents, boolean labeledExample) {
         FeatureExtractor fe = prm.dpFePrm.onlyFast ?
-                new FastDepParseFeatureExtractor(sent, cs, prm.dpFePrm.featureHashMod) :
+                new FastDepParseFeatureExtractor(sent, cs, prm.dpFePrm.featureHashMod, feAlphabet) :
                 new DepParseFeatureExtractor(prm.dpFePrm, sent, cs, feAlphabet);
         fe = new FeatureCache(fe);
         

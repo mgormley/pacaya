@@ -38,9 +38,13 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
     public static int featureHashMod = -1;
     private IntAnnoSentence isent;
     
-    public FastDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod) {
+    public FastDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FeatureNames alphabet) {
         this.isent = new IntAnnoSentence(sent, cs.store);
         this.featureHashMod = featureHashMod;
+        int i=0;
+        while (alphabet.size() < featureHashMod) {
+            alphabet.lookupIndex(i++);
+        }
     }
 
     @Override
