@@ -1,5 +1,6 @@
 package edu.jhu.nlp.data.simple;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,9 @@ import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
 import edu.jhu.util.collections.Lists;
 
-public class AlphabetStore {
+public class AlphabetStore implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(AlphabetStore.class);
     
@@ -146,28 +149,35 @@ public class AlphabetStore {
     }
     
 
-    private interface StrGetter {
+    private interface StrGetter extends Serializable {
         List<String> getStrs(AnnoSentence sent);
     }
     private StrGetter wordGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getWords(); }
     };
     private StrGetter prefixGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getPrefixes(); }
     };
     private StrGetter lemmaGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getLemmas(); }
     };
     private StrGetter posTagGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getPosTags(); }
     };
-    private StrGetter cposTagGetter = new StrGetter() {
+    private StrGetter cposTagGetter = new StrGetter() { 
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getCposTags(); }
     };
     private StrGetter clusterGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getClusters(); }
     };
     private StrGetter featGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) {
             if (sent.getFeats() == null) { return null; }
             ArrayList<String> strs = new ArrayList<>();
@@ -180,6 +190,7 @@ public class AlphabetStore {
         }
     };
     private StrGetter deprelGetter = new StrGetter() {
+        private static final long serialVersionUID = 1L;
         public List<String> getStrs(AnnoSentence sent) { return sent.getDeprels(); }
     };
     
