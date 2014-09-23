@@ -65,12 +65,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.feat_mcdonald
         g.defaults += g.adagrad
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
-                          adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
+                          adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
-                          algebra="LOG_SIGN",
-                          regularizer="NONE")
+                          algebra="LOG_SIGN")
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
@@ -164,6 +163,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             languages = ["bg", "es", "en"]
             
+            # Speedups
+            g.defaults.update(regularizer="NONE",
+                              trainMaxSentenceLength=50,
+                              includeUnsupportedFeatures=True,
+                              sgdNumPasses=5)
+            g.defaults.remove("printModel")
+            
             # Train a first-order pruning model for each language
             prune_exps = {}
             for lang_short in languages:
@@ -176,8 +182,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 prune_exps[lang_short] = exp
                 exps.append(exp)
-            
+                        
             # Train the second order models.
+            g.defaults.remove("modelOut") # Speedup.
             for trainer in [g.erma_mse, g.cll]:
                 for bpMaxIterations in [1, 2, 3, 4]:
                     for lang_short in languages:
