@@ -65,7 +65,7 @@ class PathDefinitions():
             p.langs[lang_short] = ParamGroups()            
         
         corpora_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora",
-                                            "/home/mgormley/research/corpora",
+                                            "/Users/mgormley/research/corpora",
                                             "/home/mgormley/corpora")
         p.corpora_dir = corpora_dir
         ldc_dir = get_first_that_exists("/export/common/data/corpora/LDC",

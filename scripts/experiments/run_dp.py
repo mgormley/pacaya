@@ -20,7 +20,7 @@ from pypipeline import pipeline
 import re
 import random
 from pypipeline.pipeline import write_script, RootStage, Stage
-from pypipeline.stages import get_oome_stages
+from pypipeline.stages import get_oome_stages, StagePath
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
@@ -73,7 +73,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
-        
+                
         # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
@@ -161,22 +161,40 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
+            languages = ["bg", "es", "en"]
+            
+            # Train a first-order pruning model for each language
+            prune_exps = {}
+            for lang_short in languages:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                data = gl.cx_data
+                data.update(l2variance=l2var_map[lang_short],
+                            propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                exp = g.defaults + data + g.first_order
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                prune_exps[lang_short] = exp
+                exps.append(exp)
+            
+            # Train the second order models.
             for trainer in [g.erma_mse, g.cll]:
-                for bpMaxIterations in [2, 3, 5, 10]:
-                    for lang_short in ["bg", "es", "en"]:
+                for bpMaxIterations in [1, 2, 3, 4]:
+                    for lang_short in languages:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
                         for parser in g.parsers:
                             data = gl.cx_data
                             data.update(l2variance=l2var_map[lang_short],
-                                        pruneModel=gl.pruneModel,
+                                        pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
                                         propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
                             exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            exp.add_prereq(prune_exps[lang_short])
                             if parser in [g.second_order, g.second_grand, g.second_sib]:
                                 exps += get_oome_stages(exp)
                             else:
                                 exps.append(exp)
+
             return self._get_pipeline_from_exps(exps)
         
         
@@ -240,8 +258,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 pl = p.langs[lang_short]
                 data = gl.cx_data
                 data.update(l2variance=l2var_map[lang_short],
-                            # TODO: This method of setting the pruneModel path is very unstable.
-                            pruneModel="../1st_tpl_mcdonald_basic_%s/model.binary.gz" % (lang_short),
+                            pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
                             propTrainAsDev=0,
                             trainUseCoNLLXPhead=False)  # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + parser
@@ -380,6 +397,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      testMaxNumSentences=3,
                      work_mem_megs=2000,
                      timeoutSeconds=20)
+        if (stage.get("featureHashMod") > 1):
+            stage.update(featureHashMod=1000)
+
         # Uncomment next line for multiple threads on a fast run: 
         # stage.update(threads=2)
 
