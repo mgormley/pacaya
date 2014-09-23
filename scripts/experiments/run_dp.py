@@ -65,11 +65,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.feat_mcdonald
         g.defaults += g.adagrad
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
-                          adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
+                          adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
-                          algebra="LOG_SIGN")
+                          algebra="LOG_SIGN",
+                          regularizer="NONE")
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)

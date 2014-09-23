@@ -94,6 +94,8 @@ public class JointNlpRunner {
 
     public enum Inference { BRUTE_FORCE, BP };
     
+    public enum RegularizerType { L2, NONE };
+    
     public enum AlgebraType {
         REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA),
         // SHIFTED_REAL and SPLIT algebras are for testing only.
@@ -282,6 +284,8 @@ public class JointNlpRunner {
     public static Optimizer optimizer = Optimizer.LBFGS;
     @Opt(hasArg=true, description="The variance for the L2 regularizer.")
     public static double l2variance = 1.0;
+    @Opt(hasArg=true, description="The type of regularizer.")
+    public static RegularizerType regularizer = RegularizerType.L2;
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
     public static int maxLbfgsIterations = 1000;
     @Opt(hasArg=true, description="Number of effective passes over the dataset for SGD.")
@@ -741,7 +745,13 @@ public class JointNlpRunner {
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
-        prm.regularizer = new L2(l2variance);
+        if (regularizer == RegularizerType.L2) {
+            prm.regularizer = new L2(l2variance);
+        } else if (regularizer == RegularizerType.NONE) {
+            prm.regularizer = null;
+        } else {
+            throw new ParseException("Unsupported regularizer: " + regularizer);
+        }
         prm.numThreads = threads;
         prm.useMseForValue = useMseForValue;        
         prm.trainer = trainer;                
