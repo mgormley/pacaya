@@ -9,8 +9,8 @@ def remote_command(argv):
     #prep_project_mvn("erma", "install", True)
     prep_project_mvn("optimize", "install", True)
     prep_project_py("pypipeline", True)
-    prep_project_mvn("pacaya2", "compile", False)
-    run_command("pacaya2", argv)
+    prep_project_mvn("pacaya", "compile", False)
+    run_command("pacaya", argv)
     
 if __name__ == "__main__":
     remote_command(sys.argv)
