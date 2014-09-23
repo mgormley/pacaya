@@ -32,7 +32,7 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
     private static final FeatureVector biasFvEdgeOff;
     static {
         biasFvEdgeOff = new FeatureVector();
-        biasFvEdgeOff.add(MurmurHash.hash32("BIAS_FEATURE_FOR_OFF_EDGE"), 1.0);
+        // TODO: DO WE WANT THIS? biasFvEdgeOff.add(MurmurHash.hash32("BIAS_FEATURE_FOR_OFF_EDGE"), 1.0);
     }
 
     private int featureHashMod;
