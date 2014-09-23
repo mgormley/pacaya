@@ -26,13 +26,16 @@ public class FastDepParseFeSpeedTest {
      * Speed test results.
      * 
      * Gilim SSD:
-     *    w/o        s=2400 n=169795 Toks / sec: 14677.99
-     *    w/Murmur   s=2400 n=169795 Toks / sec: 7094.89
-     *    w/BitShift s=2400 n=169795 Toks / sec: 7590.63
-     *    w/IntArrayList+BitShift s=2400 n=169795 Toks / sec: 9111.617923262676
+     *    w/o                     s=2400 n=169795 Toks / sec: 14677.99
+     *    w/Murmur                s=2400 n=169795 Toks / sec: 7094.89
+     *    w/BitShift              s=2400 n=169795 Toks / sec: 7590.63
+     *    w/IntArrayList+BitShift s=2400 n=169795 Toks / sec: 9111.61
+     *    w/DirectToFV+Murmur     s=2400 n=169795 Toks / sec: 10152.16
      *    
+     *    On round 2:
      *    w/Carerras          s=800 n=76244 Toks / sec: 1373.54
      *    w/more 2nd-order    s=800 n=76244 Toks / sec: 1013.89
+     *    w/Car.DtoFV+Mur     s=800 n=76244 Toks / sec: 1797.48
      */
     //@Test
     public void testSpeed() throws ParseException, IOException {
@@ -53,7 +56,7 @@ public class FastDepParseFeSpeedTest {
                 IntAnnoSentence isent = new IntAnnoSentence(sent, store);
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
-                        LongArrayList feats = new LongArrayList();
+                        FeatureVector feats = new FeatureVector();
                         FastDepParseFe.addArcFactoredMSTFeats(isent, i, j, feats, false);
 
                         if (true) {
@@ -69,13 +72,13 @@ public class FastDepParseFeSpeedTest {
                             }
                         }
                         
-                        FeatureVector fv = new FeatureVector();
-                        long[] lfeats = feats.getInternalElements();
-                        for (int k=0; k<feats.size(); k++) {
-                            int hash = (int) ((lfeats[k] ^ (lfeats[k] >>> 32)) & 0xffffffffl);
-                            //int hash = MurmurHash.hash32(lfeats[k]); 
-                            fv.add(hash, 1.0);
-                        }
+//                        FeatureVector fv = new FeatureVector();
+//                        long[] lfeats = feats.getInternalElements();
+//                        for (int k=0; k<feats.size(); k++) {
+//                            int hash = (int) ((lfeats[k] ^ (lfeats[k] >>> 32)) & 0xffffffffl);
+//                            //int hash = MurmurHash.hash32(lfeats[k]); 
+//                            fv.add(hash, 1.0);
+//                        }
                     }
                 }
                 timer.stop();

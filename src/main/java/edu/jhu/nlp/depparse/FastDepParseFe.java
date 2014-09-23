@@ -1,10 +1,13 @@
 package edu.jhu.nlp.depparse;
 
+import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.data.simple.AlphabetStore;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
 import edu.jhu.prim.list.LongArrayList;
 import edu.jhu.prim.sort.ShortSort;
+import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.hash.MurmurHash;
 
 
 // TODO: we should have a special token representing the wall. Instead we're using the int
@@ -31,7 +34,7 @@ public class FastDepParseFe {
     }
     
     /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." */
-    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, LongArrayList feats, boolean basicOnly) {
+    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, FeatureVector feats, boolean basicOnly) {
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
         // by c (for child).
         short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
@@ -90,10 +93,10 @@ public class FastDepParseFe {
             //    relative(p,c)
             //    distance(p,c)
             //    distance(p,c)
-            feats.add(encodeFeatureB___(templ++, flags, (byte)0));
+            addFeat(feats, encodeFeatureB___(templ++, flags, (byte)0));
             if (mode == 0) {
-                feats.add(encodeFeatureB___(templ++, flags, direction));
-                feats.add(encodeFeatureB___(templ++, flags, binnedDist));
+                addFeat(feats, encodeFeatureB___(templ++, flags, direction));
+                addFeat(feats, encodeFeatureB___(templ++, flags, binnedDist));
             } else {
                 templ++;
                 templ++;
@@ -106,12 +109,12 @@ public class FastDepParseFe {
             //    word(c) + pos(c)
             //    word(c)
             //    pos(c)
-            feats.add(encodeFeatureSB__(templ++, flags, pWord, pPos));
-            feats.add(encodeFeatureS___(templ++, flags, pWord));
-            feats.add(encodeFeatureB___(templ++, flags, pPos));
-            feats.add(encodeFeatureSB__(templ++, flags, cWord, cPos));
-            feats.add(encodeFeatureS___(templ++, flags, cWord));
-            feats.add(encodeFeatureB___(templ++, flags, cPos));
+            addFeat(feats, encodeFeatureSB__(templ++, flags, pWord, pPos));
+            addFeat(feats, encodeFeatureS___(templ++, flags, pWord));
+            addFeat(feats, encodeFeatureB___(templ++, flags, pPos));
+            addFeat(feats, encodeFeatureSB__(templ++, flags, cWord, cPos));
+            addFeat(feats, encodeFeatureS___(templ++, flags, cWord));
+            addFeat(feats, encodeFeatureB___(templ++, flags, cPos));
             
             //    # Basic Bigram Features
             //    word(p) + pos(p) + word(c) + pos(c)
@@ -121,13 +124,13 @@ public class FastDepParseFe {
             //    word(p) + pos(p) + word(c)
             //    word(p) + word(c)
             //    pos(p) + pos(c)
-            feats.add(encodeFeatureSSBB(templ++, flags, pWord, cWord, pPos, cPos));
-            feats.add(encodeFeatureSBB_(templ++, flags, cWord, pPos, cPos));
-            feats.add(encodeFeatureSSB_(templ++, flags, pWord, cWord, cPos));
-            feats.add(encodeFeatureSBB_(templ++, flags, pWord, pPos, cPos));
-            feats.add(encodeFeatureSSB_(templ++, flags, pWord, cWord, pPos));
-            feats.add(encodeFeatureSS__(templ++, flags, pWord, cWord));
-            feats.add(encodeFeatureBB__(templ++, flags, pPos, cPos));            
+            addFeat(feats, encodeFeatureSSBB(templ++, flags, pWord, cWord, pPos, cPos));
+            addFeat(feats, encodeFeatureSBB_(templ++, flags, cWord, pPos, cPos));
+            addFeat(feats, encodeFeatureSSB_(templ++, flags, pWord, cWord, cPos));
+            addFeat(feats, encodeFeatureSBB_(templ++, flags, pWord, pPos, cPos));
+            addFeat(feats, encodeFeatureSSB_(templ++, flags, pWord, cWord, pPos));
+            addFeat(feats, encodeFeatureSS__(templ++, flags, pWord, cWord));
+            addFeat(feats, encodeFeatureBB__(templ++, flags, pPos, cPos));            
             
             if (basicOnly) {
                 continue;   
@@ -138,20 +141,20 @@ public class FastDepParseFe {
             //    pos(-1(p)) + pos(p) + pos(-1(c)) + pos(c)
             //    pos(p) + pos(1(p)) + pos(c) + pos(1(c))
             //    pos(-1(p)) + pos(p) + pos(c) + pos(1(c))
-            feats.add(encodeFeatureBBBB(templ++, flags, pPos, rpPos, lcPos, cPos));
-            feats.add(encodeFeatureBBBB(templ++, flags, lpPos, pPos, lcPos, cPos));
-            feats.add(encodeFeatureBBBB(templ++, flags, pPos, rpPos, cPos, rcPos));
-            feats.add(encodeFeatureBBBB(templ++, flags, lpPos, pPos, cPos, rcPos));
+            addFeat(feats, encodeFeatureBBBB(templ++, flags, pPos, rpPos, lcPos, cPos));
+            addFeat(feats, encodeFeatureBBBB(templ++, flags, lpPos, pPos, lcPos, cPos));
+            addFeat(feats, encodeFeatureBBBB(templ++, flags, pPos, rpPos, cPos, rcPos));
+            addFeat(feats, encodeFeatureBBBB(templ++, flags, lpPos, pPos, cPos, rcPos));
             
             //    # Backed-off versions of Surrounding Word POS Features
             //    pos(-1(p)) + pos(p) + pos(c)
             //    pos(p) + pos(-1(c)) + pos(c)
             //    pos(p) + pos(c) + pos(1(c))
             //    pos(p) + pos(1(p)) + pos(c)
-            feats.add(encodeFeatureBBB_(templ++, flags, lpPos, pPos, cPos));
-            feats.add(encodeFeatureBBB_(templ++, flags, pPos, lcPos, cPos));
-            feats.add(encodeFeatureBBB_(templ++, flags, pPos, cPos, rcPos));
-            feats.add(encodeFeatureBBB_(templ++, flags, pPos, rpPos, cPos));
+            addFeat(feats, encodeFeatureBBB_(templ++, flags, lpPos, pPos, cPos));
+            addFeat(feats, encodeFeatureBBB_(templ++, flags, pPos, lcPos, cPos));
+            addFeat(feats, encodeFeatureBBB_(templ++, flags, pPos, cPos, rcPos));
+            addFeat(feats, encodeFeatureBBB_(templ++, flags, pPos, rpPos, cPos));
             
             //    # In Between POS Features
             //    pos(p) + pos(1gram(btwn(p,c))) + pos(c)
@@ -166,7 +169,7 @@ public class FastDepParseFe {
             ShortSort.sortAsc(btwnPos);
             for (int i=0; i<btwnPos.length; i++) {
                 if (i == 0 || btwnPos[i] != btwnPos[i-1]) {
-                    feats.add(encodeFeatureSBB_(templ, flags, btwnPos[i], pPos, cPos));
+                    addFeat(feats, encodeFeatureSBB_(templ, flags, btwnPos[i], pPos, cPos));
                 }
             }
             templ++;
@@ -184,20 +187,20 @@ public class FastDepParseFe {
             //    chpre5(p) + pos(p) + chpre5(c)
             //    chpre5(p) + chpre5(c)
             if (pPrefixFeats) {
-                feats.add(encodeFeatureSB__(templ++, flags, pPrefix, pPos));
-                feats.add(encodeFeatureS___(templ++, flags, pPrefix));
-                feats.add(encodeFeatureSBB_(templ++, flags, pPrefix, pPos, cPos));
+                addFeat(feats, encodeFeatureSB__(templ++, flags, pPrefix, pPos));
+                addFeat(feats, encodeFeatureS___(templ++, flags, pPrefix));
+                addFeat(feats, encodeFeatureSBB_(templ++, flags, pPrefix, pPos, cPos));
             }
             if (cPrefixFeats) {
-                feats.add(encodeFeatureSB__(templ++, flags, cPrefix, cPos));
-                feats.add(encodeFeatureS___(templ++, flags, cPrefix));
-                feats.add(encodeFeatureSBB_(templ++, flags, cPrefix, pPos, cPos));
+                addFeat(feats, encodeFeatureSB__(templ++, flags, cPrefix, cPos));
+                addFeat(feats, encodeFeatureS___(templ++, flags, cPrefix));
+                addFeat(feats, encodeFeatureSBB_(templ++, flags, cPrefix, pPos, cPos));
             }
             if (pPrefixFeats || cPrefixFeats) {
-                feats.add(encodeFeatureSSBB(templ++, flags, pPrefix, cPrefix, pPos, cPos));
-                feats.add(encodeFeatureSSB_(templ++, flags, pPrefix, cPrefix, cPos));
-                feats.add(encodeFeatureSSB_(templ++, flags, pPrefix, cPrefix, pPos));
-                feats.add(encodeFeatureSS__(templ++, flags, pPrefix, cPrefix));
+                addFeat(feats, encodeFeatureSSBB(templ++, flags, pPrefix, cPrefix, pPos, cPos));
+                addFeat(feats, encodeFeatureSSB_(templ++, flags, pPrefix, cPrefix, cPos));
+                addFeat(feats, encodeFeatureSSB_(templ++, flags, pPrefix, cPrefix, pPos));
+                addFeat(feats, encodeFeatureSS__(templ++, flags, pPrefix, cPrefix));
             }
         }
     }
@@ -206,7 +209,7 @@ public class FastDepParseFe {
      * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int p, int c, int s, LongArrayList feats) {
+    public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int p, int c, int s, FeatureVector feats) {
         // Direction flags.
         // Parent-child relationship.
         byte direction_pc = (p < c) ? (byte) 0 : (byte) 1;
@@ -225,7 +228,7 @@ public class FastDepParseFe {
      * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int g, int p, int c, LongArrayList feats) {
+    public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int g, int p, int c, FeatureVector feats) {
         // Direction flags.
         // Parent-grandparent relationship.
         byte direction_gp = (g < p) ? (byte) 0 : (byte) 1;
@@ -257,7 +260,7 @@ public class FastDepParseFe {
     public static final boolean extraTriplets = false;
     
     /** Can be used for either sibling or grandparent features. */
-    private static void addTripletFeatures(IntAnnoSentence sent, int p, int c, int s, LongArrayList feats, byte flags) {
+    private static void addTripletFeatures(IntAnnoSentence sent, int p, int c, int s, FeatureVector feats, byte flags) {
         // Head, modifier, and sibling words / POS tags. We denote the head by p (for parent), the modifier
         // by c (for child), and the sibling by s.
         short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
@@ -273,17 +276,17 @@ public class FastDepParseFe {
         // --- Triplet features. ----
         
         //    cpos(p) + cpos(c) + cpos(s)
-        feats.add(encodeFeatureBBB_(templ++, flags, pPos, cPos, sPos));
+        addFeat(feats, encodeFeatureBBB_(templ++, flags, pPos, cPos, sPos));
 
         // --- Pairwise features. ----
         
         //    cpos(p) + cpos(s)
         //    cpos(c) + cpos(s)
         //    cpos(p) + cpos(c) << Not in Carreras. From TurboParser.
-        feats.add(encodeFeatureBB__(templ++, flags, pPos, sPos));
-        feats.add(encodeFeatureBB__(templ++, flags, cPos, sPos));
+        addFeat(feats, encodeFeatureBB__(templ++, flags, pPos, sPos));
+        addFeat(feats, encodeFeatureBB__(templ++, flags, cPos, sPos));
         if (extraTriplets) {
-            feats.add(encodeFeatureBB__(templ++, flags, pPos, cPos));
+            addFeat(feats, encodeFeatureBB__(templ++, flags, pPos, cPos));
         }
 
         //    cpos(p) + word(s)
@@ -292,25 +295,33 @@ public class FastDepParseFe {
         //    word(c) + cpos(s)
         //    word(p) + cpos(c) << Not in Carreras. From TurboParser.
         //    word(c) + cpos(p) << Not in Carreras. From TurboParser.
-        feats.add(encodeFeatureSB__(templ++, flags, sWord, pPos));
-        feats.add(encodeFeatureSB__(templ++, flags, sWord, cPos));
-        feats.add(encodeFeatureSB__(templ++, flags, pWord, sPos));
-        feats.add(encodeFeatureSB__(templ++, flags, cWord, sPos));
+        addFeat(feats, encodeFeatureSB__(templ++, flags, sWord, pPos));
+        addFeat(feats, encodeFeatureSB__(templ++, flags, sWord, cPos));
+        addFeat(feats, encodeFeatureSB__(templ++, flags, pWord, sPos));
+        addFeat(feats, encodeFeatureSB__(templ++, flags, cWord, sPos));
         if (extraTriplets) {
-            feats.add(encodeFeatureSB__(templ++, flags, cWord, pPos));
-            feats.add(encodeFeatureSB__(templ++, flags, pWord, cPos));
+            addFeat(feats, encodeFeatureSB__(templ++, flags, cWord, pPos));
+            addFeat(feats, encodeFeatureSB__(templ++, flags, pWord, cPos));
         }
 
         //    word(p) + word(s)
         //    word(c) + word(s)
         //    word(p) + word(c) << Not in Carreras. From TurboParser.
-        feats.add(encodeFeatureSS__(templ++, flags, pWord, sWord));
-        feats.add(encodeFeatureSS__(templ++, flags, cWord, sWord));
+        addFeat(feats, encodeFeatureSS__(templ++, flags, pWord, sWord));
+        addFeat(feats, encodeFeatureSS__(templ++, flags, cWord, sWord));
         if (extraTriplets) {
-            feats.add(encodeFeatureSS__(templ++, flags, pWord, cWord));
+            addFeat(feats, encodeFeatureSS__(templ++, flags, pWord, cWord));
         }
     }
 
+
+    private static void addFeat(FeatureVector feats, long feat) {
+        int hash = MurmurHash.hash32(feat);
+        if (FastDepParseFeatureExtractor.featureHashMod > 0) {
+            hash = FastMath.mod(hash, FastDepParseFeatureExtractor.featureHashMod);
+        }
+        feats.add(hash, 1.0);
+    }
 
     private static final long BYTE_MAX =  0xff;
     private static final long SHORT_MAX = 0xffff;
