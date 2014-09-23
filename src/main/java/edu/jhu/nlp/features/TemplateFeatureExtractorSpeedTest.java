@@ -13,6 +13,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.relations.FeatureUtils;
+import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
 
@@ -26,7 +27,7 @@ public class TemplateFeatureExtractorSpeedTest {
      * 
      * Gilim:
      *    w/hash s=800 n=19560 Toks / sec: 238.92
-     *    w/o    s=800 n=19560 Toks / sec: 514.42
+     *    w/o    s=800 n=19560 Toks / sec: 560.39
      *    
      * Shasta:
      * 	  w/hash s=800 n=19560 Toks / sec: 375.66 (was 338.00 w/Feature object)
@@ -36,6 +37,7 @@ public class TemplateFeatureExtractorSpeedTest {
     public void testSpeed() throws ParseException, IOException {
         List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.readPtbYmConllx();
+        PrefixAnnotator.addPrefixes(sents);
         
         int trials = 3;
         
@@ -71,18 +73,6 @@ public class TemplateFeatureExtractorSpeedTest {
         log.info("Average ms per sent: " + (timer.totMs() / sents.size() / trials));
         log.info("Toks / sec: " + (sents.getNumTokens() * trials / timer.totSec())); 
         log.info("Alphabet.size(): " + alphabet.size());
-    }
-
-    /**
-     * Returns the hash code of the reverse of this string.
-     */
-    private int reverseHashCode(String fname) {
-        int hash = 0;
-        int n = fname.length();
-        for (int i=n-1; i>=0; i--) {
-            hash += 31 * hash + fname.charAt(i);
-        }
-        return hash;
     }
     
     public static void main(String[] args) throws ParseException, IOException {

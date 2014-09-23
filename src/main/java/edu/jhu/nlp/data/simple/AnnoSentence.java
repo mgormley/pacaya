@@ -34,6 +34,8 @@ public class AnnoSentence {
     private static final String SPAN_STR_SEP = " ";
     
     private List<String> words;
+    // 5-gram prefix if the word is longer than 5 characters.
+    private List<String> prefixes;
     private List<String> lemmas;
     private List<String> posTags;
     private List<String> cposTags;
@@ -79,6 +81,7 @@ public class AnnoSentence {
     public AnnoSentence getFairlyDeepCopy() {
         AnnoSentence newSent = new AnnoSentence();
         newSent.words = Lists.copyOf(this.words);
+        newSent.prefixes = Lists.copyOf(this.prefixes);
         newSent.lemmas = Lists.copyOf(this.lemmas);
         newSent.posTags = Lists.copyOf(this.posTags);
         newSent.cposTags = Lists.copyOf(this.cposTags);
@@ -113,6 +116,7 @@ public class AnnoSentence {
     public static void copyShallow(AnnoSentence src, AnnoSentence dest, AT at) {
         switch (at) {
         case WORD: dest.words = src.words; break;
+        case PREFIX: dest.prefixes = src.prefixes; break;
         case LEMMA: dest.lemmas = src.lemmas; break;
         case POS: dest.posTags = src.posTags; break;
         case CPOS: dest.cposTags = src.cposTags; break;
@@ -142,6 +146,7 @@ public class AnnoSentence {
     public void removeAt(AT at) {
         switch (at) {
         case WORD: this.words = null; break;
+        case PREFIX: this.prefixes = null; break;
         case LEMMA: this.lemmas = null; break;
         case POS: this.posTags = null; break;
         case CPOS: this.cposTags = null; break;
@@ -165,6 +170,7 @@ public class AnnoSentence {
     public boolean hasAt(AT at) {
         switch (at) {
         case WORD: return this.words != null;
+        case PREFIX: return this.prefixes != null;
         case LEMMA: return this.lemmas != null;
         case POS: return this.posTags != null;
         case CPOS: return this.cposTags != null;
@@ -187,6 +193,7 @@ public class AnnoSentence {
     
     public void intern() {
         Lists.intern(words);
+        Lists.intern(prefixes);
         Lists.intern(lemmas);
         Lists.intern(posTags);
         Lists.intern(cposTags);
@@ -216,6 +223,7 @@ public class AnnoSentence {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         appendIfNotNull(sb, "words", words);
+        appendIfNotNull(sb, "prefixes", prefixes);
         appendIfNotNull(sb, "lemmas", lemmas);
         appendIfNotNull(sb, "tags", posTags);
         appendIfNotNull(sb, "cposTags", cposTags);
@@ -257,6 +265,11 @@ public class AnnoSentence {
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
         return words.get(i);
+    }
+    
+    /** Gets the i'th prefix of 5 characters as a String. */
+    public String getPrefix(int i) {
+        return prefixes.get(i);
     }
 
     /** Gets the i'th POS tag as a String. */
@@ -310,6 +323,13 @@ public class AnnoSentence {
      */
     public List<String> getWords(Span span) {
         return getSpan(words, span);
+    }
+    
+    /**
+     * Gets a list of words corresponding to a token span.
+     */
+    public List<String> getPrefixes(Span span) {
+        return getSpan(prefixes, span);
     }
 
     /**
@@ -373,6 +393,15 @@ public class AnnoSentence {
      */
     public String getWordsStr(Span span) {
         return getSpanStr(words, span);
+    }
+    
+    /**
+     * Gets a single string representing the words in a given token span.
+     * 
+     * @param span
+     */
+    public String getPrefixesStr(Span span) {
+        return getSpanStr(prefixes, span);
     }
 
     /**
@@ -512,6 +541,14 @@ public class AnnoSentence {
 
     public void setWords(List<String> words) {
         this.words = words;
+    }
+    
+    public List<String> getPrefixes() {
+        return prefixes;
+    }
+
+    public void setPrefixes(List<String> prefixes) {
+        this.prefixes = prefixes;
     }
 
     public List<String> getLemmas() {

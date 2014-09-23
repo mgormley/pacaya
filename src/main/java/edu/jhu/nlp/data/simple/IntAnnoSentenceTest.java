@@ -8,7 +8,7 @@ import edu.jhu.util.collections.Lists;
 
 public class IntAnnoSentenceTest {
 
-    @Test
+    //@Test
     public void testOnRealCorpus() {
         AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.read(AnnoSentenceReaderSpeedTest.czTrain, DatasetType.CONLL_X);
         AlphabetStore store = new AlphabetStore(sents);
@@ -26,6 +26,7 @@ public class IntAnnoSentenceTest {
         int i = 0;
         AnnoSentence s = new AnnoSentence();
         s.setWords(Lists.getList("word"+i));
+        s.setPrefixes(Lists.getList("prefix"+i));
         s.setLemmas(Lists.getList("lemma"+i));
         s.setPosTags(Lists.getList("pos"+i));
         s.setCposTags(Lists.getList("cpos"+i));
@@ -35,13 +36,14 @@ public class IntAnnoSentenceTest {
         sents.add(s);
         
         IntAnnoSentence isent = new IntAnnoSentence(s, store);
-        assertEquals((short) 1, isent.getWord(0));
-        assertEquals((short) 1, isent.getLemma(0));
-        assertEquals((byte) 1, isent.getPosTag(0));
-        assertEquals((byte) 1, isent.getCposTag(0));
-        assertEquals((short) 1, isent.getCluster(0));
-        assertEquals((short) 1, isent.getFeats(0).get(0));
-        assertEquals((byte) 1, isent.getDeprel(0));
+        assertEquals((short) AlphabetStoreTest.FIRST_TOK_ID, isent.getWord(0));
+        assertEquals((short) AlphabetStoreTest.FIRST_TOK_ID, isent.getPrefix(0));
+        assertEquals((short) AlphabetStoreTest.FIRST_TOK_ID, isent.getLemma(0));
+        assertEquals((byte) AlphabetStoreTest.FIRST_TOK_ID, isent.getPosTag(0));
+        assertEquals((byte) AlphabetStoreTest.FIRST_TOK_ID, isent.getCposTag(0));
+        assertEquals((short) AlphabetStoreTest.FIRST_TOK_ID, isent.getCluster(0));
+        assertEquals((short) AlphabetStoreTest.FIRST_TOK_ID, isent.getFeats(0).get(0));
+        assertEquals((byte) AlphabetStoreTest.FIRST_TOK_ID, isent.getDeprel(0));
     }
     
     @Test    
@@ -53,6 +55,7 @@ public class IntAnnoSentenceTest {
         String i = "-unseen-suffix";
         AnnoSentence s = new AnnoSentence();
         s.setWords(Lists.getList("word"+i));
+        s.setPrefixes(Lists.getList("prefix"+i));
         s.setLemmas(Lists.getList("lemma"+i));
         s.setPosTags(Lists.getList("pos"+i));
         s.setCposTags(Lists.getList("cpos"+i));
@@ -63,6 +66,7 @@ public class IntAnnoSentenceTest {
         
         IntAnnoSentence isent = new IntAnnoSentence(s, store);
         assertEquals((short) 0, isent.getWord(0));
+        assertEquals((short) 0, isent.getPrefix(0));
         assertEquals((short) 0, isent.getLemma(0));
         assertEquals((byte) 0, isent.getPosTag(0));
         assertEquals((byte) 0, isent.getCposTag(0));

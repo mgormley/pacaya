@@ -355,7 +355,7 @@ public class TemplateFeatureExtractor {
         }
     }
 
-    private int binInt(int size, int...bins) {
+    public static int binInt(int size, int...bins) {
         for (int i=bins.length-1; i >= 0; i--) {
             if (size >= bins[i]) {
                 return bins[i];
@@ -552,7 +552,7 @@ public class TemplateFeatureExtractor {
         case CHPRE5:
             form = tok.getForm();
             if (form.length() > 5) {
-                return form.substring(0, Math.min(form.length(), 5));    
+                return tok.getPrefix();
             } else {
                 return null;
             }

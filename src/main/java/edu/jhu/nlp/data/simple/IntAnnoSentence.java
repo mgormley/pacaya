@@ -17,6 +17,7 @@ public class IntAnnoSentence {
     private static final int INT_MAX = Integer.MAX_VALUE; //0xffffffff;
 
     final static int MAX_WORD = SHORT_MAX;
+    final static int MAX_PREFIX = SHORT_MAX;
     final static int MAX_LEMMA = SHORT_MAX;
     final static int MAX_POS = BYTE_MAX;
     final static int MAX_CPOS = BYTE_MAX;
@@ -25,6 +26,7 @@ public class IntAnnoSentence {
     final static int MAX_DEPREL = BYTE_MAX;
     
     private ShortArrayList words;
+    private ShortArrayList prefixes;
     private ShortArrayList lemmas;
     private ByteArrayList posTags;
     private ByteArrayList cposTags;
@@ -33,11 +35,14 @@ public class IntAnnoSentence {
     private ByteArrayList deprels;
     // TODO: private IntNaryTree naryTree;
         
+    private AnnoSentence sent;
     private AlphabetStore store;
     
     public IntAnnoSentence(AnnoSentence sent, AlphabetStore store) {
+        this.sent = sent;
         this.store = store;
         this.words = getShorts(sent.getWords(), store.words);
+        this.prefixes = getShorts(sent.getPrefixes(), store.prefixes);
         this.lemmas = getShorts(sent.getLemmas(), store.lemmas);
         this.posTags = getBytes(sent.getPosTags(), store.posTags);
         this.cposTags = getBytes(sent.getCposTags(), store.cposTags);
@@ -84,6 +89,11 @@ public class IntAnnoSentence {
         return words.get(i);
     }
     
+    /** Gets the i'th word as a String. */
+    public short getPrefix(int i) {
+        return prefixes.get(i);
+    }
+    
     /** Gets the i'th lemma as a String. */
     public short getLemma(int i) {
         return lemmas.get(i);
@@ -112,6 +122,14 @@ public class IntAnnoSentence {
     /** Gets the dependency relation label for the arc from the i'th word to its parent. */
     public byte getDeprel(int i) {
         return deprels.get(i);
+    }
+
+    public int size() {
+        return words.size();
+    }
+    
+    public AnnoSentence getAnnoSentence() {
+        return sent;
     }
 
 }

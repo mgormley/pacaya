@@ -12,11 +12,19 @@ import edu.jhu.util.collections.Lists;
 public class AlphabetStore {
 
     private static final Logger log = Logger.getLogger(AlphabetStore.class);
-
-    public static String UNKNOWN_STR = "UNKNOWN_LABEL";
-    public static int UNKNOWN_INT = 0; 
+    
+    // Special Tokens.
+    public static final int NUM_SPECIAL_TOKS = 3;
+    public static final String TOK_UNK_STR = "TOK_UNK";
+    public static final String TOK_START_STR = "TOK_START";
+    public static final String TOK_END_STR = "TOK_END";
+    public static final int TOK_UNK_INT = 0;
+    public static final int TOK_START_INT = 1;
+    public static final int TOK_END_INT = 2;
+    public static String[] specialTokenStrs = new String[] { TOK_UNK_STR, TOK_START_STR, TOK_END_STR };
     
     Alphabet<String> words;
+    Alphabet<String> prefixes;
     Alphabet<String> lemmas;
     Alphabet<String> posTags;
     Alphabet<String> cposTags;
@@ -27,9 +35,10 @@ public class AlphabetStore {
     //Alphabet<String> lexAlphabet;
     //Alphabet<String> ntAlphabet;    
     private List<Alphabet<String>> as;
-        
+    
     public AlphabetStore(AnnoSentenceCollection sents) {
         words = getInitAlphabet("word", wordGetter, IntAnnoSentence.MAX_WORD, sents);
+        prefixes = getInitAlphabet("prefix", prefixGetter, IntAnnoSentence.MAX_PREFIX, sents);
         lemmas = getInitAlphabet("lemma", lemmaGetter, IntAnnoSentence.MAX_LEMMA, sents);
         posTags = getInitAlphabet("pos", posTagGetter, IntAnnoSentence.MAX_POS, sents);
         cposTags = getInitAlphabet("cpos", cposTagGetter, IntAnnoSentence.MAX_CPOS, sents);
@@ -37,7 +46,7 @@ public class AlphabetStore {
         feats = getInitAlphabet("feat", featGetter, IntAnnoSentence.MAX_FEAT, sents);
         deprels= getInitAlphabet("deprel", deprelGetter, IntAnnoSentence.MAX_DEPREL, sents);
         
-        as = Lists.getList(words, lemmas, posTags, cposTags, clusters, feats, deprels);
+        as = Lists.getList(words, prefixes, lemmas, posTags, cposTags, clusters, feats, deprels);
         this.stopGrowth();
     }
 
@@ -72,9 +81,12 @@ public class AlphabetStore {
     
     private static Alphabet<String> getInitAlphabet() {
         Alphabet<String> alphabet = new Alphabet<String>();
-        int idx = alphabet.lookupIndex(UNKNOWN_STR);
-        if (idx != UNKNOWN_INT) {
-            throw new RuntimeException("Expecting first index from alphabet to be 0");
+        //for (SpecialToken tok : SpecialToken.values()) {
+        for (int i=0; i<NUM_SPECIAL_TOKS; i++) {
+            int idx = alphabet.lookupIndex(specialTokenStrs[i]);
+            if (idx != i) {
+                throw new RuntimeException("Expecting first index from alphabet to be 0");
+            }
         }
         return alphabet;
     }
@@ -91,16 +103,20 @@ public class AlphabetStore {
         }
     }
     
-    static int safeLookup(Alphabet<String> alphabet, String word) {
-        int idx = alphabet.lookupIndex(word);
+    static int safeLookup(Alphabet<String> alphabet, String tokStr) {
+        int idx = alphabet.lookupIndex(tokStr);
         if (idx == -1) {
-            idx = UNKNOWN_INT;
+            idx = TOK_UNK_INT;
         }
         return idx;
     }
     
     public int getWordIdx(String word) {
         return safeLookup(words, word);
+    }
+
+    public int getPrefixIdx(String prefix) {
+        return safeLookup(prefixes, prefix);
     }
     
     public int getLemmaIdx(String lemma) {
@@ -133,6 +149,9 @@ public class AlphabetStore {
     }
     private StrGetter wordGetter = new StrGetter() {
         public List<String> getStrs(AnnoSentence sent) { return sent.getWords(); }
+    };
+    private StrGetter prefixGetter = new StrGetter() {
+        public List<String> getStrs(AnnoSentence sent) { return sent.getPrefixes(); }
     };
     private StrGetter lemmaGetter = new StrGetter() {
         public List<String> getStrs(AnnoSentence sent) { return sent.getLemmas(); }
