@@ -15,12 +15,9 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
-import edu.jhu.nlp.data.NerMention;
-import edu.jhu.nlp.data.NerMentions;
-import edu.jhu.nlp.data.RelationMention;
-import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
+import edu.jhu.nlp.data.simple.AlphabetStore;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.prim.tuple.ComparablePair;
@@ -79,7 +76,8 @@ public class CorpusStatistics implements Serializable {
 
     public SrlBerkeleySignatureBuilder sig;
     public Normalizer normalize;
-
+    public AlphabetStore store;
+    
     public CorpusStatisticsPrm prm;
     private boolean initialized;
     
@@ -91,6 +89,8 @@ public class CorpusStatistics implements Serializable {
     }
 
     public void init(Iterable<AnnoSentence> cr) {
+        this.store = new AlphabetStore(cr);
+        
         Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
         Set<String> knownRoles = new HashSet<String>();
         Set<String> knownLinks = new HashSet<String>();

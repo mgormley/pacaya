@@ -152,28 +152,6 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Directory to dump debugging information for BP.")
     public static File bpDumpDir = null;
     
-    // Options for dependency parse factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
-    public static boolean includeDp = true;
-    @Opt(hasArg = true, description = "The type of the link variables.")
-    public static VarType linkVarType = VarType.LATENT;
-    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
-    public static boolean useProjDepTreeFactor = false;
-    @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
-    public static boolean grandparentFactors = false;
-    @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
-    public static boolean siblingFactors = false;
-    @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
-    public static boolean excludeNonprojectiveGrandparents = true;
-    
-    // Options for dependency parsing pruning.
-    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
-    public static File pruneModel = null;
-    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
-    public static boolean pruneByModel = false;
-    @Opt(hasArg = true, description = "Whether to prune edges with a deterministic distance-based pruning approach.")
-    public static boolean pruneByDist = false;
-    
     // Options for Brown clusters.
     @Opt(hasArg = true, description = "Brown cluster file")
     public static File brownClusters = null;
@@ -247,7 +225,29 @@ public class JointNlpRunner {
     public static File senseFeatTplsOut = null;
     @Opt(hasArg = true, description = "Arg feature template output file.")
     public static File argFeatTplsOut = null;
+
+    // Options for dependency parse factor graph structure.
+    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
+    public static boolean includeDp = true;
+    @Opt(hasArg = true, description = "The type of the link variables.")
+    public static VarType linkVarType = VarType.LATENT;
+    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
+    public static boolean useProjDepTreeFactor = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
+    public static boolean grandparentFactors = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
+    public static boolean siblingFactors = false;
+    @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
+    public static boolean excludeNonprojectiveGrandparents = true;
     
+    // Options for dependency parsing pruning.
+    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
+    public static File pruneModel = null;
+    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
+    public static boolean pruneByModel = false;
+    @Opt(hasArg = true, description = "Whether to prune edges with a deterministic distance-based pruning approach.")
+    public static boolean pruneByDist = false;
+
     // Options for Dependency parser feature extraction.
     @Opt(hasArg = true, description = "1st-order factor feature templates.")
     public static String dp1FeatTpls = TemplateSets.mcdonaldDepFeatsResource;
@@ -255,6 +255,8 @@ public class JointNlpRunner {
     public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
     @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
     public static boolean acl14DepFeats = true;
+    @Opt(hasArg = true, description = "Whether to use the fast feature set for dep parsing.")
+    public static boolean dpFastFeats = true;
     
     // Options for relation extraction.
     @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
@@ -481,7 +483,7 @@ public class JointNlpRunner {
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
         }
         if (includeSrl && acl14DepFeats) {
-            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;            
+            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
         }
         if (useTemplates) {
             log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
@@ -647,6 +649,7 @@ public class JointNlpRunner {
             dpFePrm.onlyTrueBias = false;
             dpFePrm.onlyTrueEdges = false;
         }
+        dpFePrm.onlyFast = dpFastFeats;
         
         JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         fePrm.srlFePrm = srlFePrm;
