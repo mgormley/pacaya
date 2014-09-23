@@ -6,10 +6,19 @@ import edu.jhu.nlp.data.simple.IntAnnoSentence;
 import edu.jhu.prim.list.LongArrayList;
 import edu.jhu.prim.sort.ShortSort;
 
+
+// TODO: we should have a special token representing the wall. Instead we're using the int
+// for the start of the sentence.
 public class FastDepParseFe {
 
     private static final int TOK_START_INT = AlphabetStore.TOK_START_INT;
     private static final int TOK_END_INT = AlphabetStore.TOK_END_INT;
+    private static final int TOK_WALL_INT = AlphabetStore.TOK_WALL_INT;
+    
+    private enum FeatureCollection {
+        MCDONALD_06,
+        CARRERAS_07,
+    }
     
     /** Returns the bin into which the given size falls. */
     public static int binInt(int size, int...bins) {
@@ -21,17 +30,17 @@ public class FastDepParseFe {
         return bins.length;
     }
     
-    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, LongArrayList feats) {
+    /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." */
+    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, LongArrayList feats, boolean basicOnly) {
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
         // by c (for child).
-        // TODO: we should have a special token representing the wall. Instead we're using the int for the start of the sentence.
-        short pWord = (p < 0) ? TOK_START_INT : sent.getWord(p);
-        short cWord = (c < 0) ? TOK_START_INT : sent.getWord(c);
-        byte pPos = (p < 0) ? TOK_START_INT : sent.getPosTag(p);
-        byte cPos = (c < 0) ? TOK_START_INT : sent.getPosTag(c);
+        short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
+        short cWord = (c < 0) ? TOK_WALL_INT : sent.getWord(c);
+        byte pPos = (p < 0) ? TOK_WALL_INT : sent.getPosTag(p);
+        byte cPos = (c < 0) ? TOK_WALL_INT : sent.getPosTag(c);
         // 5-character prefixes.
-        short pPrefix = (p < 0) ? TOK_START_INT : sent.getPrefix(p);
-        short cPrefix = (c < 0) ? TOK_START_INT : sent.getPrefix(c);
+        short pPrefix = (p < 0) ? TOK_WALL_INT : sent.getPrefix(p);
+        short cPrefix = (c < 0) ? TOK_WALL_INT : sent.getPrefix(c);
         // Whether to include features for the 5-char prefixes.
         AnnoSentence aSent = sent.getAnnoSentence();
         boolean pPrefixFeats = (p < 0) ? false : aSent.getWord(p).length() > 5;
@@ -44,7 +53,7 @@ public class FastDepParseFe {
         byte rpPos = (p+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+1);
         byte rcPos = (c+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+1);
         
-        int distance = (p < c) ? c - p : p - c;
+        int distance = (p < c) ? c - p : p - c;        
         byte binnedDist; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
         if (distance >= 40) {
             binnedDist = 0;
@@ -65,11 +74,13 @@ public class FastDepParseFe {
         byte direction = (p < c) ? (byte) 0 : (byte) 1;
                
         for (byte mode = 0; mode < 2; mode++) {
-            byte flags = mode;
+            assert FeatureCollection.values().length <= 8;
+            byte flags = (byte) (FeatureCollection.MCDONALD_06.ordinal() << 5); // 3 bits.
+            flags |= mode << 3; // 1 bit.
             if (mode == 1) {
                 //    # All features in Table 1 were conjoined with *direction* of attachment and *distance*.
-                flags |= direction << 1;
-                flags |= binnedDist << 2;
+                flags |= direction << 4; // 1 bit.
+                flags |= binnedDist << 5; // 3 bits. (8 total)
             }
             byte templ = 0;
             
@@ -78,7 +89,7 @@ public class FastDepParseFe {
             //    # but Koo et al. (2008) had them.
             //    relative(p,c)
             //    distance(p,c)
-            //    relative(p,c) + distance(p,c)
+            //    distance(p,c)
             feats.add(encodeFeatureB___(templ++, flags, (byte)0));
             if (mode == 0) {
                 feats.add(encodeFeatureB___(templ++, flags, direction));
@@ -117,6 +128,10 @@ public class FastDepParseFe {
             feats.add(encodeFeatureSSB_(templ++, flags, pWord, cWord, pPos));
             feats.add(encodeFeatureSS__(templ++, flags, pWord, cWord));
             feats.add(encodeFeatureBB__(templ++, flags, pPos, cPos));            
+            
+            if (basicOnly) {
+                continue;   
+            }
             
             //    # Surrounding Word POS Features
             //    pos(p) + pos(1(p)) + pos(-1(c)) + pos(c)
@@ -184,6 +199,115 @@ public class FastDepParseFe {
                 feats.add(encodeFeatureSSB_(templ++, flags, pPrefix, cPrefix, pPos));
                 feats.add(encodeFeatureSS__(templ++, flags, pPrefix, cPrefix));
             }
+        }
+    }
+    
+    /**
+     * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
+     * features from Martins' TurboParser.
+     */
+    public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int p, int c, int s, LongArrayList feats) {
+        // Direction flags.
+        // Parent-child relationship.
+        byte direction_pc = (p < c) ? (byte) 0 : (byte) 1;
+        // Parent-sibling relationship.
+        byte direction_ps = (p < s) ? (byte) 0 : (byte) 1;
+        
+        assert FeatureCollection.values().length <= 8;
+        byte flags = (byte) (FeatureCollection.MCDONALD_06.ordinal() << 5); // 3 bits.
+        flags |= direction_pc << 3; // 1 bit.
+        flags |= direction_ps << 4; // 1 bit.
+                
+        addTripletFeatures(sent, p, c, s, feats, flags);
+    }
+    
+    /**
+     * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
+     * features from Martins' TurboParser.
+     */
+    public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int g, int p, int c, LongArrayList feats) {
+        // Direction flags.
+        // Parent-grandparent relationship.
+        byte direction_gp = (g < p) ? (byte) 0 : (byte) 1;
+        // Parent-child relationship.
+        byte direction_pc = (p < c) ? (byte) 0 : (byte) 1;
+        // Grandparent-child relationship.
+        byte direction_gc = (g < c) ? (byte) 0 : (byte) 1;
+        
+        assert FeatureCollection.values().length <= 8;
+        byte flags = (byte) (FeatureCollection.CARRERAS_07.ordinal() << 5); // 3 bits.
+        
+        // Use the direction code from Martins' TurboParser.
+        byte direction;
+        if (direction_gp == direction_pc) {
+            // Pointing in the same direction.
+            direction = 0;
+        } else if (direction_pc != direction_gc) {
+            // Projective with c inside range [g, p].
+            direction = 1;
+        } else {
+            // Non-projective with c outside range [g, p].
+            direction = 2;
+        }
+        flags |= direction << 3; // 2 bits.
+        
+        addTripletFeatures(sent, g, p, c, feats, flags);
+    }
+
+    public static final boolean extraTriplets = false;
+    
+    /** Can be used for either sibling or grandparent features. */
+    private static void addTripletFeatures(IntAnnoSentence sent, int p, int c, int s, LongArrayList feats, byte flags) {
+        // Head, modifier, and sibling words / POS tags. We denote the head by p (for parent), the modifier
+        // by c (for child), and the sibling by s.
+        short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
+        short cWord = (c < 0) ? TOK_WALL_INT : sent.getWord(c);
+        short sWord = (s < 0) ? TOK_WALL_INT : sent.getWord(s);
+        // Use coarse POS tags.
+        byte pPos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
+        byte cPos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
+        byte sPos = (s < 0) ? TOK_WALL_INT : sent.getCposTag(s);
+        
+        byte templ = 0;
+        
+        // --- Triplet features. ----
+        
+        //    cpos(p) + cpos(c) + cpos(s)
+        feats.add(encodeFeatureBBB_(templ++, flags, pPos, cPos, sPos));
+
+        // --- Pairwise features. ----
+        
+        //    cpos(p) + cpos(s)
+        //    cpos(c) + cpos(s)
+        //    cpos(p) + cpos(c) << Not in Carreras. From TurboParser.
+        feats.add(encodeFeatureBB__(templ++, flags, pPos, sPos));
+        feats.add(encodeFeatureBB__(templ++, flags, cPos, sPos));
+        if (extraTriplets) {
+            feats.add(encodeFeatureBB__(templ++, flags, pPos, cPos));
+        }
+
+        //    cpos(p) + word(s)
+        //    cpos(c) + word(s)
+        //    word(p) + cpos(s)
+        //    word(c) + cpos(s)
+        //    word(p) + cpos(c) << Not in Carreras. From TurboParser.
+        //    word(c) + cpos(p) << Not in Carreras. From TurboParser.
+        feats.add(encodeFeatureSB__(templ++, flags, sWord, pPos));
+        feats.add(encodeFeatureSB__(templ++, flags, sWord, cPos));
+        feats.add(encodeFeatureSB__(templ++, flags, pWord, sPos));
+        feats.add(encodeFeatureSB__(templ++, flags, cWord, sPos));
+        if (extraTriplets) {
+            feats.add(encodeFeatureSB__(templ++, flags, cWord, pPos));
+            feats.add(encodeFeatureSB__(templ++, flags, pWord, cPos));
+        }
+
+        //    word(p) + word(s)
+        //    word(c) + word(s)
+        //    word(p) + word(c) << Not in Carreras. From TurboParser.
+        feats.add(encodeFeatureSS__(templ++, flags, pWord, sWord));
+        feats.add(encodeFeatureSS__(templ++, flags, cWord, sWord));
+        if (extraTriplets) {
+            feats.add(encodeFeatureSS__(templ++, flags, pWord, cWord));
         }
     }
 

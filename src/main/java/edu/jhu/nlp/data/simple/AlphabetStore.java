@@ -14,14 +14,16 @@ public class AlphabetStore {
     private static final Logger log = Logger.getLogger(AlphabetStore.class);
     
     // Special Tokens.
-    public static final int NUM_SPECIAL_TOKS = 3;
+    public static final int NUM_SPECIAL_TOKS = 4;
     public static final String TOK_UNK_STR = "TOK_UNK";
     public static final String TOK_START_STR = "TOK_START";
     public static final String TOK_END_STR = "TOK_END";
+    public static final String TOK_WALL_STR = "TOK_WALL";
     public static final int TOK_UNK_INT = 0;
     public static final int TOK_START_INT = 1;
     public static final int TOK_END_INT = 2;
-    public static String[] specialTokenStrs = new String[] { TOK_UNK_STR, TOK_START_STR, TOK_END_STR };
+    public static final int TOK_WALL_INT = 3;
+    public static String[] specialTokenStrs = new String[] { TOK_UNK_STR, TOK_START_STR, TOK_END_STR, TOK_WALL_STR};
     
     Alphabet<String> words;
     Alphabet<String> prefixes;
@@ -36,7 +38,7 @@ public class AlphabetStore {
     //Alphabet<String> ntAlphabet;    
     private List<Alphabet<String>> as;
     
-    public AlphabetStore(AnnoSentenceCollection sents) {
+    public AlphabetStore(Iterable<AnnoSentence> sents) {
         words = getInitAlphabet("word", wordGetter, IntAnnoSentence.MAX_WORD, sents);
         prefixes = getInitAlphabet("prefix", prefixGetter, IntAnnoSentence.MAX_PREFIX, sents);
         lemmas = getInitAlphabet("lemma", lemmaGetter, IntAnnoSentence.MAX_LEMMA, sents);
@@ -50,7 +52,7 @@ public class AlphabetStore {
         this.stopGrowth();
     }
 
-    private static Alphabet<String> getInitAlphabet(String name, StrGetter sg, int maxIdx, AnnoSentenceCollection sents) {
+    private static Alphabet<String> getInitAlphabet(String name, StrGetter sg, int maxIdx, Iterable<AnnoSentence> sents) {
         CountingAlphabet<String> counter = new CountingAlphabet<>();
         for (AnnoSentence sent : sents) {
             List<String> strs = sg.getStrs(sent);

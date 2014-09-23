@@ -29,6 +29,10 @@ public class FastDepParseFeSpeedTest {
      *    w/o        s=2400 n=169795 Toks / sec: 14677.99
      *    w/Murmur   s=2400 n=169795 Toks / sec: 7094.89
      *    w/BitShift s=2400 n=169795 Toks / sec: 7590.63
+     *    w/IntArrayList+BitShift s=2400 n=169795 Toks / sec: 9111.617923262676
+     *    
+     *    w/Carerras          s=800 n=76244 Toks / sec: 1373.54
+     *    w/more 2nd-order    s=800 n=76244 Toks / sec: 1013.89
      */
     //@Test
     public void testSpeed() throws ParseException, IOException {
@@ -50,7 +54,21 @@ public class FastDepParseFeSpeedTest {
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
                         LongArrayList feats = new LongArrayList();
-                        FastDepParseFe.addArcFactoredMSTFeats(isent, i, j, feats);
+                        FastDepParseFe.addArcFactoredMSTFeats(isent, i, j, feats, false);
+
+                        if (true) {
+                            for (int k=0; k<sent.size(); k++) {
+                                if (k == i || k == j) { continue; }
+                                boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
+                                if (!isNonprojectiveGrandparent) {
+                                    FastDepParseFe.add2ndOrderGrandparentFeats(isent, k, i, j, feats);
+                                }
+                                if (j < k) {
+                                    FastDepParseFe.add2ndOrderSiblingFeats(isent, i, j, k, feats);
+                                }
+                            }
+                        }
+                        
                         FeatureVector fv = new FeatureVector();
                         long[] lfeats = feats.getInternalElements();
                         for (int k=0; k<feats.size(); k++) {
