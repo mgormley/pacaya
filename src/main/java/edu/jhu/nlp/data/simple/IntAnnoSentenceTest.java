@@ -7,15 +7,6 @@ import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.util.collections.Lists;
 
 public class IntAnnoSentenceTest {
-
-    //@Test
-    public void testOnRealCorpus() {
-        AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.read(AnnoSentenceReaderSpeedTest.czTrain, DatasetType.CONLL_X);
-        AlphabetStore store = new AlphabetStore(sents);
-        for (AnnoSentence sent : sents) {
-            new IntAnnoSentence(sent, store);
-        }
-    }
     
     @Test    
     public void testKnownTypes() {
