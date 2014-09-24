@@ -149,12 +149,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.update(printModel="model.txt")
         
         # Datasets
-        data_dir = get_first_that_exists(os.path.join(self.root_dir, "data"))
-        #data_dir = get_first_that_exists(os.path.join("/Users/mgormley/research/acere/", "data"))
         
         # ACE 2005
-        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete"),
-                                                   os.path.join(data_dir,"concrete"))
+        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete"))
         
         # ACE 2005 full domains:  bc bn cts nw un wl
         ace05_bc = get_ace05_data(ace05_concrete_dir, "bc")
