@@ -4,6 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.util.collections.Lists;
 
 public class IntAnnoSentenceTest {
@@ -65,5 +66,5 @@ public class IntAnnoSentenceTest {
         assertEquals((short) 0, isent.getFeats(0).get(0));
         assertEquals((byte) 0, isent.getDeprel(0));
     }
-
+    
 }

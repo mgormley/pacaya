@@ -47,9 +47,11 @@ public class IntAnnoSentence {
         this.posTags = getBytes(sent.getPosTags(), store.posTags);
         this.cposTags = getBytes(sent.getCposTags(), store.cposTags);
         this.clusters = getShorts(sent.getClusters(), store.clusters);
-        feats = new ArrayList<>(sent.getFeats().size());
-        for (List<String> featList : sent.getFeats()) {
-            feats.add(getShorts(featList, store.feats));
+        if (sent.getFeats() != null) {
+            feats = new ArrayList<>(sent.getFeats().size());
+            for (List<String> featList : sent.getFeats()) {
+                feats.add(getShorts(featList, store.feats));
+            }
         }
         this.deprels = getBytes(sent.getDeprels(), store.deprels);
     }

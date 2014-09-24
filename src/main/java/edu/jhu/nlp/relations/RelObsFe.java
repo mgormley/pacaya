@@ -533,6 +533,9 @@ public class RelObsFe implements ObsFeatureExtractor {
     }
     
     private void addEmbFeat(String fname, int i, FeatureNames alphabet, FeatureVector fv) {
+        if (i < 0 || sent.size() <= i) {
+            return;
+        }
         double[] embed = sent.getEmbed(i);
         for (int d=0; d<embed.length; d++) {
             int fidx = alphabet.lookupIndex(fname+"_"+d);

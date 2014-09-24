@@ -153,7 +153,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         #data_dir = get_first_that_exists(os.path.join("/Users/mgormley/research/acere/", "data"))
         
         # ACE 2005
-        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "concrete/ace_05"),
+        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete"),
                                                    os.path.join(data_dir,"concrete"))
         
         # ACE 2005 full domains:  bc bn cts nw un wl
@@ -175,7 +175,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         ace05_domains = [ace05_bc, ace05_bn, ace05_cts, ace05_nw, ace05_un, ace05_wl]
 
         # Embeddings
-        embeddings_dir = os.path.join(data_dir, "word_embeddings")
+        embeddings_dir = os.path.join(p.corpora_dir, "processed", "embeddings")
         polyglot_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.txt"),
                                   embedName="polyglot")
         polyglot_en_small_dstuned = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.dstuned.txt"),

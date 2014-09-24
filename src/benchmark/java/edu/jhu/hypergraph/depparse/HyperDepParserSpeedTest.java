@@ -24,7 +24,7 @@ public class HyperDepParserSpeedTest {
     public void testInsideOutsideSpeed() {
         FastMath.useLogAddTable = true;
 
-        int trials = 100;
+        int trials = 1000;
         int n = 30;
 
         // Just create one tree.
