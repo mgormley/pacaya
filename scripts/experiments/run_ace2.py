@@ -114,14 +114,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         defaults = g.lbfgs  + ReExpParams()        
         defaults.set("expname", self.expname, False, False)
+        defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
-        defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
+        if self.queue:
+            threads = 15
+            work_mem_megs = 15*1024
+        elif self.big_machine:
+            threads = 2
+            work_mem_megs = 1.5*1024
+        else:
+            threads = 1
+            work_mem_megs = 1.5*1024
+        defaults.set("work_mem_megs", work_mem_megs, incl_arg=False, incl_name=False)
+        g.defaults.set("threads", threads, incl_name=False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
                    featCountCutoff=0,
                    featureHashMod=-1,
                    includeUnsupportedFeatures=True,
                    l2variance=40000,
+                   sgdBatchSize=20,
                    sgdNumPasses=10,
                    useRelationSubtype=False,
                    includeDp=False,
@@ -146,7 +158,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    useSyntaxFeatures=True,
                    useEmbeddingFeatures=True,
                    )
-        defaults.update(printModel="model.txt")
         
         # Datasets
         
