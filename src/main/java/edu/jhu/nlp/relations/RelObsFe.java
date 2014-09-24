@@ -539,7 +539,9 @@ public class RelObsFe implements ObsFeatureExtractor {
         double[] embed = sent.getEmbed(i);
         for (int d=0; d<embed.length; d++) {
             int fidx = alphabet.lookupIndex(fname+"_"+d);
-            fv.add(fidx, embed[d]);
+            if (fidx != -1) {
+                fv.add(fidx, embed[d]);
+            }
         }
     }
     

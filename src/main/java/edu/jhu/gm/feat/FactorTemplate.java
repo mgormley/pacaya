@@ -35,7 +35,14 @@ public class FactorTemplate implements Serializable {
         this.numConfigs = vars.calcNumConfigs();
         this.alphabet = alphabet;
         this.key = key;
-        this.vars = vars;
+
+        // Copy the input vars since we'll want to serialize these.
+        Var[] tmpVars = new Var[vars.size()];
+        int i=0; 
+        for (Var v : vars) {
+            tmpVars[i++] = new Var(v.getType(), v.getNumStates(), v.getName(), v.getStateNames());
+        }
+        this.vars = new VarSet(tmpVars);
     }
     
     public int getNumConfigs() {
@@ -61,10 +68,6 @@ public class FactorTemplate implements Serializable {
 
     public String getStateNamesStr(int configId) {
         return StringUtils.join(getStateNames(configId), "_");
-    }
-
-    public VarSet getVars() {
-        return vars;
     }
     
     @Override
