@@ -218,7 +218,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         // • CPHBO: other phrase heads in between except
         // first and last phrase heads when at least three
         // phrases in between
-        Pair<List<LabeledSpan>, IntArrayList> chunkPair = getSpansFromBIO(sent.getChunks());
+        Pair<List<LabeledSpan>, IntArrayList> chunkPair = getSpansFromBIO(sent.getChunks(), true);
         List<LabeledSpan> chunks = chunkPair.get1();
         IntArrayList tokIdxToChunkIdx = chunkPair.get2();
         int c1 = tokIdxToChunkIdx.get(m1.getHead());
@@ -362,14 +362,14 @@ public class RelObsFe implements ObsFeatureExtractor {
     }
 
     // TODO: Move this somewhere else.
-    public static Pair<List<LabeledSpan>,IntArrayList> getSpansFromBIO(List<String> tags) {
+    public static Pair<List<LabeledSpan>,IntArrayList> getSpansFromBIO(List<String> tags, boolean includeOutside) {
         List<LabeledSpan> chunks = new ArrayList<>();
         IntArrayList tokIdxToSpanIdx = new IntArrayList(tags.size());
         int curChunk = -1;
         for (int i=0; i<tags.size(); i++) {
             String label = tags.get(i);
             if (label.startsWith("B-")) {
-                // Create a new span.
+                // Create a new span with the label.
                 LabeledSpan span = new LabeledSpan(i, i+1, label.substring(2));
                 curChunk = chunks.size();
                 chunks.add(span);
@@ -378,7 +378,14 @@ public class RelObsFe implements ObsFeatureExtractor {
                 // Update the end of the previous span.
                 chunks.get(curChunk).setEnd(i+1);
             } else if (label.equals("O")) {
-                curChunk = -1;
+                if (includeOutside) {
+                    // Create a new span with the "Outside" label.
+                    LabeledSpan span = new LabeledSpan(i, i+1, label);
+                    curChunk = chunks.size();
+                    chunks.add(span);
+                } else {
+                    curChunk = -1;
+                }
             } else {
                 throw new RuntimeException("Unexpected tag: " + label);
             }
