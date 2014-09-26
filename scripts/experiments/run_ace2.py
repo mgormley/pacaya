@@ -152,11 +152,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    trainGoldOut="./train-gold.txt",
                    devGoldOut="./dev-gold.txt",
                    testGoldOut="./test-gold.txt",
-                   modelOut="./model.binary.gz",
-                   # TO REMOVE
-                   usePosTagFeatures=True,
-                   useSyntaxFeatures=True,
-                   useEmbeddingFeatures=True,
+                   modelOut="./model.binary.gz",                   
                    )
         
         # Datasets
@@ -211,14 +207,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup= ReExpParams(removeEntityTypes=True, 
                                maxInterveningEntities=3,
-                               propTrainAsDev=0.0)
+                               propTrainAsDev=0.0,
+                               useEmbeddingFeatures=True,
+                               useZhou05Features=True)
             feats_no_embed  = ReExpParams(useEmbeddingFeatures=False)
             feats_head_only = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
             feats_head_type = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
-            feats_full = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL")
+            feats_full      = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL")
+            feats_emb_only  = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
             
             for embed in [polyglot_en]:
-                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full]: 
+                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
                     for predictArgRoles in [True, False]:
                         setup.update(predictArgRoles=predictArgRoles)
                         defaults.set("group", "PM13" if predictArgRoles else "NG14", incl_name=True, incl_arg=False)
@@ -250,17 +249,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # In-domain and Out-of-domain experiments
             for test in [get_annotation_as_test(ace05_bc_dev), ReExpParams(propTrainAsDev=0.0)]:
                 defaults.set("group", "broad", incl_name=True, incl_arg=False)
-                for usePosTagFeatures in [True, False]:
-                    for useSyntaxFeatures in [True, False]:
-                        for removeEntityTypes in [True, False]:
-                            for useEmbeddingFeatures in [True, False]:
-                                feats = ReExpParams(usePosTagFeatures=usePosTagFeatures, 
-                                                    useSyntaxFeatures=useSyntaxFeatures,
-                                                    removeEntityTypes=removeEntityTypes,
-                                                    useEmbeddingFeatures=useEmbeddingFeatures)
-                                train = get_annotation_as_train(ace05_bn_nw)
-                                experiment = defaults + setup + train + test + feats
-                                #SKIP FOR NOW: root.add_dependent(experiment)
+                for useZhou05Features in [True, False]:
+                    for removeEntityTypes in [True, False]:
+                        for useEmbeddingFeatures in [True, False]:
+                            feats = ReExpParams(useZhou05Features=useZhou05Features, 
+                                                removeEntityTypes=removeEntityTypes,
+                                                useEmbeddingFeatures=useEmbeddingFeatures)
+                            train = get_annotation_as_train(ace05_bn_nw)
+                            experiment = defaults + setup + train + test + feats
+                            #SKIP FOR NOW: root.add_dependent(experiment)
                 defaults.set("group", "embed", incl_name=True, incl_arg=False)
                 for embed in [polyglot_en, polyglot_en_large_dstuned, polyglot_en_large_combined]:
                     for embTmplPath in [True, False]:

@@ -42,6 +42,7 @@ public class AnnoSentence {
     private List<String> clusters;
     private List<double[]> embeds;
     private List<List<String>> feats;
+    private List<String> chunks;
     private List<String> deprels;
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
@@ -87,6 +88,7 @@ public class AnnoSentence {
         newSent.cposTags = Lists.copyOf(this.cposTags);
         newSent.clusters = Lists.copyOf(this.clusters);
         newSent.embeds = Lists.copyOf(this.embeds);
+        newSent.chunks = Lists.copyOf(this.chunks);
         newSent.deprels = Lists.copyOf(this.deprels);
         newSent.parents = IntArrays.copyOf(this.parents);
         newSent.depEdgeMask = (this.depEdgeMask == null) ? null : new DepEdgeMask(this.depEdgeMask);
@@ -123,6 +125,7 @@ public class AnnoSentence {
         case BROWN: dest.clusters = src.clusters; break;
         case EMBED: dest.embeds = src.embeds; break;
         case MORPHO: dest.feats = src.feats; break;
+        case CHUNKS: dest.chunks = src.chunks; break;
         case DEP_TREE: dest.parents = src.parents; break;
         case DEPREL: dest.deprels = src.deprels; break;
         case DEP_EDGE_MASK: dest.depEdgeMask = src.depEdgeMask; break;
@@ -153,6 +156,7 @@ public class AnnoSentence {
         case BROWN: this.clusters = null; break;
         case EMBED: this.embeds = null; break;
         case MORPHO: this.feats = null; break;
+        case CHUNKS: this.chunks = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
         case DEP_EDGE_MASK: this.depEdgeMask = null; break;
@@ -177,6 +181,7 @@ public class AnnoSentence {
         case BROWN: return this.clusters != null;
         case EMBED: return this.embeds != null;
         case MORPHO: return this.feats != null;
+        case CHUNKS: return this.chunks != null;
         case DEP_TREE: return this.parents != null;
         case DEPREL: return this.deprels != null;
         case DEP_EDGE_MASK: return this.depEdgeMask != null;
@@ -203,6 +208,7 @@ public class AnnoSentence {
                 Lists.intern(feats.get(i));
             }
         }
+        Lists.intern(chunks);
         Lists.intern(deprels);        
         if (naryTree != null) {
             naryTree.intern();
@@ -235,6 +241,7 @@ public class AnnoSentence {
             sb.append(Arrays.toString(parents));
             sb.append(",\n");
         }
+        appendIfNotNull(sb, "chunks", chunks);
         appendIfNotNull(sb, "deprels", deprels);
         appendIfNotNull(sb, "depEdgeMask", depEdgeMask);
         appendIfNotNull(sb, "srlGraph", srlGraph);
@@ -294,6 +301,11 @@ public class AnnoSentence {
     /** Gets the i'th lemma as a String. */
     public String getLemma(int i) {
         return lemmas.get(i);
+    }
+
+    /** Gets the i'th chunk as a String. */
+    public String getChunk(int i) {
+        return chunks.get(i);
     }
     
     /** Gets the index of the parent of the i'th word. */
@@ -589,6 +601,14 @@ public class AnnoSentence {
 
     public void setEmbeds(List<double[]> embeds) {
         this.embeds = embeds;
+    }
+    
+    public List<String> getChunks() {
+        return chunks;
+    }
+
+    public void setChunks(List<String> chunks) {
+        this.chunks = chunks;
     }
 
     public int[] getParents() {
