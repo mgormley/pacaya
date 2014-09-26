@@ -205,9 +205,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
-            setup= ReExpParams(removeEntityTypes=True, 
-                               maxInterveningEntities=3,
-                               propTrainAsDev=0.0,
+            setup= ReExpParams(propTrainAsDev=0.0,
                                useEmbeddingFeatures=True,
                                useZhou05Features=True)
             feats_no_embed  = ReExpParams(useEmbeddingFeatures=False)
@@ -216,20 +214,28 @@ class SrlExpParamsRunner(ExpParamsRunner):
             feats_full      = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL")
             feats_emb_only  = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
             
+            eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
+                                       maxInterveningEntities=3, removeEntityTypes=True)
+            eval_pm13    = ReExpParams(group="PM13", predictArgRoles=True, 
+                                       maxInterveningEntities=3, removeEntityTypes=True)
+            eval_types7 = ReExpParams(group="TYPES7", predictArgRoles=False, 
+                                       maxInterveningEntities=9999, removeEntityTypes=False)
+            eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
+                                       maxInterveningEntities=9999, removeEntityTypes=False)            
+            setup.set_incl_arg("group", False)
+            
             for embed in [polyglot_en]:
                 for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
-                    for predictArgRoles in [True, False]:
-                        setup.update(predictArgRoles=predictArgRoles)
-                        defaults.set("group", "PM13" if predictArgRoles else "NG14", incl_name=True, incl_arg=False)
+                    for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
                         # Out-of-domain experiments
                         for domain2 in [ace05_bc_dev]: #ENABLE FOR TEST: ace05_bc_test, ace05_cts, ace05_wl]:
                             train = get_annotation_as_train(ace05_bn_nw)
                             test = get_annotation_as_test(domain2)
-                            experiment = defaults + setup + train + test + embed + feats
+                            experiment = defaults + setup + evl + train + test + embed + feats
                             root.add_dependent(experiment)
                         # In-domain experiment
                         # TODO: This should use 5-fold cross validation.
-                        experiment = defaults + setup + train + ReExpParams(propTrainAsDev=0.2) + embed + feats
+                        experiment = defaults + setup + evl + train + ReExpParams(propTrainAsDev=0.2) + embed + feats
                         root.add_dependent(experiment)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
