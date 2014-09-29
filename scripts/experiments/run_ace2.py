@@ -191,7 +191,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         polyglot_en_large_combined = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.largecombined.txt"),
                                   embedName="polyglot-large-combined")
         cbow_nyt_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "vectors.nyt.cbow.out.d200.txt"),
-                                  embedName="cbow")
+                                  embedName="cbow-nyt")
+        cbow_nyt11_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "ace05.train_dev.lower.nyt2011.cbow.bin.filtered.txt"),
+                                  embedName="cbow-nyt11")
         defaults.set_incl_name("embeddingsFile", False)
         defaults.set_incl_arg("embedName", False)
                 
@@ -208,11 +210,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup= ReExpParams(propTrainAsDev=0.0,
                                useEmbeddingFeatures=True,
                                useZhou05Features=True)
-            feats_no_embed  = ReExpParams(useEmbeddingFeatures=False)
-            feats_head_only = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
-            feats_head_type = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
-            feats_full      = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL")
-            feats_emb_only  = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+            feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
+            feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+            feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+            feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
+            feats_emb_only  = ReExpParams(modelName="full",  useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+            setup.set_incl_arg("modelName", False)
             
             eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
                                        maxInterveningEntities=3, removeEntityTypes=True)
@@ -224,7 +227,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                        maxInterveningEntities=9999, removeEntityTypes=False)            
             setup.set_incl_arg("group", False)
             
-            for embed in [polyglot_en]:
+            for embed in [cbow_nyt11_en]: #, polyglot_en]:
                 for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
                     for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
                         # Out-of-domain experiments
