@@ -107,9 +107,10 @@ public class PosTagDistancePruner implements Trainable, Annotator {
             numEdgesTot += sent.size();
             // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
             if (!mask.allowsSinglyRootedTrees()) {
-                log.warn(String.format("All single-root trees pruned:\n%s\n%s", sent.getWords().toString(), mask.toString()));
+                log.warn("All single-root trees pruned");
+                log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));
                 if (sent.getParents() != null) {
-                    log.warn("Pruned parents: " + Arrays.toString(sent.getParents()));
+                    log.trace("Pruned parents: " + Arrays.toString(sent.getParents()));
                 }
             }
         }
