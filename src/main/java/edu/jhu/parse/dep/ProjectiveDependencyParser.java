@@ -158,7 +158,7 @@ public class ProjectiveDependencyParser {
         }
         
         outsideAlgorithm(fracChild, inChart, outChart, true);
-    }    
+    }
     
     /**
      * Computes the maximum projective vine-parse tree with multiple root nodes
@@ -178,18 +178,7 @@ public class ProjectiveDependencyParser {
         assert (fracChild.length == fracRoot.length);        
         
         int n = parents.length + 1;
-        double[][] scores = new double[n][n];
-        for (int p=0; p<n; p++) { 
-            for (int c=0; c<n; c++) {
-                if (c == 0) {
-                    scores[p][c] = Double.NEGATIVE_INFINITY;
-                } else if (p == 0 && c > 0) {
-                    scores[p][c] = fracRoot[c-1];
-                } else {
-                    scores[p][c] = fracChild[p-1][c-1];
-                }
-            }
-        }
+        double[][] scores = EdgeScores.combine(fracRoot, fracChild);
         int[] ps = new int[n];
         
         double score = parseMultiRoot(scores, ps);

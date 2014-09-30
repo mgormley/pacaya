@@ -104,6 +104,58 @@ public class HyperDepParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @return The parse chart.
      */
+    public static DepIoChart insideOutsideMultiRoot(double[] fracRoot, double[][] fracChild) {
+        // Currently we only support this semiring since DepParseChart assumes log probs.
+        LogSemiring semiring = new LogSemiring();
+        //LogPosNegSemiring semiring = new LogPosNegSemiring();
+        //Semirings.fromLogProb(fracRoot, semiring);
+        //Semirings.fromLogProb(fracChild, semiring);
+        
+        MultiRootDepParseHypergraph graph = new MultiRootDepParseHypergraph(fracRoot, fracChild, semiring);
+        Scores scores = new Scores();
+        Hyperalgo.insideAlgorithm(graph, graph.getPotentials(), semiring, scores);
+        Hyperalgo.outsideAlgorithm(graph, graph.getPotentials(), semiring, scores);
+
+        return getDepIoChart(graph, scores);
+    }
+    
+    public static DepIoChart getDepIoChart(MultiRootDepParseHypergraph graph, Scores scores) {
+        final int nplus = graph.getNumTokens() + 1;        
+        final DepParseChart inChart = new DepParseChart(nplus-1, DepParseType.INSIDE);
+        final DepParseChart outChart = new DepParseChart(nplus-1, DepParseType.INSIDE);
+        Hypernode[][][][] chart = graph.getChart();
+        for (int width = 1; width < nplus; width++) {
+            for (int s = 0; s < nplus - width; s++) {
+                int t = s + width;                
+                for (int d=0; d<2; d++) {
+                    for (int c=0; c<2; c++) {              
+                        int id = chart[s][t][d][c].getId();
+                        if (s == 0) {
+                            // Edge to wall.
+                            inChart.updateGoalCell(t-1, scores.beta[id]);
+                            outChart.updateGoalCell(t-1, scores.alpha[id]);
+                        } else {
+                            // Other edges.
+                            inChart.updateCell(s-1, t-1, d, c, scores.beta[id], -1);
+                            outChart.updateCell(s-1, t-1, d, c, scores.alpha[id], -1);
+                        }
+                    }
+                }
+            }
+        }
+        // Root is automatically updated by updateGoalCell() calls above.
+        inChart.setGoalScore(scores.beta[graph.getRoot().getId()]);
+        outChart.setGoalScore(scores.alpha[graph.getRoot().getId()]);
+        return new DepIoChart(inChart, outChart);
+    }
+    
+    /**
+     * Runs the inside-outside algorithm for dependency parsing.
+     * 
+     * @param fracRoot Input: The edge weights from the wall to each child.
+     * @param fracChild Input: The edge weights from parent to child.
+     * @return The parse chart.
+     */
     public static Pair<SingleRootDepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
         final Algebra semiring = new LogSignAlgebra();         
         return insideSingleRootEntropyFoe(fracRoot, fracChild, semiring);

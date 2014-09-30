@@ -115,5 +115,31 @@ public class EdgeScores {
         }
         return (p == -1) ? c : p;
     }
+
+    /**
+     * Combines a set of edge weights represented as wall and child weights into a single set of
+     * weights. The combined weights are indexed such that the wall has index 0 and the tokens of
+     * the sentence are 1-indexed.
+     * 
+     * @param fracRoot The edge weights from the wall to each child.
+     * @param fracChild The edge weights from parent to child.
+     * @return The combined weights.
+     */
+    public static double[][] combine(double[] fracRoot, double[][] fracChild) {
+        int n = fracChild.length + 1;
+        double[][] scores = new double[n][n];
+        for (int p=0; p<n; p++) { 
+            for (int c=0; c<n; c++) {
+                if (c == 0) {
+                    scores[p][c] = Double.NEGATIVE_INFINITY;
+                } else if (p == 0 && c > 0) {
+                    scores[p][c] = fracRoot[c-1];
+                } else {
+                    scores[p][c] = fracChild[p-1][c-1];
+                }
+            }
+        }
+        return scores;
+    }
     
 }

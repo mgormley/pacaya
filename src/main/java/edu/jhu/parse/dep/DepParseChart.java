@@ -47,4 +47,9 @@ public class DepParseChart extends ProjTreeChart {
             // Don't update the backpointer.
         }
     }
+    
+    // TODO: Remove this method.
+    public final void setGoalScore(double score) {
+        this.goalScore = score;        
+    }
 }
