@@ -6,9 +6,9 @@ import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.HyperpotentialFoe;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseChart;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseType;
+import edu.jhu.parse.dep.DepIoChart;
+import edu.jhu.parse.dep.DepParseChart;
+import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
@@ -55,7 +55,7 @@ public class HyperDepParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @return The parse chart.
      */
-    public static DepIoChart insideOutsideAlgorithm(double[] fracRoot, double[][] fracChild) {
+    public static DepIoChart insideOutsideSingleRoot(double[] fracRoot, double[][] fracChild) {
         // Currently we only support this semiring since DepParseChart assumes log probs.
         LogSemiring semiring = new LogSemiring();
         //LogPosNegSemiring semiring = new LogPosNegSemiring();
@@ -104,12 +104,12 @@ public class HyperDepParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @return The parse chart.
      */
-    public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot, double[][] fracChild) {
+    public static Pair<FirstOrderDepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
         final Algebra semiring = new LogSignAlgebra();         
-        return insideAlgorithmEntropyFoe(fracRoot, fracChild, semiring);
+        return insideSingleRootEntropyFoe(fracRoot, fracChild, semiring);
     }
 
-    public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot,
+    public static Pair<FirstOrderDepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot,
             double[][] fracChild, final Algebra semiring) {
         Algebras.fromLogProb(fracRoot, semiring);
         Algebras.fromLogProb(fracChild, semiring);

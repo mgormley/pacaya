@@ -354,7 +354,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Algebra s = Algebras.LOG_SIGN_ALGEBRA;
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(ratios.root, ratios.child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         

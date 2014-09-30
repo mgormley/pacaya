@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
+import edu.jhu.parse.dep.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
@@ -27,7 +27,7 @@ public class HyperDepParserTest {
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        DepIoChart chart = HyperDepParser.insideOutsideAlgorithm(root,  child);
+        DepIoChart chart = HyperDepParser.insideOutsideSingleRoot(root,  child);
         
         // Check inside scores.
         assertEquals(7, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
@@ -72,7 +72,7 @@ public class HyperDepParserTest {
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        DepIoChart chart = HyperDepParser.insideOutsideAlgorithm(root,  child);
+        DepIoChart chart = HyperDepParser.insideOutsideSingleRoot(root,  child);
 
         // Check partition function.
         assertEquals(7, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
@@ -122,7 +122,7 @@ public class HyperDepParserTest {
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root,  child, s);
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(root,  child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         // Fill with dummy outside scores.

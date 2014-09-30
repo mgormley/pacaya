@@ -37,7 +37,7 @@ public class HyperDepParserSpeedTest {
         Timer timer = new Timer();
         timer.start();
         for (int t=0; t<trials; t++) {
-            HyperDepParser.insideOutsideAlgorithm(root, child);
+            HyperDepParser.insideOutsideSingleRoot(root, child);
         }
         timer.stop();
         System.out.println("Total time: " + timer.totMs());

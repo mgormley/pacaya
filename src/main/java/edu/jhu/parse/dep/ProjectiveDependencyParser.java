@@ -4,9 +4,8 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.arrays.IntArrays;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
+
 
 /**
  * Edge-factored projective dependency parser.
@@ -20,123 +19,10 @@ public class ProjectiveDependencyParser {
 
     private static final Logger log = Logger.getLogger(ProjectiveDependencyParser.class);
 
-    public enum DepParseType { VITERBI, INSIDE };
-    
-    /**
-     * Dependency parse chart, which is just a projective spanning tree parse
-     * chart with an additional special cell for the wall node.
-     * 
-     * @author mgormley
-     */
-    public static class DepParseChart extends ProjTreeChart {
-
-        // Indexed by word position in the sentence. So goal[i] gives the
-        // maximum projective dependency tree where the i'th word is the unique
-        // child of the wall node.
-        final double wallScore[];
-        // The score for the overall parse tree.
-        double goalScore;
-        // The position of the word that heads the maximum projective dependency
-        // tree.
-        int goalBp;
-        
-        public DepParseChart(int n, DepParseType type) {
-            super(n, type);
-            wallScore = new double[n];
-            // Initialize chart to negative infinities.
-            DoubleArrays.fill(wallScore, Double.NEGATIVE_INFINITY);
-            goalScore = Double.NEGATIVE_INFINITY;
-            // Fill backpointers with -1.
-            goalBp = -1;
-        }
-
-        public final void updateGoalCell(int child, double score) {
-            if (this.type == DepParseType.VITERBI) {
-                if (score > wallScore[child]) {
-                    // This if statement will always be true.
-                    wallScore[child] = score;
-                }
-                if (score > goalScore) {
-                    goalScore = score;
-                    goalBp = child;
-                }
-            } else {
-                wallScore[child] = FastMath.logAdd(wallScore[child], score);
-                goalScore = FastMath.logAdd(goalScore, score);
-                // Don't update the backpointer.
-            }
-        }
-    }
-    
-    /**
-     * Projective spanning tree parse chart.
-     * @author mgormley
-     */
-    private static class ProjTreeChart {
-        
-        // Indexed by left position (s), right position (t), direction of dependency (d),
-        // and whether or not the constituent is complete (c).
-        //
-        // The value at chart[s][t][d][COMPLETE] will be the weight of the
-        // maximum projective spanning tree rooted at s (if d == RIGHT) or
-        // rooted at t (if d == LEFT). 
-        //
-        // For incomplete constituents chart[s][t][d][INCOMPLETE] indicates that
-        // s is the parent of t if (d == RIGHT) or that t is the parent of s if
-        // (d==LEFT). That is the direction, d, indicates which side is the dependent.
-        final double[][][][] scores;
-
-        // Backpointers, indexed just like the chart.
-        //
-        // The value at bps[s][t][d][c] will be the split point (r) for the
-        // maximum chart entry.
-        final int[][][][] bps;
-        
-        final DepParseType type;
-        
-        public ProjTreeChart(int n, DepParseType type) {
-            this.type = type;
-            scores = new double[n][n][2][2];
-            bps = new int[n][n][2][2];
-            
-            // Initialize chart to negative infinities.
-            DoubleArrays.fill(scores, Double.NEGATIVE_INFINITY);
-            
-            // Fill backpointers with -1.
-            IntArrays.fill(bps, -1);            
-        }
-        
-        // TODO: Consider using this method and making chart/bps private.
-        public final double getScore(int s, int t, int d, int ic) {
-            return scores[s][t][d][ic];
-        }
-        
-        public final int getBp(int s, int t, int d, int ic) {
-            return bps[s][t][d][ic];
-        }
-        
-        public final void updateCell(int s, int t, int d, int ic, double score, int r) {
-            if (this.type == DepParseType.VITERBI) {
-                if (score > scores[s][t][d][ic]) {
-                    scores[s][t][d][ic] = score;
-                    bps[s][t][d][ic] = r;
-                }
-            } else {
-                scores[s][t][d][ic] = FastMath.logAdd(scores[s][t][d][ic], score);
-                // Don't update the backpointer.
-                
-                // Commented out for speed.
-                // log.debug(String.format("Cell: s=%d (r=%d) t=%d d=%s ic=%s score=%.2f exp(score)=%.2f", s, r, t, d == RIGHT ? "R" : "L",
-                //        ic == COMPLETE ? "C" : "I", scores[s][t][d][ic], Utilities.exp(scores[s][t][d][ic])));
-            }
-        }
-        
-    }
-    
-    private static int LEFT = 0;
-    private static int RIGHT = 1;
-    private static int INCOMPLETE = 0;
-    private static int COMPLETE = 1;
+    static int LEFT = 0;
+    static int RIGHT = 1;
+    static int INCOMPLETE = 0;
+    static int COMPLETE = 1;
     
     private ProjectiveDependencyParser() {
         // Private constructor.
@@ -152,7 +38,7 @@ public class ProjectiveDependencyParser {
      * @return The score of the maximum projective spanning tree.
      */
     public static double maxProjSpanTree(double[][] scores, int[] parents) {
-        return parse(new double[scores.length], scores, parents);
+        return parseSingleRoot(new double[scores.length], scores, parents);
     }
 
     /**
@@ -167,13 +53,13 @@ public class ProjectiveDependencyParser {
      *            is the wall node.
      * @return The score of the parse.
      */
-    public static double parse(double[] fracRoot, double[][] fracChild, int[] parents) {
+    public static double parseSingleRoot(double[] fracRoot, double[][] fracChild, int[] parents) {
         assert (parents.length == fracRoot.length);
         assert (fracChild.length == fracRoot.length);    
 
         final int n = parents.length;
         final DepParseChart c = new DepParseChart(n, DepParseType.VITERBI);
-        insideAlgorithm(fracRoot, fracChild, c);
+        insideSingleRoot(fracRoot, fracChild, c);
         
         // Trace the backpointers to extract the parents.
         
@@ -197,7 +83,7 @@ public class ProjectiveDependencyParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @param inChart Output: The parse chart.
      */
-    private static void insideAlgorithm(double[] fracRoot, double[][] fracChild, DepParseChart inChart) {
+    private static void insideSingleRoot(double[] fracRoot, double[][] fracChild, DepParseChart inChart) {
         final int n = fracRoot.length;
         insideAlgorithm(fracChild, inChart);
         
@@ -211,6 +97,137 @@ public class ProjectiveDependencyParser {
                            fracRoot[r];
             inChart.updateGoalCell(r, score);
         }
+    }
+
+    /**
+     * Runs the inside-outside algorithm for dependency parsing.
+     * 
+     * @param fracRoot Input: The edge weights from the wall to each child.
+     * @param fracChild Input: The edge weights from parent to child.
+     * @return The parse chart.
+     */
+    public static DepIoChart insideOutsideSingleRoot(double[] fracRoot, double[][] fracChild) {
+        final int n = fracRoot.length;
+        final DepParseChart inChart = new DepParseChart(n, DepParseType.INSIDE);
+        final DepParseChart outChart = new DepParseChart(n, DepParseType.INSIDE);
+        
+        insideSingleRoot(fracRoot, fracChild, inChart);
+        outsideSingleRoot(fracRoot, fracChild, inChart, outChart);
+        
+        return new DepIoChart(inChart, outChart);
+    }
+    
+    /**
+     * Runs the parsing algorithm of (Eisner, 1996) as described in McDonald
+     * (2006), with special handling given to cell for the wall node.
+     * 
+     * @param fracRoot Input: The edge weights from the wall to each child.
+     * @param fracChild Input: The edge weights from parent to child.
+     * @param inChart Input: The inside parse chart.
+     * @param outChart Output: The outside parse chart.
+     */
+    private static void outsideSingleRoot(double[] fracRoot, double[][] fracChild, final DepParseChart inChart, final DepParseChart outChart) {
+        final int n = fracRoot.length;
+        
+        // Initialize.
+        outChart.goalScore = 0.0;
+        
+        // The inside algorithm is effectively doing this...
+        //
+        // wallScore[r] log+=  inChart.scores[0][r][LEFT][COMPLETE] +
+        //   inChart.scores[r][n-1][RIGHT][COMPLETE] + 
+        //   fracRoot[r];
+        //
+        // goalScore log+= wallScore[r];
+        
+        for (int r=0; r<n; r++) {
+            outChart.wallScore[r] = outChart.goalScore;
+        }
+        
+        // Un-build goal constituents by combining left and right complete
+        // constituents, on the left and right respectively. This corresponds to
+        // left and right triangles. (Note: this is the opposite of how we
+        // build an incomplete constituent.)
+        for (int r=0; r<n; r++) {
+            // Left child.
+            double leftScore = outChart.wallScore[r] + inChart.scores[r][n - 1][RIGHT][COMPLETE] + fracRoot[r];
+            outChart.updateCell(0, r, LEFT, COMPLETE, leftScore, -1);
+            // Right child.
+            double rightScore = outChart.wallScore[r] + inChart.scores[0][r][LEFT][COMPLETE] + fracRoot[r];
+            outChart.updateCell(r, n - 1, RIGHT, COMPLETE, rightScore, -1);
+        }
+        
+        outsideAlgorithm(fracChild, inChart, outChart, true);
+    }    
+    
+    /**
+     * Computes the maximum projective vine-parse tree with multiple root nodes
+     * using the algorithm of (Eisner, 1996). In the resulting tree, the root
+     * node will be the wall node (denoted by index -1), and may have multiple
+     * children.
+     * 
+     * @param fracRoot Input: The edge weights from the wall to each child.
+     * @param fracChild Input: The edge weights from parent to child.
+     * @param parents Output: The parent index of each node or -1 if its parent
+     *            is the wall node.
+     * @return The score of the parse.
+     */
+    public static double parseMultiRoot(double[] fracRoot, double[][] fracChild,
+            int[] parents) {
+        assert (parents.length == fracRoot.length);
+        assert (fracChild.length == fracRoot.length);        
+        
+        int n = parents.length + 1;
+        double[][] scores = new double[n][n];
+        for (int p=0; p<n; p++) { 
+            for (int c=0; c<n; c++) {
+                if (c == 0) {
+                    scores[p][c] = Double.NEGATIVE_INFINITY;
+                } else if (p == 0 && c > 0) {
+                    scores[p][c] = fracRoot[c-1];
+                } else {
+                    scores[p][c] = fracChild[p-1][c-1];
+                }
+            }
+        }
+        int[] ps = new int[n];
+        
+        double score = parseMultiRoot(scores, ps);
+        
+        for (int i=0; i<parents.length; i++) {
+            parents[i] = ps[i+1] - 1;
+        }
+        
+        return score;
+    }
+
+    /**
+     * Computes the vine parse with the given scores. This method is similar to
+     * maxProjSpanning tree except that it enforces that the single root be the
+     * leftmost node, which (by construction in the calling method) will be the
+     * wall node.
+     */
+    private static double parseMultiRoot(final double[][] scores, final int[] parents) {
+        final int n = parents.length;
+        final ProjTreeChart c = new ProjTreeChart(n, DepParseType.VITERBI);
+        insideAlgorithm(scores, c);
+        final double[][][][] chart = c.scores;
+        final int[][][][] bps = c.bps;
+        
+        // Trace the backpointers to extract the parents.
+        Arrays.fill(parents, -2);
+
+        // Get the head of the sentence.
+        int head = 0;
+        // The score will always be chart[0][n-1][RIGHT][COMPLETE].
+        double goalScore = chart[0][0][LEFT][COMPLETE] + chart[0][n-1][RIGHT][COMPLETE];
+        parents[head] = -1; // The wall (-1) is THE parent.
+        // Extract parents left of the head.
+        extractParentsComp(0, head, LEFT, chart, bps, parents);
+        // Extract parents right of the head.
+        extractParentsComp(head, n-1, RIGHT, chart, bps, parents);
+        
+        return goalScore;
     }
     
     /**
@@ -261,146 +278,6 @@ public class ProjectiveDependencyParser {
                 }                
             }
         }
-    }
-
-    /**
-     * An inside/outside chart for a dependency parse.
-     * 
-     * @author mgormley
-     * 
-     */
-    public static class DepIoChart {
-        final int n;
-        final DepParseChart inChart;
-        final DepParseChart outChart;
-
-        public DepIoChart(DepParseChart inChart, DepParseChart outChart) {
-            this.n = inChart.scores.length;
-            this.inChart = inChart;
-            this.outChart = outChart;
-        }
-
-        public double getLogInsideScore(int parent, int child) {
-            if (parent == -1) {
-                checkChild(child);
-                return inChart.wallScore[child];
-            } else {
-                int start = Math.min(parent, child);
-                int end = Math.max(parent, child);
-                int d = getDirection(parent, child);
-                checkCell(start, end);
-                return inChart.getScore(start, end, d, INCOMPLETE);
-            }
-        }
-
-        public double getLogOutsideScore(int parent, int child) {
-            if (parent == -1) {
-                checkChild(child);
-                // These are always 0.0 on the outside chart, but it makes the
-                // algorithmic differentiation clearer to include them.
-                return outChart.wallScore[child];
-            } else {
-                int start = Math.min(parent, child);
-                int end = Math.max(parent, child);
-                int d = getDirection(parent, child);
-                checkCell(start, end);
-                return outChart.getScore(start, end, d, INCOMPLETE);
-            }
-        }
-
-        public double getLogPartitionFunction() {
-            return inChart.goalScore;
-        }
-
-        public double getLogSumOfPotentials(int parent, int child) {
-            return getLogInsideScore(parent, child) + getLogOutsideScore(parent, child);
-        }
-
-        public double getLogExpectedCount(int parent, int child) {
-            return getLogSumOfPotentials(parent, child) - getLogPartitionFunction();
-        }
-
-        private int getDirection(int parent, int child) {
-            return (parent < child) ? RIGHT : LEFT;
-        }
-
-        /**
-         * Checks that start \in [0, n-1] and end \in [1, n], where n is the
-         * length of the sentence.
-         */
-        private void checkCell(int start, int end) {
-            if (start > n - 1 || end > n || start < 0 || end < 1) {
-                throw new IllegalStateException(String.format("Invalid cell: start=%d end=%d", start, end));
-            }
-        }
-
-        private void checkChild(int child) {
-            if (child > n - 1 || child < 0) {
-                throw new IllegalStateException(String.format("Invalid child: %d", child));
-            }
-        }
-    }
-    
-
-    /**
-     * Runs the inside-outside algorithm for dependency parsing.
-     * 
-     * @param fracRoot Input: The edge weights from the wall to each child.
-     * @param fracChild Input: The edge weights from parent to child.
-     * @return The parse chart.
-     */
-    public static DepIoChart insideOutsideAlgorithm(double[] fracRoot, double[][] fracChild) {
-        final int n = fracRoot.length;
-        final DepParseChart inChart = new DepParseChart(n, DepParseType.INSIDE);
-        final DepParseChart outChart = new DepParseChart(n, DepParseType.INSIDE);
-        
-        insideAlgorithm(fracRoot, fracChild, inChart);
-        outsideAlgorithm(fracRoot, fracChild, inChart, outChart);
-        
-        return new DepIoChart(inChart, outChart);
-    }
-    
-    /**
-     * Runs the parsing algorithm of (Eisner, 1996) as described in McDonald
-     * (2006), with special handling given to cell for the wall node.
-     * 
-     * @param fracRoot Input: The edge weights from the wall to each child.
-     * @param fracChild Input: The edge weights from parent to child.
-     * @param inChart Input: The inside parse chart.
-     * @param outChart Output: The outside parse chart.
-     */
-    private static void outsideAlgorithm(double[] fracRoot, double[][] fracChild, final DepParseChart inChart, final DepParseChart outChart) {
-        final int n = fracRoot.length;
-        
-        // Initialize.
-        outChart.goalScore = 0.0;
-        
-        // The inside algorithm is effectively doing this...
-        //
-        // wallScore[r] log+=  inChart.scores[0][r][LEFT][COMPLETE] +
-        //   inChart.scores[r][n-1][RIGHT][COMPLETE] + 
-        //   fracRoot[r];
-        //
-        // goalScore log+= wallScore[r];
-        
-        for (int r=0; r<n; r++) {
-            outChart.wallScore[r] = outChart.goalScore;
-        }
-        
-        // Un-build goal constituents by combining left and right complete
-        // constituents, on the left and right respectively. This corresponds to
-        // left and right triangles. (Note: this is the opposite of how we
-        // build an incomplete constituent.)
-        for (int r=0; r<n; r++) {
-            // Left child.
-            double leftScore = outChart.wallScore[r] + inChart.scores[r][n - 1][RIGHT][COMPLETE] + fracRoot[r];
-            outChart.updateCell(0, r, LEFT, COMPLETE, leftScore, -1);
-            // Right child.
-            double rightScore = outChart.wallScore[r] + inChart.scores[0][r][LEFT][COMPLETE] + fracRoot[r];
-            outChart.updateCell(r, n - 1, RIGHT, COMPLETE, rightScore, -1);
-        }
-        
-        outsideAlgorithm(fracChild, inChart, outChart, true);
     }
 
     /**
@@ -464,76 +341,6 @@ public class ProjectiveDependencyParser {
                 }
             }
         }
-    }
-    
-    /**
-     * Computes the maximum projective vine-parse tree with multiple root nodes
-     * using the algorithm of (Eisner, 1996). In the resulting tree, the root
-     * node will be the wall node (denoted by index -1), and may have multiple
-     * children.
-     * 
-     * @param fracRoot Input: The edge weights from the wall to each child.
-     * @param fracChild Input: The edge weights from parent to child.
-     * @param parents Output: The parent index of each node or -1 if its parent
-     *            is the wall node.
-     * @return The score of the parse.
-     */
-    public static double vineParse(double[] fracRoot, double[][] fracChild,
-            int[] parents) {
-        assert (parents.length == fracRoot.length);
-        assert (fracChild.length == fracRoot.length);        
-        
-        int n = parents.length + 1;
-        double[][] scores = new double[n][n];
-        for (int p=0; p<n; p++) { 
-            for (int c=0; c<n; c++) {
-                if (c == 0) {
-                    scores[p][c] = Double.NEGATIVE_INFINITY;
-                } else if (p == 0 && c > 0) {
-                    scores[p][c] = fracRoot[c-1];
-                } else {
-                    scores[p][c] = fracChild[p-1][c-1];
-                }
-            }
-        }
-        int[] ps = new int[n];
-        
-        double score = vineParse(scores, ps);
-        
-        for (int i=0; i<parents.length; i++) {
-            parents[i] = ps[i+1] - 1;
-        }
-        
-        return score;
-    }
-
-    /**
-     * Computes the vine parse with the given scores. This method is similar to
-     * maxProjSpanning tree except that it enforces that the single root be the
-     * leftmost node, which (by construction in the calling method) will be the
-     * wall node.
-     */
-    private static double vineParse(final double[][] scores, final int[] parents) {
-        final int n = parents.length;
-        final ProjTreeChart c = new ProjTreeChart(n, DepParseType.VITERBI);
-        insideAlgorithm(scores, c);
-        final double[][][][] chart = c.scores;
-        final int[][][][] bps = c.bps;
-        
-        // Trace the backpointers to extract the parents.
-        Arrays.fill(parents, -2);
-
-        // Get the head of the sentence.
-        int head = 0;
-        // The score will always be chart[0][n-1][RIGHT][COMPLETE].
-        double goalScore = chart[0][0][LEFT][COMPLETE] + chart[0][n-1][RIGHT][COMPLETE];
-        parents[head] = -1; // The wall (-1) is THE parent.
-        // Extract parents left of the head.
-        extractParentsComp(0, head, LEFT, chart, bps, parents);
-        // Extract parents right of the head.
-        extractParentsComp(head, n-1, RIGHT, chart, bps, parents);
-        
-        return goalScore;
     }
 
     private static void extractParentsComp(int s, int t, int d, double[][][][] chart, int[][][][] bps, int[] parents) {

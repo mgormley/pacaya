@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.util.math.FastMath;
@@ -51,7 +50,7 @@ public class ProjectiveDependencyParserSpeedTest {
         timer.start();
         for (int t=0; t<trials; t++) {
             int[] parents = new int[n];
-            ProjectiveDependencyParser.parse(root, child, parents);
+            ProjectiveDependencyParser.parseSingleRoot(root, child, parents);
             //ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
         }
         timer.stop();
@@ -85,7 +84,7 @@ public class ProjectiveDependencyParserSpeedTest {
         Timer timer = new Timer();
         timer.start();
         for (int t=0; t<trials; t++) {
-            ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
+            ProjectiveDependencyParser.insideOutsideSingleRoot(root, child);
         }
         timer.stop();
         System.out.println("Total time: " + timer.totMs());

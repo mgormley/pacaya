@@ -18,9 +18,9 @@ import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
+import edu.jhu.parse.dep.DepIoChart;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
@@ -159,7 +159,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
 
         // Compute the dependency tree marginals, summing over all projective
         // spanning trees via the inside-outside algorithm.
-        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(es.root, es.child);
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideSingleRoot(es.root, es.child);
 
         // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
         // Here we store the log partition.
@@ -398,7 +398,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Algebra s = Algebras.LOG_SIGN_ALGEBRA;
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(ratios.root, ratios.child, s);
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(ratios.root, ratios.child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
