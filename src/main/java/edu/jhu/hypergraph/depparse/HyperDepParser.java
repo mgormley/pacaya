@@ -8,6 +8,7 @@ import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.HyperpotentialFoe;
 import edu.jhu.parse.dep.DepIoChart;
 import edu.jhu.parse.dep.DepParseChart;
+import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.semiring.Algebra;
@@ -130,11 +131,11 @@ public class HyperDepParser {
                 for (int d=0; d<2; d++) {
                     for (int c=0; c<2; c++) {              
                         int id = chart[s][t][d][c].getId();
-                        if (s == 0) {
+                        if (s == 0 && c == ProjectiveDependencyParser.INCOMPLETE) {
                             // Edge to wall.
                             inChart.updateGoalCell(t-1, scores.beta[id]);
                             outChart.updateGoalCell(t-1, scores.alpha[id]);
-                        } else {
+                        } else if (s != 0) {
                             // Other edges.
                             inChart.updateCell(s-1, t-1, d, c, scores.beta[id], -1);
                             outChart.updateCell(s-1, t-1, d, c, scores.alpha[id], -1);

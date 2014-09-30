@@ -126,10 +126,10 @@ public class EdgeScores {
      * @return The combined weights.
      */
     public static double[][] combine(double[] fracRoot, double[][] fracChild) {
-        int n = fracChild.length + 1;
-        double[][] scores = new double[n][n];
-        for (int p=0; p<n; p++) { 
-            for (int c=0; c<n; c++) {
+        int nplus = fracChild.length + 1;
+        double[][] scores = new double[nplus][nplus];
+        for (int p=0; p<nplus; p++) { 
+            for (int c=0; c<nplus; c++) {
                 if (c == 0) {
                     scores[p][c] = Double.NEGATIVE_INFINITY;
                 } else if (p == 0 && c > 0) {

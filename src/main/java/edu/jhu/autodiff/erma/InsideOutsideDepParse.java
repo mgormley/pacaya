@@ -11,8 +11,8 @@ import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
-import edu.jhu.hypergraph.depparse.SingleRootDepParseHypergraph;
-import edu.jhu.hypergraph.depparse.SingleRootDepParseHypergraph.PCBasicHypernode;
+import edu.jhu.hypergraph.depparse.MultiRootDepParseHypergraph;
+import edu.jhu.hypergraph.depparse.PCBasicHypernode;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.collections.Lists;
@@ -36,7 +36,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
     
     private Scores scores;
     // Cached for efficiency.
-    private SingleRootDepParseHypergraph graph;
+    private MultiRootDepParseHypergraph graph;
     
     public InsideOutsideDepParse(Module<Tensor> weightsIn) {
         super(weightsIn.getAlgebra());
@@ -47,7 +47,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
     public Tensor forward() {
         scores = new Scores();
         EdgeScores es = EdgeScores.tensorToEdgeScores(weightsIn.getOutput());            
-        graph = new SingleRootDepParseHypergraph(es.root, es.child, s);            
+        graph = new MultiRootDepParseHypergraph(es.root, es.child, s);            
         Hyperpotential w = graph.getPotentials();
         Hyperalgo.insideAlgorithm(graph, w, s, scores);
         Hyperalgo.outsideAlgorithm(graph, w, s, scores);

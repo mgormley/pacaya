@@ -19,10 +19,10 @@ public class ProjectiveDependencyParser {
 
     private static final Logger log = Logger.getLogger(ProjectiveDependencyParser.class);
 
-    static int LEFT = 0;
-    static int RIGHT = 1;
-    static int INCOMPLETE = 0;
-    static int COMPLETE = 1;
+    public static final int LEFT = 0;
+    public static final int RIGHT = 1;
+    public static final int INCOMPLETE = 0;
+    public static final int COMPLETE = 1;
     
     private ProjectiveDependencyParser() {
         // Private constructor.

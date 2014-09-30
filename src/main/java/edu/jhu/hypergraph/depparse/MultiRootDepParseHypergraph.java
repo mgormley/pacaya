@@ -20,39 +20,6 @@ import edu.jhu.util.semiring.Semiring;
  * @author mgormley
  */
 public class MultiRootDepParseHypergraph implements Hypergraph {
-
-    public static class PCBasicHypernode extends BasicHypernode {
-
-        private int p;
-        private int c;
-        
-        public PCBasicHypernode(String label, int id, int p, int c) {
-            super(label, id);
-            this.p = p;
-            this.c = c;
-        }
-        
-
-        public PCBasicHypernode(String label, int id) {
-            super(label, id);
-            this.p = -2;
-            this.c = -2;
-        }
-
-        public int getP() {
-            return p;
-        }
-
-        public int getC() {
-            return c;
-        }
-        
-        public void setPC(int p, int c) {
-            this.p = p;
-            this.c = c;
-        }
-        
-    }
     
     private static final Logger log = Logger.getLogger(MultiRootDepParseHypergraph.class);
 
@@ -107,10 +74,10 @@ public class MultiRootDepParseHypergraph implements Hypergraph {
                             label = String.format("chart[%d][%d][%d][%d]", s,t,d,c);
                         }
                         Hypernode node;
-                        if (c == INCOMPLETE) {
-                            // Subtract one to get the parents array indexing.
-                            int parent = (d == LEFT) ? t-1 : s-1;
-                            int child  = (d == LEFT) ? s-1 : t-1;
+                        // Subtract one to get the parents array indexing.
+                        int parent = (d == LEFT) ? t-1 : s-1;
+                        int child  = (d == LEFT) ? s-1 : t-1;
+                        if (c == INCOMPLETE && child != -1) {
                             node = new PCBasicHypernode(label, id++, parent, child);
                         } else {
                             node = new BasicHypernode(label, id++);
