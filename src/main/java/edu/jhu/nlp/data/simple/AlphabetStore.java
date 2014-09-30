@@ -76,7 +76,7 @@ public class AlphabetStore implements Serializable {
                 }
             }
             if (alphabet.size()-1 <= maxIdx) {
-                log.info(String.format("For %s: Actual count = %d Reduced count = %d Cutoff = %d", 
+                log.info(String.format("For %s: Type count = %d Alphabet count = %d Cutoff = %d", 
                         name, counter.size(), alphabet.size(), cutoff));
                 break;
             }
