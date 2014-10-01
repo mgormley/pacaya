@@ -69,7 +69,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
-                          algebra="LOG_SIGN")
+                          algebra="LOG_SIGN",
+                          singleRoot=False)
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)

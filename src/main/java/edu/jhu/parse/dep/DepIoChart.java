@@ -6,46 +6,37 @@ package edu.jhu.parse.dep;
  * @author mgormley
  */
 public class DepIoChart {
-    final int n;
-    final DepParseChart inChart;
-    final DepParseChart outChart;
+    final int nplus;
+    final ProjTreeChart inChart;
+    final ProjTreeChart outChart;
 
-    public DepIoChart(DepParseChart inChart, DepParseChart outChart) {
-        this.n = inChart.scores.length;
+    public DepIoChart(ProjTreeChart inChart, ProjTreeChart outChart) {
+        this.nplus = inChart.scores.length;
         this.inChart = inChart;
         this.outChart = outChart;
     }
 
     public double getLogInsideScore(int parent, int child) {
-        if (parent == -1) {
-            checkChild(child);
-            return inChart.wallScore[child];
-        } else {
-            int start = Math.min(parent, child);
-            int end = Math.max(parent, child);
-            int d = getDirection(parent, child);
-            checkCell(start, end);
-            return inChart.getScore(start, end, d, ProjectiveDependencyParser.INCOMPLETE);
-        }
+        parent++; child++;
+        int start = Math.min(parent, child);
+        int end = Math.max(parent, child);
+        int d = getDirection(parent, child);
+        checkCell(start, end);
+        return inChart.getScore(start, end, d, ProjectiveDependencyParser.INCOMPLETE);
     }
 
     public double getLogOutsideScore(int parent, int child) {
-        if (parent == -1) {
-            checkChild(child);
-            // These are always 0.0 on the outside chart, but it makes the
-            // algorithmic differentiation clearer to include them.
-            return outChart.wallScore[child];
-        } else {
-            int start = Math.min(parent, child);
-            int end = Math.max(parent, child);
-            int d = getDirection(parent, child);
-            checkCell(start, end);
-            return outChart.getScore(start, end, d, ProjectiveDependencyParser.INCOMPLETE);
-        }
+        parent++; child++;
+        int start = Math.min(parent, child);
+        int end = Math.max(parent, child);
+        int d = getDirection(parent, child);
+        checkCell(start, end);
+        return outChart.getScore(start, end, d, ProjectiveDependencyParser.INCOMPLETE);
     }
 
     public double getLogPartitionFunction() {
-        return inChart.goalScore;
+        return inChart.getScore(0,0, ProjectiveDependencyParser.LEFT, ProjectiveDependencyParser.COMPLETE) +
+                inChart.getScore(0, nplus-1, ProjectiveDependencyParser.RIGHT, ProjectiveDependencyParser.COMPLETE);
     }
 
     public double getLogSumOfPotentials(int parent, int child) {
@@ -61,18 +52,12 @@ public class DepIoChart {
     }
 
     /**
-     * Checks that start \in [0, n-1] and end \in [1, n], where n is the
-     * length of the sentence.
+     * Checks that start \in [0, n-1] and end \in [1, n], where nplus is the sentence length plus 1.
      */
     private void checkCell(int start, int end) {
-        if (start > n - 1 || end > n || start < 0 || end < 1) {
+        if (start > nplus - 1 || end > nplus || start < 0 || end < 1) {
             throw new IllegalStateException(String.format("Invalid cell: start=%d end=%d", start, end));
         }
     }
 
-    private void checkChild(int child) {
-        if (child > n - 1 || child < 0) {
-            throw new IllegalStateException(String.format("Invalid child: %d", child));
-        }
-    }
 }

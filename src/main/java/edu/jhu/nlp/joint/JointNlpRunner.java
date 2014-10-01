@@ -16,6 +16,7 @@ import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
@@ -850,6 +851,7 @@ public class JointNlpRunner {
             parser.addClass(JointNlpRunner.class);
             parser.addClass(CorpusHandler.class);
             parser.addClass(RelationsOptions.class);
+            parser.addClass(InsideOutsideDepParse.class);            
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {

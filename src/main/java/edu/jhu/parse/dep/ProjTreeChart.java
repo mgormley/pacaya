@@ -1,5 +1,7 @@
 package edu.jhu.parse.dep;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.math.FastMath;
@@ -9,6 +11,8 @@ import edu.jhu.prim.util.math.FastMath;
  * @author mgormley
  */
 public class ProjTreeChart {
+
+    private static final Logger log = Logger.getLogger(ProjTreeChart.class);
 
     public enum DepParseType { VITERBI, INSIDE }
     
@@ -64,8 +68,12 @@ public class ProjTreeChart {
             // Don't update the backpointer.
             
             // Commented out for speed.
-            // log.debug(String.format("Cell: s=%d (r=%d) t=%d d=%s ic=%s score=%.2f exp(score)=%.2f", s, r, t, d == RIGHT ? "R" : "L",
-            //        ic == COMPLETE ? "C" : "I", scores[s][t][d][ic], Utilities.exp(scores[s][t][d][ic])));
+            //            log.debug(String.format("Cell: s=%d (r=%d) t=%d d=%s ic=%s score=%10.2f exp(score)=%.2f", 
+            //                    s, r, t, 
+            //                    d == ProjectiveDependencyParser.RIGHT ? "R" : "L",
+            //                    ic == ProjectiveDependencyParser.COMPLETE ? "C" : "I", 
+            //                    scores[s][t][d][ic], 
+            //                    FastMath.exp(scores[s][t][d][ic])));
         }
     }
     

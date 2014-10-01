@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.autodiff.erma.ProjDepTreeModule;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
@@ -16,7 +17,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.SingleRootDepParseHypergraph;
+import edu.jhu.hypergraph.depparse.DepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
@@ -354,8 +355,8 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Algebra s = Algebras.LOG_SIGN_ALGEBRA;
-        Pair<SingleRootDepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(ratios.root, ratios.child, s);
-        SingleRootDepParseHypergraph graph = pair.get1();
+        Pair<DepParseHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
+        DepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
         int rt = graph.getRoot().getId();        
