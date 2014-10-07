@@ -212,12 +212,7 @@ public class FgModel implements Serializable, IFgModel {
     }
 
     public void scale(final double multiplier) {
-        apply(new FnIntDoubleToDouble() {
-            @Override
-            public double call(int idx, double val) {
-                return multiplier * val;
-            }
-        });
+        params.scale(multiplier);
     }
 
     public double l2Norm() {
