@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -140,6 +141,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     private Beliefs bAdj;
     private Module<Factors> effm;
 
+    private static AtomicInteger oscillationCount = new AtomicInteger(0);
+    private static AtomicInteger sendCount = new AtomicInteger(0);
+    
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
         this(fg, prm, getFactorsModule(fg, prm));
     }
@@ -239,7 +243,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     normalizeAndAddToTape(edge, te);
                 }
                 for (FgEdge edge : edges) {
-                    forwardSendMessage(edge);
+                    forwardSendMessage(edge, iter);
                 }
                 if (prm.keepTape) { tape.add(te); }
                 if (isConverged()) {
@@ -250,6 +254,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             }
             maybeWriteAllBeliefs(iter);
         }
+        
+        log.debug("Oscillation rate: " + ((double) oscillationCount.get() / sendCount.get()));
         
         forwardVarAndFacBeliefs();
         b = new Beliefs(varBeliefs, facBeliefs);
@@ -668,10 +674,11 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
      * edge.
      * 
      * @param edge The edge over which the message should be sent.
+     * @param iter The current iteration.
      */
-    protected void forwardSendMessage(FgEdge edge) {
+    protected void forwardSendMessage(FgEdge edge, int iter) {
         int edgeId = edge.getId();
-       
+        
         Messages ec = msgs[edgeId];
         // Update the residual
         double oldResidual = ec.residual;
@@ -683,6 +690,14 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         if (oldResidual <= prm.convergenceThreshold && ec.residual > prm.convergenceThreshold) {
             // This message was marked as converged, but is no longer converged.
             numConverged--;
+        }
+        
+        // Check for oscillation. Did the argmax change?
+        if (iter > 0) {
+            if (ec.message.getArgmaxConfigId() != ec.newMessage.getArgmaxConfigId()) {    
+                oscillationCount.incrementAndGet();
+            }
+            sendCount.incrementAndGet();
         }
         
         // Send message: Just swap the pointers to the current message and the new message, so

@@ -60,7 +60,7 @@ public class DepParseDecoder implements Decoder<AnnoSentence, int[]> {
         int n = scores.root.length;
         int[] parents = new int[n];
         Arrays.fill(parents, DepTree.EMPTY_POSITION);
-        ProjectiveDependencyParser.parse(scores.root, scores.child, parents);
+        ProjectiveDependencyParser.parseSingleRoot(scores.root, scores.child, parents);
         return parents;
     }
 

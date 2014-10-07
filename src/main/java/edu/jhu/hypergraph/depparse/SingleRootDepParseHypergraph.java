@@ -14,42 +14,14 @@ import edu.jhu.hypergraph.WeightedHyperedge;
 import edu.jhu.nlp.MutableInt;
 import edu.jhu.util.semiring.Semiring;
 
-public class FirstOrderDepParseHypergraph implements Hypergraph {
+/**
+ * Hypergraph for single-root projective dependency parsing.
+ * 
+ * @author mgormley
+ */
+public class SingleRootDepParseHypergraph implements Hypergraph {
 
-    public static class PCBasicHypernode extends BasicHypernode {
-
-        private int p;
-        private int c;
-        
-        public PCBasicHypernode(String label, int id, int p, int c) {
-            super(label, id);
-            this.p = p;
-            this.c = c;
-        }
-        
-
-        public PCBasicHypernode(String label, int id) {
-            super(label, id);
-            this.p = -2;
-            this.c = -2;
-        }
-
-        public int getP() {
-            return p;
-        }
-
-        public int getC() {
-            return c;
-        }
-        
-        public void setPC(int p, int c) {
-            this.p = p;
-            this.c = c;
-        }
-        
-    }
-    
-    private static final Logger log = Logger.getLogger(FirstOrderDepParseHypergraph.class);
+    private static final Logger log = Logger.getLogger(SingleRootDepParseHypergraph.class);
 
     private static final int NOT_INITIALIZED = -1;
     private static int LEFT = 0;
@@ -70,7 +42,7 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
     private double[][] childScores;
     private Semiring semiring;
     
-    public FirstOrderDepParseHypergraph(double[] rootScores, double[][] scores, Semiring semiring) {
+    public SingleRootDepParseHypergraph(double[] rootScores, double[][] scores, Semiring semiring) {
         this.rootScores = rootScores;
         this.childScores = scores;
         this.semiring = semiring;
