@@ -67,6 +67,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     }
     
     public static class O2FeTypedFactor extends FeTypedFactor {
+        private static final long serialVersionUID = 1L;
         public int i,j,k;
         public O2FeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int i, int j, int k) {
             super(vars, type, fe);

@@ -114,14 +114,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         defaults = g.lbfgs  + ReExpParams()        
         defaults.set("expname", self.expname, False, False)
+        defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
-        defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
+        if self.queue:
+            threads = 15
+            work_mem_megs = 15*1024
+        elif self.big_machine:
+            threads = 2
+            work_mem_megs = 1.5*1024
+        else:
+            threads = 1
+            work_mem_megs = 1.5*1024
+        defaults.set("work_mem_megs", work_mem_megs, incl_arg=False, incl_name=False)
+        g.defaults.set("threads", threads, incl_name=False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
                    featCountCutoff=0,
                    featureHashMod=-1,
                    includeUnsupportedFeatures=True,
                    l2variance=40000,
+                   sgdBatchSize=20,
                    sgdNumPasses=10,
                    useRelationSubtype=False,
                    includeDp=False,
@@ -140,21 +152,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    trainGoldOut="./train-gold.txt",
                    devGoldOut="./dev-gold.txt",
                    testGoldOut="./test-gold.txt",
-                   modelOut="./model.binary.gz",
-                   # TO REMOVE
-                   usePosTagFeatures=True,
-                   useSyntaxFeatures=True,
-                   useEmbeddingFeatures=True,
+                   modelOut="./model.binary.gz",                   
                    )
-        defaults.update(printModel="model.txt")
         
         # Datasets
-        data_dir = get_first_that_exists(os.path.join(self.root_dir, "data"))
-        #data_dir = get_first_that_exists(os.path.join("/Users/mgormley/research/acere/", "data"))
         
         # ACE 2005
-        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "concrete/ace_05"),
-                                                   os.path.join(data_dir,"concrete"))
+        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete"))
         
         # ACE 2005 full domains:  bc bn cts nw un wl
         ace05_bc = get_ace05_data(ace05_concrete_dir, "bc")
@@ -175,7 +179,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         ace05_domains = [ace05_bc, ace05_bn, ace05_cts, ace05_nw, ace05_un, ace05_wl]
 
         # Embeddings
-        embeddings_dir = os.path.join(data_dir, "word_embeddings")
+        embeddings_dir = os.path.join(p.corpora_dir, "processed", "embeddings")
         polyglot_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.txt"),
                                   embedName="polyglot")
         polyglot_en_small_dstuned = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.dstuned.txt"),
@@ -187,7 +191,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         polyglot_en_large_combined = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.largecombined.txt"),
                                   embedName="polyglot-large-combined")
         cbow_nyt_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "vectors.nyt.cbow.out.d200.txt"),
-                                  embedName="cbow")
+                                  embedName="cbow-nyt")
+        cbow_nyt11_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "ace05.train_dev.lower.nyt2011.cbow.bin.filtered.txt"),
+                                  embedName="cbow-nyt11")
         defaults.set_incl_name("embeddingsFile", False)
         defaults.set_incl_arg("embedName", False)
                 
@@ -201,28 +207,38 @@ class SrlExpParamsRunner(ExpParamsRunner):
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
-            setup= ReExpParams(removeEntityTypes=True, 
-                               maxInterveningEntities=3,
-                               propTrainAsDev=0.0)
-            feats_no_embed  = ReExpParams(useEmbeddingFeatures=False)
-            feats_head_only = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
-            feats_head_type = ReExpParams(useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
-            feats_full = ReExpParams(useEmbeddingFeatures=True, embFeatType="FULL")
+            setup= ReExpParams(propTrainAsDev=0.0,
+                               useEmbeddingFeatures=True,
+                               useZhou05Features=True)
+            feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
+            feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+            feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+            feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
+            feats_emb_only  = ReExpParams(modelName="full",  useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+            setup.set_incl_arg("modelName", False)
             
-            for embed in [polyglot_en]:
-                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full]: 
-                    for predictArgRoles in [True, False]:
-                        setup.update(predictArgRoles=predictArgRoles)
-                        defaults.set("group", "PM13" if predictArgRoles else "NG14", incl_name=True, incl_arg=False)
+            eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
+                                       maxInterveningEntities=3, removeEntityTypes=True)
+            eval_pm13    = ReExpParams(group="PM13", predictArgRoles=True, 
+                                       maxInterveningEntities=3, removeEntityTypes=True)
+            eval_types7 = ReExpParams(group="TYPES7", predictArgRoles=False, 
+                                       maxInterveningEntities=9999, removeEntityTypes=False)
+            eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
+                                       maxInterveningEntities=9999, removeEntityTypes=False)            
+            setup.set_incl_arg("group", False)
+            
+            for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
+                    for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
                         # Out-of-domain experiments
                         for domain2 in [ace05_bc_dev]: #ENABLE FOR TEST: ace05_bc_test, ace05_cts, ace05_wl]:
                             train = get_annotation_as_train(ace05_bn_nw)
                             test = get_annotation_as_test(domain2)
-                            experiment = defaults + setup + train + test + embed + feats
+                            experiment = defaults + setup + evl + train + test + embed + feats
                             root.add_dependent(experiment)
                         # In-domain experiment
                         # TODO: This should use 5-fold cross validation.
-                        experiment = defaults + setup + train + ReExpParams(propTrainAsDev=0.2) + embed + feats
+                        experiment = defaults + setup + evl + train + ReExpParams(propTrainAsDev=0.2) + embed + feats
                         root.add_dependent(experiment)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
@@ -242,17 +258,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # In-domain and Out-of-domain experiments
             for test in [get_annotation_as_test(ace05_bc_dev), ReExpParams(propTrainAsDev=0.0)]:
                 defaults.set("group", "broad", incl_name=True, incl_arg=False)
-                for usePosTagFeatures in [True, False]:
-                    for useSyntaxFeatures in [True, False]:
-                        for removeEntityTypes in [True, False]:
-                            for useEmbeddingFeatures in [True, False]:
-                                feats = ReExpParams(usePosTagFeatures=usePosTagFeatures, 
-                                                    useSyntaxFeatures=useSyntaxFeatures,
-                                                    removeEntityTypes=removeEntityTypes,
-                                                    useEmbeddingFeatures=useEmbeddingFeatures)
-                                train = get_annotation_as_train(ace05_bn_nw)
-                                experiment = defaults + setup + train + test + feats
-                                #SKIP FOR NOW: root.add_dependent(experiment)
+                for useZhou05Features in [True, False]:
+                    for removeEntityTypes in [True, False]:
+                        for useEmbeddingFeatures in [True, False]:
+                            feats = ReExpParams(useZhou05Features=useZhou05Features, 
+                                                removeEntityTypes=removeEntityTypes,
+                                                useEmbeddingFeatures=useEmbeddingFeatures)
+                            train = get_annotation_as_train(ace05_bn_nw)
+                            experiment = defaults + setup + train + test + feats
+                            #SKIP FOR NOW: root.add_dependent(experiment)
                 defaults.set("group", "embed", incl_name=True, incl_arg=False)
                 for embed in [polyglot_en, polyglot_en_large_dstuned, polyglot_en_large_combined]:
                     for embTmplPath in [True, False]:

@@ -51,6 +51,7 @@ import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsEncoder;
+import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.map.IntIntHashMap;
@@ -184,7 +185,14 @@ public class ConcreteReader {
             if (comm.getSituationMentionSetsSize() > 0) {
                 addSituationMentions(comm, tmpSents);
                 
-                for (AnnoSentence aSent : tmpSents) {                     
+                for (AnnoSentence aSent : tmpSents) {     
+                    if (RelationsOptions.shortenEntityMentions) {
+                        for (NerMention m : aSent.getNamedEntities()) {
+                            // Set the end of the span to be the head token.
+                            m.getSpan().setEnd(m.getHead()+1);
+                        }
+                        aSent.getNamedEntities().sort();                       
+                    }
                     // Add the named entity pairs.
                     RelationsEncoder.addNePairsAndRelLabels(aSent);
                 }
@@ -369,6 +377,13 @@ public class ConcreteReader {
         if (tokenization.isSetLemmaList() && prm.lemmaTheory != SKIP) {
             List<String> lemmas = getTagging(tokenization.getLemmaList());
             as.setLemmas(lemmas);
+        }
+
+        // Chunks
+        if (tokenization.isSetLangIdList()) {
+            // TODO: For Concrete 3.4+, this will be taken from the list of token taggings.
+            List<String> chunks = getTagging(tokenization.getLangIdList());
+            as.setChunks(chunks);
         }
 
         // Dependency Parse

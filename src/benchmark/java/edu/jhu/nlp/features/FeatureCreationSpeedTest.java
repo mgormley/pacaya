@@ -157,13 +157,18 @@ public class FeatureCreationSpeedTest {
                                     featIdx = alphabet.lookupIndex(featName);
                                     lookupTimer.stop();   
                                 } else {
+                                    final boolean murmur = true;
+                                    
                                     extTimer.start();
                                     byte[] barr = null;
                                     int hash = 0;
                                     if (OPT == 3) {
-                                        String data = t + "_" + pWord + "_" + aWord + "_" + pPos + "_" + aPos;                                        
-                                        //hash = MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
-                                        hash = data.hashCode();
+                                        String data = t + "_" + pWord + "_" + aWord + "_" + pPos + "_" + aPos;
+                                        if (murmur) {
+                                            hash = MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
+                                        } else {
+                                            hash = data.hashCode();
+                                        }
                                     } else if (OPT == 4) {
                                         StringBuilder sb = new StringBuilder(3+4+pWord.length()+aWord.length()+pPos.length()+aPos.length());
                                         sb.append(t);
@@ -176,8 +181,11 @@ public class FeatureCreationSpeedTest {
                                         sb.append("_");
                                         sb.append(aPos);
                                         String data = sb.toString();
-                                        //hash = MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
-                                        hash = data.hashCode();
+                                        if (murmur) {
+                                            hash = MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
+                                        } else {
+                                            hash = data.hashCode();
+                                        }
                                     } else if (OPT == 5) {
                                         ByteBuffer bb = ByteBuffer.allocate(4+4+4+4+4);
                                         bb.putInt((byte)t);
@@ -185,9 +193,12 @@ public class FeatureCreationSpeedTest {
                                         bb.putInt(words.get(arg));
                                         bb.putInt(tags.get(pred));
                                         bb.putInt(tags.get(arg));
-                                        barr = bb.array();                                        
-                                        //hash = MurmurHash3.murmurhash3_x86_32(barr, 0, barr.length, 123456789);
-                                        hash = Arrays.hashCode(barr);
+                                        barr = bb.array();
+                                        if (murmur) {
+                                            hash = MurmurHash3.murmurhash3_x86_32(barr, 0, barr.length, 123456789);
+                                        } else {
+                                            hash = Arrays.hashCode(barr);
+                                        }
                                     } else if (OPT == 6) {
                                         // Direct hashing
                                         // From Arrays.hashCode(long[])
@@ -217,7 +228,7 @@ public class FeatureCreationSpeedTest {
                                     hashTimer.stop();
 
                                     lookupTimer.start();
-                                    final int alpha = 2;
+                                    final int alpha = 0;
                                     if (alpha == 0) {
                                         featIdx = hash;
                                     } else if (alpha == 1) {

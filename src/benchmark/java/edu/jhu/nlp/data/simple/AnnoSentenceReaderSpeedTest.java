@@ -14,16 +14,18 @@ import edu.jhu.util.Timer;
  */
 public class AnnoSentenceReaderSpeedTest {
 
-    //private static String conllxDir = "/Users/mgormley/research/pacaya/data/conllx/CoNLL-X";
-	private static String conllxDir = "c:/cygwin64/home/mgormley/corpora/CoNLL-X";
-    private static String ptbYmTest = conllxDir + "/test/data/english/ptb_ym/test/english_ptb_ym_test.conll";
-    private static String ptbYmTrain = conllxDir + "/train/data/english/ptb_ym/train/english_ptb_ym_train.conll";
+    private static String conllxDir = "/Users/mgormley/research/pacaya/data/conllx/CoNLL-X";
+    //private static String conllxDir = "c:/cygwin64/home/mgormley/corpora/CoNLL-X";
     
+    public static String ptbYmTest = conllxDir + "/test/data/english/ptb_ym/test/english_ptb_ym_test.conll";
+    public static String ptbYmTrain = conllxDir + "/train/data/english/ptb_ym/train/english_ptb_ym_train.conll";
+    public static String czTrain = AnnoSentenceReaderSpeedTest.conllxDir + "/train/data/czech/pdt/train/czech_pdt_train.conll";
+
     public static AnnoSentenceCollection readPtbYmConllx() {
         return read(ptbYmTest, DatasetType.CONLL_X);
     }
 
-    private static AnnoSentenceCollection read(String path, DatasetType type) {
+    public static AnnoSentenceCollection read(String path, DatasetType type) {
         AnnoSentenceReaderPrm prm = new AnnoSentenceReaderPrm();
         AnnoSentenceReader reader = new AnnoSentenceReader(prm);
         try {
@@ -37,13 +39,18 @@ public class AnnoSentenceReaderSpeedTest {
     /**
      * Speed test results:
      * # sents: 39832
-     * Tokens / sec: 106961.04480972754
+     * Tokens / sec: 114240.98124098123
      */
     //@Test
     public void testReaderSpeed() {
         Timer t = new Timer();
         t.start();
         AnnoSentenceCollection sents = read(ptbYmTrain, DatasetType.CONLL_X);
+        AlphabetStore store = new AlphabetStore(sents);
+        // Include convertion to IntAnnoSentence.
+        for (AnnoSentence sent : sents) {
+            new IntAnnoSentence(sent, store);
+        }
         t.stop();
         System.out.println("# sents: "+ sents.size());
         System.out.println("Tokens / sec: " + (sents.getNumTokens() / t.totSec()));

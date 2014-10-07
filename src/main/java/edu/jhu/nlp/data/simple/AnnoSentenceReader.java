@@ -17,6 +17,7 @@ import edu.jhu.nlp.data.conll.CoNLLXFileReader;
 import edu.jhu.nlp.data.conll.CoNLLXSentence;
 import edu.jhu.nlp.data.semeval.SemEval2010Reader;
 import edu.jhu.nlp.data.semeval.SemEval2010Sentence;
+import edu.jhu.nlp.words.PrefixAnnotator;
 
 /**
  * Generic reader of AnnoSentence objects from many different corpora. 
@@ -94,6 +95,9 @@ public class AnnoSentenceReader {
         }
         
         loadSents(reader);
+        
+        // TODO: Move this.
+        PrefixAnnotator.addPrefixes(sents);
         
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());

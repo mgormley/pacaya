@@ -272,6 +272,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
 
     private void forwardGlobalFacToVar(GlobalFactor globalFac) {
+        if (globalFac.getVars().size() == 0) { return; }
         log.trace("Creating messages for global factor.");
         // Since this is a global factor, we pass the incoming messages to it, 
         // and efficiently marginalize over the variables.
@@ -501,6 +502,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
     
     private void backwardGlobalFactorToVar(GlobalFactor globalFac) {
+        if (globalFac.getVars().size() == 0) { return; }
         FgNode node = fg.getNode(globalFac);
         VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
         VarTensor[] inMsgsAdj = getMsgs(node, msgsAdj, CUR_MSG, IN_MSG);

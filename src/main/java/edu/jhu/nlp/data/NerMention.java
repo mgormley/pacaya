@@ -35,7 +35,7 @@ public class NerMention implements Comparable<NerMention> {
 
     /** Deep copy constructor. */
     public NerMention(NerMention other) {
-        this.span = other.span;
+        this.span = new Span(other.span.start(), other.span.end());
         this.entityType = other.entityType;
         this.entitySubType = other.entitySubType;
         this.phraseType = other.phraseType;
@@ -106,15 +106,16 @@ public class NerMention implements Comparable<NerMention> {
 
     @Override
     public int compareTo(NerMention other) {
-        int diff = ObjectUtils.compare(this.span, other.span);
+        int diff;
+        diff = ObjectUtils.compare(this.head, other.head);
+        if (diff != 0) { return diff; }
+        diff = ObjectUtils.compare(this.span, other.span);
         if (diff != 0) { return diff; }
         diff = ObjectUtils.compare(this.entityType, other.entityType);
         if (diff != 0) { return diff; }
         diff = ObjectUtils.compare(this.entitySubType, other.entitySubType);
         if (diff != 0) { return diff; }
         diff = ObjectUtils.compare(this.phraseType, other.phraseType);
-        if (diff != 0) { return diff; }
-        diff = ObjectUtils.compare(this.head, other.head);
         if (diff != 0) { return diff; }
         diff = ObjectUtils.compare(this.id, other.id);
         return diff;        

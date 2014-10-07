@@ -15,19 +15,20 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.LabeledSpan;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.FeaturizedSentence;
 import edu.jhu.nlp.features.FeaturizedTokenPair;
 import edu.jhu.nlp.features.LocalObservations;
-import edu.jhu.nlp.features.TemplateFeatureExtractor;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.Lambda.FnObjDoubleToVoid;
 import edu.jhu.util.FeatureNames;
 
 /**
@@ -53,34 +54,46 @@ public class RelObsFe implements ObsFeatureExtractor {
 
     @Override
     public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
-        TemplateFeatureExtractor fe = new TemplateFeatureExtractor(sent, null);
-        List<String> obsFeats = new ArrayList<>();
+        final FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
+        ObjFeatVec<String> obsFeats = calcObsFeatureVectorStrs(factor);
+        final FeatureVector fv = new FeatureVector();
+        obsFeats.iterate(new FnObjDoubleToVoid<String>() {            
+            @Override
+            public void call(String fname, double val) {
+                int fidx = alphabet.lookupIndex(fname);
+                if (fidx != -1) {
+                    fv.add(fidx, val);
+                }
+            }
+        });
+        return fv;
+    }
+    
+    public ObjFeatVec<String> calcObsFeatureVectorStrs(ObsFeExpFamFactor factor) {
         RelVar rv = (RelVar) factor.getVars().get(0);
         LocalObservations local = LocalObservations.newNe1Ne2(rv.ment1, rv.ment2);
-        // TODO: fe.addFeatures(prm.templates, local, obsFeats);
-
-        addFeatures(local, obsFeats);
-        
-        FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
+        ObjFeatVec<String> fv = new ObjFeatVec<String>();
         
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
-        ArrayList<String> biasFeats = new ArrayList<String>(1);
-        biasFeats.add("BIAS_FEATURE");
-        // Add the bias features.
-        FeatureVector fv = new FeatureVector(1 + obsFeats.size());
-        FeatureUtils.addFeatures(biasFeats, alphabet, fv, true, prm.featureHashMod);
+        fv.add("BIAS_FEATURE", 1.0);
         
-        // Add the other features.
-        FeatureUtils.addFeatures(obsFeats, alphabet, fv, false, prm.featureHashMod);
-        
-        if (RelationsOptions.useEmbeddingFeatures) {
-            addEmbeddingFeatures(local, alphabet, fv);
+        if (RelationsOptions.useZhou05Features) {
+            addZhou05Features(local, fv);
         }
         
+        if (RelationsOptions.useEmbeddingFeatures) {
+            addEmbeddingFeatures(local, fv);
+        }
+        
+        // TODO: Add template features. 
+        // fe.addFeatures(prm.templates, local, obsFeats);         
+        // TemplateFeatureExtractor fe = new TemplateFeatureExtractor(sent, null);
+
         return fv;
     }
 
-    private void addFeatures(LocalObservations local, List<String> features) {
+    /** Add the features from Zhou et al. (2005). */
+    private void addZhou05Features(LocalObservations local, ObjFeatVec<String> features) {
         NerMention m1 = local.getNe1();
         NerMention m2 = local.getNe2();
         Span m1span = m1.getSpan();
@@ -98,26 +111,26 @@ public class RelObsFe implements ObsFeatureExtractor {
         // • HM12: combination of HM1 and HM2        
         StringBuilder wm1 = new StringBuilder("m1WordSet:");
         for (String word : sortUniq(sent.getWords(m1span))) {
-            features.add("m1HasWord:" + word);
+            addBinFeat(features, "m1HasWord:" + word);
             wm1.append("_");
             wm1.append(word);
         }
-        features.add(wm1.toString());        
+        addBinFeat(features, wm1.toString());        
         String hm1 = "m1HeadWord:" + sent.getWord(m1.getHead());
-        features.add(hm1); 
+        addBinFeat(features, hm1); 
         
         StringBuilder wm2 = new StringBuilder("m2WordSet:");
         for (String word : sortUniq(sent.getWords(m2span))) {
-            features.add("m2HasWord:" + word);
+            addBinFeat(features, "m2HasWord:" + word);
             wm2.append("_");
             wm2.append(word);
         }
-        features.add(wm2.toString());        
+        addBinFeat(features, wm2.toString());        
         String hm2 = "m2HeadWord:" + sent.getWord(m2.getHead());
-        features.add(hm2); 
+        addBinFeat(features, hm2); 
         
         String hm12 = combo(hm1, hm2);
-        features.add(hm12);
+        addBinFeat(features, hm12);
         
         // • WBNULL: when no word in between
         // • WBFL: the only word in between when only
@@ -130,14 +143,14 @@ public class RelObsFe implements ObsFeatureExtractor {
         // last words when at least three words in between 
         Span btwn = Span.getSpanBtwn(m1span, m2span);
         if (btwn.size() == 0) {
-            features.add("wbNull");
+            addBinFeat(features, "wbNull");
         } else if (btwn.size() == 1) {
-            features.add("wbfl:" + sent.getWord(btwn.start()));
+            addBinFeat(features, "wbfl:" + sent.getWord(btwn.start()));
         } else if (btwn.size() >= 2) {
-            features.add("wbf:" + sent.getWord(btwn.start()));
-            features.add("wbl:" + sent.getWord(btwn.end()-1));
+            addBinFeat(features, "wbf:" + sent.getWord(btwn.start()));
+            addBinFeat(features, "wbl:" + sent.getWord(btwn.end()-1));
             for (int i=btwn.start()+1; i<btwn.end(); i++) {
-                features.add("wbo:" + sent.getWord(i));
+                addBinFeat(features, "wbo:" + sent.getWord(i));
             }
         }
         
@@ -145,10 +158,10 @@ public class RelObsFe implements ObsFeatureExtractor {
         // • BM1L: second word before M1
         // • AM2F: first word after M2
         // • AM2L: second word after M2
-        features.add("bm1f:" + fsent.getFeatTok(m1span.start() - 1).getForm());
-        features.add("bm1l:" + fsent.getFeatTok(m1span.start() - 2).getForm());
-        features.add("am2f:" + fsent.getFeatTok(m1span.end() + 0).getForm());
-        features.add("am2l:" + fsent.getFeatTok(m1span.end() + 1).getForm());
+        addBinFeat(features, "bm1f:" + fsent.getFeatTok(m1span.start() - 1).getForm());
+        addBinFeat(features, "bm1l:" + fsent.getFeatTok(m1span.start() - 2).getForm());
+        addBinFeat(features, "am2f:" + fsent.getFeatTok(m1span.end() + 0).getForm());
+        addBinFeat(features, "am2l:" + fsent.getFeatTok(m1span.end() + 1).getForm());
         
 
         // =============================
@@ -156,16 +169,15 @@ public class RelObsFe implements ObsFeatureExtractor {
         // =============================
         // • ET12: combination of mention entity types
         String et12 = "et12:" + m1.getEntityType() + "_" + m2.getEntityType();
-        features.add(et12);
+        addBinFeat(features, et12);
         
         // =============================
         // 4.3 Mention Level 
         // =============================
         // • ML12: combination of mention levels
         String ml12 = "ml12:" + m1.getPhraseType() + "_" + m2.getPhraseType();
-        features.add(ml12);
+        addBinFeat(features, ml12);
         
-
         // =============================
         // 4.4 Overlap
         // =============================
@@ -180,18 +192,18 @@ public class RelObsFe implements ObsFeatureExtractor {
         // 3) HM12+M1>M2; 
         // 4) HM12+M1<M2.
         int numMentsBtwn = getNumBtwn(sent, m1, m2);
-        features.add("#MB:"+numMentsBtwn);
+        addBinFeat(features, "#MB:"+numMentsBtwn);
         int numWordsBtwn = btwn.size();
-        features.add("#WB:"+numWordsBtwn);
+        addBinFeat(features, "#WB:"+numWordsBtwn);
         String m1ConM2 = "M1>M2:"+m1span.contains(m2span);
         String m2ConM1 = "M1<M2:"+m2span.contains(m1span);
-        features.add(m1ConM2);
-        features.add(m2ConM1);
+        addBinFeat(features, m1ConM2);
+        addBinFeat(features, m2ConM1);
         
-        features.add(combo(et12, m1ConM2));
-        features.add(combo(et12, m2ConM1));
-        features.add(combo(hm12, m1ConM2));
-        features.add(combo(hm12, m2ConM1));
+        addBinFeat(features, combo(et12, m1ConM2));
+        addBinFeat(features, combo(et12, m2ConM1));
+        addBinFeat(features, combo(hm12, m1ConM2));
+        addBinFeat(features, combo(hm12, m2ConM1));
         
         // =============================
         // 4.5 Base Phrase Chunking
@@ -206,19 +218,62 @@ public class RelObsFe implements ObsFeatureExtractor {
         // • CPHBO: other phrase heads in between except
         // first and last phrase heads when at least three
         // phrases in between
-        // 
+        Pair<List<LabeledSpan>, IntArrayList> chunkPair = getSpansFromBIO(sent.getChunks(), true);
+        List<LabeledSpan> chunks = chunkPair.get1();
+        IntArrayList tokIdxToChunkIdx = chunkPair.get2();
+        int c1 = tokIdxToChunkIdx.get(m1.getHead());
+        int c2 = tokIdxToChunkIdx.get(m2.getHead());
+        int[] chunkHeads = getHeadsOfSpans(chunks, sent.getParents());
+        assert c2 >= c1;
+        int numChunksBtwn = Math.max(c2 - c1 - 1, 0);
+        if (numChunksBtwn == 0) {
+            addBinFeat(features, "CPHBNULL");
+        } else if (numChunksBtwn == 1) {
+            addBinFeat(features, "CPHBFL:"+sent.getWord(chunkHeads[c1+1]));
+        } else {
+            addBinFeat(features, "CPHBF:"+sent.getWord(chunkHeads[c1+1]));
+            addBinFeat(features, "CPHBL:"+sent.getWord(chunkHeads[c2-1]));
+            for (int b=c1+2; b<=c2-2; b++) {
+                addBinFeat(features, "CPHBO:"+sent.getWord(chunkHeads[b]));
+            }
+        }
+        
         // • CPHBM1F: first phrase head before M1
         // • CPHBM1L: second phrase head before M1
         // • CPHAM2F: first phrase head after M2
-        // • CPHAM2F: second phrase head after M2
+        // • CPHAM2L: second phrase head after M2
+        String chunkHead;
+        chunkHead = (c1-1 < 0) ? "BOS" : sent.getWord(chunkHeads[c1-1]);
+        addBinFeat(features, "CPHBM1F:"+chunkHead);
+        chunkHead = (c1-2 < 0) ? "BOS" : sent.getWord(chunkHeads[c1-2]);
+        addBinFeat(features, "CPHBM1L:"+chunkHead);
+        chunkHead = (c2+1 >= chunkHeads.length) ? "EOS" : sent.getWord(chunkHeads[c2+1]);
+        addBinFeat(features, "CPHAM2F:"+chunkHead);
+        chunkHead = (c2+2 >= chunkHeads.length) ? "EOS" : sent.getWord(chunkHeads[c2+2]);
+        addBinFeat(features, "CPHAM2L:"+chunkHead);
+        
         // • CPP: path of phrase labels connecting the two
         // mentions in the chunking
-        //
+        StringBuilder chunkPath = new StringBuilder();
+        for (int b=c1+1; b<=c2-1; b++) {
+            chunkPath.append(chunks.get(b).getLabel());
+            chunkPath.append("_");
+        }
+        addBinFeat(features, "CPP:"+chunkPath);
+        
         // • CPPH: path of phrase labels connecting the two
         // mentions in the chunking augmented with head words,
         // if at most two phrases in between
-        
-        // TODO: Finish Base Phrase Chunking features.
+        if (numChunksBtwn <= 2) {
+            StringBuilder chunkHeadPath = new StringBuilder();
+            for (int b=c1+1; b<=c2-1; b++) {
+                chunkHeadPath.append(chunks.get(b).getLabel());
+                chunkHeadPath.append(":");
+                chunkHeadPath.append(sent.getWord(chunkHeads[b]));
+                chunkHeadPath.append("_");
+            }
+            addBinFeat(features, "CPPH:"+chunkHeadPath);
+        }
         
         // =============================
         // 4.6 Dependency Tree
@@ -240,20 +295,20 @@ public class RelObsFe implements ObsFeatureExtractor {
 
         String depWord1 = getDepWord(fsent, sent, m1);
         String dw1 = "dw1:"+depWord1;
-        features.add(combo("et1:"+m1.getEntityType(), dw1));
-        features.add(combo(hm1, dw1));
+        addBinFeat(features, combo("et1:"+m1.getEntityType(), dw1));
+        addBinFeat(features, combo(hm1, dw1));
         
         String depWord2 = getDepWord(fsent, sent, m2);
         String dw2 = "dw2:"+depWord2;
-        features.add(combo("et2:"+m2.getEntityType(), dw2));
-        features.add(combo(hm2, dw2));
+        addBinFeat(features, combo("et2:"+m2.getEntityType(), dw2));
+        addBinFeat(features, combo(hm2, dw2));
         
         String sameNp = "sameNp:"+inSamePhrase(sent, m1.getHead(), m2.getHead(), "NP");
         String samePp = "samePp:"+inSamePhrase(sent, m1.getHead(), m2.getHead(), "PP");
         String sameVp = "sameVp:"+inSamePhrase(sent, m1.getHead(), m2.getHead(), "VP");
-        features.add(combo(et12, sameNp));
-        features.add(combo(et12, samePp));
-        features.add(combo(et12, sameVp));
+        addBinFeat(features, combo(et12, sameNp));
+        addBinFeat(features, combo(et12, samePp));
+        addBinFeat(features, combo(et12, sameVp));
         
         // =============================
         // 4.7 Parse Tree
@@ -265,9 +320,9 @@ public class RelObsFe implements ObsFeatureExtractor {
         // with the head word of the top phrase in the path.
         
         String ptp = "ptp:"+ StringUtils.join(getPathSymbols(m1.getHead(), m2.getHead()), ":");
-        features.add(ptp);
+        addBinFeat(features, ptp);
         int lca = getLca(sent.getParents(), m1.getHead(), m2.getHead());
-        features.add(combo(ptp, "lcaHead:" + fsent.getFeatTok(lca).getForm()));
+        addBinFeat(features, combo(ptp, "lcaHead:" + fsent.getFeatTok(lca).getForm()));
 
         // =============================
         // 4.8 Semantic Resources
@@ -287,6 +342,58 @@ public class RelObsFe implements ObsFeatureExtractor {
         
     }
 
+    // TODO: Move this somewhere else.
+    private static int[] getHeadsOfSpans(List<? extends Span> spans, int[] parents) {
+        int[] heads = new int[spans.size()];
+        for (int i=0; i<spans.size(); i++) {
+            heads[i] = getHeadOfSpan(spans.get(i), parents);
+        }
+        return heads;
+    }
+
+    private static int getHeadOfSpan(Span span, int[] parents) {
+        int prev= span.start();
+        int head = span.start();
+        while (head != -1 && span.start() <= head && head < span.end()) {
+            prev = head;
+            head = parents[head];
+        }
+        return prev;
+    }
+
+    // TODO: Move this somewhere else.
+    public static Pair<List<LabeledSpan>,IntArrayList> getSpansFromBIO(List<String> tags, boolean includeOutside) {
+        List<LabeledSpan> chunks = new ArrayList<>();
+        IntArrayList tokIdxToSpanIdx = new IntArrayList(tags.size());
+        int curChunk = -1;
+        for (int i=0; i<tags.size(); i++) {
+            String label = tags.get(i);
+            if (label.startsWith("B-")) {
+                // Create a new span with the label.
+                LabeledSpan span = new LabeledSpan(i, i+1, label.substring(2));
+                curChunk = chunks.size();
+                chunks.add(span);
+            } else if (label.startsWith("I-")) {
+                assert curChunk != -1 : "I- was not preceeded by B- in chunks: " + tags;
+                // Update the end of the previous span.
+                chunks.get(curChunk).setEnd(i+1);
+            } else if (label.equals("O")) {
+                if (includeOutside) {
+                    // Create a new span with the "Outside" label.
+                    LabeledSpan span = new LabeledSpan(i, i+1, label);
+                    curChunk = chunks.size();
+                    chunks.add(span);
+                } else {
+                    curChunk = -1;
+                }
+            } else {
+                throw new RuntimeException("Unexpected tag: " + label);
+            }
+            tokIdxToSpanIdx.add(curChunk);            
+        }        
+        return new Pair<List<LabeledSpan>,IntArrayList>(chunks, tokIdxToSpanIdx);
+    }
+    
     public static int getNumBtwn(AnnoSentence sent, NerMention m1, NerMention m2) {
         Span btwn = Span.getSpanBtwn(m1.getSpan(), m2.getSpan());
         int numMentsBtwn = 0;
@@ -407,46 +514,13 @@ public class RelObsFe implements ObsFeatureExtractor {
         return hm1 + "_" + hm2;
     }
 
-
-    private boolean usePosTagFeatures = true;
-    private boolean useLemmaFeatures = false;
-    
-    /**
-     * Adds a set of features based on a span of tokens.
-     */
-    private void addExtentFeatures(List<String> features, Span extent, String prefix) {
-        features.add(String.format("%sAllWords:%s", prefix, sent.getWordsStr(extent)));
-        if (useLemmaFeatures) {
-            features.add(String.format("%sAllLemmas:%s", prefix, sent.getLemmasStr(extent)));
-        }
-        if (usePosTagFeatures) {
-            features.add(String.format("%sAllPosTags:%s", prefix, sent.getPosTagsStr(extent)));
-            features.add(String.format("%sAllWordPosTags:%s", prefix, sent.getWordPosTagsStr(extent)));
-        }
-
-        for (String word : sortUniq(sent.getWords(extent))) {
-            features.add(String.format("%sHasWord:%s", prefix, word));
-        }
-        for (String lemma : sortUniq(sent.getLemmas(extent))) {
-            features.add(String.format("%sHasLemma:%s", prefix, lemma));
-        }
-        if (usePosTagFeatures) {
-            for (String tag : sortUniq(sent.getPosTags(extent))) {
-                features.add(String.format("%sHasPosTag:%s", prefix, tag));
-            }
-            for (String wt : sortUniq(sent.getWordPosTags(extent))) {
-                features.add(String.format("%sHasWordPosTag:%s", prefix, wt));
-            }
-        }
-    }
-
     private static Collection<String> sortUniq(List<String> words) {
         ArrayList<String> uniq = new ArrayList<>(new HashSet<>(words));
         Collections.sort(uniq);
         return words;
     }
 
-    private void addEmbeddingFeatures(LocalObservations local, FeatureNames alphabet, FeatureVector fv) {
+    private void addEmbeddingFeatures(LocalObservations local, ObjFeatVec<String> fv) {
         //  - Per word, we have various features, such as whether a word is in between
         //    the entities or on the dependency path between them.
         //    - For each of the above features, if the feature fires, set the
@@ -472,11 +546,11 @@ public class RelObsFe implements ObsFeatureExtractor {
             //     - in_between+ne1+ne2 if in_between = T
             Span btwn = Span.getSpanBtwn(m1span, m2span);
             for (int i=btwn.start(); i<btwn.end(); i++) {
-                addEmbFeat("in_between", i, alphabet, fv);
-                addEmbFeat("in_between"+ne1, i, alphabet, fv);
-                addEmbFeat("in_between"+ne2, i, alphabet, fv);
-                addEmbFeat("in_between"+ne1ne2, i, alphabet, fv);
-            }                
+                addEmbFeat("in_between", i, fv);
+                addEmbFeat("in_between"+ne1, i, fv);
+                addEmbFeat("in_between"+ne2, i, fv);
+                addEmbFeat("in_between"+ne1ne2, i, fv);
+            }
     
             //     - on_path
             //     - on_path+ne1 if on_path = T
@@ -485,58 +559,66 @@ public class RelObsFe implements ObsFeatureExtractor {
             FeaturizedTokenPair ftp = fsent.getFeatTokPair(m1.getHead(), m2.getHead());        
             for (Pair<Integer,DepTree.Dir> pair : ftp.getDependencyPath()) {
                 int i = pair.get1();
-                addEmbFeat("on_path", i, alphabet, fv);
-                addEmbFeat("on_path"+ne1, i, alphabet, fv);
-                addEmbFeat("on_path"+ne2, i, alphabet, fv);
-                addEmbFeat("on_path"+ne1ne2, i, alphabet, fv);
+                addEmbFeat("on_path", i, fv);
+                addEmbFeat("on_path"+ne1, i, fv);
+                addEmbFeat("on_path"+ne2, i, fv);
+                addEmbFeat("on_path"+ne1ne2, i, fv);
             }
             
             //     - -1_ne1: immediately to the left of the ne1 head
             //     - +1_ne1: immediately to the right of the ne1 head
             //     - -2_ne1: two to the left of the ne1 head
             //     - +2_ne1: two to the right of the ne1 head
-            addEmbFeat("-1_ne1", m1.getHead()-1, alphabet, fv);
-            addEmbFeat("+1_ne1", m1.getHead()+1, alphabet, fv);
-            addEmbFeat("-2_ne1", m1.getHead()-2, alphabet, fv);
-            addEmbFeat("+2_ne1", m1.getHead()+2, alphabet, fv);
+            addEmbFeat("-1_ne1", m1.getHead()-1, fv);
+            addEmbFeat("+1_ne1", m1.getHead()+1, fv);
+            addEmbFeat("-2_ne1", m1.getHead()-2, fv);
+            addEmbFeat("+2_ne1", m1.getHead()+2, fv);
             
             //     - -1_ne2: immediately to the left of the ne1 head
             //     - +1_ne2: immediately to the right of the ne1 head
             //     - -2_ne2: two to the left of the ne1 head
             //     - +2_ne2: two to the right of the ne1 head
-            addEmbFeat("-1_ne2", m2.getHead()-1, alphabet, fv);
-            addEmbFeat("+1_ne2", m2.getHead()+1, alphabet, fv);
-            addEmbFeat("-2_ne2", m2.getHead()-2, alphabet, fv);
-            addEmbFeat("+2_ne2", m2.getHead()+2, alphabet, fv);
+            addEmbFeat("-1_ne2", m2.getHead()-1, fv);
+            addEmbFeat("+1_ne2", m2.getHead()+1, fv);
+            addEmbFeat("-2_ne2", m2.getHead()-2, fv);
+            addEmbFeat("+2_ne2", m2.getHead()+2, fv);
                     
         case HEAD_TYPE:
             //     - ne1_head+ne1
             //     - ne1_head+ne2
             //     - ne1_head+ne1+ne2
-            addEmbFeat("ne1_head"+ne1,    m1.getHead(), alphabet, fv);
-            addEmbFeat("ne1_head"+ne2,    m1.getHead(), alphabet, fv);
-            addEmbFeat("ne1_head"+ne1ne2, m1.getHead(), alphabet, fv);
+            addEmbFeat("ne1_head"+ne1,    m1.getHead(), fv);
+            addEmbFeat("ne1_head"+ne2,    m1.getHead(), fv);
+            addEmbFeat("ne1_head"+ne1ne2, m1.getHead(), fv);
             
             //     - ne2_head+ne1
             //     - ne2_head+ne2
             //     - ne2_head+ne1+ne2
-            addEmbFeat("ne2_head"+ne1,    m2.getHead(), alphabet, fv);
-            addEmbFeat("ne2_head"+ne2,    m2.getHead(), alphabet, fv);
-            addEmbFeat("ne2_head"+ne1ne2, m2.getHead(), alphabet, fv);
+            addEmbFeat("ne2_head"+ne1,    m2.getHead(), fv);
+            addEmbFeat("ne2_head"+ne2,    m2.getHead(), fv);
+            addEmbFeat("ne2_head"+ne1ne2, m2.getHead(), fv);
             
         case HEAD_ONLY:
             //     - ne1_head: true if is the head of the first entity
-            addEmbFeat("ne1_head",        m1.getHead(), alphabet, fv);
+            addEmbFeat("ne1_head",        m1.getHead(), fv);
             //     - ne2_head: true if is the head of the second entity
-            addEmbFeat("ne2_head",        m2.getHead(), alphabet, fv);
+            addEmbFeat("ne2_head",        m2.getHead(), fv);
         }
     }
+
+    private void addBinFeat(ObjFeatVec<String> fv, String fname) {
+        fv.add(fname, 1.0);
+    }
     
-    private void addEmbFeat(String fname, int i, FeatureNames alphabet, FeatureVector fv) {
+    private void addEmbFeat(String fname, int i, ObjFeatVec<String> fv) {
+        if (i < 0 || sent.size() <= i) {
+            return;
+        }
         double[] embed = sent.getEmbed(i);
-        for (int d=0; d<embed.length; d++) {
-            int fidx = alphabet.lookupIndex(fname+"_"+d);
-            fv.add(fidx, embed[d]);
+        if (embed != null) {
+            for (int d=0; d<embed.length; d++) {
+                fv.add(fname+"_"+d, embed[d]);
+            }
         }
     }
     

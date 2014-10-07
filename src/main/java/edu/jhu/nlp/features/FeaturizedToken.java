@@ -164,6 +164,15 @@ public class FeaturizedToken {
         }
         return sent.getWord(idx);
     }
+
+    public String getPrefix() {
+        if (idx < 0) {
+            return "BEGIN_NO_PREFIX";
+        } else if (idx >= sent.size()) {
+            return "END_NO_PREFIX";
+        }
+        return sent.getPrefix(idx);
+    }
     
     public String getLemma() {
         if (idx < 0) {

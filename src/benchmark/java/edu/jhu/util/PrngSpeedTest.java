@@ -2,7 +2,7 @@ package edu.jhu.util;
 
 import org.junit.Test;
 
-public class PrngTest {
+public class PrngSpeedTest {
 
     @Test
     public void testSpeed() {

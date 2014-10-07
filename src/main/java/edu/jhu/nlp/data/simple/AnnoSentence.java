@@ -34,12 +34,15 @@ public class AnnoSentence {
     private static final String SPAN_STR_SEP = " ";
     
     private List<String> words;
+    // 5-gram prefix if the word is longer than 5 characters.
+    private List<String> prefixes;
     private List<String> lemmas;
     private List<String> posTags;
     private List<String> cposTags;
     private List<String> clusters;
     private List<double[]> embeds;
-    private ArrayList<List<String>> feats;
+    private List<List<String>> feats;
+    private List<String> chunks;
     private List<String> deprels;
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
@@ -79,11 +82,13 @@ public class AnnoSentence {
     public AnnoSentence getFairlyDeepCopy() {
         AnnoSentence newSent = new AnnoSentence();
         newSent.words = Lists.copyOf(this.words);
+        newSent.prefixes = Lists.copyOf(this.prefixes);
         newSent.lemmas = Lists.copyOf(this.lemmas);
         newSent.posTags = Lists.copyOf(this.posTags);
         newSent.cposTags = Lists.copyOf(this.cposTags);
         newSent.clusters = Lists.copyOf(this.clusters);
         newSent.embeds = Lists.copyOf(this.embeds);
+        newSent.chunks = Lists.copyOf(this.chunks);
         newSent.deprels = Lists.copyOf(this.deprels);
         newSent.parents = IntArrays.copyOf(this.parents);
         newSent.depEdgeMask = (this.depEdgeMask == null) ? null : new DepEdgeMask(this.depEdgeMask);
@@ -113,12 +118,14 @@ public class AnnoSentence {
     public static void copyShallow(AnnoSentence src, AnnoSentence dest, AT at) {
         switch (at) {
         case WORD: dest.words = src.words; break;
+        case PREFIX: dest.prefixes = src.prefixes; break;
         case LEMMA: dest.lemmas = src.lemmas; break;
         case POS: dest.posTags = src.posTags; break;
         case CPOS: dest.cposTags = src.cposTags; break;
         case BROWN: dest.clusters = src.clusters; break;
         case EMBED: dest.embeds = src.embeds; break;
         case MORPHO: dest.feats = src.feats; break;
+        case CHUNKS: dest.chunks = src.chunks; break;
         case DEP_TREE: dest.parents = src.parents; break;
         case DEPREL: dest.deprels = src.deprels; break;
         case DEP_EDGE_MASK: dest.depEdgeMask = src.depEdgeMask; break;
@@ -142,12 +149,14 @@ public class AnnoSentence {
     public void removeAt(AT at) {
         switch (at) {
         case WORD: this.words = null; break;
+        case PREFIX: this.prefixes = null; break;
         case LEMMA: this.lemmas = null; break;
         case POS: this.posTags = null; break;
         case CPOS: this.cposTags = null; break;
         case BROWN: this.clusters = null; break;
         case EMBED: this.embeds = null; break;
         case MORPHO: this.feats = null; break;
+        case CHUNKS: this.chunks = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
         case DEP_EDGE_MASK: this.depEdgeMask = null; break;
@@ -165,12 +174,14 @@ public class AnnoSentence {
     public boolean hasAt(AT at) {
         switch (at) {
         case WORD: return this.words != null;
+        case PREFIX: return this.prefixes != null;
         case LEMMA: return this.lemmas != null;
         case POS: return this.posTags != null;
         case CPOS: return this.cposTags != null;
         case BROWN: return this.clusters != null;
         case EMBED: return this.embeds != null;
         case MORPHO: return this.feats != null;
+        case CHUNKS: return this.chunks != null;
         case DEP_TREE: return this.parents != null;
         case DEPREL: return this.deprels != null;
         case DEP_EDGE_MASK: return this.depEdgeMask != null;
@@ -187,6 +198,7 @@ public class AnnoSentence {
     
     public void intern() {
         Lists.intern(words);
+        Lists.intern(prefixes);
         Lists.intern(lemmas);
         Lists.intern(posTags);
         Lists.intern(cposTags);
@@ -196,6 +208,7 @@ public class AnnoSentence {
                 Lists.intern(feats.get(i));
             }
         }
+        Lists.intern(chunks);
         Lists.intern(deprels);        
         if (naryTree != null) {
             naryTree.intern();
@@ -216,6 +229,7 @@ public class AnnoSentence {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         appendIfNotNull(sb, "words", words);
+        appendIfNotNull(sb, "prefixes", prefixes);
         appendIfNotNull(sb, "lemmas", lemmas);
         appendIfNotNull(sb, "tags", posTags);
         appendIfNotNull(sb, "cposTags", cposTags);
@@ -227,6 +241,7 @@ public class AnnoSentence {
             sb.append(Arrays.toString(parents));
             sb.append(",\n");
         }
+        appendIfNotNull(sb, "chunks", chunks);
         appendIfNotNull(sb, "deprels", deprels);
         appendIfNotNull(sb, "depEdgeMask", depEdgeMask);
         appendIfNotNull(sb, "srlGraph", srlGraph);
@@ -258,6 +273,11 @@ public class AnnoSentence {
     public String getWord(int i) {
         return words.get(i);
     }
+    
+    /** Gets the i'th prefix of 5 characters as a String. */
+    public String getPrefix(int i) {
+        return prefixes.get(i);
+    }
 
     /** Gets the i'th POS tag as a String. */
     public String getPosTag(int i) {
@@ -281,6 +301,11 @@ public class AnnoSentence {
     /** Gets the i'th lemma as a String. */
     public String getLemma(int i) {
         return lemmas.get(i);
+    }
+
+    /** Gets the i'th chunk as a String. */
+    public String getChunk(int i) {
+        return chunks.get(i);
     }
     
     /** Gets the index of the parent of the i'th word. */
@@ -310,6 +335,13 @@ public class AnnoSentence {
      */
     public List<String> getWords(Span span) {
         return getSpan(words, span);
+    }
+    
+    /**
+     * Gets a list of words corresponding to a token span.
+     */
+    public List<String> getPrefixes(Span span) {
+        return getSpan(prefixes, span);
     }
 
     /**
@@ -373,6 +405,15 @@ public class AnnoSentence {
      */
     public String getWordsStr(Span span) {
         return getSpanStr(words, span);
+    }
+    
+    /**
+     * Gets a single string representing the words in a given token span.
+     * 
+     * @param span
+     */
+    public String getPrefixesStr(Span span) {
+        return getSpanStr(prefixes, span);
     }
 
     /**
@@ -513,6 +554,14 @@ public class AnnoSentence {
     public void setWords(List<String> words) {
         this.words = words;
     }
+    
+    public List<String> getPrefixes() {
+        return prefixes;
+    }
+
+    public void setPrefixes(List<String> prefixes) {
+        this.prefixes = prefixes;
+    }
 
     public List<String> getLemmas() {
         return lemmas;
@@ -552,6 +601,14 @@ public class AnnoSentence {
 
     public void setEmbeds(List<double[]> embeds) {
         this.embeds = embeds;
+    }
+    
+    public List<String> getChunks() {
+        return chunks;
+    }
+
+    public void setChunks(List<String> chunks) {
+        this.chunks = chunks;
     }
 
     public int[] getParents() {
@@ -596,11 +653,11 @@ public class AnnoSentence {
         this.deprels = deprels;
     }
 
-    public ArrayList<List<String>> getFeats() {
+    public List<List<String>> getFeats() {
         return feats;
     }
 
-    public void setFeats(ArrayList<List<String>> feats) {
+    public void setFeats(List<List<String>> feats) {
         this.feats = feats;
     }
     

@@ -20,7 +20,7 @@ public class NerMentions implements Iterable<NerMention> {
 
     public NerMentions(int n, List<NerMention> spans) {
         this.ments = spans;
-        Collections.sort(spans);
+        Collections.sort(ments);
     }
 
     /** Deep copy constructor. */
@@ -104,6 +104,10 @@ public class NerMentions implements Iterable<NerMention> {
     
     public int size() {
         return ments.size();
+    }
+
+    public void sort() {
+        Collections.sort(ments);
     }
 
 }

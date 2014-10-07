@@ -48,6 +48,8 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
         public boolean onlyTrueEdges = true;
         /** Whether to only include the bias feature on edges in the tree. */ 
         public boolean onlyTrueBias = true;
+        /** Whether to use only the fast-to-extract feature set. */
+        public boolean onlyFast = false;
     }
     
     private static final Logger log = Logger.getLogger(DepParseFeatureExtractor.class); 

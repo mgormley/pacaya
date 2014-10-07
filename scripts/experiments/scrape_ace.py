@@ -9,7 +9,7 @@ import tempfile
 import stat
 import subprocess
 from optparse import OptionParser
-from experiments.run_ace import ReExpParams
+from experiments.run_ace2 import ReExpParams
 from glob import glob
 from pypipeline.util import get_all_following, get_following, get_time, get_following_literal,\
     to_str, to_int, get_group1, head
