@@ -29,10 +29,9 @@ import edu.jhu.util.hash.MurmurHash;
 public class FastDepParseFeatureExtractor implements FeatureExtractor {
 
     private static final Logger log = Logger.getLogger(FastDepParseFeatureExtractor.class);     
-    private static final FeatureVector biasFvEdgeOff;
+    private static final FeatureVector emptyFv;
     static {
-        biasFvEdgeOff = new FeatureVector();
-        // TODO: DO WE WANT THIS? biasFvEdgeOff.add(MurmurHash.hash32("BIAS_FEATURE_FOR_OFF_EDGE"), 1.0);
+        emptyFv = new FeatureVector();
     }
 
     public static int featureHashMod = -1;
@@ -41,6 +40,7 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
     public FastDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FeatureNames alphabet) {
         this.isent = new IntAnnoSentence(sent, cs.store);
         this.featureHashMod = featureHashMod;
+        // TODO: Remove this, it's a huge waste of memory.
         int i=0;
         while (alphabet.size() < featureHashMod) {
             alphabet.lookupIndex(i++);
@@ -62,7 +62,7 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
         
         int[] vc = vars.getVarConfigAsArray(configId);
         if (ArrayUtils.contains(vc, LinkVar.FALSE)) {
-            return biasFvEdgeOff;
+            return emptyFv;
         }
         
         //LongArrayList feats = new LongArrayList();
@@ -85,15 +85,6 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
             throw new RuntimeException("Unsupported template: " + ft);
         }
         
-//        // TODO: This should be stored as an IntArrayList and hashing should move inside the feature extractors.
-//        FeatureVector fv = new FeatureVector();
-//        long[] lfeats = feats.getInternalElements();
-//        for (int k=0; k<feats.size(); k++) {
-//            //int hash = (int) ((lfeats[k] ^ (lfeats[k] >>> 32)) & 0xffffffffl);
-//            int hash = MurmurHash.hash32(lfeats[k]);
-//            hash = FastMath.mod(hash, featureHashMod);
-//            fv.add(hash, 1.0);
-//        }
         return feats;
     }
         

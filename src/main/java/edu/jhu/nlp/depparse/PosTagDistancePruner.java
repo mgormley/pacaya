@@ -1,5 +1,7 @@
 package edu.jhu.nlp.depparse;
 
+import java.util.Arrays;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.nlp.Annotator;
@@ -106,6 +108,10 @@ public class PosTagDistancePruner implements Trainable, Annotator {
             // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
             if (!mask.allowsSinglyRootedTrees()) {
                 log.warn("All single-root trees pruned");
+                log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));
+                if (sent.getParents() != null) {
+                    log.trace("Pruned parents: " + Arrays.toString(sent.getParents()));
+                }
             }
         }
         
