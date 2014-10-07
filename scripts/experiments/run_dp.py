@@ -77,11 +77,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 
         # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
-                                   removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
-                                   #bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
+                                   removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
+                                   bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
-                                                  #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
-                                                  bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
+                                                  bpMaxIterations=5, 
                                                   useMseForValue=True)
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
         g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
