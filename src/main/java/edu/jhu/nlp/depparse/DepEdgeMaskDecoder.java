@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.FgInferencer;
@@ -25,6 +26,7 @@ public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
     public static class DepEdgeMaskDecoderPrm {
         public double pruneMargProp = 0.0001;
         public int maxPrunedHeads = 10;
+        public boolean includeMbrParse = true;
     }
     
     private DepEdgeMaskDecoderPrm prm;
@@ -51,18 +53,21 @@ public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
         int linkVarCount = pair.get2();
         
         if (linkVarCount > 0) {
-            return getDepEdgeMask(scores, prm.pruneMargProp, prm.maxPrunedHeads);
+            return getDepEdgeMask(scores, prm.pruneMargProp, prm.maxPrunedHeads, prm.includeMbrParse);
         } else {
             return null;
         }
     }
 
     /** See {@link #decode(FgInferencer, UFgExample, AnnoSentence)}. */
-    public static DepEdgeMask getDepEdgeMask(EdgeScores scores, double propMaxMarg, int maxPrunedHeads) {
+    public static DepEdgeMask getDepEdgeMask(EdgeScores scores, double propMaxMarg, int maxPrunedHeads, boolean includeMbrParse) {
         int n = scores.root.length;
         DepEdgeMask mask = new DepEdgeMask(n, true);
         pruneByCount(scores, maxPrunedHeads, mask);
         pruneByMaxMarginal(scores, propMaxMarg, mask);
+        if (includeMbrParse) {
+            mask.keepEdgesFromTree(DepParseDecoder.getParents(scores));
+        }
         checkValidMask(n, mask);
         return mask;
     }
@@ -145,6 +150,11 @@ public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
                 String msg = String.format("") + mask;
                 throw new IllegalStateException(msg);
             }
+        }
+        if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
+            log.warn("All single-root trees pruned");
+        } else if (!InsideOutsideDepParse.singleRoot && !mask.allowsMultiRootTrees()) {
+            log.warn("All multi-root trees pruned");
         }
     }
 

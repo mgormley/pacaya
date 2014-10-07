@@ -68,6 +68,15 @@ public class DepEdgeMask implements Serializable {
             }
         }
     }
+    
+    public void keepEdgesFromTree(int[] parents) {
+        if (parents.length != n) {
+            throw new IllegalArgumentException("Tree is wrong length. expected="+n+" actual="+parents.length);
+        }
+        for (int c=0; c<parents.length; c++) {
+            setIsKept(parents[c], c, true);
+        }
+    }
 
     /** Gets the total number of kept edges. */
     public int getCount() {
@@ -83,18 +92,26 @@ public class DepEdgeMask implements Serializable {
         this.mat.and(other.mat);
     }
 
-    public boolean allowsSinglyRootedTrees() {
+    public void or(DepEdgeMask other) {
+        this.mat.or(other.mat);
+    }
+
+    public boolean allowsSingleRootTrees() {
         for (int c=0; c < n; c++) {
             // For each child of the root, check that a singly root tree 
-            if(this.isKept(-1, c) && allowsSinglyRootedTrees(c)) {
+            if(this.isKept(-1, c) && getNumReachable(c) == n) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean allowsSinglyRootedTrees(int root) {
-        boolean[] marked = new boolean[n];
+    public boolean allowsMultiRootTrees() {
+        return getNumReachable(-1) == n+1;
+    }
+
+    private int getNumReachable(int root) {
+        boolean[] marked = new boolean[n+1];
         Arrays.fill(marked, false);
         // Run a depth-first search (excluding edges to the root) starting at the given token, and mark all reachable tokens.
         IntStack stack = new IntStack();
@@ -102,19 +119,18 @@ public class DepEdgeMask implements Serializable {
         int numMarked = 0;
         while (stack.size() > 0) {
             int p = stack.pop();
-            if (marked[p]) {
+            if (marked[p+1]) {
                 continue;
             }
             for (int c=0; c<n; c++) {
-                if (p != c && !marked[c] && this.isKept(p, c)) {
+                if (p != c && !marked[c+1] && this.isKept(p, c)) {
                     stack.push(c);
                 }
             }
-            marked[p] = true;
+            marked[p+1] = true;
             numMarked++;
         }
-        // If all tokens are reachable, then a singly root tree is possible.
-        return numMarked == n;
+        return numMarked;
     }
     
 }

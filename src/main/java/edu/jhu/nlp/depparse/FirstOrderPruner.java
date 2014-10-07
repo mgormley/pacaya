@@ -55,6 +55,7 @@ public class FirstOrderPruner implements Annotator {
         exPrm.fgPrm.dpPrm.siblingFactors = false;
         exPrm.fgPrm.dpPrm.unaryFactors = true;
         exPrm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        exPrm.fgPrm.dpPrm.pruneEdges = true;
         exPrm.fePrm = fePrm;
         
         // Get unlabeled data.
@@ -71,6 +72,8 @@ public class FirstOrderPruner implements Annotator {
         for (int i = 0; i < inputSents.size(); i++) {
             LFgExample ex = data.get(i);
             AnnoSentence inputSent = inputSents.get(i);
+            // TODO: Because we use the JointNlpDecoder, we end up computing the MBR parse twice
+            // (once for the mask, once for the parents array).
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
             AnnoSentence predSent = decoder.decode(model, ex, inputSent);
             

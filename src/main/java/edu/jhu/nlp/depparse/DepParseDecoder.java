@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.FgInferencer;
@@ -60,7 +61,11 @@ public class DepParseDecoder implements Decoder<AnnoSentence, int[]> {
         int n = scores.root.length;
         int[] parents = new int[n];
         Arrays.fill(parents, DepTree.EMPTY_POSITION);
-        ProjectiveDependencyParser.parseSingleRoot(scores.root, scores.child, parents);
+        if (InsideOutsideDepParse.singleRoot) {
+            ProjectiveDependencyParser.parseSingleRoot(scores.root, scores.child, parents);
+        } else {
+            ProjectiveDependencyParser.parseMultiRoot(scores.root, scores.child, parents);
+        }
         return parents;
     }
 
