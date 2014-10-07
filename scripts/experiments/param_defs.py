@@ -92,7 +92,7 @@ class ParamDefinitions():
         else:
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
-        g.defaults.set("sgdBatchSize", 20)
+        g.defaults.set("sgdBatchSize", 30)
                 
         g.defaults.update(
             printModel="./model.txt.gz",                          

@@ -82,8 +82,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                   bpMaxIterations=5, 
                                                   useMseForValue=True)
-        g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
-        g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
+        g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, 
+                                                       tagger_parser="2nd-gra")
+        g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, 
+                                                     tagger_parser="2nd-sib")
         g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
         g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
         g.parsers = g.pruned_parsers + g.unpruned_parsers
@@ -164,8 +166,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             languages = ["bg", "es", "en"]
             
             # Speedups
-            g.defaults.update(regularizer="NONE",
-                              trainMaxSentenceLength=50,
+            g.defaults.update(trainMaxSentenceLength=50,
                               includeUnsupportedFeatures=True,
                               sgdNumPasses=5)
             g.defaults.remove("printModel")
@@ -185,12 +186,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         
             # Train the second order models.
             g.defaults.remove("modelOut") # Speedup.
-            for trainer in [g.erma_mse, g.cll]:
+            for trainer in [g.erma_mse, g.cll, g.erma_dp]:
                 for bpMaxIterations in [1, 2, 3, 4]:
                     for lang_short in languages:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
-                        for parser in g.parsers:
+                        for parser in g.pruned_parsers:
                             data = gl.cx_data
                             data.update(l2variance=l2var_map[lang_short],
                                         pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
