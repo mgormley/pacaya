@@ -163,7 +163,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
-            languages = ["bg", "es", "en"]
+            languages = ["es", "bg", "en"]
             
             # Speedups
             g.defaults.update(trainMaxSentenceLength=50,
@@ -186,9 +186,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         
             # Train the second order models.
             g.defaults.remove("modelOut") # Speedup.
-            for trainer in [g.erma_mse, g.cll, g.erma_dp]:
+            for lang_short in languages:
                 for bpMaxIterations in [1, 2, 3, 4]:
-                    for lang_short in languages:
+                    for trainer in [g.erma_mse, g.cll, g.erma_dp]:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
                         for parser in g.pruned_parsers:
