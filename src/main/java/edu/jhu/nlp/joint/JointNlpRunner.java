@@ -76,9 +76,12 @@ import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.report.Reporter;
+import edu.jhu.util.report.ReporterManager;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -114,6 +117,7 @@ public class JointNlpRunner {
     }
 
     private static final Logger log = Logger.getLogger(JointNlpRunner.class);
+    private static final Reporter rep = Reporter.getReporter(JointNlpRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
@@ -334,6 +338,8 @@ public class JointNlpRunner {
     }
 
     public void run() throws ParseException, IOException {  
+        Timer t = new Timer();
+        t.start();
         FastMath.useLogAddTable = useLogAddTable;
         if (useLogAddTable) {
             log.warn("Using log-add table instead of exact computation. When using global factors, this may result in numerical instability.");
@@ -425,6 +431,8 @@ public class JointNlpRunner {
             eval(name, goldSents, inputSents);
             corpus.clearTestCache();
         }
+        t.stop();
+        rep.report("elapsedSec", t.totSec());
     }
 
     private void addClustersAndEmbeddings(AnnoSentenceCollection sents) throws IOException {
@@ -846,35 +854,36 @@ public class JointNlpRunner {
     }
     
     public static void main(String[] args) {
+        int exitCode = 0;
+        ArgParser parser = null;
         try {
-            ArgParser parser = new ArgParser(JointNlpRunner.class);
+            parser = new ArgParser(JointNlpRunner.class);
             parser.addClass(JointNlpRunner.class);
             parser.addClass(CorpusHandler.class);
             parser.addClass(RelationsOptions.class);
-            parser.addClass(InsideOutsideDepParse.class);            
-            try {
-                parser.parseArgs(args);
-            } catch (ParseException e) {
-                log.error(e.getMessage());
-                parser.printUsage();
-                System.exit(1);
-            }
+            parser.addClass(InsideOutsideDepParse.class);      
+            parser.addClass(ReporterManager.class);
+            parser.parseArgs(args);
             
+            ReporterManager.init(ReporterManager.reportOut, true);
             Prng.seed(seed);
-            
+
             JointNlpRunner pipeline = new JointNlpRunner();
-            try {
-                pipeline.run();
-            } catch (ParseException e1) {
-                log.error(e1.getMessage());
+            pipeline.run();
+        } catch (ParseException e1) {
+            log.error(e1.getMessage());
+            if (parser != null) {
                 parser.printUsage();
-                System.exit(1);
             }
+            exitCode = 1;
         } catch (Throwable t) {
             t.printStackTrace();
-            System.exit(1);
+            exitCode = 1;
+        } finally {
+            ReporterManager.close();
         }
-        System.exit(0);
+        
+        System.exit(exitCode);
     }
 
 }

@@ -2,13 +2,10 @@ package edu.jhu.nlp.eval;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.nlp.data.NerMention;
-import edu.jhu.nlp.data.NerMentions;
-import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsEncoder;
-import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.report.Reporter;
 
 /**
  * Computes the precision, recall, and micro-averaged F1 of relations mentions.
@@ -18,6 +15,7 @@ import edu.jhu.prim.tuple.Pair;
 public class RelationEvaluator {
 
     private static final Logger log = Logger.getLogger(RelationEvaluator.class);
+    private static final Reporter rep = Reporter.getReporter(RelationEvaluator.class);
 
     private String dataName;
 
@@ -80,6 +78,8 @@ public class RelationEvaluator {
         log.info(String.format("Precision on %s: %.4f", dataName, precision));
         log.info(String.format("Recall on %s: %.4f", dataName, recall));
         log.info(String.format("F1 on %s: %.4f", dataName, f1));
+        
+        rep.report(dataName+"F1", f1);
     }
 
     public double getPrecision() {
