@@ -314,7 +314,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                     experiment = defaults + setup + evl + dev + test + embed + feats + hyperparam
                                     root.add_dependent(experiment)
 
-            root.dependents = root.dependents[:2]
+            if self.fast: root.dependents = root.dependents[:2]
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)  
