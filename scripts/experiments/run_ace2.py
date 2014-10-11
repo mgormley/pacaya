@@ -308,8 +308,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         for evl in [eval_pm13, eval_types13]:
                             for trainMaxNumSentences in [2000, 4000, 8000, 16000, 35990]:
                                 setup.update(trainMaxNumSentences=trainMaxNumSentences)
-                                setup.update(work_mem_megs=max(1000, 15.*1000. * (trainMaxNumSentences / 32000)))
-                                setup.update(threads=min(1, int(trainMaxNumSentences/1000)))      
+                                setup.update(work_mem_megs=5000 + 10000. * (trainMaxNumSentences / 35990))
+                                setup.update(threads=int(1. + 15. * trainMaxNumSentences / 35990))
                                 for hyperparam in hyperparams:
                                     experiment = defaults + setup + evl + dev + test + embed + feats + hyperparam
                                     root.add_dependent(experiment)
