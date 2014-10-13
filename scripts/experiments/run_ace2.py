@@ -26,7 +26,7 @@ from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
 from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
-
+from hyperparams import *
 
 class ReExpParams(experiment_runner.JavaExpParams):
     
@@ -250,6 +250,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                    maxInterveningEntities=9999, removeEntityTypes=False)            
         defaults.set_incl_arg("group", False)
         
+        # Hyperparameters
+        hyperparams = []
+        for _ in range(20):
+            l2variance = loguniform_val(2, 100000)
+            embScaler = loguniform_val(1, 60)
+            hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
+        for x in hyperparams: print x
+        
         # ------------------------ EXPERIMENTS --------------------------
         
         
@@ -263,20 +271,19 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                useEmbeddingFeatures=True,
                                useZhou05Features=True,
                                useRelationSubtype=True)
-            
-            for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
-                    for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
-                        # Out-of-domain experiments
-                        for domain2 in [ace05_bc_dev]: #ENABLE FOR TEST: ace05_bc_test, ace05_cts, ace05_wl]:
-                            train = get_annotation_as_train(ace05_bn_nw)
-                            test = get_annotation_as_test(domain2)
-                            experiment = defaults + setup + evl + train + test + embed + feats
-                            root.add_dependent(experiment)
-                        # In-domain experiment
-                        # TODO: This should use 5-fold cross validation.
-                        experiment = defaults + setup + evl + train + ReExpParams(propTrainAsDev=0.2) + embed + feats
-                        root.add_dependent(experiment)
+            setup += get_annotation_as_train(ace05_bn_nw)
+
+            for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
+                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
+                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
+                              (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
+                              ]:
+                for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                    for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
+                        for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
+                            for hyperparam in hyperparams[:1]:
+                                exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
+                                root.add_dependent(exp)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
@@ -290,13 +297,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                useEmbeddingFeatures=True,
                                useZhou05Features=True)
             setup += get_annotation_as_train(ace05_bn_nw)
-            hyperparams = []
-            from hyperparams import loguniform_val
-            for _ in range(20):
-                l2variance = loguniform_val(2, 100000)
-                embScaler = loguniform_val(1, 60)
-                hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
-            for x in hyperparams: print x
             
             for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
                               (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
