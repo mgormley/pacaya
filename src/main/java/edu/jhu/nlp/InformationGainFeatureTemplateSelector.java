@@ -16,18 +16,18 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.featurize.TemplateFeatureExtractor;
-import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
-import edu.jhu.featurize.TemplateLanguage.OtherFeat;
-import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.LocalObservations;
+import edu.jhu.nlp.features.TemplateFeatureExtractor;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;
+import edu.jhu.nlp.features.TemplateLanguage.OtherFeat;
+import edu.jhu.nlp.features.TemplateSets;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.matrix.DenseDoubleMatrix;
 import edu.jhu.prim.sort.IntDoubleSort;

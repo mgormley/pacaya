@@ -1,6 +1,5 @@
 package edu.jhu.util.semiring;
 
-import edu.jhu.prim.Primitives;
 import edu.jhu.prim.util.math.FastMath;
 
 public class RealAlgebra implements Semiring, Algebra {

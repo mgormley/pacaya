@@ -7,12 +7,11 @@ import java.util.ArrayList;
 import org.junit.Test;
 
 import edu.jhu.gm.inf.BruteForceInferencer;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.VarSetTest;
-import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebras;
 
 public class MseMarginalEvaluatorTest {

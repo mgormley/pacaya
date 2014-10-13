@@ -11,10 +11,11 @@ import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
-import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
-import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph.PCBasicHypernode;
+import edu.jhu.hypergraph.depparse.DepParseHypergraph;
+import edu.jhu.hypergraph.depparse.PCBasicHypernode;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -28,6 +29,10 @@ import edu.jhu.util.collections.Lists;
  */
 public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Module<Tensor> {
     
+    // TODO: Pass this into the InsideOutsideDepParse constructor.
+    @Opt(hasArg = true, description = "Whether to use single-root or multi-root parsing.")
+    public static boolean singleRoot = true;
+    
     public static final int BETA_IDX = 0;
     public static final int ALPHA_IDX = 1;
     public static final int ROOT_IDX = 2;
@@ -36,7 +41,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
     
     private Scores scores;
     // Cached for efficiency.
-    private FirstOrderDepParseHypergraph graph;
+    private DepParseHypergraph graph;
     
     public InsideOutsideDepParse(Module<Tensor> weightsIn) {
         super(weightsIn.getAlgebra());
@@ -47,7 +52,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
     public Tensor forward() {
         scores = new Scores();
         EdgeScores es = EdgeScores.tensorToEdgeScores(weightsIn.getOutput());            
-        graph = new FirstOrderDepParseHypergraph(es.root, es.child, s);            
+        graph = new DepParseHypergraph(es.root, es.child, s, singleRoot);            
         Hyperpotential w = graph.getPotentials();
         Hyperalgo.insideAlgorithm(graph, w, s, scores);
         Hyperalgo.outsideAlgorithm(graph, w, s, scores);

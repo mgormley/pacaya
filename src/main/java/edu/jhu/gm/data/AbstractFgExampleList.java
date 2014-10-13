@@ -3,8 +3,6 @@ package edu.jhu.gm.data;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import edu.jhu.gm.feat.FactorTemplateList;
-
 /**
  * An abstract collection of instances for a graphical model represented as factor graphs.
  * 

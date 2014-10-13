@@ -8,12 +8,10 @@ import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -21,6 +19,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.util.collections.Lists;
 
@@ -61,11 +60,11 @@ public class MbrDecoderTest {
         
         // Set the param for "N" to 0.5.
         int feat;
-        feat = ofc.getFeatIndex(0, 0, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE", true)));
+        feat = ofc.getFeatIndex(0, 0, fts.get(0).getAlphabet().lookupIndex("BIAS_FEATURE"));
         model.add(feat, 0.5);
         //model.getParams()[0] = 0.5;
         // Set the param for "V" to 1.0.
-        feat = ofc.getFeatIndex(0, 1, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE", true)));
+        feat = ofc.getFeatIndex(0, 1, fts.get(0).getAlphabet().lookupIndex("BIAS_FEATURE"));
         model.add(feat, 1.0);
         //model.getParams()[1] = 1.0;
         System.out.println(model);

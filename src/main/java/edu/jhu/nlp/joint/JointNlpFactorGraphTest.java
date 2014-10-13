@@ -11,10 +11,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import edu.jhu.data.DepEdgeMask;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -22,7 +20,6 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
@@ -30,10 +27,14 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
+import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.ObsFeTypedFactor;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
@@ -41,14 +42,14 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.set.IntHashSet;
-import edu.jhu.prim.set.IntSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.collections.Lists;
 
 /**
  * Unit tests for {@link JointNlpFactorGraph}.
  * @author mgormley
  */
+// TODO: This only tests joint dependency parsing and semantic role labeling, but skips relation extraction.
 public class JointNlpFactorGraphTest {
 
     @Test
@@ -253,7 +254,7 @@ public class JointNlpFactorGraphTest {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();
         prm.includeSrl = false;
         prm.dpPrm.linkVarType = VarType.PREDICTED;
-        prm.dpPrm.unaryFactors = true;       
+        prm.dpPrm.unaryFactors = true;
         JointNlpFactorGraph sfg;
         
         // Grandparents only
@@ -327,7 +328,7 @@ public class JointNlpFactorGraphTest {
     public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
-        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new Alphabet<Feature>()); 
+        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new FeatureNames()); 
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---                                         ---
@@ -339,14 +340,26 @@ public class JointNlpFactorGraphTest {
             }
             
         };
-        IntSet knownPreds = IntHashSet.fromArray(0, 2);
+        IntHashSet knownPreds = IntHashSet.fromArray(0, 2);
         List<String> words = Lists.getList("w1", "w2", "w3");        
         // Prune all but a left branching tree.
         DepEdgeMask depEdgeMask = new DepEdgeMask(words.size(), false);
         for (int c=0; c<words.size(); c++) {
             depEdgeMask.setIsKept(c-1, c, true);
         }
-        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc, fe);
+
+        AnnoSentence sent = new AnnoSentence();
+        sent.setWords(words);
+        sent.setLemmas(words);
+        sent.setKnownPreds(knownPreds);
+        sent.setDepEdgeMask(depEdgeMask);
+        
+        CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
+        cs.roleStateNames = Lists.getList("A1", "A2", "A3");
+        cs.predSenseListMap = psMap;
+        
+        JointNlpFactorGraph fg = new JointNlpFactorGraph(prm, sent, cs, obsFe, ofc, fe, null);
+        
         fe.init(new UnlabeledFgExample(fg, new VarConfig()));
         return fg;
     }

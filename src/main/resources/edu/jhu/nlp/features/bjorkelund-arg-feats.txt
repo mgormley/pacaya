@@ -1,0 +1,67 @@
+# Bjorkelund et al. (2009) unigram feature templates for argument identification and classification. 
+#
+
+# Sense << TODO: This requires a change to our model.
+
+# PredWord
+word(p)
+# PredPOS
+pos(p)
+# PredLemma
+lemma(p)
+# PredDeprel
+deprel(p)
+# PredFeats
+morpho(p)
+# PredParentWord
+word(head(p))
+# PredParentPOS
+pos(head(p))
+# PredParentFeats
+morpho(head(p))
+# DepSubCat
+deprel(seq(children(p)))
+# ChildDepSet
+deprel(bag(children(p)))
+# ChildWordSet
+word(bag(children(p)))
+# ChildPOSSet
+pos(bag(children(p)))
+# ArgWord
+word(c)
+# ArgPOS
+pos(c)
+# ArgFeats
+morpho(c)
+# ArgDeprel
+deprel(c)
+# DeprelPath
+deprel(dir(seq(path(p,c))))
+# POSPath
+pos(dir(seq(path(p,c))))
+# Position
+relative(p,c)
+# LeftWord
+word(lmc(c))
+# LeftPOS
+pos(lmc(c))
+# LeftFeats
+morpho(lmc(c))
+# RightWord
+word(rmc(c))
+# RightPOS
+pos(rmc(c))
+# RightFeats
+morpho(rmc(c))
+# LeftSiblingWord
+word(lns(c))
+# LeftSiblingPOS
+pos(lns(c))
+# LeftSiblingFeats
+morpho(lns(c))
+# RightSiblingWord
+word(rns(c))
+# RightSiblingPOS
+pos(rns(c))
+# RightSiblingFeats
+morpho(rns(c))

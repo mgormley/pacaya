@@ -2,8 +2,6 @@ package edu.jhu.gm.inf;
 
 import java.util.List;
 
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-
 /**
  * Schedule for a message passing algorithm.
  * @author mgormley

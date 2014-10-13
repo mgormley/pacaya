@@ -16,13 +16,19 @@ import edu.jhu.autodiff.tensor.Prod;
 import edu.jhu.autodiff.tensor.ScalarFill;
 import edu.jhu.autodiff.tensor.ScalarMultiply;
 import edu.jhu.autodiff.tensor.Select;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.LogSignAlgebra;
 
+/**
+ * Takes incoming messages about a set of binary variables for a dependency tree and computes the
+ * outgoing messages that are sent from a projective dependency parsing factor following (Smith &
+ * Eisner, 2008).
+ * 
+ * @author mgormley
+ */
 public class ProjDepTreeModule implements Module<Tensor> {
 
     private Module<Tensor> mTrueIn;

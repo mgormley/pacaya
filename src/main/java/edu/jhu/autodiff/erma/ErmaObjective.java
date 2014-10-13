@@ -141,7 +141,7 @@ public class ErmaObjective implements ExampleObjective {
         }
         double sum = initTimer.totMs() + updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
         double mult = 100.0 / sum;
-        log.debug(String.format("Timers total%% (ms): init=%.1f model=%.1f inf=%.1f val=%.1f grad=%.1f avg=%.1f max=%.1f stddev=%.1f", 
+        log.debug(String.format("Timers: init=%.1f%% model=%.1f%% inf=%.1f%% val=%.1f%% grad=%.1f%% avg(ms)=%.1f max(ms)=%.1f stddev(ms)=%.1f", 
                 initTimer.totMs()*mult, updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult,
                 tot.avgMs(), tot.maxSplitMs(), tot.stdDevMs()));
     }

@@ -1,6 +1,6 @@
 package edu.jhu.gm.train;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 

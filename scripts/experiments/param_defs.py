@@ -92,7 +92,7 @@ class ParamDefinitions():
         else:
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
-        g.defaults.set("sgdBatchSize", 20)
+        g.defaults.set("sgdBatchSize", 30)
                 
         g.defaults.update(
             printModel="./model.txt.gz",                          
@@ -164,35 +164,35 @@ class ParamDefinitions():
         g.feat_dep               = self._get_named_feature_set(False, False, False, True, False, 'dep')
         g.feat_bjork             = self._get_named_feature_set(False, False, False, False, True, 'bjork')
         
-        g.feat_tpl_bjork         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/bjorkelund-arg-feats.txt",
+        g.feat_tpl_bjork         = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/bjorkelund-arg-feats.txt",
                                                                 False, 'tpl_bjork')
-        g.feat_tpl_bjork_es      = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-es-sense-feats.txt",
-                                                                "/edu/jhu/featurize/bjorkelund-es-arg-feats.txt",
+        g.feat_tpl_bjork_es      = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-es-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/bjorkelund-es-arg-feats.txt",
                                                                 False, 'tpl_bjork_es')
-        g.feat_tpl_zhao          = self._get_named_template_set("/edu/jhu/featurize/zhao-en-sense-feats.txt",
-                                                                "/edu/jhu/featurize/zhao-ca-arg-feats.txt",
+        g.feat_tpl_zhao          = self._get_named_template_set("/edu/jhu/nlp/features/zhao-en-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/zhao-ca-arg-feats.txt",
                                                                 False, 'tpl_zhao')
-        g.feat_tpl_narad         = self._get_named_template_set("/edu/jhu/featurize/naradowsky-sense-feats.txt",
-                                                                "/edu/jhu/featurize/naradowsky-arg-feats.txt",
+        g.feat_tpl_narad         = self._get_named_template_set("/edu/jhu/nlp/features/naradowsky-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/naradowsky-arg-feats.txt",
                                                                 False, 'tpl_narad')
-        g.feat_mcdonald          = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/mcdonald-dep-feats.txt",
+        g.feat_mcdonald          = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/mcdonald-dep-feats.txt",
                                                                 False, 'tpl_mcdonald')
-        g.feat_mcdonald_basic    = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/mcdonald-basic-dep-feats.txt",
+        g.feat_mcdonald_basic    = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/mcdonald-basic-dep-feats.txt",
                                                                 False, 'tpl_mcdonald_basic')
-        g.feat_koo_basic         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/koo-basic-dep-feats.txt",
+        g.feat_koo_basic         = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/koo-basic-dep-feats.txt",
                                                                 False, 'tpl_koo_basic')
-        g.feat_koo_hybrid        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/koo-hybrid-dep-feats.txt",
+        g.feat_koo_hybrid        = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/koo-hybrid-dep-feats.txt",
                                                                 False, 'tpl_koo_hybrid')
-        g.feat_lluis             = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/lluis-arg-feats.txt",
+        g.feat_lluis             = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/lluis-arg-feats.txt",
                                                                 False, 'tpl_lluis')
-        g.feat_lluis_koo         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
-                                                                "/edu/jhu/featurize/lluis-koo-arg-feats.txt",
+        g.feat_lluis_koo         = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/lluis-koo-arg-feats.txt",
                                                                 False, 'tpl_lluis_koo')
         g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig', 
                                                                    numFeatsToSelect=32, numSentsForFeatSelect=1000)
@@ -200,18 +200,18 @@ class ParamDefinitions():
         # Language specific feature sets from Bjorkelund et al. (2009).
         for lang_short in p.c09_lang_short_names:
             gl = g.langs[lang_short]
-            gl.feat_tpl_bjork_ls = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-%s-sense-feats.txt" % (lang_short),
-                                                                "/edu/jhu/featurize/bjorkelund-%s-arg-feats.txt" % (lang_short),
+            gl.feat_tpl_bjork_ls = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-%s-sense-feats.txt" % (lang_short),
+                                                                "/edu/jhu/nlp/features/bjorkelund-%s-arg-feats.txt" % (lang_short),
                                                                 False, 'tpl_bjork_ls_%s' % (lang_short))
 
         # The coarse set uses the bjorkelund sense features.
-        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", 
-                                                                 "/edu/jhu/featurize/coarse1-arg-feats.txt", 
+        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt", 
+                                                                 "/edu/jhu/nlp/features/coarse1-arg-feats.txt", 
                                                                  False, 'tpl_coarse1')
-        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", 
+        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/nlp/features/bjorkelund-sense-feats.txt", 
                                                                  "coarse2", False, 'tpl_coarse2')
-        g.feat_tpl_custom1        = self._get_named_template_set("/edu/jhu/featurize/custom1-sense-feats.txt",
-                                                                "/edu/jhu/featurize/custom1-arg-feats.txt",
+        g.feat_tpl_custom1        = self._get_named_template_set("/edu/jhu/nlp/features/custom1-sense-feats.txt",
+                                                                "/edu/jhu/nlp/features/custom1-arg-feats.txt",
                                                                 False, 'tpl_custom1')
         g.feat_all = g.feat_tpl_bjork_ig
     

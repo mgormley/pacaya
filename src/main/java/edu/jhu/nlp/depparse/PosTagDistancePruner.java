@@ -1,13 +1,16 @@
 package edu.jhu.nlp.depparse;
 
+import java.util.Arrays;
+
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.LabelSequence;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.Trainable;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.LabelSequence;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.prim.matrix.DenseIntegerMatrix;
 import edu.jhu.util.Alphabet;
 
@@ -29,8 +32,8 @@ public class PosTagDistancePruner implements Trainable, Annotator {
     public PosTagDistancePruner() { }
     
     @Override
-    public void train(AnnoSentenceCollection sents) {
-        for (AnnoSentence sent : sents) {
+    public void train(AnnoSentenceCollection goldSents) {
+        for (AnnoSentence sent : goldSents) {
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
@@ -38,7 +41,7 @@ public class PosTagDistancePruner implements Trainable, Annotator {
         mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
         mat.fill(0);
         // For each sentence...
-        for (AnnoSentence sent : sents) {
+        for (AnnoSentence sent : goldSents) {
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
             int[] tags = tagSeq.getLabelIds();
             int[] parents = sent.getParents();            
@@ -104,8 +107,14 @@ public class PosTagDistancePruner implements Trainable, Annotator {
             // Count the edges to the wall, which will never be pruned.
             numEdgesTot += sent.size();
             // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
-            if (!mask.allowsSinglyRootedTrees()) {
+            if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
                 log.warn("All single-root trees pruned");
+                log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));
+                if (sent.getParents() != null) {
+                    log.trace("Pruned parents: " + Arrays.toString(sent.getParents()));
+                }
+            } else if (!InsideOutsideDepParse.singleRoot && !mask.allowsMultiRootTrees()) {
+                log.warn("All multi-root trees pruned");
             }
         }
         

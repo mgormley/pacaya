@@ -1,6 +1,6 @@
 package edu.jhu.parse.cky;
 
-import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 
 public class ExpFamScorer implements Scorer {
 

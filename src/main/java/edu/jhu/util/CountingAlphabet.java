@@ -42,9 +42,4 @@ public class CountingAlphabet<T> extends Alphabet<T> {
 	    return idxCountMap.get(index);
 	}
 	
-	@Override
-	public Object clone() {
-		return new CountingAlphabet<T>(this);
-	}
-
 }

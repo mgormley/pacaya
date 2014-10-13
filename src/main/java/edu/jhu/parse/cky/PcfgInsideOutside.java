@@ -1,6 +1,6 @@
 package edu.jhu.parse.cky;
 
-import edu.jhu.data.Sentence;
+import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;

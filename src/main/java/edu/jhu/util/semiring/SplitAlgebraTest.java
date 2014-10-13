@@ -1,7 +1,5 @@
 package edu.jhu.util.semiring;
 
-import java.nio.ByteBuffer;
-
 import org.junit.Before;
 import org.junit.Test;
 

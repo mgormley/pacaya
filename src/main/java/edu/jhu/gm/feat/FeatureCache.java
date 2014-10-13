@@ -1,15 +1,14 @@
 package edu.jhu.gm.feat;
 
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.UnsupportedFactorTypeException;
-import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 
 /** Cache of feature vectors for a factor graph. */
 public class FeatureCache implements FeatureExtractor {
@@ -52,7 +51,7 @@ public class FeatureCache implements FeatureExtractor {
         return feats[factorId][configId];
     }
 
-    public String toString(Alphabet<Feature> alphabet) {
+    public String toString(FeatureNames alphabet) {
         StringBuilder sb = new StringBuilder();
         for (int a = 0; a < feats.length; a++) {
             for (int c = 0; c < feats[a].length; c++) {

@@ -9,10 +9,10 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
 import edu.jhu.gm.maxent.LogLinearObsFeats.LogLinearObsFeatsPrm;
-import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;

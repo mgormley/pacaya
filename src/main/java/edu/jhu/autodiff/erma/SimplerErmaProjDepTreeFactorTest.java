@@ -1,39 +1,24 @@
 package edu.jhu.autodiff.erma;
 
-import static edu.jhu.prim.util.math.FastMath.logAdd;
-import static edu.jhu.prim.util.math.FastMath.logSubtract;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.inf.BfsMpSchedule;
-import edu.jhu.gm.inf.BruteForceInferencer;
-import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.ExplicitFactor;
-import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.prim.util.math.LogAddTable;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 

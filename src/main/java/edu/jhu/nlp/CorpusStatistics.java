@@ -15,9 +15,11 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
+import edu.jhu.nlp.data.simple.AlphabetStore;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.prim.tuple.ComparablePair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -66,6 +68,7 @@ public class CorpusStatistics implements Serializable {
     
     public List<String> linkStateNames;
     public List<String> roleStateNames;
+    public List<String> relationStateNames;
     // Mapping from predicate form to the set of predicate senses.
     public Map<String,List<String>> predSenseListMap = new HashMap<String,List<String>>();
 
@@ -73,7 +76,8 @@ public class CorpusStatistics implements Serializable {
 
     public SrlBerkeleySignatureBuilder sig;
     public Normalizer normalize;
-
+    public AlphabetStore store;
+    
     public CorpusStatisticsPrm prm;
     private boolean initialized;
     
@@ -85,13 +89,16 @@ public class CorpusStatistics implements Serializable {
     }
 
     public void init(Iterable<AnnoSentence> cr) {
+        this.store = new AlphabetStore(cr);
+        
         Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
         Set<String> knownRoles = new HashSet<String>();
         Set<String> knownLinks = new HashSet<String>();
+        Set<String> knownRelations = new TreeSet<String>();
         Map<String, MutableInt> words = new HashMap<String, MutableInt>();
         Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
         initialized = true;
-                
+        
         // Store the variable states we have seen before so
         // we know what our vocabulary of possible states are for
         // the Link variable. Applies to knownLinks, knownRoles.
@@ -102,6 +109,7 @@ public class CorpusStatistics implements Serializable {
         // This is a hack:  '_' won't actually be in any of the defined edges.
         // However, removing this messes up what we assume as default.
         knownRoles.add("_");
+        int numTruePosRels = 0;
         for (AnnoSentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in
@@ -146,6 +154,17 @@ public class CorpusStatistics implements Serializable {
                     senses.add(pred.getLabel());
                 }
             }
+            
+            // Relation stats.
+            if (sent.getRelLabels() != null) {
+            	for (int k=0; k<sent.getRelLabels().size(); k++) {
+                    String relation = sent.getRelLabels().get(k);
+                    knownRelations.add(relation);
+                    if (!relation.equals(RelationsEncoder.getNoRelationLabel())) {
+                    	numTruePosRels++;
+                    }
+                }
+            }
         }
         
         // For words and unknown word classes, we only keep those above some threshold.
@@ -156,6 +175,7 @@ public class CorpusStatistics implements Serializable {
         
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
+        this.relationStateNames =  new ArrayList<String>(knownRelations);
         for (Entry<String,Set<String>> entry : predSenseSetMap.entrySet()) {
             predSenseListMap.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
         }
@@ -163,6 +183,10 @@ public class CorpusStatistics implements Serializable {
         log.info("Num known roles: " + roleStateNames.size());
         log.info("Known roles: " + roleStateNames);
         log.info("Num known predicates: " + predSenseListMap.size());
+        
+        log.info("Num true positive relations: " + numTruePosRels);
+        log.info("Num known relations: " + relationStateNames.size());
+        log.info("Known relations: " + relationStateNames);
     }
     
     // ------------------- private ------------------- //

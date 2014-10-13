@@ -1,0 +1,29 @@
+# Naradowsky et al. (2012) Argument feature set.
+#
+
+# mode 1
+word(p) + word(c)
+pos(p) + pos(c)
+word(p) + pos(c)
+pos(p) + word(c)
+word(p) + word(c) + pos(p) + pos(c)
+
+# mode 2
+pos(p) + pos(c) + distance(p,c)
+pos(p) + pos(c) + relative(p,c)
+pos(p) + distance(p,c) + relative(p,c)
+pos(c) + distance(p,c) + relative(p,c)
+pos(p) + pos(c) + distance(p,c) + relative(p,c) # Commented out in Naradowsky code: 
+
+# mode 3
+sentlen
+distance(p,c)
+relative(p,c)
+distance(p,c) + relative(p,c)
+word(p)
+pos(p)
+word(c)
+pos(c)
+
+# mode 4
+eachmorpho(p) + eachmorpho(c)

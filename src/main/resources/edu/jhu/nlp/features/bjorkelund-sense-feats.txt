@@ -1,0 +1,25 @@
+# Bjorkelund et al. (2009) unigram feature templates for sense prediction.
+#
+
+# PredWord
+word(p)
+# PredPOS
+pos(p)
+# PredDeprel
+deprel(p)
+# PredFeats
+morpho(p)
+# PredParentWord
+word(head(p))
+# PredParentPOS
+pos(head(p))
+# PredParentFeats
+morpho(head(p))
+# DepSubCat
+deprel(seq(children(p)))
+# ChildDepSet
+deprel(bag(children(p)))
+# ChildWordSet
+word(bag(children(p)))
+# ChildPOSSet
+pos(bag(children(p)))

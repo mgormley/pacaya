@@ -1,16 +1,12 @@
 package edu.jhu.gm.model.globalfac;
 
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.inf.Messages;
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarTensor;
 
 /**
- * A constraint global factor.
- * 
- * Unlike a full global factor, this does not have any parameters or features.
+ * A structured factor that permits efficient computation of its outgoing messages.
  * 
  * @author mgormley
  */

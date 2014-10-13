@@ -5,7 +5,6 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.iter.IntIncrIter;
 import edu.jhu.prim.iter.IntIter;
-import edu.jhu.prim.util.math.FastMath;
 
 
 /**

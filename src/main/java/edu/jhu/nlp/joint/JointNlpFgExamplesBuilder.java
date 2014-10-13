@@ -2,38 +2,25 @@ package edu.jhu.nlp.joint;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.gm.data.AbstractFgExampleList;
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
-import edu.jhu.gm.data.LabeledFgExample;
-import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureCache;
-import edu.jhu.gm.feat.FeatureExtractor;
-import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.CorpusStatistics;
-import edu.jhu.nlp.depparse.DepParseEncoder;
-import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
-import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpEncoderPrm;
+import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
-import edu.jhu.nlp.srl.SrlEncoder;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder;
-import edu.jhu.nlp.srl.SrlFeatureExtractor;
-import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
 
 /**
@@ -46,23 +33,18 @@ public class JointNlpFgExamplesBuilder {
 
     public static class JointNlpFgExampleBuilderPrm extends Prm {
         private static final long serialVersionUID = 1L;
+        public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
+        // TODO: Switch fgPrm and fePrm to: public JointNlpEncoderPrm jePrm = new JointNlpEncoderPrm();
         public JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
         public JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
-        public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
-    }
-    
-    public static class JointNlpFeatureExtractorPrm extends Prm {
-        private static final long serialVersionUID = 1L;
-        public DepParseFeatureExtractorPrm dpFePrm = new DepParseFeatureExtractorPrm();
-        public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();        
     }
     
     private static final Logger log = Logger.getLogger(JointNlpFgExamplesBuilder.class);
 
     private ObsFeatureConjoiner ofc;
     private JointNlpFgExampleBuilderPrm prm;
+    private JointNlpEncoderPrm jePrm;
     private CorpusStatistics cs;
-    private FactorTemplateList fts;
     private boolean labeledExamples;
 
     public JointNlpFgExamplesBuilder(JointNlpFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
@@ -73,28 +55,30 @@ public class JointNlpFgExamplesBuilder {
         this.prm = prm;
         this.ofc = ofc;
         this.cs = cs;
-        this.fts = ofc.getTemplates();
         this.labeledExamples = labeledExamples;
+        this.jePrm = new JointNlpEncoderPrm();
+        jePrm.fePrm = prm.fePrm;
+        jePrm.fgPrm = prm.fgPrm;
     }
-
+    
     public FgExampleList getData(AnnoSentenceCollection sents) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
         }
-        checkForRequiredAnnotations(sents);
+        JointNlpEncoder.checkForRequiredAnnotations(jePrm, sents);
         
         log.info("Building factor graphs and extracting features.");
         FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
-        FgExampleList data = builder.getInstance(new SrlFgExampleFactory(sents, ofc));
+        FgExampleList data = builder.getInstance(new JointNlpFgExampleFactory(sents, ofc));
         
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
         FactorTemplateList fts = ofc.getTemplates();
-        if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
+        if (jePrm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
         }
         
         if (!ofc.isInitialized()) {
@@ -113,12 +97,12 @@ public class JointNlpFgExamplesBuilder {
     /** 
      * This class is read-only and thread-safe.
      */
-    private class SrlFgExampleFactory extends AbstractFgExampleList implements FgExampleList {
+    private class JointNlpFgExampleFactory extends AbstractFgExampleList implements FgExampleList {
 
         private AnnoSentenceCollection sents;
         private ObsFeatureConjoiner ofc;
         
-        public SrlFgExampleFactory(AnnoSentenceCollection sents, ObsFeatureConjoiner ofc) {
+        public JointNlpFgExampleFactory(AnnoSentenceCollection sents, ObsFeatureConjoiner ofc) {
             this.sents = sents;
             this.ofc = ofc;
         }
@@ -126,64 +110,18 @@ public class JointNlpFgExamplesBuilder {
         public LFgExample get(int i) {
             log.trace("Getting example: " + i);
             AnnoSentence sent = sents.get(i);
-            
-            // Create a feature extractor for this example.
-            ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
-            obsFe = new ObsFeatureCache(obsFe);
-            
-            FeatureExtractor fe = new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
-            fe = new FeatureCache(fe);
-            
-            // Construct the factor graph.
-            JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);
-            log.trace("Number of variables: " + sfg.getNumVars() + " Number of factors: " + sfg.getNumFactors() + " Number of edges: " + sfg.getNumEdges());
-            // Get the variable assignments given in the training data.
-            VarConfig vc = getVarAssignment(sent, sfg, prm.fgPrm);
-            
-            // Create the example.
-            LFgExample ex;
+            JointNlpEncoder encoder = new JointNlpEncoder(jePrm, cs, ofc);
             if (labeledExamples) {
-                ex = new LabeledFgExample(sfg, vc, obsFe, fts);
+                return encoder.encode(sent, sent);
             } else {
-                ex = new UnlabeledFgExample(sfg, vc, obsFe, fts);
+                return (LFgExample) encoder.encode(sent);
             }
-            fe.init(ex);
-            
-            return ex;
         }
         
         public int size() {
             return sents.size();
         }
 
-    }
-
-    /** Gets the variable assignment for either all variables or only the observed variables. 
-     * @param fgPrm */
-    private static VarConfig getVarAssignment(AnnoSentence sent, JointNlpFactorGraph sfg, JointFactorGraphPrm fgPrm) {
-        VarConfig vc = new VarConfig();
-        DepParseEncoder.getDepParseTrainAssignment(sent, sfg, vc);       
-        SrlEncoder.getSrlTrainAssignment(sent, sfg, vc, fgPrm.srlPrm.predictSense, fgPrm.srlPrm.predictPredPos);
-        return vc;
-    }
-    
-
-    private void checkForRequiredAnnotations(AnnoSentenceCollection sents) {
-        // Check that the first sentence has all the required annotation
-        // types for the specified feature templates.
-        AnnoSentence sent = sents.get(0);
-        if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
-            if (prm.fgPrm.includeSrl) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
-            }
-        }
-        if (prm.fgPrm.includeDp) {
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
-            if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
-            }
-        }
     }
     
 }

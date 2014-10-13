@@ -8,12 +8,12 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.conll.CoNLL09FileReader;
-import edu.jhu.data.conll.CoNLL09ReadWriteTest;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.data.conll.CoNLL09FileReader;
+import edu.jhu.nlp.data.conll.CoNLL09ReadWriteTest;
+import edu.jhu.nlp.data.conll.CoNLL09Sentence;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 /**
  * Unit tests for {@link CorpusStatisticsTest}.

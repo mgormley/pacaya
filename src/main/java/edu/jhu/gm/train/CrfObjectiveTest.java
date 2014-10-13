@@ -1,12 +1,11 @@
 package edu.jhu.gm.train;
 
-import static edu.jhu.data.simple.AnnoSentenceCollection.getSingleton;
+import static edu.jhu.nlp.data.simple.AnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,12 +13,6 @@ import java.util.Random;
 import org.junit.Test;
 
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.data.simple.AnnoSentenceReader;
-import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
-import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.data.FgExampleMemoryStore;
@@ -47,6 +40,12 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.data.conll.CoNLL09Sentence;
+import edu.jhu.nlp.data.conll.CoNLL09Token;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.simple.AnnoSentenceReader;
+import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
+import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
@@ -55,7 +54,6 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 

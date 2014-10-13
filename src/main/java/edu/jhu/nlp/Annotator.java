@@ -1,10 +1,6 @@
 package edu.jhu.nlp;
 
-import java.util.List;
-
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 /**
  * An annotator for a sentence.

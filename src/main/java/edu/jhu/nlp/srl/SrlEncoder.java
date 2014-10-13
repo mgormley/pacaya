@@ -1,24 +1,83 @@
 package edu.jhu.nlp.srl;
 
-import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.gm.app.Encoder;
+import edu.jhu.gm.data.LFgExample;
+import edu.jhu.gm.data.LabeledFgExample;
+import edu.jhu.gm.data.UFgExample;
+import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureCache;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
-import edu.jhu.nlp.joint.JointNlpFactorGraph;
+import edu.jhu.nlp.data.conll.SrlGraph;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
+import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 
-public class SrlEncoder {
+/**
+ * Encodes an {@link AnnoSentence} as a semantic role labeling factor graph and its training
+ * variable assignment.
+ * 
+ * @author mgormley
+ */
+public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
 
-    public static void getSrlTrainAssignment(AnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {
-        SrlGraph srlGraph = sent.getSrlGraph();
-        if (srlGraph == null) {
-            return;
-        }
+    // TODO: Use this in JointNlp
+    public static class SrlEncoderPrm {
+        // TODO: Fill w/non-null values.
+        public SrlFactorGraphBuilderPrm srlPrm = null; //new SrlFactorGraphBuilderPrm();
+        public SrlFeatureExtractorPrm srlFePrm = null; //new SrlFeatureExtractorPrm();        
+    }
+    
+    private SrlEncoderPrm prm;
+    private CorpusStatistics cs;
+    private ObsFeatureConjoiner ofc;
+    
+    public SrlEncoder(SrlEncoderPrm prm, CorpusStatistics cs, ObsFeatureConjoiner ofc) {
+        this.prm = prm;
+        this.cs = cs;
+        this.ofc = ofc;
+    }
+
+    @Override
+    public LFgExample encode(AnnoSentence sent, SrlGraph graph) {
+        return getExample(sent, graph, true);
+    }
+
+    @Override
+    public UFgExample encode(AnnoSentence sent) {
+        return getExample(sent, null, false);
+    }
+
+    private LFgExample getExample(AnnoSentence sent, SrlGraph graph, boolean labeledExample) {
+        // Create a feature extractor for this example.
+        ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
+        obsFe = new ObsFeatureCache(obsFe);
         
+        FactorGraph fg = new FactorGraph();
+        SrlFactorGraphBuilder srl = new SrlFactorGraphBuilder(prm.srlPrm);
+        srl.build(sent, cs, obsFe, ofc, fg);
+        
+        VarConfig goldConfig = new VarConfig();
+        addSrlTrainAssignment(sent, graph, srl, goldConfig, prm.srlPrm.predictSense, prm.srlPrm.predictPredPos);
+
+        FactorTemplateList fts = ofc.getTemplates();
+        if (labeledExample) {
+            return new LabeledFgExample(fg, goldConfig, obsFe, fts);
+        } else {
+            return new UnlabeledFgExample(fg, goldConfig, obsFe, fts);
+        }
+    }
+    
+    public static void addSrlTrainAssignment(AnnoSentence sent, SrlGraph srlGraph, SrlFactorGraphBuilder sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {        
         // ROLE VARS
         // Add all the training data assignments to the role variables, if they are not latent.
         // First, just set all the role names to "_".

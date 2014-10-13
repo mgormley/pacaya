@@ -1,7 +1,5 @@
 package edu.jhu.hlt.optimize;
 
-import java.util.Arrays;
-
 import org.apache.log4j.Logger;
 
 import cc.mallet.optimize.BackTrackLineSearch;
@@ -10,7 +8,6 @@ import cc.mallet.optimize.InvalidOptimizableException;
 import cc.mallet.optimize.Optimizable;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
-import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 
 /**

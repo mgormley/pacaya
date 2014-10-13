@@ -20,7 +20,7 @@ from pypipeline import pipeline
 import re
 import random
 from pypipeline.pipeline import write_script, RootStage, Stage
-from pypipeline.stages import get_oome_stages
+from pypipeline.stages import get_oome_stages, StagePath
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
@@ -29,6 +29,11 @@ from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
 
 # ---------------------------- Experiments Creator Class ----------------------------------
 
+def pruned_parsers(parsers):
+    return [x + SrlExpParams(pruneByModel=True,
+                             tagger_parser=x.get("tagger_parser")+"-pr") 
+            for x in parsers]
+    
 class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
@@ -48,14 +53,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
             sys.stderr.write("Unknown experiment setting.\n")
             parser.print_help()
             sys.exit()
-        #if options.fast: name = 
         name = options.expname if not options.fast else "fast_" + options.expname 
         ExpParamsRunner.__init__(self, name, options.queue, print_to_console=True, dry_run=options.dry_run)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
         self.hprof = options.hprof   
-        self.eval = options.eval
         self.big_machine = (multiprocessing.cpu_count() > 2)
         self.prm_defs = ParamDefinitions(options) 
 
@@ -71,29 +74,33 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
-                          algebra="LOG_SIGN")
+                          algebra="LOG_SIGN",
+                          singleRoot=False)
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
-        
+                
+        # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
-                                   removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
-                                   #bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
+                                   removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
+                                   bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
-                                                  #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
-                                                  bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
+                                                  bpMaxIterations=5, 
                                                   useMseForValue=True)
-        g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
-        g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
+        g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, 
+                                                       tagger_parser="2nd-gra")
+        g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, 
+                                                     tagger_parser="2nd-sib")
         g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
-        g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
+        g.pruned_parsers = pruned_parsers(g.unpruned_parsers)
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
+        # Trainers
         g.erma_dp = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
         g.erma_mse = SrlExpParams(trainer="ERMA", dpLoss="MSE")
         g.erma_er = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL")
         g.cll = SrlExpParams(trainer="CLL")
-        
+                
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_000"),
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"),
@@ -113,7 +120,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl.pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
             gl.cx_data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
                                       test=pl.cx_test, testType="CONLL_X", 
-                                      language=lang_short, trainUseCoNLLXPhead=True)        
+                                      language=lang_short, trainUseCoNLLXPhead=True,
+                                      l2variance=l2var_map[lang_short])        
             if lang_short == "en":
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev)
             else:
@@ -130,8 +138,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 pl = p.langs[lang_short]
                 for parser in g.parsers:
                     data = gl.cx_data
-                    data.update(l2variance=l2var_map[lang_short],
-                                pruneModel=gl.pruneModel,
+                    data.update(pruneModel=gl.pruneModel,
                                 propTrainAsDev=0)  # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -141,7 +148,45 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exps.append(exp)
             exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
-        
+                
+        elif self.expname == "dp-cll":
+            # Conditional log-likelihood training of 1st and 2nd-order models for parsing.
+            # Includes hyperparameter tuning.
+            exps = []
+            languages = ["en"]
+            
+            g.defaults += g.cll
+            # Speedups
+            g.defaults.update(trainMaxSentenceLength=20,
+                              includeUnsupportedFeatures=True,
+                              sgdNumPasses=10,
+                              work_mem_megs=5.*1000,
+                              bpMaxIterations=10)
+            g.defaults.remove("printModel")
+            
+            # Train a first-order pruning model for each language
+            prune_exps = {}
+            for lang_short in languages:
+                gl = g.langs[lang_short]
+                data = gl.cx_data
+                data.update(propTrainAsDev=0)
+                exp = g.defaults + data + g.first_order
+                prune_exps[lang_short] = exp
+                exps.append(exp)
+                        
+            # Train the pruned (e.g. second-order) models.
+            g.defaults.remove("modelOut") # Speedup.
+            for lang_short in languages:
+                gl = g.langs[lang_short]
+                for parser in pruned_parsers([g.first_order, g.second_order]):
+                    data = gl.cx_data
+                    data.update(pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"))             
+                    exp = g.defaults + data + parser
+                    exp.add_prereq(prune_exps[lang_short])
+                    exps.append(exp)
+
+            return self._get_pipeline_from_exps(exps)
+                
         elif self.expname == "dp-pruning":            
             # Trains the pruning models for the CoNLL-X languages.
             exps = []
@@ -151,44 +196,57 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
                 data = gl.cx_data
-                data.update(l2variance=l2var_map[lang_short],
-                            propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                data.update(propTrainAsDev=0) # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + g.first_order
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
+        
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
             exps = []
-            overrides = SrlExpParams(bpUpdateOrder="SEQUENTIAL", 
-                              bpSchedule="TREE_LIKE",                              
-                              trainMaxSentenceLength=50,
-                              devMaxSentenceLength=50,
-                              testMaxSentenceLength=50,
-                              useMseForValue=True)
-            for trainer in [g.erma_mse, g.cll, g.erma_dp, g.erma_er]:
-                for bpMaxIterations in [1, 2, 3, 5, 10]:
-                    for lang_short in ["bg", "es", "en"]:
+            languages = ["es", "bg", "en"]
+            
+            # Speedups
+            g.defaults.update(trainMaxSentenceLength=50,
+                              includeUnsupportedFeatures=True,
+                              sgdNumPasses=5)
+            g.defaults.remove("printModel")
+            
+            # Train a first-order pruning model for each language
+            prune_exps = {}
+            for lang_short in languages:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                data = gl.cx_data
+                data.update(propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                exp = g.defaults + data + g.first_order
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                prune_exps[lang_short] = exp
+                exps.append(exp)
+                        
+            # Train the second order models.
+            g.defaults.remove("modelOut") # Speedup.
+            for lang_short in languages:
+                for bpMaxIterations in [1, 2, 3, 4]:
+                    for trainer in [g.erma_mse, g.cll, g.erma_dp]:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
-                        for parser in g.unpruned_parsers:
-                            for pruneByDist in [True, False]:
-                                data = gl.cx_data
-                                data.update(l2variance=l2var_map[lang_short],
-                                            pruneModel=gl.pruneModel,
-                                            propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
-                                exp = g.defaults + data + parser + trainer + overrides
-                                exp.update(bpMaxIterations=bpMaxIterations,
-                                           pruneByDist=pruneByDist,
-                                           work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                                if parser in [g.second_order, g.second_grand, g.second_sib]:
-                                    exps += get_oome_stages(exp)
-                                else:
-                                    exps.append(exp)
-            exps = [x for x in exps if exp.get("language") == "en"] #TODO Remove
+                        for parser in g.pruned_parsers:
+                            data = gl.cx_data
+                            data.update(pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
+                                        propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
+                            exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            exp.add_prereq(prune_exps[lang_short])
+                            if parser in [g.second_order, g.second_grand, g.second_sib]:
+                                exps += get_oome_stages(exp)
+                            else:
+                                exps.append(exp)
+
             return self._get_pipeline_from_exps(exps)
-        
+                
         elif self.expname == "dp-aware-small":
             # Comparison of CLL and ERMA training with varying models and iterations.
             # Here we use a small dataset and no pruning.
@@ -233,8 +291,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     gl = g.langs[lang_short]
                     pl = p.langs[lang_short]
                     data = gl.cx_data
-                    data.update(l2variance=l2var_map[lang_short],
-                                propTrainAsDev=0,
+                    data.update(propTrainAsDev=0,
                                 trainUseCoNLLXPhead=False) # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + g.first_order + feats
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -248,9 +305,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
                 data = gl.cx_data
-                data.update(l2variance=l2var_map[lang_short],
-                            # TODO: This method of setting the pruneModel path is very unstable.
-                            pruneModel="../1st_tpl_mcdonald_basic_%s/model.binary.gz" % (lang_short),
+                data.update(pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
                             propTrainAsDev=0,
                             trainUseCoNLLXPhead=False)  # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + parser
@@ -278,8 +333,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             gl = g.langs[lang_short]
                             pl = p.langs[lang_short]
                             data = gl.cx_data
-                            data.update(l2variance=l2var_map[lang_short],
-                                        trainMaxNumSentences=trainMaxNumSentences)
+                            data.update(trainMaxNumSentences=trainMaxNumSentences)
                             exp = g.defaults + data + g.first_order + g.feat_mcdonald_basic + optimizer + trainer
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))                
                             exps.append(exp)
@@ -351,30 +405,31 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
-                # Uncomment next line for multiple threads on a fast run: 
-                # stage.update(threads=2)
             if isinstance(stage, SrlExpParams) and not self.big_machine and not self.dry_run:
                 stage.update(work_mem_megs=1100, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
-                # Update the thread count
-                threads = stage.get("threads")
-                if threads != None: 
-                    # Add an extra thread just as a precaution.
-                    stage.threads = threads + 1
-                work_mem_megs = stage.get("work_mem_megs")
-                if work_mem_megs != None:
-                    stage.work_mem_megs = work_mem_megs
-                # Update the runtime
-                timeoutSeconds = stage.get("timeoutSeconds")
-                if timeoutSeconds != None:
-                    stage.minutes = (timeoutSeconds / 60.0)
-                    # Add some extra time in case some other part of the experiment
-                    # (e.g. evaluation) takes excessively long.
-                    stage.minutes = (stage.minutes * 2.0) + 10
+                self.update_qsub_fields(stage)
             if self.hprof:
                 if isinstance(stage, experiment_runner.JavaExpParams):
                     stage.hprof = self.hprof
         return root_stage
+    
+    def update_qsub_fields(self, stage):
+        # Update the thread count
+        threads = stage.get("threads")
+        if threads != None: 
+            # Add an extra thread just as a precaution.
+            stage.threads = threads + 1
+        work_mem_megs = stage.get("work_mem_megs")
+        if work_mem_megs != None:
+            stage.work_mem_megs = work_mem_megs
+        # Update the runtime
+        timeoutSeconds = stage.get("timeoutSeconds")
+        if timeoutSeconds != None:
+            stage.minutes = (timeoutSeconds / 60.0)
+            # Add some extra time in case some other part of the experiment
+            # (e.g. evaluation) takes excessively long.
+            stage.minutes = (stage.minutes * 2.0) + 10
     
     def make_stage_fast(self, stage):       
         ''' Makes the stage run in a very short period of time (under 5 seconds).
@@ -388,6 +443,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      testMaxNumSentences=3,
                      work_mem_megs=2000,
                      timeoutSeconds=20)
+        if (stage.get("featureHashMod") > 1):
+            stage.update(featureHashMod=1000)
+
+        # Uncomment next line for multiple threads on a fast run: 
+        # stage.update(threads=2)
 
 if __name__ == "__main__":
     usage = "%prog "
@@ -396,13 +456,9 @@ if __name__ == "__main__":
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
     parser.add_option('-e', '--expname',  help="Experiment name. [" + ", ".join(SrlExpParamsRunner.known_exps) + "]")
-    parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
+    parser.add_option(      '--hprof',  help="What type of profiling to use [cpu, heap]")
     parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
-    parser.add_option('-v', '--eval', help="Experiment directory to use as input for eval")
-    parser.add_option('-r', '--remote',  action="store_true", help="Whether to run remotely.")
     (options, args) = parser.parse_args(sys.argv)
-    # TODO: Above, we still want to list the experiment names in the usage printout, but we should
-    # somehow pull them from SrlExpParamsRunner so that they are less likely to get stale.
 
     if len(args) != 1:
         parser.print_help()

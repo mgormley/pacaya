@@ -2,22 +2,19 @@ package edu.jhu.nlp.depparse;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.model.ClampFactor;
-import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.gm.model.globalfac.LinkVar;
+import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.nlp.FeTypedFactor;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 
 /**
  * A factor graph builder for syntactic dependency parsing.
@@ -70,6 +67,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     }
     
     public static class O2FeTypedFactor extends FeTypedFactor {
+        private static final long serialVersionUID = 1L;
         public int i,j,k;
         public O2FeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int i, int j, int k) {
             super(vars, type, fe);
@@ -97,8 +95,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(AnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, FeatureExtractor fe,
-            FactorGraph fg) {
+    public void build(AnnoSentence sent, FeatureExtractor fe, FactorGraph fg) {
         build(sent.getWords(), sent.getDepEdgeMask(), fe, fg);
     }
     

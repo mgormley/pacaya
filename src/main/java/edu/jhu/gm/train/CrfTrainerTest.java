@@ -15,7 +15,6 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -41,8 +40,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.hlt.optimize.SGD;
@@ -52,7 +51,7 @@ import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
@@ -70,9 +69,9 @@ public class CrfTrainerTest {
      */
     public static class SimpleVCFeatureExtractor2 extends SlowFeatureExtractor {
 
-        private Alphabet<Feature> alphabet;
+        private FeatureNames alphabet;
 
-        public SimpleVCFeatureExtractor2(Alphabet<Feature> alphabet) {
+        public SimpleVCFeatureExtractor2(FeatureNames alphabet) {
             super();
             this.alphabet = alphabet;          
         }
@@ -90,12 +89,12 @@ public class CrfTrainerTest {
                     i++;
                 }
                 Arrays.sort(strs);
-                Feature feat = new Feature(StringUtils.join(strs, ":"));
-                int featIdx = alphabet.lookupIndex(feat);
+                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
                 fv.set(featIdx, 1.0);
             }
             
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
+            alphabet.setIsBias(featIdx);
             fv.set(featIdx, 1.0);
             
             return fv;
@@ -128,7 +127,7 @@ public class CrfTrainerTest {
         @Override
         public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            Alphabet<Feature> alphabet = fts.getTemplate(factor).getAlphabet();
+            FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
 
             if (varConfig.size() > 0) {
                 String[] strs = new String[varConfig.getVars().size()];
@@ -138,12 +137,12 @@ public class CrfTrainerTest {
                     i++;
                 }
                 Arrays.sort(strs);
-                Feature feat = new Feature(StringUtils.join(strs, ":"));
-                int featIdx = alphabet.lookupIndex(feat);
+                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
                 fv.set(featIdx, 1.0);
             }
             
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
+            alphabet.setIsBias(featIdx);
             fv.set(featIdx, 1.0);
             
             return fv;

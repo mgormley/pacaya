@@ -1,28 +1,22 @@
 package edu.jhu.gm.inf;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.IFgModel;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.AbstractGlobalFactor;
-import edu.jhu.gm.model.globalfac.GlobalFactor;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.AbstractConstraintFactor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 
 public class BfsMpScheduleTest {
 
@@ -184,7 +178,7 @@ public class BfsMpScheduleTest {
         assertEquals(expectedOrderStr4, orderStr.toString());
     }
     
-    private static class MockGlobalFactor extends AbstractGlobalFactor implements GlobalFactor {
+    private static class MockGlobalFactor extends AbstractConstraintFactor implements GlobalFactor {
 
         private static final long serialVersionUID = 1L;
 

@@ -1,0 +1,8 @@
+# Bjorklund Spanish features.
+
+deprel(bag(children(p)))
+deprel(bag(children(p))) + pos(p)
+pos(bag(children(p)))
+word(bag(children(p)))
+morpho(p)
+word(p)

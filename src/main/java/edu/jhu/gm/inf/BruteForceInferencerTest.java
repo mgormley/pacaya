@@ -7,10 +7,10 @@ import java.io.IOException;
 import org.junit.Test;
 
 import edu.jhu.gm.data.bayesnet.BayesNetReaderTest;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.JUnitUtils;

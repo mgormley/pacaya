@@ -14,25 +14,17 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
-import edu.jhu.data.simple.CorpusHandler;
-import edu.jhu.eval.DepParseEvaluator;
-import edu.jhu.featurize.TemplateLanguage;
-import edu.jhu.featurize.TemplateLanguage.AT;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.featurize.TemplateReader;
-import edu.jhu.featurize.TemplateSets;
-import edu.jhu.featurize.TemplateWriter;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
@@ -47,31 +39,49 @@ import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.nlp.CorpusStatistics;
-import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
+import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.simple.CorpusHandler;
+import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
-import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
+import edu.jhu.nlp.embed.Embeddings.Scaling;
+import edu.jhu.nlp.embed.EmbeddingsAnnotator;
+import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
+import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.RelationEvaluator;
+import edu.jhu.nlp.features.TemplateLanguage;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.features.TemplateReader;
+import edu.jhu.nlp.features.TemplateSets;
+import edu.jhu.nlp.features.TemplateWriter;
 import edu.jhu.nlp.joint.JointNlpAnnotator.InitParams;
 import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
-import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
+import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.report.Reporter;
+import edu.jhu.util.report.ReporterManager;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -82,10 +92,14 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class JointNlpRunner {
 
-    public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
+    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA };
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
+    public enum Inference { BRUTE_FORCE, BP };
+    
+    public enum RegularizerType { L2, NONE };
+    
     public enum AlgebraType {
         REAL(Algebras.REAL_ALGEBRA), LOG(Algebras.LOG_SEMIRING), LOG_SIGN(Algebras.LOG_SIGN_ALGEBRA),
         // SHIFTED_REAL and SPLIT algebras are for testing only.
@@ -103,6 +117,7 @@ public class JointNlpRunner {
     }
 
     private static final Logger log = Logger.getLogger(JointNlpRunner.class);
+    private static final Reporter rep = Reporter.getReporter(JointNlpRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
@@ -125,6 +140,8 @@ public class JointNlpRunner {
     public static InitParams initParams = InitParams.UNIFORM;
     
     // Options for inference.
+    @Opt(hasArg = true, description = "Type of inference method.")
+    public static Inference inference = Inference.BP;
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static AlgebraType algebra = AlgebraType.REAL;
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
@@ -142,31 +159,17 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Directory to dump debugging information for BP.")
     public static File bpDumpDir = null;
     
-    // Options for dependency parse factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
-    public static boolean includeDp = true;
-    @Opt(hasArg = true, description = "The type of the link variables.")
-    public static VarType linkVarType = VarType.LATENT;
-    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
-    public static boolean useProjDepTreeFactor = false;
-    @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
-    public static boolean grandparentFactors = false;
-    @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
-    public static boolean siblingFactors = false;
-    @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
-    public static boolean excludeNonprojectiveGrandparents = true;
-    
-    // Options for dependency parsing pruning.
-    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
-    public static File pruneModel = null;
-    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
-    public static boolean pruneByModel = false;
-    @Opt(hasArg = true, description = "Whether to prune edges with a deterministic distance-based pruning approach.")
-    public static boolean pruneByDist = false;
-    
     // Options for Brown clusters.
     @Opt(hasArg = true, description = "Brown cluster file")
     public static File brownClusters = null;
+    
+    // Options for Embeddings.
+    @Opt(hasArg=true, description="Path to word embeddings text file.")
+    public static File embeddingsFile = null;
+    @Opt(hasArg=true, description="Method for normalization of the embeddings.")
+    public static Scaling embNorm = Scaling.L1_NORM;
+    @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
+    public static double embScaler = 15.0;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
@@ -229,7 +232,29 @@ public class JointNlpRunner {
     public static File senseFeatTplsOut = null;
     @Opt(hasArg = true, description = "Arg feature template output file.")
     public static File argFeatTplsOut = null;
+
+    // Options for dependency parse factor graph structure.
+    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
+    public static boolean includeDp = true;
+    @Opt(hasArg = true, description = "The type of the link variables.")
+    public static VarType linkVarType = VarType.LATENT;
+    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
+    public static boolean useProjDepTreeFactor = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
+    public static boolean grandparentFactors = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
+    public static boolean siblingFactors = false;
+    @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
+    public static boolean excludeNonprojectiveGrandparents = true;
     
+    // Options for dependency parsing pruning.
+    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
+    public static File pruneModel = null;
+    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
+    public static boolean pruneByModel = false;
+    @Opt(hasArg = true, description = "Whether to prune edges with a deterministic distance-based pruning approach.")
+    public static boolean pruneByDist = false;
+
     // Options for Dependency parser feature extraction.
     @Opt(hasArg = true, description = "1st-order factor feature templates.")
     public static String dp1FeatTpls = TemplateSets.mcdonaldDepFeatsResource;
@@ -237,6 +262,14 @@ public class JointNlpRunner {
     public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
     @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
     public static boolean acl14DepFeats = true;
+    @Opt(hasArg = true, description = "Whether to use the fast feature set for dep parsing.")
+    public static boolean dpFastFeats = true;
+    
+    // Options for relation extraction.
+    @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
+    public static boolean includeRel = false;
+    @Opt(hasArg = true, description = "Relation feature templates.")
+    public static String relFeatTpls = null;
     
     // Options for data munging.
     @Deprecated
@@ -251,11 +284,13 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Whether to gzip an object before caching it.")
     public static boolean gzipCache = false;    
     
-    // Options for training.
+    // Options for optimization.
     @Opt(hasArg=true, description="The optimization method to use for training.")
     public static Optimizer optimizer = Optimizer.LBFGS;
     @Opt(hasArg=true, description="The variance for the L2 regularizer.")
     public static double l2variance = 1.0;
+    @Opt(hasArg=true, description="The type of regularizer.")
+    public static RegularizerType regularizer = RegularizerType.L2;
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
     public static int maxLbfgsIterations = 1000;
     @Opt(hasArg=true, description="Number of effective passes over the dataset for SGD.")
@@ -282,6 +317,8 @@ public class JointNlpRunner {
     public static double adaDeltaConstantAddend = Math.pow(Math.E, -6.);
     @Opt(hasArg=true, description="Stop training by this date/time.")
     public static Date stopTrainingBy = null;
+    
+    // Options for training.
     @Opt(hasArg=true, description="Whether to use the mean squared error instead of conditional log-likelihood when evaluating training quality.")
     public static boolean useMseForValue = false;
     @Opt(hasArg=true, description="The type of trainer to use (e.g. conditional log-likelihood, ERMA).")
@@ -301,6 +338,8 @@ public class JointNlpRunner {
     }
 
     public void run() throws ParseException, IOException {  
+        Timer t = new Timer();
+        t.start();
         FastMath.useLogAddTable = useLogAddTable;
         if (useLogAddTable) {
             log.warn("Using log-add table instead of exact computation. When using global factors, this may result in numerical instability.");
@@ -316,8 +355,11 @@ public class JointNlpRunner {
         
         PosTagDistancePruner ptdPruner = null;
         // Get a model.
+        if (modelIn == null && !corpus.hasTrain()) {
+        	throw new ParseException("Either --modelIn or --train must be specified.");
+        }
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
-        if (modelIn == null) {
+        if (modelIn == null && corpus.hasTrain()) {
             // Feature selection.
             featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
         }
@@ -331,8 +373,10 @@ public class JointNlpRunner {
             AnnoSentenceCollection goldSents = corpus.getTrainGold();
             AnnoSentenceCollection inputSents = corpus.getTrainInput();
 
-            addBrownClusters(inputSents);
+            // Add brown clusters, word embeddings.            
+            addClustersAndEmbeddings(inputSents);
             AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
+            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.EMBED);
             // Train the distance-based pruner. 
             if (pruneByDist) {
                 ptdPruner = new PosTagDistancePruner();
@@ -352,7 +396,7 @@ public class JointNlpRunner {
             eval(name, goldSents, inputSents);
             corpus.clearTrainCache();
         }
-          
+        
         if (modelOut != null) {
             jointAnno.saveModel(modelOut);
         }
@@ -361,35 +405,38 @@ public class JointNlpRunner {
         }
 
         if (corpus.hasDev()) {
-            // Test the model on dev data.
+            // Decode dev data.
             String name = "dev";
             AnnoSentenceCollection inputSents = corpus.getDevInput();
-            addBrownClusters(inputSents);
+            addClustersAndEmbeddings(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
-            // Decode and evaluate the dev data.
-            jointAnno.annotate(inputSents);            
+            jointAnno.annotate(inputSents);
             corpus.writeDevPreds(inputSents);
+            // Evaluate dev data.
             AnnoSentenceCollection goldSents = corpus.getDevGold();
             eval(name, goldSents, inputSents);
             corpus.clearDevCache();
         }
         
         if (corpus.hasTest()) {
-            // Test the model on test data.
+            // Decode test data.
             String name = "test";
             AnnoSentenceCollection inputSents = corpus.getTestInput();
-            addBrownClusters(inputSents);
+            addClustersAndEmbeddings(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
-            // Decode and evaluate the test data.
             jointAnno.annotate(inputSents);
             corpus.writeTestPreds(inputSents);
+            // Evaluate test data.
             AnnoSentenceCollection goldSents = corpus.getTestGold();
             eval(name, goldSents, inputSents);
             corpus.clearTestCache();
         }
+        t.stop();
+        rep.report("elapsedSec", t.totSec());
     }
 
-    private void addBrownClusters(AnnoSentenceCollection sents) throws IOException {
+    private void addClustersAndEmbeddings(AnnoSentenceCollection sents) throws IOException {
+        // Add Brown clusters.
         if (brownClusters != null) {            
             log.info("Adding Brown clusters.");
             BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
@@ -399,9 +446,18 @@ public class JointNlpRunner {
         } else {
             log.warn("No Brown cluster file specified.");            
         }
+        // Add word embeddings.
+        if (embeddingsFile != null) {
+            log.info("Adding word embeddings.");
+            EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
+            ea.annotate(sents);
+            log.info("Embeddings hit rate: " + ea.getHitRate());
+        } else {
+            log.info("No embeddings file specified.");
+        }
     }
 
-    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) {
+    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) throws ParseException {
         if (pruneByDist) {
             // Prune via the distance-based pruner.
             ptdPruner.annotate(inputSents);
@@ -440,7 +496,7 @@ public class JointNlpRunner {
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
         }
         if (includeSrl && acl14DepFeats) {
-            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;            
+            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
         }
         if (useTemplates) {
             log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
@@ -454,7 +510,7 @@ public class JointNlpRunner {
         }
     }
 
-    private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
+    private void removeAts(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
         List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
         if (brownClusters == null) {
             // Filter out the Brown cluster features.
@@ -472,9 +528,10 @@ public class JointNlpRunner {
     private void eval(String name, AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
         printOracleAccuracyAfterPruning(predSents, goldSents, name);
         printPredArgSelfLoopStats(goldSents);
-
-        DepParseEvaluator eval = new DepParseEvaluator(name);
-        eval.evaluate(goldSents, predSents);
+        DepParseEvaluator depEval = new DepParseEvaluator(name);
+        depEval.evaluate(goldSents, predSents);
+        RelationEvaluator relEval = new RelationEvaluator(name);
+        relEval.evaluate(goldSents, predSents);
     }
 
     private static void printOracleAccuracyAfterPruning(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
@@ -518,7 +575,7 @@ public class JointNlpRunner {
 
     /* --------- Factory Methods ---------- */
 
-    private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() {
+    private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() throws ParseException {
         JointNlpAnnotatorPrm prm = new JointNlpAnnotatorPrm();
         prm.crfPrm = getCrfTrainerPrm();
         prm.csPrm = getCorpusStatisticsPrm();
@@ -530,7 +587,7 @@ public class JointNlpRunner {
         return prm;
     }
     
-    private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpFeatureExtractorPrm fePrm) {
+    private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         // Factor graph structure.
@@ -550,8 +607,15 @@ public class JointNlpRunner {
         prm.fgPrm.srlPrm.predictSense = predictSense;
         prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
+        // Relation Feature extraction.
+        if (includeRel) {
+            if (relFeatTpls != null) { prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls); }
+            prm.fgPrm.relPrm.featureHashMod = featureHashMod;
+        }
+        
         prm.fgPrm.includeDp = includeDp;
         prm.fgPrm.includeSrl = includeSrl;
+        prm.fgPrm.includeRel = includeRel;
         
         // Feature extraction.
         prm.fePrm = fePrm;
@@ -598,6 +662,7 @@ public class JointNlpRunner {
             dpFePrm.onlyTrueBias = false;
             dpFePrm.onlyTrueEdges = false;
         }
+        dpFePrm.onlyFast = dpFastFeats;
         
         JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         fePrm.srlFePrm = srlFePrm;
@@ -651,15 +716,21 @@ public class JointNlpRunner {
         return prm;
     }
     
-    private static CrfTrainerPrm getCrfTrainerPrm() {
+    private static CrfTrainerPrm getCrfTrainerPrm() throws ParseException {
         FgInferencerFactory infPrm = getInfFactory();
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = infPrm;
-        prm.bFactory = (ErmaBpPrm) infPrm; // TODO: This is a temporary hack to which assumes we always use ErmaBp.
+        if (infPrm instanceof BeliefsModuleFactory) {
+            // TODO: This is a temporary hack to which assumes we always use ErmaBp.
+            prm.bFactory = (BeliefsModuleFactory) infPrm;
+        }
         if (optimizer == Optimizer.LBFGS) {
-            prm.optimizer = getLbfgs();
+            prm.optimizer = getMalletLbfgs();
             prm.batchOptimizer = null;
+        } else if (optimizer == Optimizer.QN) {
+            prm.optimizer = getStanfordLbfgs();
+            prm.batchOptimizer = null;            
         } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.optimizer = null;
             SGDPrm sgdPrm = getSgdPrm();
@@ -683,7 +754,13 @@ public class JointNlpRunner {
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
-        prm.regularizer = new L2(l2variance);
+        if (regularizer == RegularizerType.L2) {
+            prm.regularizer = new L2(l2variance);
+        } else if (regularizer == RegularizerType.NONE) {
+            prm.regularizer = null;
+        } else {
+            throw new ParseException("Unsupported regularizer: " + regularizer);
+        }
         prm.numThreads = threads;
         prm.useMseForValue = useMseForValue;        
         prm.trainer = trainer;                
@@ -706,10 +783,14 @@ public class JointNlpRunner {
         return prm;
     }
 
-    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getLbfgs() {
+    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getMalletLbfgs() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         prm.maxIterations = maxLbfgsIterations;
         return new MalletLBFGS(prm);
+    }
+
+    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getStanfordLbfgs() {
+        return new StanfordQNMinimizer(maxLbfgsIterations);
     }
     
     private static SGDPrm getSgdPrm() {
@@ -726,23 +807,30 @@ public class JointNlpRunner {
         return prm;
     }
 
-    private static FgInferencerFactory getInfFactory() {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
-        bpPrm.logDomain = logDomain;
-        bpPrm.s = algebra.getAlgebra();
-        bpPrm.schedule = bpSchedule;
-        bpPrm.updateOrder = bpUpdateOrder;
-        bpPrm.normalizeMessages = normalizeMessages;
-        bpPrm.maxIterations = bpMaxIterations;
-        bpPrm.convergenceThreshold = bpConvergenceThreshold;
-        bpPrm.keepTape = (trainer == Trainer.ERMA);
-        if (bpDumpDir != null) {
-            bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+    private static FgInferencerFactory getInfFactory() throws ParseException {
+        if (inference == Inference.BRUTE_FORCE) {
+            BruteForceInferencerPrm prm = new BruteForceInferencerPrm(algebra.getAlgebra());
+            return prm;
+        } else if (inference == Inference.BP) {
+            ErmaBpPrm bpPrm = new ErmaBpPrm();
+            bpPrm.logDomain = logDomain;
+            bpPrm.s = algebra.getAlgebra();
+            bpPrm.schedule = bpSchedule;
+            bpPrm.updateOrder = bpUpdateOrder;
+            bpPrm.normalizeMessages = normalizeMessages;
+            bpPrm.maxIterations = bpMaxIterations;
+            bpPrm.convergenceThreshold = bpConvergenceThreshold;
+            bpPrm.keepTape = (trainer == Trainer.ERMA);
+            if (bpDumpDir != null) {
+                bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
+            }
+            return bpPrm;
+        } else {
+            throw new ParseException("Unsupported inference method: " + inference);
         }
-        return bpPrm;
     }
 
-    private static JointNlpDecoderPrm getDecoderPrm() {
+    private static JointNlpDecoderPrm getDecoderPrm() throws ParseException {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
         mbrPrm.loss = Loss.L1;
@@ -756,35 +844,46 @@ public class JointNlpRunner {
         bcPrm.language = CorpusHandler.language;
         return bcPrm;
     }
+
+    private static EmbeddingsAnnotatorPrm getEmbeddingsAnnotatorPrm() {
+        EmbeddingsAnnotatorPrm prm = new EmbeddingsAnnotatorPrm();
+        prm.embeddingsFile = embeddingsFile;
+        prm.embNorm = embNorm;
+        prm.embScaler= embScaler;
+        return prm;
+    }
     
     public static void main(String[] args) {
+        int exitCode = 0;
+        ArgParser parser = null;
         try {
-            ArgParser parser = new ArgParser(JointNlpRunner.class);
+            parser = new ArgParser(JointNlpRunner.class);
             parser.addClass(JointNlpRunner.class);
             parser.addClass(CorpusHandler.class);
-            try {
-                parser.parseArgs(args);
-            } catch (ParseException e) {
-                log.error(e.getMessage());
-                parser.printUsage();
-                System.exit(1);
-            }
+            parser.addClass(RelationsOptions.class);
+            parser.addClass(InsideOutsideDepParse.class);      
+            parser.addClass(ReporterManager.class);
+            parser.parseArgs(args);
             
+            ReporterManager.init(ReporterManager.reportOut, true);
             Prng.seed(seed);
-            
+
             JointNlpRunner pipeline = new JointNlpRunner();
-            try {
-                pipeline.run();
-            } catch (ParseException e1) {
-                log.error(e1.getMessage());
+            pipeline.run();
+        } catch (ParseException e1) {
+            log.error(e1.getMessage());
+            if (parser != null) {
                 parser.printUsage();
-                System.exit(1);
             }
+            exitCode = 1;
         } catch (Throwable t) {
             t.printStackTrace();
-            System.exit(1);
+            exitCode = 1;
+        } finally {
+            ReporterManager.close();
         }
-        System.exit(0);
+        
+        System.exit(exitCode);
     }
 
 }

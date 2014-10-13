@@ -10,12 +10,10 @@ import java.util.Iterator;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.IFgModel;
@@ -24,15 +22,14 @@ import edu.jhu.gm.model.ObsFeatureCarrier;
 import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.util.ArrayIter3D;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.IntIntDenseVector;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
 import edu.jhu.util.semiring.Algebras;
 
@@ -78,7 +75,7 @@ public class ObsFeatureConjoiner implements Serializable {
     /** Whether this object is initialized. */
     private boolean initialized;
     /** Alphabet for standard (non-observation function) features. */
-    private Alphabet<Object> feAlphabet;
+    private FeatureNames feAlphabet;
     
     private ObsFeatureConjoinerPrm prm;
     
@@ -86,10 +83,10 @@ public class ObsFeatureConjoiner implements Serializable {
         this.prm = prm;
         initialized = false;
         this.templates = fts;
-        this.feAlphabet = new Alphabet<Object>();
+        this.feAlphabet = new FeatureNames();
     }
         
-    public Alphabet<Object> getFeAlphabet() {
+    public FeatureNames getFeAlphabet() {
         return feAlphabet;
     }
     
@@ -137,9 +134,9 @@ public class ObsFeatureConjoiner implements Serializable {
         // Always include the bias features.
         for (int t=0; t<included.length; t++) {
             FactorTemplate template = templates.get(t);
-            Alphabet<Feature> alphabet = template.getAlphabet();            
+            FeatureNames alphabet = template.getAlphabet();            
             for (int k = 0; k < alphabet.size(); k++) {
-                if (alphabet.lookupObject(k).isBiasFeature()) {
+                if (alphabet.isBiasFeature(k)) {
                     for (int c = 0; c < included[t].length; c++) {
                         included[t][c][k] = true;
                     }
@@ -348,7 +345,7 @@ public class ObsFeatureConjoiner implements Serializable {
         for (int t=0; t<numTemplates; t++) {
             FactorTemplate template = templates.get(t);
             int numConfigs = template.getNumConfigs();
-            Alphabet<Feature> alphabet = template.getAlphabet();
+            FeatureNames alphabet = template.getAlphabet();
             for (int c = 0; c < numConfigs; c++) {
                 for (int k = 0; k < indices[t][c].length; k++) {
                     writer.write(template.getKey().toString());
@@ -400,7 +397,7 @@ public class ObsFeatureConjoiner implements Serializable {
             int k = iter.k;
             
             FactorTemplate template = templates.get(t);
-            Alphabet<Feature> alphabet = template.getAlphabet();
+            FeatureNames alphabet = template.getAlphabet();
             
             StringBuilder name = new StringBuilder();
             name.append(template.getKey().toString());

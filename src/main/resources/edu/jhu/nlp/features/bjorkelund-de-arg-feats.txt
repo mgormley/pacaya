@@ -1,0 +1,38 @@
+# Features selected as in Bjorkelund et al. (2009) for 'arg' language 'de'
+deprel(c)
+deprel(c) + pos(bag(children(p)))
+deprel(c) + pos(dir(seq(path(p,c))))
+# c.deprel + p.lemmaSense ### NOT SUPPORTED
+morpho(c)
+morpho(c) + pos(lmc(c))
+# c.morpho + p.lemmaSense ### NOT SUPPORTED
+pos(c)
+# c.pos + p.lemmaSense ### NOT SUPPORTED
+pos(c) + pos(rns(c))
+word(c)
+word(c) + lemma(p)
+# c.word + p.lemmaSense ### NOT SUPPORTED
+deprel(bag(children(p)))
+deprel(bag(children(p))) + pos(dir(seq(path(p,c))))
+pos(bag(children(p))) + deprel(p)
+deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c)))) + word(head(p))
+morpho(lmc(c))
+morpho(lmc(c)) + pos(head(p))
+morpho(lns(c))
+pos(lns(c))
+pos(lns(c)) + pos(rns(c))
+word(lmc(c))
+# c.lmc.word + p.lemmaSense ### NOT SUPPORTED
+pos(dir(seq(path(p,c))))
+# relative(p,c) + p.lemmaSense ### NOT SUPPORTED
+morpho(p)
+lemma(p)
+# p.lemmaSense ### NOT SUPPORTED
+# p.lemmaSense + c.rns.pos ### NOT SUPPORTED
+pos(p)
+pos(p) + word(head(p))
+pos(head(p))
+pos(rmc(c)) + pos(rns(c))
+pos(rns(c))
+word(rns(c))

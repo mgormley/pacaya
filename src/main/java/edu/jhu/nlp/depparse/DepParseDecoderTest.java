@@ -1,29 +1,42 @@
 package edu.jhu.nlp.depparse;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.model.Factor;
+import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.LinkVar;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.parse.dep.EdgeScores;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Maps;
 import edu.jhu.util.semiring.Algebras;
 
 public class DepParseDecoderTest {
     
-    private int n;
-    private List<VarTensor> margs;
-    private List<Var> vars;
+    int n;
+    List<VarTensor> margs;
+    List<Var> vars;
+    FgInferencer inf;
+    FactorGraph fg;
+    EdgeScores scores;
+    int linkVarCount;
 
     @Before
     public void setUp() {
@@ -33,6 +46,7 @@ public class DepParseDecoderTest {
         vars = new ArrayList<Var>();
         for (int p=-1; p<n; p++) {
             for (int c=0; c<n; c++) {
+                if (p == c) { continue; }
                 LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
                 VarTensor f = new VarTensor(Algebras.REAL_ALGEBRA, new VarSet(v));
                 if ((p == -1 && c == 1) || 
@@ -48,68 +62,95 @@ public class DepParseDecoderTest {
                 vars.add(v);
             }
         }
+        
+        inf = new MockFgInf(vars, margs);
+        fg = new FactorGraph();
+        for (Var var : vars) {
+            fg.addVar(var);
+        }
+        // Create the EdgeScores.
+        Pair<EdgeScores, Integer> pair = DepParseDecoder.getEdgeScores(inf, fg, n);
+        scores = pair.get1();
+        linkVarCount = pair.get2();
+    }
+    
+    @Test 
+    public void testGetEdgeScores() {
+        
+        assertEquals(3*3, linkVarCount);
+        assertEquals(0.7, scores.getScore(-1, 1), 1e-13);
+        assertEquals(0.7, scores.getScore(1, 0), 1e-13);
+        assertEquals(0.7, scores.getScore(1, 2), 1e-13);
+        assertEquals(0.3, scores.getScore(-1, 2), 1e-13);
+        assertEquals(0.3, scores.getScore(-1, 0), 1e-13);
+        assertEquals(0.3, scores.getScore(2, 1), 1e-13);
+        assertEquals(0.3, scores.getScore(2, 0), 1e-13);
     }
     
     @Test
-    public void testGetParents() {       
-        int[] parents = DepParseDecoder.getParents(margs, vars, n);
+    public void testGetParents() { 
+        int[] parents = DepParseDecoder.getParents(scores);
         System.out.println(Arrays.toString(parents));
         Assert.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
     @Test
-    public void testGetDepEdgeMaskPropMaxMarg() {
-        double propMaxMarg = 0.1;
-        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, 99);
-        System.out.println(mask);
-        assertNoneArePruned(mask);
-        
-        propMaxMarg = 0.5;
-        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, 99);
-        System.out.println(mask);
-        assertOnlyMostLikelyAreKept(mask);
+    public void testDecoder() {
+        DepParseDecoder dp = new DepParseDecoder();
+        AnnoSentence sent = new AnnoSentence();
+        sent.setWords(Lists.getList("a", "b", "c"));
+        int[] parents = dp.decode(inf, new UnlabeledFgExample(fg, new VarConfig()), sent);
+        System.out.println(Arrays.toString(parents));
+        Assert.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
-    @Test
-    public void testGetDepEdgeMaskCount() {
-        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, 0, 99);
-        System.out.println(mask);
-        assertNoneArePruned(mask);
+    public static class MockFgInf implements FgInferencer {
+
+        Map<Var,VarTensor> var2marg;
+        List<VarTensor> margs;
         
-        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, 0, 1);
-        System.out.println(mask);
-        assertOnlyMostLikelyAreKept(mask);
-    }
-
-    private void assertOnlyMostLikelyAreKept(DepEdgeMask mask) {
-        assertEquals(3, mask.getCount());
-
-        for (int p=-1; p<n; p++) {
-            for (int c=0; c<n; c++) {
-                if (p == c) { continue; }
-                if ((p == -1 && c == 1) || 
-                        (p == 1 && c == 0) || 
-                        (p == 1 && c == 2)) {
-                    assertTrue("pc: "+p + " " + c, mask.isKept(p, c));
-                    assertTrue("pc: "+p + " " + c, !mask.isPruned(p, c));
-                } else {
-                    assertTrue("pc: "+p + " " + c, !mask.isKept(p, c));
-                    assertTrue("pc: "+p + " " + c, mask.isPruned(p, c));
-                }
-            }
+        public MockFgInf(List<Var> vars, List<VarTensor> margs) {
+            this.margs = margs;
+            this.var2marg = Maps.zip(vars, margs);
         }
-    }
 
-    private void assertNoneArePruned(DepEdgeMask mask) {
-        assertEquals(n*n, mask.getCount());
-
-        for (int p=-1; p<n; p++) {
-            for (int c=0; c<n; c++) {
-                if (p == c) { continue; }
-                assertTrue("pc: "+p + " " + c, mask.isKept(p, c));
-                assertTrue("pc: "+p + " " + c, !mask.isPruned(p, c));
-            }
+        @Override
+        public VarTensor getMarginals(Var var) {
+            return var2marg.get(var);
         }
+
+        @Override
+        public VarTensor getMarginalsForVarId(int varId) {
+            return margs.get(varId);
+        }
+        
+        @Override
+        public void run() { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public VarTensor getMarginals(Factor factor) { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public VarTensor getMarginalsForFactorId(int factorId) { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public double getPartition() { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public VarTensor getLogMarginals(Var var) { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public VarTensor getLogMarginals(Factor factor) { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public VarTensor getLogMarginalsForVarId(int varId) { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public VarTensor getLogMarginalsForFactorId(int factorId) { throw new RuntimeException("Should not be called"); }
+
+        @Override
+        public double getLogPartition() { throw new RuntimeException("Should not be called"); }
+        
     }
 
 }

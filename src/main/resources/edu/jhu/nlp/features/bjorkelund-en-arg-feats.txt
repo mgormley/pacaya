@@ -1,0 +1,48 @@
+# Features selected as in Bjorkelund et al. (2009) for 'arg' language 'en'
+
+deprel(c)
+deprel(c) + pos(c)
+deprel(c) + deprel(bag(children(p)))
+deprel(c) + deprel(dir(seq(path(p,c))))
+deprel(c) + deprel(p)
+# c.deprel + p.lemmaSense ### NOT SUPPORTED
+deprel(c) + word(head(p))
+deprel(c) + pos(rmc(c))
+pos(c)
+pos(c) + word(c)
+pos(c) + relative(p,c)
+pos(c) + lemma(p)
+# c.pos + p.lemmaSense ### NOT SUPPORTED
+word(c)
+word(c) + relative(p,c)
+# c.word + p.lemmaSense ### NOT SUPPORTED
+deprel(bag(children(p)))
+deprel(bag(children(p))) + relative(p,c)
+pos(bag(children(p)))
+word(bag(children(p)))
+# children(p).word.bag + p.lemmaSense ### NOT SUPPORTED
+deprel(dir(seq(path(p,c))))
+deprel(dir(seq(path(p,c)))) + relative(p,c)
+pos(lmc(c))
+pos(lmc(c)) + word(p)
+pos(lmc(c)) + pos(rmc(c))
+pos(lmc(c)) + pos(rns(c))
+pos(lns(c))
+# c.lns.pos + p.lemmaSense ### NOT SUPPORTED
+word(lns(c))
+word(lmc(c))
+pos(dir(seq(path(p,c))))
+# path(p,c).dir.pos.seq + p.lemmaSense ### NOT SUPPORTED
+pos(dir(seq(path(p,c)))) + pos(rns(c))
+relative(p,c)
+# relative(p,c) + p.lemmaSense ### NOT SUPPORTED
+lemma(p)
+# p.lemmaSense ### NOT SUPPORTED
+# p.lemmaSense + c.rns.pos ### NOT SUPPORTED
+pos(p)
+pos(head(p))
+word(head(p))
+word(p)
+pos(rmc(c))
+word(rns(c))
+word(rmc(c))

@@ -1,0 +1,23 @@
+# Zhao et al. (2009) argument feature templates for English.
+#
+
+# p.lm.pos 
+pos(lmc(p))
+# p.rm.pos
+pos(rmc(p)) 
+# p.lemma 
+lemma(p)
+# p.lemma + p.lemma_1
+lemma(p) + lemma(1(p)) 
+# p.lemma + p.children.dprel.noDup 
+lemma(p) + deprel(noDup(children(p)))
+
+# p.lemma + p.currentSense          << NOT SUPPORTED. 
+# p.currentSense also doesn't make much sense. Shouldn't all features be conjoined with the sense?
+
+# p.form 
+word(p)
+# p.form_{-1} + p.form
+word(-1(p)) + word(p)
+# p.form + p.form_{1}
+word(p) + word(1(p))

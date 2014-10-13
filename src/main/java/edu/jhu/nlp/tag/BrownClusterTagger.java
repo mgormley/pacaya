@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-import edu.jhu.data.Sentence;
-import edu.jhu.data.SentenceCollection;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.Annotator;
+import edu.jhu.nlp.data.Sentence;
+import edu.jhu.nlp.data.SentenceCollection;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.util.Alphabet;
 
 /**

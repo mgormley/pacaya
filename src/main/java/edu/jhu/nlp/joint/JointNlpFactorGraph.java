@@ -1,27 +1,24 @@
 package edu.jhu.nlp.joint;
 
-import java.util.List;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
+import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
+import edu.jhu.nlp.relations.RelationsFactorGraphBuilder;
+import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
-import edu.jhu.prim.set.IntSet;
 import edu.jhu.util.Prm;
 
 /**
@@ -48,6 +45,8 @@ public class JointNlpFactorGraph extends FactorGraph {
         public DepParseFactorGraphBuilderPrm dpPrm = new DepParseFactorGraphBuilderPrm();
         public boolean includeSrl = true;
         public SrlFactorGraphBuilderPrm srlPrm = new SrlFactorGraphBuilderPrm();
+        public boolean includeRel = false;
+        public RelationsFactorGraphBuilderPrm relPrm = new RelationsFactorGraphBuilderPrm();
     }
     
     public enum JointFactorTemplate {
@@ -63,46 +62,32 @@ public class JointNlpFactorGraph extends FactorGraph {
     // Factor graph builders, which also cache the variables.
     private DepParseFactorGraphBuilder dp;  
     private SrlFactorGraphBuilder srl;
+    private RelationsFactorGraphBuilder rel;
 
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
-        this(prm, sent.getWords(), sent.getLemmas(), sent.getDepEdgeMask(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe);
-    }
-    
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, List<String> words, List<String> lemmas, DepEdgeMask depEdgeMask,
-            IntSet knownPreds, List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
-        this(prm);
-        build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fe, this, depEdgeMask);
-    }
-    
-    public JointNlpFactorGraph(JointFactorGraphPrm prm) {
+    public JointNlpFactorGraph(JointFactorGraphPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor srlFe, ObsFeatureConjoiner ofc, FeatureExtractor dpFe, ObsFeatureExtractor relFe) {
         this.prm = prm;
+        build(sent, cs, srlFe, ofc, dpFe, relFe, this);
     }
 
     /**
      * Adds factors and variables to the given factor graph.
-     * @param fe TODO
      */
-    public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
-            ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
-        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe, fg, sent.getDepEdgeMask());
-    }
-
-    /**
-     * Adds factors and variables to the given factor graph.
-     * @param fe TODO
-     * @param depEdgeMask TODO
-     */
-    public void build(List<String> words, List<String> lemmas, IntSet knownPreds, List<String> roleStateNames,
-            Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg, DepEdgeMask depEdgeMask) {
-        this.n = words.size();
+    public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor srlFe,
+            ObsFeatureConjoiner ofc, FeatureExtractor dpFe,  ObsFeatureExtractor relFe, 
+            FactorGraph fg) {
+        this.n = sent.size();
 
         if (prm.includeDp) {
             dp = new DepParseFactorGraphBuilder(prm.dpPrm);
-            dp.build(words, depEdgeMask, fe, fg);
+            dp.build(sent, dpFe, fg);
         }
         if (prm.includeSrl) {
             srl = new SrlFactorGraphBuilder(prm.srlPrm); 
-            srl.build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fg);
+            srl.build(sent, cs, srlFe, ofc, fg);
+        }
+        if (prm.includeRel ) {
+            rel = new RelationsFactorGraphBuilder(prm.relPrm);
+            rel.build(sent, ofc, fg, cs, relFe);
         }
         
         if (prm.includeDp && prm.includeSrl) {
@@ -114,7 +99,7 @@ public class JointNlpFactorGraph extends FactorGraph {
                     if (i != -1) {
                         // Add binary factors between Roles and Links.
                         if (roleVars[i][j] != null && childVars[i][j] != null) {
-                            addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j], childVars[i][j]), JointFactorTemplate.LINK_ROLE_BINARY, ofc, obsFe));
+                            addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j], childVars[i][j]), JointFactorTemplate.LINK_ROLE_BINARY, ofc, srlFe));
                         }
                     }
                 }
@@ -161,6 +146,18 @@ public class JointNlpFactorGraph extends FactorGraph {
 
     public int getSentenceLength() {
         return n;
+    }
+
+    public DepParseFactorGraphBuilder getDpBuilder() {
+        return dp;
+    }
+    
+    public SrlFactorGraphBuilder getSrlBuilder() {
+        return srl;
+    }
+
+    public RelationsFactorGraphBuilder getRelBuilder() {
+        return rel;
     }
     
 }

@@ -2,7 +2,6 @@ package edu.jhu.gm.train;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.autodiff.erma.ErmaObjective;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;

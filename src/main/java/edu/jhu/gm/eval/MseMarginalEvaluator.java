@@ -1,13 +1,12 @@
 package edu.jhu.gm.eval;
 
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.RealAlgebra;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.RealAlgebra;
 
 public class MseMarginalEvaluator {
 

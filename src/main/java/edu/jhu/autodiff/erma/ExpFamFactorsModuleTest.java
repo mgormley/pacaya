@@ -4,16 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.autodiff.AbstractModuleTest;
-import edu.jhu.autodiff.AbstractModuleTest.OneToOneFactory;
-import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
-import edu.jhu.autodiff.Tensor;
-import edu.jhu.autodiff.TensorIdentity;
-import edu.jhu.autodiff.TensorUtils;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.model.ExplicitExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;

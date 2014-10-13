@@ -365,13 +365,13 @@ public class BeliefPropagationTest {
         assertEqualMarginals(fg, bf, bp);
     }
     
-    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
-            BeliefPropagation bp) {
+    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
+            FgInferencer bp) {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 
-    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
-            BeliefPropagation bp, double tolerance) {
+    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
+            FgInferencer bp, double tolerance) {
         for (Var var : fg.getVars()) {
             {
                 VarTensor bfm = bf.getMarginals(var);

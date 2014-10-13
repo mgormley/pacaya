@@ -4,22 +4,22 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.AnnoSentence;
-import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.DepEdgeMask;
+import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder;
-import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
-import edu.jhu.nlp.joint.JointNlpFgModel;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
-import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
+import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
+import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.joint.JointNlpFgModel;
 import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
 import edu.jhu.util.files.Files;
@@ -55,6 +55,7 @@ public class FirstOrderPruner implements Annotator {
         exPrm.fgPrm.dpPrm.siblingFactors = false;
         exPrm.fgPrm.dpPrm.unaryFactors = true;
         exPrm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        exPrm.fgPrm.dpPrm.pruneEdges = true;
         exPrm.fePrm = fePrm;
         
         // Get unlabeled data.
@@ -70,23 +71,25 @@ public class FirstOrderPruner implements Annotator {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             LFgExample ex = data.get(i);
-            AnnoSentence predSent = inputSents.get(i);
+            AnnoSentence inputSent = inputSents.get(i);
+            // TODO: Because we use the JointNlpDecoder, we end up computing the MBR parse twice
+            // (once for the mask, once for the parents array).
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
-            decoder.decode(model, ex);
-                        
-            // Update the dependency tree on the sentence.
-            int[] parents = decoder.getParents();
-            if (parents != null) {
-                predSent.setParents(parents);
-            }
+            AnnoSentence predSent = decoder.decode(model, ex, inputSent);
             
+            // Update the dependency tree on the sentence.
+            int[] parents = predSent.getParents();
+            if (parents != null) {
+                inputSent.setParents(parents);
+            }
+
             // Update the pruning mask.
-            DepEdgeMask mask = decoder.getDepEdgeMask();
+            DepEdgeMask mask = predSent.getDepEdgeMask();
             if (mask != null) {
-                if (predSent.getDepEdgeMask() == null) {
-                    predSent.setDepEdgeMask(mask);
+                if (inputSent.getDepEdgeMask() == null) {
+                    inputSent.setDepEdgeMask(mask);
                 } else {
-                    predSent.getDepEdgeMask().and(mask);
+                    inputSent.getDepEdgeMask().and(mask);
                 }
             }
             numEdgesKept += mask.getCount();

@@ -64,15 +64,20 @@ class PathDefinitions():
         for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:
             p.langs[lang_short] = ParamGroups()            
         
+        corpora_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora",
+                                            "/Users/mgormley/research/corpora",
+                                            "/home/mgormley/corpora")
+        p.corpora_dir = corpora_dir
         ldc_dir = get_first_that_exists("/export/common/data/corpora/LDC",
-                                        "/Users/mgormley/research/corpora/LDC",
+                                        corpora_dir + "/LDC",
                                         self.root_dir + "/data/LDC")
+        p.ldc_dir = ldc_dir
         
         # CoNLL'09 Shared Task datasets.
-        conll09_T03_dir = get_first_that_exists(ldc_dir + "/LDC2012T03/data")
-        conll09_T04_dir = get_first_that_exists(ldc_dir + "/LDC2012T04/data")
+        conll09_T03_dir = ldc_dir + "/LDC2012T03/data"
+        conll09_T04_dir = ldc_dir + "/LDC2012T04/data"
         
-        self._set_paths_for_conll09_lang(p, "Spanish", "es", conll09_T03_dir, require=True)
+        self._set_paths_for_conll09_lang(p, "Spanish", "es", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "German",  "de", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Czech",   "cs", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Catalan", "ca", conll09_T03_dir, require=False)
@@ -80,7 +85,7 @@ class PathDefinitions():
         self._set_paths_for_conll09_lang(p, "Chinese", "zh", conll09_T04_dir, require=False)
         
         # CoNLL'08 Shared Task dataset
-        conll08_dir = get_first_that_exists(ldc_dir + "/LDC2009T12/data")
+        conll08_dir = ldc_dir + "/LDC2009T12/data"
         p.c08_pos_gold_train = os.path.join(conll08_dir, "train", "train.closed")
         p.c08_pos_gold_dev = os.path.join(conll08_dir, "devel", "devel.closed")
         p.c08_pos_gold_test_wsj = os.path.join(conll08_dir, "test.wsj", "test.wsj.closed.GOLD")
@@ -96,7 +101,7 @@ class PathDefinitions():
         # Languages: arabic, bulgarian, czech, danish, dutch, german, portuguese, slovene, spanish, swedish, turkish.
         # Missing: japanese, chinese.
         # TODO: Fix language codes.
-        conllx_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora/CoNLL-X",
+        conllx_dir = get_first_that_exists(corpora_dir + "/CoNLL-X",
                                            self.root_dir + "/data/conllx/CoNLL-X")
         self._set_paths_for_conllx_lang(p, "Arabic",     "ar", "PADT", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Bulgarian",  "bg", "bultreebank", conllx_dir, require=True)
@@ -125,8 +130,10 @@ class PathDefinitions():
                 
         # Brown Clusters.
         bc_256_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_256",
+                                           corpora_dir + "/embeddings/bc_out_256",
                                            self.root_dir + "/data/bc_out_256")
         bc_1000_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_1000",
+                                            corpora_dir + "/embeddings/bc_out_1000",
                                             self.root_dir + "/data/bc_out_1000")
         p.bc_tiny = os.path.join(bc_1000_dir, "paths.tiny")
         for lang_short in p.c09_lang_short_names:

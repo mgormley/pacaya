@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.FactorGraph;
@@ -13,7 +13,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.collections.Lists;
 
 public class ObsFeatureConjoinerTest {
@@ -84,11 +84,12 @@ public class ObsFeatureConjoinerTest {
         @Override
         public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            Alphabet<Feature> alphabet = fts.getTemplate(factor).getAlphabet();
+            FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
 
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int featIdx = alphabet.lookupIndex("BIAS_FEATURE", true);
+            alphabet.setIsBias(featIdx);
             fv.set(featIdx, 1.0);
-            featIdx = alphabet.lookupIndex(new Feature("feat2a"));
+            featIdx = alphabet.lookupIndex("feat2a");
             fv.set(featIdx, 1.0);
             
             return fv;
@@ -118,14 +119,14 @@ public class ObsFeatureConjoinerTest {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            alphabet.lookupIndex(new Feature("feat1"));
+            FeatureNames alphabet = new FeatureNames();
+            alphabet.lookupIndex("feat1");
             fts.add(new FactorTemplate(new VarSet(v1), alphabet, "key1"));
         }
         {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            alphabet.lookupIndex(new Feature("feat2a"));
-            alphabet.lookupIndex(new Feature("feat2b"));
+            FeatureNames alphabet = new FeatureNames();
+            alphabet.lookupIndex("feat2a");
+            alphabet.lookupIndex("feat2b");
             fts.add(new FactorTemplate(new VarSet(v1, v2), alphabet, "key2"));
         }
         return fts;

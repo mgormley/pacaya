@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.inf.BeliefPropagation;
@@ -30,12 +29,10 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.util.math.LogAddTable;
-import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
 
 public class ProjDepTreeFactorTest {
