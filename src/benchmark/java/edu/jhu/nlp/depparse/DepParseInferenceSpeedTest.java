@@ -45,8 +45,12 @@ public class DepParseInferenceSpeedTest {
     }
 
     public static ErmaBp runBp(FactorGraph fg) {
+        return runBp(fg, 1);
+    }
+
+    public static ErmaBp runBp(FactorGraph fg, int numIters) {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
-        bpPrm.maxIterations = 1;
+        bpPrm.maxIterations = numIters;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         ErmaBp bp = new ErmaBp(fg, bpPrm);

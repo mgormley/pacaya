@@ -464,18 +464,23 @@ public class Tensor implements MVec<Tensor> {
 
     /** Special equals with a tolerance. */
     public boolean equals(Tensor other, double delta) {
-        if (this == other)
+        return equals(this, other, delta);
+    }
+
+    /** Special equals with a tolerance. */
+    public static boolean equals(Tensor t1, Tensor t2, double delta) {
+        if (t1 == t2)
             return true;
-        if (other == null)
+        if (t2 == null)
             return false;
-        if (!Arrays.equals(dims, other.dims))
+        if (!Arrays.equals(t1.dims, t2.dims))
             return false;
-        if (!this.s.equals(other.s))
+        if (!t1.s.equals(t2.s))
             return false;
-        if (this.values.length != other.values.length)
+        if (t1.values.length != t2.values.length)
             return false;
-        for (int i=0; i<values.length; i++) {
-            if (!s.eq(values[i], other.values[i], delta))
+        for (int i=0; i<t1.values.length; i++) {
+            if (!t1.s.eq(t1.values[i], t2.values[i], delta))
                 return false;
         }
         return true;
