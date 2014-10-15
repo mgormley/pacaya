@@ -240,8 +240,8 @@ public class HyperDepParserTest {
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        Pair<DepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(root,  child, s);
-        DepParseHypergraph graph = pair.get1();
+        Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(root,  child, s);
+        O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         // Fill with dummy outside scores.
         scores.alpha = new double[scores.beta.length];

@@ -16,20 +16,21 @@ import edu.jhu.util.semiring.Semiring;
 
 /**
  * Hypergraph for single-root or multi-root first-order projective dependency parsing.
+ * This follows the Eisner (2000) algorithm.
  * 
  * @author mgormley
  */
-public class DepParseHypergraph implements Hypergraph {
+public class O1DpHypergraph implements Hypergraph {
     
-    private static final Logger log = Logger.getLogger(DepParseHypergraph.class);
+    private static final Logger log = Logger.getLogger(O1DpHypergraph.class);
 
     private static final int NOT_INITIALIZED = -1;
-    private static int LEFT = 0;
-    private static int RIGHT = 1;
-    private static int INCOMPLETE = 0;
-    private static int COMPLETE = 1;
+    private static final int LEFT = 0;
+    private static final int RIGHT = 1;
+    private static final int INCOMPLETE = 0;
+    private static final int COMPLETE = 1;
     
-    // Number of words in the sentence.
+    // Number of words in the sentence plus one.
     private int nplus;
     private Hypernode root;
     private Hypernode[][][][] chart;   
@@ -41,7 +42,7 @@ public class DepParseHypergraph implements Hypergraph {
     private Semiring semiring;
     private final boolean singleRoot;
     
-    public DepParseHypergraph(double[] rootScores, double[][] childScores, Semiring semiring, boolean singleRoot) {
+    public O1DpHypergraph(double[] rootScores, double[][] childScores, Semiring semiring, boolean singleRoot) {
         this.scores = EdgeScores.combine(rootScores, childScores);
         this.semiring = semiring;
         this.singleRoot = singleRoot;
@@ -246,7 +247,7 @@ public class DepParseHypergraph implements Hypergraph {
     public void applyRevTopoSort(final HyperedgeFn fn) {
         final int startIdx = singleRoot ? 1 : 0;         
         int id = 0;
-        WeightedHyperedge e = new WeightedHyperedge(id, "edge");
+        WeightedHyperedge e = new WeightedHyperedge(id, null);
 
         // Single hyperedge from wall to ROOT.
         e.setHeadNode(root);

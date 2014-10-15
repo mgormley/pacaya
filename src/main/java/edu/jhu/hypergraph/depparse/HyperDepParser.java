@@ -80,7 +80,7 @@ public class HyperDepParser {
         //Semirings.fromLogProb(fracRoot, semiring);
         //Semirings.fromLogProb(fracChild, semiring);
         
-        DepParseHypergraph graph = new DepParseHypergraph(fracRoot, fracChild, semiring, singleRoot);
+        O1DpHypergraph graph = new O1DpHypergraph(fracRoot, fracChild, semiring, singleRoot);
         Scores scores = new Scores();
         Hyperalgo.insideAlgorithm(graph, graph.getPotentials(), semiring, scores);
         Hyperalgo.outsideAlgorithm(graph, graph.getPotentials(), semiring, scores);
@@ -88,7 +88,7 @@ public class HyperDepParser {
         return getDepIoChart(graph, scores);
     }
     
-    public static DepIoChart getDepIoChart(DepParseHypergraph graph, Scores scores) {
+    public static DepIoChart getDepIoChart(O1DpHypergraph graph, Scores scores) {
         final int nplus = graph.getNumTokens() + 1;        
         final ProjTreeChart inChart = new ProjTreeChart(nplus, DepParseType.INSIDE);
         final ProjTreeChart outChart = new ProjTreeChart(nplus, DepParseType.INSIDE);
@@ -116,29 +116,29 @@ public class HyperDepParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @return The parse chart.
      */
-    public static Pair<DepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
+    public static Pair<O1DpHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
         final Algebra semiring = new LogSignAlgebra();         
         return insideSingleRootEntropyFoe(fracRoot, fracChild, semiring);
     }
 
-    public static Pair<DepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot,
+    public static Pair<O1DpHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot,
             double[][] fracChild, final Algebra semiring) {
         boolean singleRoot = true;
         return insideEntropyFoe(fracRoot, fracChild, semiring, singleRoot);
     }
 
-    public static Pair<DepParseHypergraph, Scores> insideEntropyFoe(double[] fracRoot, double[][] fracChild,
+    public static Pair<O1DpHypergraph, Scores> insideEntropyFoe(double[] fracRoot, double[][] fracChild,
             final Algebra semiring, boolean singleRoot) {
         Algebras.fromLogProb(fracRoot, semiring);
         Algebras.fromLogProb(fracChild, semiring);
         
-        DepParseHypergraph graph = new DepParseHypergraph(fracRoot, fracChild, semiring, singleRoot);
+        O1DpHypergraph graph = new O1DpHypergraph(fracRoot, fracChild, semiring, singleRoot);
         Scores scores = new Scores();
         final Hyperpotential w = graph.getPotentials();
         HyperpotentialFoe wFoe = new EntropyHyperpotentialFoe(w);
         Hyperalgo.insideAlgorithmFirstOrderExpect(graph, wFoe, semiring, scores);
 
-        return new Pair<DepParseHypergraph, Scores>(graph, scores);
+        return new Pair<O1DpHypergraph, Scores>(graph, scores);
     }
     
 }

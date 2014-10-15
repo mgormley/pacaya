@@ -10,12 +10,9 @@ public class WeightedHyperedge extends Hyperedge {
         super(id, label);
     }
 
-    public WeightedHyperedge(int id, String label, Hypernode headNode, Hypernode... tailNodes) {
+    public WeightedHyperedge(int id, String label, double weight, Hypernode headNode, Hypernode... tailNodes) {
         super(id, label, headNode, tailNodes);
-    }
-    
-    public WeightedHyperedge(int id, String label, Hypernode headNode, List<Hypernode> tailNodes) {
-        super(id, label, headNode, tailNodes);
+        this.weight = weight;
     }
 
     public double getWeight() {

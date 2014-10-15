@@ -9,14 +9,7 @@ public class Hyperedge {
     private Hypernode[] tailNodes;
     private String label;
     private int id;
-        
-    public Hyperedge(int id, String label, Hypernode headNode, List<Hypernode> tailNodes) {
-        this.headNode = headNode;
-        this.tailNodes = tailNodes.toArray(new Hypernode[]{});
-        this.label = label;
-        this.id = id;
-    }
-    
+       
     public Hyperedge(int id, String label, Hypernode headNode, Hypernode... tailNodes) {
         this.headNode = headNode;
         this.tailNodes = tailNodes;

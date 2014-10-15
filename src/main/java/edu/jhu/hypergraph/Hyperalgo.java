@@ -56,9 +56,9 @@ public class Hyperalgo {
                     prod = s.times(prod, beta[jNode.getId()]);
                 }
                 int i = e.getHeadNode().getId();
-                //if (log.isTraceEnabled()) { log.trace(String.format("old beta[%d] = %f",  i, s.toReal(beta[i]))); }
-                beta[i] = s.plus(beta[i], s.times(w.getScore(e, s), prod));
-                //if (log.isTraceEnabled()) { log.trace(String.format("%s w_e=%f beta[%d] = %f", e.getLabel(), s.toReal(w.getScore(e, s)), i, s.toReal(beta[i]))); }
+                prod = s.times(w.getScore(e, s), prod);
+                beta[i] = s.plus(beta[i], prod);
+                //if (log.isTraceEnabled()) { log.trace(String.format("inside: %s w_e=%f prod=%f beta[%d] = %f", e.getLabel(), ((Algebra)s).toReal(w.getScore(e, s)), prod, i, ((Algebra)s).toReal(beta[i]))); }
             }
             
         });
@@ -100,8 +100,8 @@ public class Hyperalgo {
                     }
                     prod = s.times(prod, alpha[i]);
                     prod = s.times(prod, w.getScore(e, s));
-                    //log.trace(String.format("i=%d j=%d prod=%f", i, j, prod));
                     alpha[j] = s.plus(alpha[j], prod);
+                    //if (log.isTraceEnabled()) { log.trace(String.format("outside: %s w_e=%f prod=%f alpha[%d]=%f", e.getLabel(), w.getScore(e,s), prod, j, alpha[j])); }
                 }
             }
             

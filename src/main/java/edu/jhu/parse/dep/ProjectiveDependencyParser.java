@@ -30,7 +30,7 @@ public class ProjectiveDependencyParser {
 
     /**
      * Computes the maximum projective spanning tree with a single root node using the algorithm of
-     * (Eisner, 1996) as described in McDonald (2006).  In the resulting tree,
+     * (Eisner, 2000) as described in McDonald (2006).  In the resulting tree,
      * the root node will have parent -1 and may have multiple children.
      * 
      * @param scores Input: The edge weights.
@@ -43,7 +43,7 @@ public class ProjectiveDependencyParser {
 
     /**
      * This gives the maximum projective dependency tree using the algorithm of
-     * (Eisner, 1996) as described in McDonald (2006). In the resulting tree,
+     * (Eisner, 2000) as described in McDonald (2006). In the resulting tree,
      * the wall node (denoted as the parent -1) will be the root, and will have
      * exactly one child.
      * 
@@ -76,7 +76,7 @@ public class ProjectiveDependencyParser {
     
     /**
      * Computes the maximum projective vine-parse tree with multiple root nodes
-     * using the algorithm of (Eisner, 1996). In the resulting tree, the root
+     * using the algorithm of (Eisner, 2000). In the resulting tree, the root
      * node will be the wall node (denoted by index -1), and may have multiple
      * children.
      * 
@@ -134,7 +134,7 @@ public class ProjectiveDependencyParser {
     }
     
     /**
-     * Runs the parsing algorithm of (Eisner, 1996) as described in McDonald (2006).
+     * Runs the parsing algorithm of (Eisner, 2000) as described in McDonald (2006).
      * 
      * @param scores Input: The edge weights.
      * @param inChart Output: The parse chart.
@@ -199,7 +199,7 @@ public class ProjectiveDependencyParser {
     }
 
     /**
-     * Runs the outside-algorithm for the parsing algorithm of (Eisner, 1996).
+     * Runs the outside-algorithm for the parsing algorithm of (Eisner, 2000).
      * 
      * @param scores Input: The edge weights.
      * @param inChart Input: The inside parse chart.

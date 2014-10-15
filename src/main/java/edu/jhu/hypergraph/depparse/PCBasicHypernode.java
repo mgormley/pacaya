@@ -13,7 +13,6 @@ public class PCBasicHypernode extends BasicHypernode {
         this.c = c;
     }
     
-
     public PCBasicHypernode(String label, int id) {
         super(label, id);
         this.p = -2;
