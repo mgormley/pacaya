@@ -27,7 +27,7 @@ public class O2AllGraDpHypergraph implements Hypergraph {
     private static final Logger log = Logger.getLogger(O1DpHypergraph.class);
 
     private static final int NOT_INITIALIZED = -1;
-    private static final int NIL = 0;
+    public static final int NIL = 0;
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
     private static final int INCOMPLETE = 0;

@@ -79,5 +79,28 @@ public class O2AllGraDpHypergraphTest extends AbstractHypergraphTest {
         O2AllGraDpHypergraph graph = new O2AllGraDpHypergraph(scorer, s, true);
         return graph;
     }
+    
+    public static class ExplicitDependencyScorer implements DependencyScorer {
+
+        private double[][][] scores;
+        private int n;
+                
+        public ExplicitDependencyScorer(double[][][] scores, int n) {
+            super();
+            this.scores = scores;
+            this.n = n;
+        }
+
+        @Override
+        public double getScore(int p, int c, int g) {
+            return scores[p][c][g];
+        }
+
+        @Override
+        public int getNumTokens() {
+            return n;
+        }
+        
+    }
 
 }

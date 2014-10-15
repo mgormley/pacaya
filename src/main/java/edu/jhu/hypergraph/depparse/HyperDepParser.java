@@ -6,7 +6,9 @@ import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.HyperpotentialFoe;
+import edu.jhu.hypergraph.depparse.O2AllGraDpHypergraph.DependencyScorer;
 import edu.jhu.parse.dep.DepIoChart;
+import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjTreeChart;
 import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
@@ -139,6 +141,31 @@ public class HyperDepParser {
         Hyperalgo.insideAlgorithmFirstOrderExpect(graph, wFoe, semiring, scores);
 
         return new Pair<O1DpHypergraph, Scores>(graph, scores);
+    }
+    
+    public static EdgeScores insideOutsideO2AllGra(DependencyScorer scorer, Algebra s) {
+        O2AllGraDpHypergraph graph = new O2AllGraDpHypergraph(scorer, s, true);
+        Scores sc = new Scores();
+        Hyperalgo.forward(graph, graph.getPotentials(), s, sc);
+        int nplus = scorer.getNumTokens()+1;
+
+        Hypernode[][][][] c = graph.getChart();
+        EdgeScores marg = new EdgeScores(scorer.getNumTokens(), 0.0);
+        for (int width = 1; width < nplus; width++) {
+            for (int i = 0; i < nplus - width; i++) {
+                int j = i + width;
+                for (int g=0; g<nplus; g++) {
+                    if (i <= g && g <= j && !(i==0 && g==O2AllGraDpHypergraph.NIL)) { continue; }
+                    if (j > 0) {
+                        marg.incrScore(i-1, j-1, s.toReal(sc.marginal[c[i][j][g][0].getId()]));
+                    } 
+                    if (i > 0) {
+                        marg.incrScore(j-1, i-1, s.toReal(sc.marginal[c[j][i][g][0].getId()]));
+                    }
+                }
+            }
+        }
+        return marg;
     }
     
 }
