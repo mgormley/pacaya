@@ -48,6 +48,7 @@ def hyperparam_argmax(exp_list, train_keys, hyperparam_keys, argmax_key):
     '''
     # Check the keys for correctness
     assert argmax_key not in train_keys
+    assert argmax_key in get_all_keys(exp_list)
     for key in hyperparam_keys: assert key in train_keys
     
     # Convert to a DataFrame
