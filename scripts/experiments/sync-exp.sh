@@ -18,6 +18,7 @@ echo "Syncing results..."
 "${RSYNC[@]}" $REMOTE_EXP/ $LOCAL_COPY \
     --include="/*/" \
     --include="scrape*/" \
+    --include="hyperparam_argmax*/" \
     --include="*.csv" \
     --include="README" \
     --include="results.csv" \
