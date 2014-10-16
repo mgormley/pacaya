@@ -74,7 +74,7 @@ public class RelationEvaluator {
         recall = numTruePositive == 0 ? 0.0 :  (double) numCorrectPositive / numTruePositive;
         f1 = (precision == 0.0 && recall == 0.0) ? 0.0 : (double) (2 * precision * recall) / (precision + recall);
         
-        log.info(String.format("Num sents not annotated on %s: %.4f", dataName, numMissing));
+        log.info(String.format("Num sents not annotated on %s: %d", dataName, numMissing));
         log.info(String.format("Relation accuracy on %s: %.4f", dataName, (double)(numCorrectPositive + numCorrectNegative)/numInstances));
         log.info(String.format("Num relation instances on %s: %d", dataName, numInstances));
         log.info(String.format("Num true positives on %s: %d", dataName, numTruePositive));
