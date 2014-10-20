@@ -3,6 +3,7 @@ package edu.jhu.nlp.eval;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.app.Loss;
+import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
@@ -12,7 +13,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  * 
  * @author mgormley
  */
-public class DepParseEvaluator implements Loss<AnnoSentence> {
+public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
 
     private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
 

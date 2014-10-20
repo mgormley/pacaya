@@ -46,8 +46,6 @@ import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
-import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
@@ -57,7 +55,9 @@ import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.OraclePruningAccuracy;
 import edu.jhu.nlp.eval.RelationEvaluator;
+import edu.jhu.nlp.eval.SrlSelfLoops;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
@@ -294,7 +294,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
     public static int maxLbfgsIterations = 1000;
     @Opt(hasArg=true, description="Number of effective passes over the dataset for SGD.")
-    public static double sgdNumPasses = 30;
+    public static int sgdNumPasses = 30;
     @Opt(hasArg=true, description="The batch size to use at each step of SGD.")
     public static int sgdBatchSize = 15;
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
@@ -370,31 +370,45 @@ public class JointNlpRunner {
         
         if (corpus.hasTrain()) {
             String name = "train";            
-            AnnoSentenceCollection goldSents = corpus.getTrainGold();
-            AnnoSentenceCollection inputSents = corpus.getTrainInput();
+            AnnoSentenceCollection trainGold = corpus.getTrainGold();
+            AnnoSentenceCollection trainInput = corpus.getTrainInput();
 
             // Add brown clusters, word embeddings.            
-            addClustersAndEmbeddings(inputSents);
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.EMBED);
+            addClustersAndEmbeddings(trainInput);
+            AnnoSentenceCollection.copyShallow(trainInput, trainGold, AT.BROWN);
+            AnnoSentenceCollection.copyShallow(trainInput, trainGold, AT.EMBED);
             // Train the distance-based pruner. 
             if (pruneByDist) {
                 ptdPruner = new PosTagDistancePruner();
-                ptdPruner.train(goldSents);
+                ptdPruner.train(trainGold);
             }
-            addPruneMask(inputSents, ptdPruner, name);
+            addPruneMask(trainInput, ptdPruner, name);
             // Ensure that the gold data is annotated with the pruning mask as well.
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
-            printOracleAccuracyAfterPruning(inputSents, goldSents, name);
+            AnnoSentenceCollection.copyShallow(trainInput, trainGold, AT.DEP_EDGE_MASK);
+            printOracleAccuracyAfterPruning(trainInput, trainGold, name);
             
             // Train a model.
-            jointAnno.train(goldSents);
+            jointAnno.train(trainGold);
             
             // Decode and evaluate the train data.
-            jointAnno.annotate(inputSents);
-            corpus.writeTrainPreds(inputSents);
-            eval(name, goldSents, inputSents);
+            jointAnno.annotate(trainInput);
+            corpus.writeTrainPreds(trainInput);
+            eval(name, trainGold, trainInput);
             corpus.clearTrainCache();
+
+            if (corpus.hasDev()) {
+                // Decode dev data.
+                name = "dev";
+                AnnoSentenceCollection devInput = corpus.getDevInput();
+                addClustersAndEmbeddings(devInput);
+                addPruneMask(devInput, ptdPruner, name);
+                jointAnno.annotate(devInput);
+                corpus.writeDevPreds(devInput);
+                // Evaluate dev data.
+                AnnoSentenceCollection devGold = corpus.getDevGold();
+                eval(name, devGold, devInput);
+                corpus.clearDevCache();
+            }
         }
         
         if (modelOut != null) {
@@ -403,32 +417,18 @@ public class JointNlpRunner {
         if (printModel != null) {
             jointAnno.printModel(printModel);
         }
-
-        if (corpus.hasDev()) {
-            // Decode dev data.
-            String name = "dev";
-            AnnoSentenceCollection inputSents = corpus.getDevInput();
-            addClustersAndEmbeddings(inputSents);
-            addPruneMask(inputSents, ptdPruner, name);
-            jointAnno.annotate(inputSents);
-            corpus.writeDevPreds(inputSents);
-            // Evaluate dev data.
-            AnnoSentenceCollection goldSents = corpus.getDevGold();
-            eval(name, goldSents, inputSents);
-            corpus.clearDevCache();
-        }
         
         if (corpus.hasTest()) {
             // Decode test data.
             String name = "test";
-            AnnoSentenceCollection inputSents = corpus.getTestInput();
-            addClustersAndEmbeddings(inputSents);
-            addPruneMask(inputSents, ptdPruner, name);
-            jointAnno.annotate(inputSents);
-            corpus.writeTestPreds(inputSents);
+            AnnoSentenceCollection testInput = corpus.getTestInput();
+            addClustersAndEmbeddings(testInput);
+            addPruneMask(testInput, ptdPruner, name);
+            jointAnno.annotate(testInput);
+            corpus.writeTestPreds(testInput);
             // Evaluate test data.
-            AnnoSentenceCollection goldSents = corpus.getTestGold();
-            eval(name, goldSents, inputSents);
+            AnnoSentenceCollection testGold = corpus.getTestGold();
+            eval(name, testGold, testInput);
             corpus.clearTestCache();
         }
         t.stop();
@@ -527,52 +527,17 @@ public class JointNlpRunner {
 
     private void eval(String name, AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
         printOracleAccuracyAfterPruning(predSents, goldSents, name);
-        printPredArgSelfLoopStats(goldSents);
-        DepParseEvaluator depEval = new DepParseEvaluator(name);
-        depEval.evaluate(goldSents, predSents);
-        RelationEvaluator relEval = new RelationEvaluator(name);
-        relEval.evaluate(goldSents, predSents);
+        new SrlSelfLoops(name).evaluate(goldSents, predSents);
+        new DepParseEvaluator(name).evaluate(goldSents, predSents);
+        new RelationEvaluator(name).evaluate(goldSents, predSents);
     }
 
     private static void printOracleAccuracyAfterPruning(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         if (pruneByDist || pruneByModel) {
-            int numTot = 0;
-            int numCorrect = 0;
-            for (int i=0; i<predSents.size(); i++) {
-                AnnoSentence predSent = predSents.get(i);
-                AnnoSentence goldSent = goldSents.get(i);
-                if (predSent.getDepEdgeMask() != null) {
-                    for (int c=0; c<goldSent.size(); c++) {
-                        int p = goldSent.getParent(c);
-                        if (predSent.getDepEdgeMask().isKept(p, c)) {
-                            numCorrect++;
-                        }
-                        numTot++;
-                    }
-                }
-            }
-            log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
+            new OraclePruningAccuracy(name).evaluate(goldSents, predSents);
         }
     }
     
-    private static void printPredArgSelfLoopStats(AnnoSentenceCollection sents) {
-        int numPredArgSelfLoop = 0;
-        int numPredArgs = 0;
-        for (AnnoSentence sent : sents) {
-            if (sent.getSrlGraph() != null) {
-                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
-                    if (edge.getArg().getPosition() == edge.getPred().getPosition()) {
-                        numPredArgSelfLoop += 1;
-                    }
-                }
-                numPredArgs += sent.getSrlGraph().getEdges().size();
-            }
-        }
-        if (numPredArgs > 0) {
-            log.info(String.format("Proportion pred-arg self loops: %.4f (%d / %d)", (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
-        }
-    }
-
     /* --------- Factory Methods ---------- */
 
     private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() throws ParseException {

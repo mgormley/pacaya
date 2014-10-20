@@ -2,6 +2,7 @@ package edu.jhu.nlp.eval;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsEncoder;
@@ -12,7 +13,7 @@ import edu.jhu.util.report.Reporter;
  * 
  * @author mgormley
  */
-public class RelationEvaluator {
+public class RelationEvaluator implements Evaluator {
 
     private static final Logger log = Logger.getLogger(RelationEvaluator.class);
     private static final Reporter rep = Reporter.getReporter(RelationEvaluator.class);
