@@ -1,4 +1,4 @@
-package edu.jhu.nlp.depparse;
+package edu.jhu.hypergraph.depparse;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -23,6 +23,12 @@ import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
+import edu.jhu.nlp.depparse.DepParseDecoder;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilderSpeedTest;
+import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
+import edu.jhu.nlp.depparse.DepParseInferenceSpeedTest;
+import edu.jhu.nlp.depparse.FastDepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.features.TemplateSets;
