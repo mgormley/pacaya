@@ -248,7 +248,7 @@ public class CorpusHandler {
             loadTrainAsDev();
         }
         
-        if (devGoldOut != null) {
+        if (devGoldSents != null && devGoldOut != null) {
             // Write gold dev data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold dev";
@@ -339,7 +339,7 @@ public class CorpusHandler {
         testGoldSents = reader.getData();
         testGoldSents = testGoldSents.getWithAtsRemoved(getRemoveAts());
 
-        if (testGoldOut != null) {
+        if (testGoldSents != null && testGoldOut != null) {
             // Write gold test data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold test";

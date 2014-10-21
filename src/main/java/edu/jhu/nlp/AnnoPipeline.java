@@ -26,7 +26,9 @@ public class AnnoPipeline implements Trainable, Annotator {
                 ((Trainable) anno).train(trainInput, trainGold, devInput, devGold);
             }
             anno.annotate(trainInput);
-            anno.annotate(devInput);
+            if (devInput != null) {
+                anno.annotate(devInput);
+            }
         }
     }
     

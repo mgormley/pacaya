@@ -115,6 +115,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
     }
     
     private Function getValidationFn(final AnnoSentenceCollection devInput, final AnnoSentenceCollection devGold) {
+        if (devInput == null || devGold == null) { return null; }
         final Annotator anno = this;
         final Evaluator eval;
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
