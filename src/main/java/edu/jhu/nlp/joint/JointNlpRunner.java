@@ -60,6 +60,7 @@ import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.eval.DepParseEvaluator;
 import edu.jhu.nlp.eval.OraclePruningAccuracy;
 import edu.jhu.nlp.eval.RelationEvaluator;
+import edu.jhu.nlp.eval.SrlEvaluator;
 import edu.jhu.nlp.eval.SrlSelfLoops;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
@@ -424,6 +425,7 @@ public class JointNlpRunner {
             eval.add(new SrlSelfLoops());
             eval.add(new DepParseEvaluator());
             eval.add(new RelationEvaluator());
+                eval.add(new SrlEvaluator());
         }
         
         if (corpus.hasTrain()) {
