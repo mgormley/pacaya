@@ -11,14 +11,8 @@ public class SrlSelfLoops implements Evaluator {
     
     private static final Logger log = Logger.getLogger(SrlSelfLoops.class);
 
-    private String name;
-
-    public SrlSelfLoops(String name) {
-        this.name = name;
-    }
-    
     @Override
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String name) {
         printPredArgSelfLoopStats(goldSents, "gold " + name);
     }
     

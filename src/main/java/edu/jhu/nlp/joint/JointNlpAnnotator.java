@@ -67,7 +67,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
     }
     
     @Override
-    public void train(AnnoSentenceCollection goldSents) {
+    public void train(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents) {
         log.info("Initializing data.");
         CorpusStatistics cs;
         ObsFeatureConjoiner ofc;
@@ -81,9 +81,8 @@ public class JointNlpAnnotator implements Trainable, Annotator {
             ofc.getTemplates().startGrowth();
         }
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, ofc, cs, true);
-        FgExampleList data = builder.getData(goldSents);
+        FgExampleList data = builder.getData(inputSents, goldSents);
         
-
         if (model == null) {
             model = new JointNlpFgModel(cs, ofc, prm.buPrm.fePrm);
             if (prm.initParams == InitParams.RANDOM) {
@@ -114,7 +113,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         
         log.info("Running the decoder");
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, model.getOfc(), model.getCs(), false);
-        FgExampleList data = builder.getData(sents);
+        FgExampleList data = builder.getData(sents, null);
         
         Timer timer = new Timer();
         timer.start();

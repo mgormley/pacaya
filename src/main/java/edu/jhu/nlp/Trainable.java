@@ -4,6 +4,6 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 public interface Trainable {
 
-    void train(AnnoSentenceCollection goldSents);
+    void train(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents);
     
 }

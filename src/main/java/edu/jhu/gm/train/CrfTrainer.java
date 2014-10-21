@@ -104,7 +104,6 @@ public class CrfTrainer {
             } else {
                 prm.batchOptimizer.maximize(fn, model.getParams());   
             }
-            log.info("Final objective value: " + fn.getValue(model.getParams(), IntSort.getIndexArray(fn.getNumExamples())));
         }
         objective.shutdown();
         return model;

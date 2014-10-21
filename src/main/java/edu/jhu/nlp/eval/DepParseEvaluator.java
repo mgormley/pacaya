@@ -17,15 +17,9 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
 
     private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
 
-    private String dataName;
-
     private double accuracy;
     private int correct;
     private int total;
-
-    public DepParseEvaluator(String dataName) {
-        this.dataName = dataName;
-    }
 
     /** Gets the number of incorrect dependencies. */
     @Override
@@ -37,7 +31,7 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
     }  
 
     /** Computes the number of correct dependencies, total dependencies, and accuracy. */
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String dataName) {
         correct = 0;
         total = 0;
         assert(predSents.size() == goldSents.size());

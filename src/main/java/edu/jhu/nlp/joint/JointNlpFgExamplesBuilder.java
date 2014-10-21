@@ -61,16 +61,21 @@ public class JointNlpFgExamplesBuilder {
         jePrm.fgPrm = prm.fgPrm;
     }
     
+    @Deprecated
     public FgExampleList getData(AnnoSentenceCollection sents) {
+        return getData(sents, sents);
+    }
+    
+    public FgExampleList getData(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
-            cs.init(sents);
+            cs.init(goldSents);
         }
-        JointNlpEncoder.checkForRequiredAnnotations(jePrm, sents);
+        JointNlpEncoder.checkForRequiredAnnotations(jePrm, inputSents);
         
         log.info("Building factor graphs and extracting features.");
         FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
-        FgExampleList data = builder.getInstance(new JointNlpFgExampleFactory(sents, ofc));
+        FgExampleList data = builder.getInstance(new JointNlpFgExampleFactory(inputSents, goldSents, ofc));
         
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
@@ -99,27 +104,31 @@ public class JointNlpFgExamplesBuilder {
      */
     private class JointNlpFgExampleFactory extends AbstractFgExampleList implements FgExampleList {
 
-        private AnnoSentenceCollection sents;
+        private AnnoSentenceCollection inputSents;
+        private AnnoSentenceCollection goldSents;
         private ObsFeatureConjoiner ofc;
         
-        public JointNlpFgExampleFactory(AnnoSentenceCollection sents, ObsFeatureConjoiner ofc) {
-            this.sents = sents;
+        public JointNlpFgExampleFactory(
+                AnnoSentenceCollection inputSents, 
+                AnnoSentenceCollection goldSents, 
+                ObsFeatureConjoiner ofc) {
+            this.inputSents = inputSents;
+            this.goldSents = goldSents;
             this.ofc = ofc;
         }
         
         public LFgExample get(int i) {
             log.trace("Getting example: " + i);
-            AnnoSentence sent = sents.get(i);
             JointNlpEncoder encoder = new JointNlpEncoder(jePrm, cs, ofc);
             if (labeledExamples) {
-                return encoder.encode(sent, sent);
+                return encoder.encode(inputSents.get(i), goldSents.get(i));
             } else {
-                return (LFgExample) encoder.encode(sent);
+                return (LFgExample) encoder.encode(inputSents.get(i));
             }
         }
         
         public int size() {
-            return sents.size();
+            return goldSents.size();
         }
 
     }

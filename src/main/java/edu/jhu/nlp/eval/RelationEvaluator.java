@@ -18,18 +18,12 @@ public class RelationEvaluator implements Evaluator {
     private static final Logger log = Logger.getLogger(RelationEvaluator.class);
     private static final Reporter rep = Reporter.getReporter(RelationEvaluator.class);
 
-    private String dataName;
-
     private double precision;
     private double recall;
     private double f1;
-
-    public RelationEvaluator(String dataName) {
-        this.dataName = dataName;
-    }
     
     /** Computes the precision, recall, and micro-averaged F1 of relations mentions. */
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String dataName) {
         // Precision = # correctly predicted positive / # predicted positive
         // Recall = # correctly predicted positive / # true positive
         int numCorrectPositive = 0;

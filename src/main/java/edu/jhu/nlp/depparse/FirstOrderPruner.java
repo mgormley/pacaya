@@ -60,7 +60,7 @@ public class FirstOrderPruner implements Annotator {
         
         // Get unlabeled data.
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(exPrm, ofc, cs, false);
-        FgExampleList data = builder.getData(inputSents);
+        FgExampleList data = builder.getData(inputSents, null);
         
         // Decode and create edge pruning mask.
         log.info("Running the pruning decoder.");

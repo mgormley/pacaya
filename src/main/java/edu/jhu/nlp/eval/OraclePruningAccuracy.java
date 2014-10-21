@@ -9,15 +9,9 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 public class OraclePruningAccuracy implements Evaluator {
 
     private static final Logger log = Logger.getLogger(OraclePruningAccuracy.class);
-
-    private String name;
-    
-    public OraclePruningAccuracy(String name) {
-        this.name = name;
-    }
     
     @Override
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String name) {
         int numTot = 0;
         int numCorrect = 0;
         for (int i=0; i<predSents.size(); i++) {

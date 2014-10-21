@@ -1,5 +1,6 @@
 package edu.jhu.nlp.depparse;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
@@ -23,8 +24,9 @@ import edu.jhu.util.Alphabet;
  * 
  * @author mgormley
  */
-public class PosTagDistancePruner implements Trainable, Annotator {
+public class PosTagDistancePruner implements Trainable, Annotator, Serializable {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
     private Alphabet<String> alphabet = new Alphabet<String>();
     private DenseIntegerMatrix mat;
@@ -32,7 +34,7 @@ public class PosTagDistancePruner implements Trainable, Annotator {
     public PosTagDistancePruner() { }
     
     @Override
-    public void train(AnnoSentenceCollection goldSents) {
+    public void train(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents) {
         for (AnnoSentence sent : goldSents) {
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
