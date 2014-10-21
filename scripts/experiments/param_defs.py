@@ -403,7 +403,7 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*3*1024
                 else:
                     base_work_mem_megs = 5*1024
-            elif exp.get("includeSrl") == False:
+            elif exp.get("predAts") == "DEP_TREE":
                 base_work_mem_megs = 5 * 1000
                 is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
                 if is_higher_order: 
