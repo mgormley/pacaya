@@ -11,7 +11,7 @@ public class OraclePruningAccuracy implements Evaluator {
     private static final Logger log = Logger.getLogger(OraclePruningAccuracy.class);
     
     @Override
-    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         int numTot = 0;
         int numCorrect = 0;
         for (int i=0; i<predSents.size(); i++) {
@@ -28,6 +28,8 @@ public class OraclePruningAccuracy implements Evaluator {
             }
         }
         log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
+        // Return the number of errors.
+        return numTot - numCorrect;
     }
 
 }

@@ -169,8 +169,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    sgdNumPasses=10,
                    useRelationSubtype=False,
                    cacheType="MEMORY_STORE", # Store all the examples in memory.
-                   predAts="RELATIONS,REL_LABELS",
-                   latAts="",
+                   predAts="REL_LABELS",
                    inference="BRUTE_FORCE",
                    trainTypeOut="SEMEVAL_2010",
                    devTypeOut="SEMEVAL_2010",
@@ -254,7 +253,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # Hyperparameters
         hyperparams = []
-        for _ in range(20):
+        for _ in range(2):
             l2variance = loguniform_val(2, 100000)
             embScaler = loguniform_val(1, 60)
             hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            

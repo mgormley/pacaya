@@ -358,6 +358,7 @@ public class JointNlpRunner {
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
         if (modelIn == null && corpus.hasTrain()) {
             // Feature selection.
+            // TODO: Move feature selection into the pipeline.
             featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
         }
         

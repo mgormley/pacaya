@@ -27,11 +27,11 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
         correct = 0;
         total = 0;
         evaluate(gold, pred);
-        return total-correct;
+        return getErrors();
     }
 
     /** Computes the number of correct dependencies, total dependencies, and accuracy. */
-    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
         correct = 0;
         total = 0;
         assert(predSents.size() == goldSents.size());
@@ -41,7 +41,8 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
             evaluate(gold, pred);
         }
         accuracy = (double) correct / (double) total;
-        log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));
+        log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));        
+        return getErrors();
     }
 
     private void evaluate(AnnoSentence gold, AnnoSentence pred) {
@@ -70,6 +71,10 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
 
     public int getTotal() {
         return total;
-    }  
+    }
+
+    public double getErrors() {
+        return total - correct;
+    }
 
 }

@@ -12,11 +12,11 @@ public class SrlSelfLoops implements Evaluator {
     private static final Logger log = Logger.getLogger(SrlSelfLoops.class);
 
     @Override
-    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
-        printPredArgSelfLoopStats(goldSents, "gold " + name);
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
+        return printPredArgSelfLoopStats(goldSents, "gold " + name);
     }
     
-    private static void printPredArgSelfLoopStats(AnnoSentenceCollection sents, String name) {
+    private static double printPredArgSelfLoopStats(AnnoSentenceCollection sents, String name) {
         int numPredArgSelfLoop = 0;
         int numPredArgs = 0;
         for (AnnoSentence sent : sents) {
@@ -30,6 +30,7 @@ public class SrlSelfLoops implements Evaluator {
             }
         }
         log.info(String.format("Proportion pred-arg self loops on %s: %.4f (%d / %d)", name, (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
+        return 0;
     }
 
 }

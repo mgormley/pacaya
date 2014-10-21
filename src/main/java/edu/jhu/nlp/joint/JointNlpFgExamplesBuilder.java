@@ -128,7 +128,7 @@ public class JointNlpFgExamplesBuilder {
         }
         
         public int size() {
-            return goldSents.size();
+            return inputSents.size();
         }
 
     }

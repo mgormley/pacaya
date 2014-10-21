@@ -25,7 +25,7 @@ public class SrlEvaluator implements Evaluator {
     private double f1;
     
     /** Computes the precision, recall, and micro-averaged F1 of SRL. */
-    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
         log.warn("This evaluator is UNTESTED!!!");
         
         // Precision = # correctly predicted positive / # predicted positive
@@ -88,6 +88,8 @@ public class SrlEvaluator implements Evaluator {
         log.info(String.format("SRL F1 on %s: %.4f", dataName, f1));
         
         rep.report(dataName+"SrlF1", f1);
+        
+        return -f1;
     }
 
     public double getPrecision() {
