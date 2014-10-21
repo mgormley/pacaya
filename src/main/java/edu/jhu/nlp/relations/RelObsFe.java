@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -15,6 +16,7 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.DepTree.Dir;
 import edu.jhu.nlp.data.LabeledSpan;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.Span;
@@ -36,7 +38,9 @@ import edu.jhu.util.FeatureNames;
  * @author mgormley
  */
 public class RelObsFe implements ObsFeatureExtractor {
-    
+
+    private static final Logger log = Logger.getLogger(RelObsFe.class);
+
     private RelationsFactorGraphBuilderPrm prm;
     private AnnoSentence sent;
     private FactorTemplateList fts;
@@ -557,12 +561,17 @@ public class RelObsFe implements ObsFeatureExtractor {
             //     - on_path+ne2 if on_path = T
             //     - on_path+ne1+ne2 if on_path = T
             FeaturizedTokenPair ftp = fsent.getFeatTokPair(m1.getHead(), m2.getHead());        
-            for (Pair<Integer,DepTree.Dir> pair : ftp.getDependencyPath()) {
-                int i = pair.get1();
-                addEmbFeat("on_path", i, fv);
-                addEmbFeat("on_path"+ne1, i, fv);
-                addEmbFeat("on_path"+ne2, i, fv);
-                addEmbFeat("on_path"+ne1ne2, i, fv);
+            List<Pair<Integer, Dir>> depPath = ftp.getDependencyPath();
+            if (depPath != null) {
+                for (Pair<Integer,DepTree.Dir> pair : depPath) {
+                    int i = pair.get1();
+                    addEmbFeat("on_path", i, fv);
+                    addEmbFeat("on_path"+ne1, i, fv);
+                    addEmbFeat("on_path"+ne2, i, fv);
+                    addEmbFeat("on_path"+ne1ne2, i, fv);
+                }
+            } else {
+                log.warn("No dependency path between mention heads");
             }
             
             //     - -1_ne1: immediately to the left of the ne1 head

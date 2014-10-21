@@ -168,11 +168,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    sgdBatchSize=20,
                    sgdNumPasses=10,
                    useRelationSubtype=False,
-                   includeDp=False,
-                   includeSrl=False,
-                   includeRel=True,
                    cacheType="MEMORY_STORE", # Store all the examples in memory.
-                   predAts="RELATIONS,REL_LABELS",
+                   predAts="REL_LABELS",
                    inference="BRUTE_FORCE",
                    trainTypeOut="SEMEVAL_2010",
                    devTypeOut="SEMEVAL_2010",
@@ -241,18 +238,22 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # Evaluation settings
         eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
-                                   maxInterveningEntities=3, removeEntityTypes=True)
+                                   maxInterveningEntities=3, removeEntityTypes=True,                                   
+                                   useRelationSubtype=False)
         eval_pm13    = ReExpParams(group="PM13", predictArgRoles=True, 
-                                   maxInterveningEntities=3, removeEntityTypes=True)
+                                   maxInterveningEntities=3, removeEntityTypes=True,                                   
+                                   useRelationSubtype=False)
         eval_types7 = ReExpParams(group="TYPES7", predictArgRoles=False, 
-                                   maxInterveningEntities=9999, removeEntityTypes=False)
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=False)
         eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
-                                   maxInterveningEntities=9999, removeEntityTypes=False)            
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=False)            
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
         hyperparams = []
-        for _ in range(20):
+        for _ in range(2):
             l2variance = loguniform_val(2, 100000)
             embScaler = loguniform_val(1, 60)
             hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
@@ -269,8 +270,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup= ReExpParams(propTrainAsDev=0.0,
                                useEmbeddingFeatures=True,
-                               useZhou05Features=True,
-                               useRelationSubtype=True)
+                               useZhou05Features=True)
             setup += get_annotation_as_train(ace05_bn_nw)
 
             for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
@@ -281,12 +281,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for embed in [cbow_nyt11_en]: #, polyglot_en]:
                     for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
                         for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
-                            for hyperparam in hyperparams[:1]:
+                            for hyperparam in hyperparams:
                                 exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
                                 root.add_dependent(exp)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
+                                      argmax_key='devF1')
+            hypmax.add_prereqs(root.dependents)
             return root
                 
         elif self.expname == "ace-lc":

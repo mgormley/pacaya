@@ -69,7 +69,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         g.defaults += g.feat_mcdonald
         g.defaults += g.adagrad
-        g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
+        g.defaults.update(featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
@@ -81,7 +81,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("grandparentFactors", False)
                 
         # Parsers
-        g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
+        g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE",
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
                                    bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
@@ -251,21 +251,22 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Comparison of CLL and ERMA training with varying models and iterations.
             # Here we use a small dataset and no pruning.
             exps = []
-            overrides = SrlExpParams(trainMaxNumSentences=2000,
-                              trainMaxSentenceLength=15,
+            overrides = SrlExpParams(trainMaxNumSentences=1000,
+                              trainMaxSentenceLength=10,
                               pruneByDist=False,
                               pruneByModel=False,
                               propTrainAsDev=0.5,
                               bpUpdateOrder="SEQUENTIAL", 
                               bpSchedule="TREE_LIKE",
-                              useMseForValue=True)
+                              useMseForValue=True,
+                              featureHashMod=10000)
             for l2variance in [500, 1000, 5000, 10000, 50000, 100000]:
                 for trainer in [g.erma_mse, g.cll]:
                     for bpMaxIterations in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
                         for lang_short in ['en']: #["bg", "es", "en"]:
                             gl = g.langs[lang_short]
                             pl = p.langs[lang_short]
-                            for parser in [g.second_order, g.second_sib, g.first_order, g.second_grand]:
+                            for parser in [g.first_order, g.second_order, g.second_sib, g.second_grand]:
                                 data = gl.cx_data
                                 data.remove("test")
                                 data.remove("testType")

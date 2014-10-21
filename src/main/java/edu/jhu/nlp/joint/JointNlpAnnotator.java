@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.Logger;
@@ -19,16 +18,25 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
+import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.data.simple.CorpusHandler;
+import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.RelationEvaluator;
+import edu.jhu.nlp.eval.SrlEvaluator;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -67,7 +75,8 @@ public class JointNlpAnnotator implements Trainable, Annotator {
     }
     
     @Override
-    public void train(AnnoSentenceCollection goldSents) {
+    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold, 
+            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
         log.info("Initializing data.");
         CorpusStatistics cs;
         ObsFeatureConjoiner ofc;
@@ -81,9 +90,8 @@ public class JointNlpAnnotator implements Trainable, Annotator {
             ofc.getTemplates().startGrowth();
         }
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, ofc, cs, true);
-        FgExampleList data = builder.getData(goldSents);
+        FgExampleList data = builder.getData(trainInput, trainGold);
         
-
         if (model == null) {
             model = new JointNlpFgModel(cs, ofc, prm.buPrm.fePrm);
             if (prm.initParams == InitParams.RANDOM) {
@@ -102,10 +110,39 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         
         log.info("Training model.");
         CrfTrainer trainer = new CrfTrainer(prm.crfPrm);
-        trainer.train(model, data);
+        trainer.train(model, data, getValidationFn(devInput, devGold));
         ofc.getTemplates().stopGrowth();
     }
     
+    private Function getValidationFn(final AnnoSentenceCollection devInput, final AnnoSentenceCollection devGold) {
+        final Annotator anno = this;
+        final Evaluator eval;
+        if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
+            eval = new DepParseEvaluator();
+        } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL))) {
+            eval = new SrlEvaluator();
+        } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {
+            eval = new RelationEvaluator();
+        } else {
+            log.warn("Validation function not implemented. Skipping.");
+            return null;
+        }
+        return new Function() {
+            
+            @Override
+            public double getValue(IntDoubleVector point) {
+                // TODO: This should make a shallow copy of the input sentences.
+                anno.annotate(devInput);
+                return eval.evaluate(devInput, devGold, "dev");
+            }
+            
+            @Override
+            public int getNumDimensions() {
+                return -1;
+            }
+        };
+    }
+
     @Override
     public void annotate(AnnoSentenceCollection sents) {
         if (model == null) {
@@ -114,7 +151,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         
         log.info("Running the decoder");
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, model.getOfc(), model.getCs(), false);
-        FgExampleList data = builder.getData(sents);
+        FgExampleList data = builder.getData(sents, null);
         
         Timer timer = new Timer();
         timer.start();
