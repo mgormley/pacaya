@@ -19,9 +19,9 @@ public class EvalPipeline implements Evaluator {
     }
     
     @Override
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String name) {
+    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         for (Evaluator anno : pipeline) {
-            anno.evaluate(goldSents, predSents, name);
+            anno.evaluate(predSents, goldSents, name);
         }
     }
 

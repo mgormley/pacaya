@@ -430,24 +430,24 @@ public class JointNlpRunner {
             String name = "train";            
             AnnoSentenceCollection trainGold = corpus.getTrainGold();
             AnnoSentenceCollection trainInput = corpus.getTrainInput();
-
+            // (Dev data might be null.)
+            AnnoSentenceCollection devGold = corpus.getDevGold();
+            AnnoSentenceCollection devInput = corpus.getDevInput();
+            
             // Train a model. (The PipelineAnnotator also annotates all the input.)
             anno.train(trainInput, trainGold);
             
             // Decode and evaluate the train data.
             corpus.writeTrainPreds(trainInput);
-            eval.evaluate(trainGold, trainInput, name);
+            eval.evaluate(trainInput, trainGold, name);
             corpus.clearTrainCache();
 
             if (corpus.hasDev()) {
-                // Decode dev data.
+                // Write dev data predictions.
                 name = "dev";
-                AnnoSentenceCollection devInput = corpus.getDevInput();
-                anno.annotate(devInput);
                 corpus.writeDevPreds(devInput);
                 // Evaluate dev data.
-                AnnoSentenceCollection devGold = corpus.getDevGold();
-                eval.evaluate(devGold, devInput, name);
+                eval.evaluate(devInput, devGold, name);
                 corpus.clearDevCache();
             }
         }
@@ -467,7 +467,7 @@ public class JointNlpRunner {
             corpus.writeTestPreds(testInput);
             // Evaluate test data.
             AnnoSentenceCollection testGold = corpus.getTestGold();
-            eval.evaluate(testGold, testInput, name);
+            eval.evaluate(testInput, testGold, name);
             corpus.clearTestCache();
         }
         t.stop();

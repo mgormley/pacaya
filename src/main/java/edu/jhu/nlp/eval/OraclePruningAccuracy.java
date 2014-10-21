@@ -11,7 +11,7 @@ public class OraclePruningAccuracy implements Evaluator {
     private static final Logger log = Logger.getLogger(OraclePruningAccuracy.class);
     
     @Override
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String name) {
+    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         int numTot = 0;
         int numCorrect = 0;
         for (int i=0; i<predSents.size(); i++) {

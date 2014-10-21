@@ -23,7 +23,7 @@ public class RelationEvaluator implements Evaluator {
     private double f1;
     
     /** Computes the precision, recall, and micro-averaged F1 of relations mentions. */
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents, String dataName) {
+    public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
         // Precision = # correctly predicted positive / # predicted positive
         // Recall = # correctly predicted positive / # true positive
         int numCorrectPositive = 0;
