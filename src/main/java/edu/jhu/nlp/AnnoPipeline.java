@@ -19,12 +19,14 @@ public class AnnoPipeline implements Trainable, Annotator {
     }
     
     @Override
-    public void train(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents) {
+    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold, 
+            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
         for (Annotator anno : pipeline) {
             if (anno instanceof Trainable) {
-                ((Trainable) anno).train(inputSents, goldSents);
+                ((Trainable) anno).train(trainInput, trainGold, devInput, devGold);
             }
-            anno.annotate(inputSents);
+            anno.annotate(trainInput);
+            anno.annotate(devInput);
         }
     }
     

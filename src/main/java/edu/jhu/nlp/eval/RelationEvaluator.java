@@ -1,9 +1,10 @@
 package edu.jhu.nlp.eval;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.nlp.Evaluator;
-import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.util.report.Reporter;
@@ -37,16 +38,16 @@ public class RelationEvaluator implements Evaluator {
         
         // For each sentence.
         for (int s = 0; s < goldSents.size(); s++) {
-            AnnoSentence gold = goldSents.get(s);
-            AnnoSentence pred = predSents.get(s);
+            List<String> gold = goldSents.get(s).getRelLabels();
+            List<String> pred = predSents.get(s).getRelLabels();
             
-            if (pred.getRelLabels() == null) {
-                numMissing++;
-            }
+            if (gold == null) { continue; }
+            if (pred == null) { numMissing++; }
+            
             // For each pair of named entities.
-            for (int k=0; k<gold.getRelLabels().size(); k++) {                
-                String goldLabel = gold.getRelLabels().get(k);
-                String predLabel = (pred.getRelLabels() == null) ? null : pred.getRelLabels().get(k);
+            for (int k=0; k<gold.size(); k++) {                
+                String goldLabel = gold.get(k);
+                String predLabel = (pred == null) ? null : pred.get(k);
                 
                 if (goldLabel.equals(predLabel)) {
                     if (!goldLabel.equals(RelationsEncoder.getNoRelationLabel())) {

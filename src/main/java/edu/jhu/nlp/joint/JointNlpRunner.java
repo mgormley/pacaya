@@ -44,8 +44,8 @@ import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.AnnoPipeline;
 import edu.jhu.nlp.Annotator;
-import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
@@ -176,8 +176,6 @@ public class JointNlpRunner {
     public static double embScaler = 15.0;
     
     // Options for SRL factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model SRL.")
-    public static boolean includeSrl = true;
     @Opt(hasArg = true, description = "The structure of the Role variables.")
     public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
     @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
@@ -238,8 +236,6 @@ public class JointNlpRunner {
     public static File argFeatTplsOut = null;
 
     // Options for dependency parse factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
-    public static boolean includeDp = true;
     @Opt(hasArg = true, description = "The type of the link variables.")
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
@@ -270,8 +266,6 @@ public class JointNlpRunner {
     public static boolean dpFastFeats = true;
     
     // Options for relation extraction.
-    @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
-    public static boolean includeRel = false;
     @Opt(hasArg = true, description = "Relation feature templates.")
     public static String relFeatTpls = null;
     
@@ -422,10 +416,16 @@ public class JointNlpRunner {
             if (pruneByDist || pruneByModel) {
                 eval.add(new OraclePruningAccuracy());
             }
-            eval.add(new SrlSelfLoops());
-            eval.add(new DepParseEvaluator());
-            eval.add(new RelationEvaluator());
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE)) {
+                eval.add(new DepParseEvaluator());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
+                eval.add(new SrlSelfLoops());
                 eval.add(new SrlEvaluator());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
+                eval.add(new RelationEvaluator());
+            }
         }
         
         if (corpus.hasTrain()) {
@@ -437,7 +437,7 @@ public class JointNlpRunner {
             AnnoSentenceCollection devInput = corpus.getDevInput();
             
             // Train a model. (The PipelineAnnotator also annotates all the input.)
-            anno.train(trainInput, trainGold);
+            anno.train(trainInput, trainGold, devInput, devGold);
             
             // Decode and evaluate the train data.
             corpus.writeTrainPreds(trainInput);
@@ -500,7 +500,7 @@ public class JointNlpRunner {
             srlFePrm.fePrm.soloTemplates = sft.srlSense;
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
         }
-        if (includeSrl && acl14DepFeats) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
             fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
         }
         if (useTemplates) {
@@ -565,14 +565,14 @@ public class JointNlpRunner {
         prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
         // Relation Feature extraction.
-        if (includeRel) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
             if (relFeatTpls != null) { prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls); }
             prm.fgPrm.relPrm.featureHashMod = featureHashMod;
         }
         
-        prm.fgPrm.includeDp = includeDp;
-        prm.fgPrm.includeSrl = includeSrl;
-        prm.fgPrm.includeRel = includeRel;
+        prm.fgPrm.includeDp = CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE);
+        prm.fgPrm.includeSrl = CorpusHandler.getGoldOnlyAts().contains(AT.SRL);
+        prm.fgPrm.includeRel = CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS);
         
         // Feature extraction.
         prm.fePrm = fePrm;
@@ -614,7 +614,7 @@ public class JointNlpRunner {
         dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
         dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
-        if (includeSrl && acl14DepFeats) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
             // This special case is only for historical consistency.
             dpFePrm.onlyTrueBias = false;
             dpFePrm.onlyTrueEdges = false;
@@ -723,7 +723,8 @@ public class JointNlpRunner {
         prm.trainer = trainer;                
         
         // TODO: add options for other loss functions.
-        if (prm.trainer == Trainer.ERMA && includeDp && !includeSrl) {
+        if (prm.trainer == Trainer.ERMA && 
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             if (dpLoss == ErmaLoss.DP_DECODE_LOSS) {
                 DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
                 lossPrm.annealMse = dpAnnealMse;

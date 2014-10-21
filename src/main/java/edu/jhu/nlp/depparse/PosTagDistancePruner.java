@@ -34,8 +34,9 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
     public PosTagDistancePruner() { }
     
     @Override
-    public void train(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents) {
-        for (AnnoSentence sent : goldSents) {
+    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold, 
+            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
+        for (AnnoSentence sent : trainGold) {
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
@@ -43,7 +44,7 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
         mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
         mat.fill(0);
         // For each sentence...
-        for (AnnoSentence sent : goldSents) {
+        for (AnnoSentence sent : trainGold) {
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
             int[] tags = tagSeq.getLabelIds();
             int[] parents = sent.getParents();            

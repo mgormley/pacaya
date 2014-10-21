@@ -168,11 +168,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    sgdBatchSize=20,
                    sgdNumPasses=10,
                    useRelationSubtype=False,
-                   includeDp=False,
-                   includeSrl=False,
-                   includeRel=True,
                    cacheType="MEMORY_STORE", # Store all the examples in memory.
                    predAts="RELATIONS,REL_LABELS",
+                   latAts="",
                    inference="BRUTE_FORCE",
                    trainTypeOut="SEMEVAL_2010",
                    devTypeOut="SEMEVAL_2010",

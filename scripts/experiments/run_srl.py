@@ -113,7 +113,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_narad
             g.defaults.update(predictSense=True, biasOnly=True, removeAts="BROWN,MORPHO", featureSelection=False)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL,BROWN,MORPHO", 
-                                       tagger_parser="1st", includeSrl=False)
+                                       tagger_parser="1st")
             lang_short = "en"
             concrete_files = glob(os.path.join(self.root_dir, "data/thrift_anno/*.thrift"))
             for concrete_file in concrete_files:

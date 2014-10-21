@@ -69,7 +69,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         g.defaults += g.feat_mcdonald
         g.defaults += g.adagrad
-        g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
+        g.defaults.update(featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
@@ -81,8 +81,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("grandparentFactors", False)
                 
         # Parsers
-        g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
-                                   removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
+        g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE",
+                                   latAts="", removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
                                    bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                   bpMaxIterations=5, 

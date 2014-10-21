@@ -18,7 +18,7 @@ public class PosTagDistancePrunerTest {
         AnnoSentenceCollection sents = getSents(3, 10, 10);
         System.out.println(sents);
         PosTagDistancePruner pruner = new PosTagDistancePruner();
-        pruner.train(null, sents);
+        pruner.train(null, sents, null, null);
         pruner.annotate(sents);
         System.out.println(sents);
         AnnoSentence sent = sents.get(0);
@@ -57,7 +57,7 @@ public class PosTagDistancePrunerTest {
         sents2.add(sent2);
         
         PosTagDistancePruner pruner = new PosTagDistancePruner();
-        pruner.train(null, sents1);
+        pruner.train(null, sents1, null, null);
         pruner.annotate(sents2);        
 
         System.out.println(sents1);
@@ -89,7 +89,7 @@ public class PosTagDistancePrunerTest {
         sents2.add(sent2);
         
         PosTagDistancePruner pruner = new PosTagDistancePruner();
-        pruner.train(null, sents1);
+        pruner.train(null, sents1, null, null);
         pruner.annotate(sents2);        
 
         System.out.println(sents1);

@@ -28,7 +28,7 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
         total = 0;
         evaluate(gold, pred);
         return total-correct;
-    }  
+    }
 
     /** Computes the number of correct dependencies, total dependencies, and accuracy. */
     public void evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
