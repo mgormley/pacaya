@@ -272,15 +272,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                useEmbeddingFeatures=True,
                                useZhou05Features=True)
             setup += get_annotation_as_train(ace05_bn_nw)
-
-            for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
-                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
-                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
-                              (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
-                              ]:
-                for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                    for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
-                        for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
+            for evl in [eval_pm13, eval_types13, eval_ng14]: #, eval_types7]:
+                for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
+                                  (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
+                                  (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
+                                  (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
+                                  ]:
+                    for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                        for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
                             for hyperparam in hyperparams:
                                 exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
                                 root.add_dependent(exp)

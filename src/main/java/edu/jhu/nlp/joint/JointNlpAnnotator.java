@@ -116,7 +116,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
     
     private Function getValidationFn(final AnnoSentenceCollection devInput, final AnnoSentenceCollection devGold) {
         if (devInput == null || devGold == null) { return null; }
-        final Annotator anno = this;
+        final JointNlpAnnotator anno = this;
         final Evaluator eval;
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             eval = new DepParseEvaluator();
@@ -128,12 +128,15 @@ public class JointNlpAnnotator implements Trainable, Annotator {
             log.warn("Validation function not implemented. Skipping.");
             return null;
         }
+
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, model.getOfc(), model.getCs(), false);
+        final FgExampleList devData = builder.getData(devInput, null);
         return new Function() {
             
             @Override
             public double getValue(IntDoubleVector point) {
                 // TODO: This should make a shallow copy of the input sentences.
-                anno.annotate(devInput);
+                anno.annotate(devInput, devData);
                 return eval.evaluate(devInput, devGold, "dev");
             }
             
@@ -152,10 +155,15 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         
         log.info("Running the decoder");
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, model.getOfc(), model.getCs(), false);
-        FgExampleList data = builder.getData(sents, null);
-        
+        FgExampleList data = builder.getData(sents, null);  
         Timer timer = new Timer();
-        timer.start();
+        timer.start();      
+        annotate(sents, data);
+        timer.stop();
+        log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));
+    }
+
+    private void annotate(AnnoSentenceCollection sents, FgExampleList data) {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < sents.size(); i++) {
             UFgExample ex = data.get(i);
@@ -170,8 +178,6 @@ public class JointNlpAnnotator implements Trainable, Annotator {
                 t.printStackTrace();
             }
         }
-        timer.stop();
-        log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));        
     }
     
     public void loadModel(File modelIn) {
