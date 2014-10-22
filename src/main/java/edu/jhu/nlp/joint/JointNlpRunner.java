@@ -39,6 +39,8 @@ import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.SGDFobos;
+import edu.jhu.hlt.optimize.SGDFobos.SGDFobosPrm;
 import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
@@ -96,7 +98,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class JointNlpRunner {
 
-    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA };
+    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA, FOBOS };
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
@@ -709,6 +711,17 @@ public class JointNlpRunner {
                 sgdPrm.autoSelectLr = false;
             }
             prm.batchOptimizer = new SGD(sgdPrm);
+        } else if (optimizer == Optimizer.FOBOS) {
+            SGDFobosPrm sgdPrm = new SGDFobosPrm();
+            setSgdPrm(sgdPrm);
+            //TODO: sgdPrm.l1Lambda = l2Lambda;            
+            sgdPrm.l2Lambda = 1.0 / l2variance;
+            BottouSchedulePrm boPrm = new BottouSchedulePrm();
+            boPrm.initialLr = sgdInitialLr;
+            boPrm.lambda = 1.0 / l2variance;
+            sgdPrm.sched = new BottouSchedule(boPrm);  
+            prm.optimizer = null;
+            prm.batchOptimizer = new SGDFobos(sgdPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
@@ -754,6 +767,11 @@ public class JointNlpRunner {
     
     private static SGDPrm getSgdPrm() {
         SGDPrm prm = new SGDPrm();
+        setSgdPrm(prm);
+        return prm;
+    }
+
+    private static void setSgdPrm(SGDPrm prm) {
         prm.numPasses = sgdNumPasses;
         prm.batchSize = sgdBatchSize;
         prm.withReplacement = sgdWithRepl;
@@ -763,7 +781,6 @@ public class JointNlpRunner {
         prm.computeValueOnNonFinalIter = sgdComputeValueOnNonFinalIter;
         // Make sure we correctly set the schedule somewhere else.
         prm.sched = null;
-        return prm;
     }
 
     private static FgInferencerFactory getInfFactory() throws ParseException {
