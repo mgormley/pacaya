@@ -3,6 +3,7 @@ package edu.jhu.nlp.eval;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.app.Loss;
+import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
@@ -12,19 +13,13 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  * 
  * @author mgormley
  */
-public class DepParseEvaluator implements Loss<AnnoSentence> {
+public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
 
     private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
-
-    private String dataName;
 
     private double accuracy;
     private int correct;
     private int total;
-
-    public DepParseEvaluator(String dataName) {
-        this.dataName = dataName;
-    }
 
     /** Gets the number of incorrect dependencies. */
     @Override
@@ -32,11 +27,11 @@ public class DepParseEvaluator implements Loss<AnnoSentence> {
         correct = 0;
         total = 0;
         evaluate(gold, pred);
-        return total-correct;
-    }  
+        return getErrors();
+    }
 
     /** Computes the number of correct dependencies, total dependencies, and accuracy. */
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
         correct = 0;
         total = 0;
         assert(predSents.size() == goldSents.size());
@@ -46,16 +41,21 @@ public class DepParseEvaluator implements Loss<AnnoSentence> {
             evaluate(gold, pred);
         }
         accuracy = (double) correct / (double) total;
-        log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));
+        log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));        
+        return getErrors();
     }
 
     private void evaluate(AnnoSentence gold, AnnoSentence pred) {
         int[] goldParents = gold.getParents();
         int[] parseParents = pred.getParents();
-        assert(parseParents.length == goldParents.length);
+        if (parseParents != null) {
+            assert(parseParents.length == goldParents.length);
+        }
         for (int j = 0; j < goldParents.length; j++) {
-            if (goldParents[j] == parseParents[j]) {
-                correct++;
+            if (parseParents != null) {
+                if (goldParents[j] == parseParents[j]) {
+                    correct++;
+                }
             }
             total++;
         }
@@ -71,6 +71,10 @@ public class DepParseEvaluator implements Loss<AnnoSentence> {
 
     public int getTotal() {
         return total;
-    }  
+    }
+
+    public double getErrors() {
+        return total - correct;
+    }
 
 }

@@ -28,7 +28,6 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.globalfac.SimpleProjDepTreeFactor.LinkVar;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;

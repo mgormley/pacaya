@@ -13,6 +13,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -197,6 +198,8 @@ public class ConcreteReader {
                     RelationsEncoder.addNePairsAndRelLabels(aSent);
                 }
                 tmpSents = RelationsEncoder.getSingletons(tmpSents);
+                // Deterministically shuffle the positive and negative examples for this communication.
+                Collections.shuffle(tmpSents, new Random(1234567890));
             }
         }
         

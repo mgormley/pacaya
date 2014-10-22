@@ -3,6 +3,7 @@ package edu.jhu.nlp.tag;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,9 +49,14 @@ public class BrownClusterTagger implements Annotator {
         map = new HashMap<String,String>();
     }
     
-    public void read(File brownClusters) throws IOException {
-        FileInputStream is = new FileInputStream(brownClusters);
-        read(is);
+    public void read(File brownClusters) {
+        FileInputStream is;
+        try {
+            is = new FileInputStream(brownClusters);
+            read(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public void read(InputStream input) throws IOException {

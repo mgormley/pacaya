@@ -92,7 +92,7 @@ class ParamDefinitions():
         else:
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
-        g.defaults.set("sgdBatchSize", 20)
+        g.defaults.set("sgdBatchSize", 30)
                 
         g.defaults.update(
             printModel="./model.txt.gz",                          
@@ -117,9 +117,6 @@ class ParamDefinitions():
             numFeatsToSelect=32,
             numSentsForFeatSelect=1000,
             #stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
-            predAts="SRL",
-            includeSrl=True,
-            includeDp=True,
             cacheType="NONE",
             #maxEntriesInMemory=g.defaults.get("sgdBatchSize")
             )
@@ -270,14 +267,20 @@ class ParamDefinitions():
         l.optimizers = [g.sgd, g.adagrad, g.adadelta, g.lbfgs]    
     
     def _define_groups_model(self, g):
-        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
-        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="SRL,DEP_TREE", removeAts="DEPREL")
-        g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
-        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
-        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="SRL,DEP_TREE", removeAts="DEPREL")
-        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")
+        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", 
+                                           predAts="SRL", latAts="DEP_TREE", removeAts="DEPREL")
+        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", 
+                                           predAts="SRL,DEP_TREE", removeAts="DEPREL")
+        g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED",
+                                           predAts="SRL")                        
+        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", 
+                                           predAts="SRL", latAts="DEP_TREE", removeAts="DEPREL")
+        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", 
+                                           predAts="SRL,DEP_TREE", removeAts="DEPREL")
+        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED",
+                                           predAts="SRL")
         g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, 
-                                                                         binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")                        
+                                                                         binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")
 
     def _define_lists_model(self, g, l):
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
@@ -400,10 +403,10 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*3*1024
                 else:
                     base_work_mem_megs = 5*1024
-            elif exp.get("includeSrl") == False:
+            elif exp.get("predAts") == "DEP_TREE":
                 base_work_mem_megs = 5 * 1000
                 is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
-                if exp.get("pruneEdges") == False and is_higher_order: 
+                if is_higher_order: 
                     base_work_mem_megs = 10*1000
             else:
                 if exp.get("useProjDepTreeFactor"):

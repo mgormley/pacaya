@@ -55,11 +55,12 @@ public class FirstOrderPruner implements Annotator {
         exPrm.fgPrm.dpPrm.siblingFactors = false;
         exPrm.fgPrm.dpPrm.unaryFactors = true;
         exPrm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        exPrm.fgPrm.dpPrm.pruneEdges = true;
         exPrm.fePrm = fePrm;
         
         // Get unlabeled data.
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(exPrm, ofc, cs, false);
-        FgExampleList data = builder.getData(inputSents);
+        FgExampleList data = builder.getData(inputSents, null);
         
         // Decode and create edge pruning mask.
         log.info("Running the pruning decoder.");
@@ -71,10 +72,18 @@ public class FirstOrderPruner implements Annotator {
         for (int i = 0; i < inputSents.size(); i++) {
             LFgExample ex = data.get(i);
             AnnoSentence inputSent = inputSents.get(i);
+            // TODO: Because we use the JointNlpDecoder, we end up computing the MBR parse twice
+            // (once for the mask, once for the parents array).
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
             AnnoSentence predSent = decoder.decode(model, ex, inputSent);
             
             // Update the dependency tree on the sentence.
+            int[] parents = predSent.getParents();
+            if (parents != null) {
+                inputSent.setParents(parents);
+            }
+
+            // Update the pruning mask.
             DepEdgeMask mask = predSent.getDepEdgeMask();
             if (mask != null) {
                 if (inputSent.getDepEdgeMask() == null) {

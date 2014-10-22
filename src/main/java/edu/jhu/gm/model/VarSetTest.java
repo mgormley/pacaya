@@ -11,7 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.util.semiring.Algebras;
 
 public class VarSetTest {

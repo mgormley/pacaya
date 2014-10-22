@@ -12,7 +12,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;

@@ -57,12 +57,13 @@ class ReScraper(Scraper):
         ## exp.update(hours = to_int(get_group1(stdout_lines, "^(\d+) \[main\]", -1)) / 1000.0 / 60.0 / 60.0)
 
         # Get stats about train/dev/test datasets.
-        exp.update(trainNumSentences = to_int(get_following_literal(stdout_lines, "Number of train sentences: ", -1)))
-        exp.update(testNumSentences = to_int(get_following_literal(stdout_lines, "Number of test sentences: ", -1)))
+        exp.update(trainNumSentences = to_int(get_following_literal(stdout_lines, "Num train sentences: ", -1)))
+        exp.update(devNumSentences = to_int(get_following_literal(stdout_lines, "Num dev sentences: ", -1)))
+        exp.update(testNumSentences = to_int(get_following_literal(stdout_lines, "Num test sentences: ", -1)))
         
-        exp.update(trainNumInstances = to_int(get_following_literal(stdout_lines, "Number of train instances: ", -1)))
-        exp.update(devNumInstances = to_int(get_following_literal(stdout_lines, "Number of dev instances: ", -1)))
-        exp.update(testNumInstances = to_int(get_following_literal(stdout_lines, "Number of test instances: ", -1)))
+        exp.update(trainNumInstances = to_int(get_following_literal(stdout_lines, "Num train instances: ", -1)))
+        exp.update(devNumInstances = to_int(get_following_literal(stdout_lines, "Num dev instances: ", -1)))
+        exp.update(testNumInstances = to_int(get_following_literal(stdout_lines, "Num test instances: ", -1)))
 
         exp.update(trainNumFeatures = to_int(get_following_literal(stdout_lines, "Number of train features after thresholding: ", -1)))
         exp.update(trainNumLabels = to_int(get_following_literal(stdout_lines, "Number of train labels: ", -1)))

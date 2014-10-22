@@ -15,7 +15,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;

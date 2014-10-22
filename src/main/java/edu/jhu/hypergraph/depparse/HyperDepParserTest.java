@@ -7,10 +7,8 @@ import org.junit.Test;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.parse.dep.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.LogSignAlgebra;
@@ -121,8 +119,6 @@ public class HyperDepParserTest {
         assertEquals(2, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);        
     }    
 
-    // TODO: The inside scores from the wall to the root are computed incorrectly in the DepIoChart
-    // not the hypergraph. Fix this test.
     @Test
     public void testInsideOutsideMultiRoot1() {
         double[] root = new double[] {1, 2, 3}; 
@@ -135,44 +131,43 @@ public class HyperDepParserTest {
 
         // Check partition function.
         double multiTrees = 6+14+12+36+27;
-        assertEquals(45+28+20+84+162+216+96+multiTrees, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
-                
-        if (true) { return; }
-        
+        double Z = 45+28+20+84+162+216+96+multiTrees;
+        assertEquals(Z, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
+                        
         // Check inside scores.
         assertEquals(7, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
         assertEquals(9, FastMath.exp(chart.getLogInsideScore(2, 1)), 1e-13);
         assertEquals(45+20, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
-        assertEquals(45+28+20, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
-        assertEquals(84, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
+        assertEquals(14, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
         assertEquals(8*9+8*4, FastMath.exp(chart.getLogInsideScore(2, 0)), 1e-10);
-        assertEquals(162+216+96, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
+        assertEquals(555, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
 
         // Check outside scores.
-        assertEquals(1*4+2*6, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
-        assertEquals(1*5+3*6+3*8, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
+        assertEquals(18, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
+        assertEquals(50, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
         assertEquals(1, FastMath.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
-        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
-        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
+        assertEquals(152, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
+        assertEquals(10, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
         assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);
-        assertEquals(2*7+3*9, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
+        assertEquals(47, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
 
         // Check sums.
-        assertEquals(28+84, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
-        assertEquals(45+162+216, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
-        assertEquals(28+20+96, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
-        assertEquals(96+216, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
+        assertEquals(6+14+12+27+28+45+20, FastMath.exp(chart.getLogSumOfPotentials(-1, 0)), 1e-10);
+        assertEquals(6+14+36+84, FastMath.exp(chart.getLogSumOfPotentials(-1, 1)), 1e-13);
+        assertEquals(6+12+36+27+54*3+32*3+72*3, FastMath.exp(chart.getLogSumOfPotentials(-1, 2)), 1e-3);
+        assertEquals(126, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
+        assertEquals(27+45+54*3+72*3, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
+        assertEquals(12+28+20+32*3, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
+        assertEquals(312, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
         
         // Check expected counts.
-        double Z = 45+28+20+84+162+216+96;
-        assertEquals((28+84)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
-        assertEquals((45+162+216)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
-        assertEquals((28+20+96)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
-        assertEquals((96+216)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+        assertEquals((126)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
+        assertEquals((27+45+54*3+72*3)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
+        assertEquals((12+28+20+32*3)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
+        assertEquals((312)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
     }    
 
-    // TODO: The inside scores from the wall to the root are computed incorrectly in the DepIoChart
-    // not the hypergraph. Fix this test.
     @Test
     public void testInsideOutsideMultiRoot2() {
         double[] root = new double[] {1, 1, 1}; 
@@ -185,38 +180,36 @@ public class HyperDepParserTest {
 
         // Check partition function.
         assertEquals(7+5, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
-                
-        if (true) { return; }
-       
+                       
         // Check inside scores.
         assertEquals(1, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
         assertEquals(1, FastMath.exp(chart.getLogInsideScore(2, 1)), 1e-13);
-        assertEquals(1+1, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
-        assertEquals(1+1+1, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
-        assertEquals(1, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
-        assertEquals(1+1+1, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
+        assertEquals(2, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
+        assertEquals(2, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(7, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
         
         // Check outside scores.
-        assertEquals(1+1, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
-        assertEquals(1+1+1, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
+        assertEquals(3, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
+        assertEquals(4, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13);  // checked
         assertEquals(1, FastMath.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
-        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
-        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
-        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);
-        assertEquals(1+1, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
+        assertEquals(7, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13); // checked
+        assertEquals(2, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13); // checked
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);  // checked
+        assertEquals(3, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);   // checked
 
         // Check sums.
-        assertEquals(1+1, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
-        assertEquals(1+1+1, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
-        assertEquals(1+1+1, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
-        assertEquals(1+1, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
+        assertEquals(3, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
+        assertEquals(4, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3); // checked
+        assertEquals(4, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3); // checked
+        assertEquals(2, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3); // checked
         
         // Check expected counts.
-        double Z = 7;
-        assertEquals((1+1)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
-        assertEquals((1+1+1)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
-        assertEquals((1+1+1)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
-        assertEquals((1+1)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+        double Z = 7+5;
+        assertEquals((3)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
+        assertEquals((4)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
+        assertEquals((4)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
+        assertEquals((2)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
     }
     
     @Test
@@ -247,8 +240,8 @@ public class HyperDepParserTest {
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        Pair<SingleRootDepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(root,  child, s);
-        SingleRootDepParseHypergraph graph = pair.get1();
+        Pair<DepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(root,  child, s);
+        DepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         // Fill with dummy outside scores.
         scores.alpha = new double[scores.beta.length];

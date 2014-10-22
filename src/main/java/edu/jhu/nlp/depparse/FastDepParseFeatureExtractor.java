@@ -10,7 +10,7 @@ import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;

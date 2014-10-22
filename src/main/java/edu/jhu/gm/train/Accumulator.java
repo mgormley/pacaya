@@ -9,15 +9,13 @@ public class Accumulator {
     public double value = 0;
     public FgModel gradient = null;
     public double weight = 0;
-    public double trainLoss = 0;
-    public double devLoss = 0;
+    public double loss = 0;
 
     // Flags indicating whether to accumulate each value.
     public boolean accumValue;
     public boolean accumGradient;
     public boolean accumWeight;
-    public boolean accumTrainLoss;
-    public boolean accumDevLoss;
+    public boolean accumLoss;
 
     // For nonstationary functions:
     public int curIter = 0;
@@ -28,8 +26,7 @@ public class Accumulator {
     public void addAll(Accumulator other) {
         this.value += other.value;
         this.weight += other.weight;
-        this.trainLoss += other.trainLoss;
-        this.devLoss += other.devLoss;
+        this.loss += other.loss;
         if (this.gradient != null && other.gradient != null) {
             this.gradient.add(other.gradient);
         }
@@ -39,8 +36,7 @@ public class Accumulator {
         this.accumValue = other.accumValue;
         this.accumGradient = other.accumGradient;
         this.accumWeight = other.accumWeight;
-        this.accumTrainLoss = other.accumTrainLoss;
-        this.accumDevLoss = other.accumDevLoss;    
+        this.accumLoss = other.accumLoss;
         
         this.curIter = other.curIter;
         this.maxIter = other.maxIter;

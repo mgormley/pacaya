@@ -7,7 +7,7 @@ import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.model.globalfac.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.util.collections.Lists;
 

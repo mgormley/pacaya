@@ -1,7 +1,7 @@
 # Syncs the remote results with a local copy of them.
 #
 
-RSYNC=(rsync -azv -e "ssh external.hltcoe.jhu.edu ssh")
+RSYNC=(rsync -azv -e "ssh login.clsp.jhu.edu 'ssh external.hltcoe.jhu.edu ssh'")
 LOCAL_COPY=./remote_exp
 SERVER=test2
 REMOTE_EXP=$SERVER:/export/projects/mgormley/exp_dirs/working--pacaya--exp
@@ -18,6 +18,7 @@ echo "Syncing results..."
 "${RSYNC[@]}" $REMOTE_EXP/ $LOCAL_COPY \
     --include="/*/" \
     --include="scrape*/" \
+    --include="hyperparam_argmax*/" \
     --include="*.csv" \
     --include="README" \
     --include="results.csv" \

@@ -55,6 +55,15 @@ public class ErmaObjective implements ExampleObjective {
     // Assumed by caller to be threadsafe.
     @Override
     public void accum(FgModel model, int i, Accumulator ac) {
+        try {
+            accumWithException(model, i, ac);
+        } catch(Throwable t) {
+            log.error("Skipping example " + i + " due to throwable: " + t.getMessage());
+            t.printStackTrace();
+        }
+    }
+    
+    public void accumWithException(FgModel model, int i, Accumulator ac) {
         final Timer t0 = new Timer(); t0.start();        
         final Timer t = new Timer();
         
@@ -113,8 +122,8 @@ public class ErmaObjective implements ExampleObjective {
         if (ac.accumWeight) {
             ac.weight += ex.getWeight();
         }
-        if (ac.accumTrainLoss) {
-            ac.trainLoss += loss;
+        if (ac.accumLoss) {
+            ac.loss += loss;
         }
         t0.stop(); tot.add(t0);
     }

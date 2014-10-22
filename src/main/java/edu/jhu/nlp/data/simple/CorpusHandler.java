@@ -88,6 +88,8 @@ public class CorpusHandler {
     public static String removeAts = null;
     @Opt(hasArg = true, description = "Comma separated list of annotation types for predicted annotations.")
     public static String predAts = null;
+    @Opt(hasArg = true, description = "Comma separated list of annotation types for latent annotations.")
+    public static String latAts = null;
     
     ////// TODO: use these options... /////
     // @Opt(hasArg=true, description="Whether to normalize and clean words.")
@@ -154,6 +156,7 @@ public class CorpusHandler {
          
         // Cache gold train data.
         trainGoldSents = reader.getData();
+        trainGoldSents = trainGoldSents.getWithAtsRemoved(getRemoveAts());
         
         if (hasTrain() && propTrainAsDev > 0) {
             // Split into train and dev.
@@ -172,7 +175,7 @@ public class CorpusHandler {
         }
         
         // Cache input train data.
-        trainInputSents = trainGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
+        trainInputSents = trainGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     /**
@@ -245,7 +248,7 @@ public class CorpusHandler {
             loadTrainAsDev();
         }
         
-        if (devGoldOut != null) {
+        if (devGoldSents != null && devGoldOut != null) {
             // Write gold dev data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold dev";
@@ -265,9 +268,10 @@ public class CorpusHandler {
          
         // Cache gold dev data.
         devGoldSents = reader.getData();
-        
+        devGoldSents = devGoldSents.getWithAtsRemoved(getRemoveAts());
+
         // Cache input dev data.
-        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
+        devInputSents = devGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     private void loadTrainAsDev() throws IOException {
@@ -281,7 +285,7 @@ public class CorpusHandler {
         for (AnnoSentence sent : trainAsDevSents) {
             devGoldSents.add(sent);
         }
-        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
+        devInputSents = devGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     // -------------------- Test data --------------------------
@@ -333,8 +337,9 @@ public class CorpusHandler {
          
         // Cache gold test data.
         testGoldSents = reader.getData();
-        
-        if (testGoldOut != null) {
+        testGoldSents = testGoldSents.getWithAtsRemoved(getRemoveAts());
+
+        if (testGoldSents != null && testGoldOut != null) {
             // Write gold test data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold test";
@@ -343,7 +348,7 @@ public class CorpusHandler {
         }
         
         // Cache input test data.
-        testInputSents = testGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
+        testInputSents = testGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     private AnnoSentenceReaderPrm getDefaultReaderPrm() {
@@ -352,13 +357,25 @@ public class CorpusHandler {
         prm.useGoldSyntax = useGoldSyntax;
         return prm;
     }
-
+    
+    /** Gets predicated annotations (included only in the gold data). */
     public static List<AT> getPredAts() {
         return getAts(predAts);
     }
 
+    /** Gets latent annotations (included only in the gold data). */
+    public static List<AT> getLatAts() {
+        return getAts(latAts);
+    }
+
+    /** Gets the annotations removed from both gold and input data. */
     public static List<AT> getRemoveAts() {
         return getAts(removeAts);
+    }
+
+    /** Gets predicated and latent annotations (included only in the gold data). */
+    public static List<AT> getGoldOnlyAts() {
+        return Lists.union(getPredAts(), getLatAts());
     }
     
     public static List<AT> getAts(String atsStr) {

@@ -1,11 +1,11 @@
 package edu.jhu.gm.model.globalfac;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -14,7 +14,7 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.SingleRootDepParseHypergraph;
+import edu.jhu.hypergraph.depparse.DepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
@@ -24,7 +24,6 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
@@ -38,45 +37,7 @@ import edu.jhu.util.semiring.LogSemiring;
 public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
- 
-    /**
-     * Link variable. When true it indicates that there is an edge between its
-     * parent and child.
-     * 
-     * @author mgormley
-     */
-    public static class LinkVar extends Var {
-
-        private static final long serialVersionUID = 1L;
-
-        // The variable states.
-        public static final int TRUE = 1;
-        public static final int FALSE = 0;
-        
-        private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
-        private int parent;
-        private int child;     
-        
-        public LinkVar(VarType type, String name, int parent, int child) {
-            super(type, BOOLEANS.size(), name, BOOLEANS);
-            this.parent = parent;
-            this.child = child;
-        }
-
-        public int getParent() {
-            return parent;
-        }
-
-        public int getChild() {
-            return child;
-        }
-
-        public static String getDefaultName(int i, int j) {
-            return String.format("Link_%d_%d", i, j);
-        }
-        
-    }
-    
+     
     private static final Logger log = Logger.getLogger(SimpleProjDepTreeFactor.class);
     
     private final VarSet vars;
@@ -398,8 +359,8 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Algebra s = Algebras.LOG_SIGN_ALGEBRA;
-        Pair<SingleRootDepParseHypergraph, Scores> pair = HyperDepParser.insideSingleRootEntropyFoe(ratios.root, ratios.child, s);
-        SingleRootDepParseHypergraph graph = pair.get1();
+        Pair<DepParseHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
+        DepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
         int rt = graph.getRoot().getId();        

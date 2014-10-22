@@ -26,7 +26,7 @@ from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
 from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
-
+from hyperparams import *
 
 class ReExpParams(experiment_runner.JavaExpParams):
     
@@ -42,7 +42,7 @@ class ReExpParams(experiment_runner.JavaExpParams):
     def create_experiment_script(self, exp_dir):
         script = "\n"
         cmd = "java " + self.get_java_args() + " edu.jhu.nlp.joint.JointNlpRunner  %s \n" % (self.get_args())
-        script += fancify_cmd(cmd)        
+        script += fancify_cmd(cmd)
         return script
     
 class ScrapeAce(experiment_runner.PythonExpParams):
@@ -68,21 +68,50 @@ class ScrapeAce(experiment_runner.PythonExpParams):
         script += fancify_cmd(cmd)
         return script
 
+class HyperparamArgmax(experiment_runner.PythonExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.PythonExpParams.__init__(self,keywords)
+        self.always_relaunch()
+
+    def get_instance(self):
+        return HyperparamArgmax()
+    
+    def get_name(self):
+        return "hyperparam_argmax"
+    
+    def create_experiment_script(self, exp_dir):
+        self.add_arg(os.path.dirname(exp_dir))
+        script = ""
+        cmd = "python -m experiments.hyperparam_argmax %s\n" % (self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+
 # ---------------------------- Experiments Creator Class ----------------------------------
 
 def get_ace05_data(concrete_dir, prefix):
     return os.path.join(concrete_dir, prefix+"-comms.zip")
 
 def get_annotation_as_train(comm):
-    return ReExpParams(train=comm, trainType="CONCRETE")
+    exp = ReExpParams(train=comm, trainType="CONCRETE")
+    exp.set('trainName', os.path.basename(comm), incl_arg=False)
+    return exp
+
+def get_annotation_as_dev(comm):
+    exp = ReExpParams(dev=comm, devType="CONCRETE")
+    exp.set('devName', os.path.basename(comm), incl_arg=False)
+    return exp
 
 def get_annotation_as_test(comm):
-    return ReExpParams(test=comm, testType="CONCRETE")
+    exp = ReExpParams(test=comm, testType="CONCRETE")
+    exp.set('testName', os.path.basename(comm), incl_arg=False)
+    return exp
 
 class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "ace-pm13",
+                    "ace-lc",
                     "acl-feats"
                     )
     
@@ -115,7 +144,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults = g.lbfgs  + ReExpParams()        
         defaults.set("expname", self.expname, False, False)
         defaults.update(seed=random.getrandbits(63))
-        defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
+        defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)  
         if self.queue:
             threads = 15
             work_mem_megs = 15*1024
@@ -126,7 +155,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             threads = 1
             work_mem_megs = 1.5*1024
         defaults.set("work_mem_megs", work_mem_megs, incl_arg=False, incl_name=False)
-        g.defaults.set("threads", threads, incl_name=False)
+        defaults.set("threads", threads, incl_name=False)
+        defaults.set_incl_name("train", False)
+        defaults.set_incl_name("dev", False)
+        defaults.set_incl_name("test", False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
                    featCountCutoff=0,
@@ -136,11 +168,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    sgdBatchSize=20,
                    sgdNumPasses=10,
                    useRelationSubtype=False,
-                   includeDp=False,
-                   includeSrl=False,
-                   includeRel=True,
                    cacheType="MEMORY_STORE", # Store all the examples in memory.
-                   predAts="RELATIONS,REL_LABELS",
+                   predAts="REL_LABELS",
                    inference="BRUTE_FORCE",
                    trainTypeOut="SEMEVAL_2010",
                    devTypeOut="SEMEVAL_2010",
@@ -152,7 +181,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    trainGoldOut="./train-gold.txt",
                    devGoldOut="./dev-gold.txt",
                    testGoldOut="./test-gold.txt",
-                   modelOut="./model.binary.gz",                   
+                   modelOut="./model.binary.gz",  
+                   reportOut="./outparams.txt",                 
                    )
         
         # Datasets
@@ -197,6 +227,37 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_name("embeddingsFile", False)
         defaults.set_incl_arg("embedName", False)
                 
+                
+        # Models
+        feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
+        feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+        feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+        feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
+        feats_emb_only  = ReExpParams(modelName="full",  useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+        defaults.set_incl_arg("modelName", False)
+        
+        # Evaluation settings
+        eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
+                                   maxInterveningEntities=3, removeEntityTypes=True,                                   
+                                   useRelationSubtype=False)
+        eval_pm13    = ReExpParams(group="PM13", predictArgRoles=True, 
+                                   maxInterveningEntities=3, removeEntityTypes=True,                                   
+                                   useRelationSubtype=False)
+        eval_types7 = ReExpParams(group="TYPES7", predictArgRoles=False, 
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=False)
+        eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=False)            
+        defaults.set_incl_arg("group", False)
+        
+        # Hyperparameters
+        hyperparams = []
+        for _ in range(2):
+            l2variance = loguniform_val(2, 100000)
+            embScaler = loguniform_val(1, 60)
+            hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
+        for x in hyperparams: print x
         
         # ------------------------ EXPERIMENTS --------------------------
         
@@ -210,41 +271,62 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup= ReExpParams(propTrainAsDev=0.0,
                                useEmbeddingFeatures=True,
                                useZhou05Features=True)
-            feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
-            feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
-            feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
-            feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
-            feats_emb_only  = ReExpParams(modelName="full",  useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
-            setup.set_incl_arg("modelName", False)
-            
-            eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
-                                       maxInterveningEntities=3, removeEntityTypes=True)
-            eval_pm13    = ReExpParams(group="PM13", predictArgRoles=True, 
-                                       maxInterveningEntities=3, removeEntityTypes=True)
-            eval_types7 = ReExpParams(group="TYPES7", predictArgRoles=False, 
-                                       maxInterveningEntities=9999, removeEntityTypes=False)
-            eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
-                                       maxInterveningEntities=9999, removeEntityTypes=False)            
-            setup.set_incl_arg("group", False)
-            
-            for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
-                    for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
-                        # Out-of-domain experiments
-                        for domain2 in [ace05_bc_dev]: #ENABLE FOR TEST: ace05_bc_test, ace05_cts, ace05_wl]:
-                            train = get_annotation_as_train(ace05_bn_nw)
-                            test = get_annotation_as_test(domain2)
-                            experiment = defaults + setup + evl + train + test + embed + feats
-                            root.add_dependent(experiment)
-                        # In-domain experiment
-                        # TODO: This should use 5-fold cross validation.
-                        experiment = defaults + setup + evl + train + ReExpParams(propTrainAsDev=0.2) + embed + feats
-                        root.add_dependent(experiment)
+            setup += get_annotation_as_train(ace05_bn_nw)
+            for evl in [eval_pm13, eval_types13, eval_ng14]: #, eval_types7]:
+                for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
+                                  (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
+                                  (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
+                                  (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
+                                  ]:
+                    for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                        for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
+                            for hyperparam in hyperparams:
+                                exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
+                                root.add_dependent(exp)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
+                                      argmax_key='devF1')
+            hypmax.add_prereqs(root.dependents)
             return root
-        
+                
+        elif self.expname == "ace-lc":
+            '''Learning curve experiment.
+            '''
+            root = RootStage()
+            setup= ReExpParams(propTrainAsDev=0.0,
+                               useEmbeddingFeatures=True,
+                               useZhou05Features=True)
+            setup += get_annotation_as_train(ace05_bn_nw)
+            
+            for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
+                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
+                              #(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
+                              #(ReExpParams(propTrainAsDev=0.2), ReExpParams()),
+                              ]:
+                for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                    for feats in [feats_emb_only]: 
+                        for evl in [eval_pm13, eval_types13]:
+                            for trainMaxNumSentences in [2000, 4000, 8000, 16000, 35990]:
+                                setup.update(trainMaxNumSentences=trainMaxNumSentences)
+                                setup.update(work_mem_megs=5000 + 10000. * (trainMaxNumSentences / 35990.))
+                                setup.update(threads=int(2. + 5. * (trainMaxNumSentences / 35990.)))
+                                print "se=%d mm=%f th=%d" % (trainMaxNumSentences, setup.get("work_mem_megs"), setup.get("threads"))
+                                for hyperparam in hyperparams:
+                                    experiment = defaults + setup + evl + dev + test + embed + feats + hyperparam
+                                    root.add_dependent(experiment)
+
+            if self.fast: root.dependents = root.dependents[:2]
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)  
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
+                                      argmax_key='devF1')
+            hypmax.add_prereqs(root.dependents)
+            return root        
         
         elif self.expname == "ace-feats":
             '''Development results for in-domain and out-of-domain experiments, 
@@ -310,10 +392,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         scrape.add_prereqs(root.dependents)
         return root
     
-    def update_stages_for_qsub(self, root_stage):
-        ''' Makes sure that the stage object specifies reasonable values for the 
-            qsub parameters given its experimental parameters.
-        '''
+    def update_stages(self, root_stage):
         for stage in self.get_stages_as_list(root_stage):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, ReExpParams) and self.fast:
@@ -328,6 +407,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         return root_stage
     
     def update_qsub_fields(self, stage):
+        ''' Makes sure that the stage object specifies reasonable values for the 
+            qsub parameters given its experimental parameters.
+        '''
         # Update the thread count
         threads = stage.get("threads")
         if threads != None: 
@@ -347,7 +429,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
     def make_stage_fast(self, stage):       
         ''' Makes the stage run in a very short period of time (under 5 seconds).
         ''' 
-        stage.update(maxLbfgsIterations=3,
+        safe_update(stage, 
+                    maxLbfgsIterations=3,
                      trainMaxNumSentences=10,
                      devMaxNumSentences=10,
                      testMaxNumSentences=10,
@@ -356,6 +439,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      #testMaxSentenceLength=7,
                      work_mem_megs=2000,
                      timeoutSeconds=20)
+
+def safe_update(stage, **kwargs):
+    for key, val in kwargs.iteritems():
+        if stage.get(key) is not None:
+            stage.set("non-fast:"+key, stage.get(key), incl_arg=False)        
+        stage.params[key] = val
 
 if __name__ == "__main__":
     usage = "%prog "
@@ -374,7 +463,7 @@ if __name__ == "__main__":
     
     runner = SrlExpParamsRunner(options)
     root_stage = runner.get_experiments()
-    root_stage = runner.update_stages_for_qsub(root_stage)
+    root_stage = runner.update_stages(root_stage)
     runner.run_pipeline(root_stage)
 
 

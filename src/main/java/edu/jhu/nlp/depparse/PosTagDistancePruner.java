@@ -1,9 +1,11 @@
 package edu.jhu.nlp.depparse;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -22,8 +24,9 @@ import edu.jhu.util.Alphabet;
  * 
  * @author mgormley
  */
-public class PosTagDistancePruner implements Trainable, Annotator {
+public class PosTagDistancePruner implements Trainable, Annotator, Serializable {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
     private Alphabet<String> alphabet = new Alphabet<String>();
     private DenseIntegerMatrix mat;
@@ -31,8 +34,9 @@ public class PosTagDistancePruner implements Trainable, Annotator {
     public PosTagDistancePruner() { }
     
     @Override
-    public void train(AnnoSentenceCollection goldSents) {
-        for (AnnoSentence sent : goldSents) {
+    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold, 
+            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
+        for (AnnoSentence sent : trainGold) {
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
@@ -40,7 +44,7 @@ public class PosTagDistancePruner implements Trainable, Annotator {
         mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
         mat.fill(0);
         // For each sentence...
-        for (AnnoSentence sent : goldSents) {
+        for (AnnoSentence sent : trainGold) {
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
             int[] tags = tagSeq.getLabelIds();
             int[] parents = sent.getParents();            
@@ -106,12 +110,14 @@ public class PosTagDistancePruner implements Trainable, Annotator {
             // Count the edges to the wall, which will never be pruned.
             numEdgesTot += sent.size();
             // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
-            if (!mask.allowsSinglyRootedTrees()) {
+            if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
                 log.warn("All single-root trees pruned");
                 log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));
                 if (sent.getParents() != null) {
                     log.trace("Pruned parents: " + Arrays.toString(sent.getParents()));
                 }
+            } else if (!InsideOutsideDepParse.singleRoot && !mask.allowsMultiRootTrees()) {
+                log.warn("All multi-root trees pruned");
             }
         }
         

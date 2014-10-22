@@ -255,7 +255,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             maybeWriteAllBeliefs(iter);
         }
         
-        log.debug("Oscillation rate: " + ((double) oscillationCount.get() / sendCount.get()));
+        log.trace("Oscillation rate: " + ((double) oscillationCount.get() / sendCount.get()));
         
         forwardVarAndFacBeliefs();
         b = new Beliefs(varBeliefs, facBeliefs);
@@ -693,7 +693,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
         
         // Check for oscillation. Did the argmax change?
-        if (iter > 0) {
+        if (log.isTraceEnabled() && iter > 0) {
             if (ec.message.getArgmaxConfigId() != ec.newMessage.getArgmaxConfigId()) {    
                 oscillationCount.incrementAndGet();
             }

@@ -36,23 +36,23 @@ public class DepEdgeMaskDecoderTest {
     @Test
     public void testGetDepEdgeMaskPropMaxMarg() {
         double propMaxMarg = 0.1;
-        DepEdgeMask mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, propMaxMarg, 99);
+        DepEdgeMask mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, propMaxMarg, 99, true);
         System.out.println(mask);
         assertNoneArePruned(mask);
         
         propMaxMarg = 0.5;
-        mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, propMaxMarg, 99);
+        mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, propMaxMarg, 99, true);
         System.out.println(mask);
         assertOnlyMostLikelyAreKept(mask);
     }
     
     @Test
     public void testGetDepEdgeMaskCount() {
-        DepEdgeMask mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, 0, 99);
+        DepEdgeMask mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, 0, 99, true);
         System.out.println(mask);
         assertNoneArePruned(mask);
         
-        mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, 0, 1);
+        mask = DepEdgeMaskDecoder.getDepEdgeMask(scores, 0, 1, true);
         System.out.println(mask);
         assertOnlyMostLikelyAreKept(mask);
     }

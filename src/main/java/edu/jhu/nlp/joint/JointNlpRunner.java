@@ -16,6 +16,7 @@ import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
+import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
@@ -41,12 +42,13 @@ import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
+import edu.jhu.nlp.AnnoPipeline;
+import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
-import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
@@ -56,7 +58,10 @@ import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.OraclePruningAccuracy;
 import edu.jhu.nlp.eval.RelationEvaluator;
+import edu.jhu.nlp.eval.SrlEvaluator;
+import edu.jhu.nlp.eval.SrlSelfLoops;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
@@ -75,9 +80,12 @@ import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.report.Reporter;
+import edu.jhu.util.report.ReporterManager;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -113,6 +121,7 @@ public class JointNlpRunner {
     }
 
     private static final Logger log = Logger.getLogger(JointNlpRunner.class);
+    private static final Reporter rep = Reporter.getReporter(JointNlpRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
@@ -167,8 +176,6 @@ public class JointNlpRunner {
     public static double embScaler = 15.0;
     
     // Options for SRL factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model SRL.")
-    public static boolean includeSrl = true;
     @Opt(hasArg = true, description = "The structure of the Role variables.")
     public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
     @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
@@ -229,8 +236,6 @@ public class JointNlpRunner {
     public static File argFeatTplsOut = null;
 
     // Options for dependency parse factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
-    public static boolean includeDp = true;
     @Opt(hasArg = true, description = "The type of the link variables.")
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
@@ -261,8 +266,6 @@ public class JointNlpRunner {
     public static boolean dpFastFeats = true;
     
     // Options for relation extraction.
-    @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
-    public static boolean includeRel = false;
     @Opt(hasArg = true, description = "Relation feature templates.")
     public static String relFeatTpls = null;
     
@@ -289,7 +292,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
     public static int maxLbfgsIterations = 1000;
     @Opt(hasArg=true, description="Number of effective passes over the dataset for SGD.")
-    public static double sgdNumPasses = 30;
+    public static int sgdNumPasses = 30;
     @Opt(hasArg=true, description="The batch size to use at each step of SGD.")
     public static int sgdBatchSize = 15;
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
@@ -333,6 +336,8 @@ public class JointNlpRunner {
     }
 
     public void run() throws ParseException, IOException {  
+        Timer t = new Timer();
+        t.start();
         FastMath.useLogAddTable = useLogAddTable;
         if (useLogAddTable) {
             log.warn("Using log-add table instead of exact computation. When using global factors, this may result in numerical instability.");
@@ -346,7 +351,6 @@ public class JointNlpRunner {
         // Initialize the data reader/writer.
         CorpusHandler corpus = new CorpusHandler();
         
-        PosTagDistancePruner ptdPruner = null;
         // Get a model.
         if (modelIn == null && !corpus.hasTrain()) {
         	throw new ParseException("Either --modelIn or --train must be specified.");
@@ -354,40 +358,101 @@ public class JointNlpRunner {
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
         if (modelIn == null && corpus.hasTrain()) {
             // Feature selection.
+            // TODO: Move feature selection into the pipeline.
             featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
         }
+        
+        AnnoPipeline anno = new AnnoPipeline();
+        EvalPipeline eval = new EvalPipeline();
         JointNlpAnnotator jointAnno = new JointNlpAnnotator(prm);
         if (modelIn != null) {
             jointAnno.loadModel(modelIn);
         }
+        {
+            // Add Brown clusters.
+            if (brownClusters != null) {      
+                anno.add(new Annotator() {                    
+                    @Override
+                    public void annotate(AnnoSentenceCollection sents) {
+                        log.info("Adding Brown clusters.");
+                        BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
+                        bct.read(brownClusters);
+                        bct.annotate(sents);
+                        log.info("Brown cluster hit rate: " + bct.getHitRate());                        
+                    }
+                });
+            } else {
+                log.info("No Brown clusters file specified.");
+            }
+            // Add word embeddings.
+            if (embeddingsFile != null) {
+                anno.add(new Annotator() {                   
+                    @Override
+                    public void annotate(AnnoSentenceCollection sents) {
+                        log.info("Adding word embeddings.");
+                        EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
+                        ea.annotate(sents);
+                        log.info("Embeddings hit rate: " + ea.getHitRate());                        
+                    }
+                });
+            } else {
+                log.info("No embeddings file specified.");
+            }
+            
+            if (pruneByDist) {
+                // Prune via the distance-based pruner.
+                anno.add(new PosTagDistancePruner());
+            }
+            if (pruneByModel) {
+                if (pruneModel == null) {
+                    throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
+                }
+                anno.add(new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm()));
+            }
+            
+            // Various NLP annotations.
+            anno.add(jointAnno);
+        }
+        {
+            if (pruneByDist || pruneByModel) {
+                eval.add(new OraclePruningAccuracy());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE)) {
+                eval.add(new DepParseEvaluator());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
+                eval.add(new SrlSelfLoops());
+                eval.add(new SrlEvaluator());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
+                eval.add(new RelationEvaluator());
+            }
+        }
         
         if (corpus.hasTrain()) {
             String name = "train";            
-            AnnoSentenceCollection goldSents = corpus.getTrainGold();
-            AnnoSentenceCollection inputSents = corpus.getTrainInput();
-
-            // Add brown clusters, word embeddings.            
-            addClustersAndEmbeddings(inputSents);
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.EMBED);
-            // Train the distance-based pruner. 
-            if (pruneByDist) {
-                ptdPruner = new PosTagDistancePruner();
-                ptdPruner.train(goldSents);
-            }
-            addPruneMask(inputSents, ptdPruner, name);
-            // Ensure that the gold data is annotated with the pruning mask as well.
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
-            printOracleAccuracyAfterPruning(inputSents, goldSents, name);
+            AnnoSentenceCollection trainGold = corpus.getTrainGold();
+            AnnoSentenceCollection trainInput = corpus.getTrainInput();
+            // (Dev data might be null.)
+            AnnoSentenceCollection devGold = corpus.getDevGold();
+            AnnoSentenceCollection devInput = corpus.getDevInput();
             
-            // Train a model.
-            jointAnno.train(goldSents);
+            // Train a model. (The PipelineAnnotator also annotates all the input.)
+            anno.train(trainInput, trainGold, devInput, devGold);
             
             // Decode and evaluate the train data.
-            jointAnno.annotate(inputSents);
-            corpus.writeTrainPreds(inputSents);
-            eval(name, goldSents, inputSents);
+            corpus.writeTrainPreds(trainInput);
+            eval.evaluate(trainInput, trainGold, name);
             corpus.clearTrainCache();
+
+            if (corpus.hasDev()) {
+                // Write dev data predictions.
+                name = "dev";
+                corpus.writeDevPreds(devInput);
+                // Evaluate dev data.
+                eval.evaluate(devInput, devGold, name);
+                corpus.clearDevCache();
+            }
         }
         
         if (modelOut != null) {
@@ -396,72 +461,22 @@ public class JointNlpRunner {
         if (printModel != null) {
             jointAnno.printModel(printModel);
         }
-
-        if (corpus.hasDev()) {
-            // Decode dev data.
-            String name = "dev";
-            AnnoSentenceCollection inputSents = corpus.getDevInput();
-            addClustersAndEmbeddings(inputSents);
-            addPruneMask(inputSents, ptdPruner, name);
-            jointAnno.annotate(inputSents);
-            corpus.writeDevPreds(inputSents);
-            // Evaluate dev data.
-            AnnoSentenceCollection goldSents = corpus.getDevGold();
-            eval(name, goldSents, inputSents);
-            corpus.clearDevCache();
-        }
         
         if (corpus.hasTest()) {
             // Decode test data.
             String name = "test";
-            AnnoSentenceCollection inputSents = corpus.getTestInput();
-            addClustersAndEmbeddings(inputSents);
-            addPruneMask(inputSents, ptdPruner, name);
-            jointAnno.annotate(inputSents);
-            corpus.writeTestPreds(inputSents);
+            AnnoSentenceCollection testInput = corpus.getTestInput();
+            anno.annotate(testInput);
+            corpus.writeTestPreds(testInput);
             // Evaluate test data.
-            AnnoSentenceCollection goldSents = corpus.getTestGold();
-            eval(name, goldSents, inputSents);
+            AnnoSentenceCollection testGold = corpus.getTestGold();
+            eval.evaluate(testInput, testGold, name);
             corpus.clearTestCache();
         }
+        t.stop();
+        rep.report("elapsedSec", t.totSec());
     }
 
-    private void addClustersAndEmbeddings(AnnoSentenceCollection sents) throws IOException {
-        // Add Brown clusters.
-        if (brownClusters != null) {            
-            log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
-            bct.read(brownClusters);
-            bct.annotate(sents);
-            log.info("Brown cluster hit rate: " + bct.getHitRate());
-        } else {
-            log.warn("No Brown cluster file specified.");            
-        }
-        // Add word embeddings.
-        if (embeddingsFile != null) {
-            log.info("Adding word embeddings.");
-            EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
-            ea.annotate(sents);
-            log.info("Embeddings hit rate: " + ea.getHitRate());
-        } else {
-            log.info("No embeddings file specified.");
-        }
-    }
-
-    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) throws ParseException {
-        if (pruneByDist) {
-            // Prune via the distance-based pruner.
-            ptdPruner.annotate(inputSents);
-        }
-        if (pruneByModel) {
-            if (pruneModel == null) {
-                throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
-            }
-            FirstOrderPruner foPruner = new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm());
-            foPruner.annotate(inputSents);
-        }
-    }
-    
     /**
      * Do feature selection and update fePrm with the chosen feature templates.
      */
@@ -486,7 +501,7 @@ public class JointNlpRunner {
             srlFePrm.fePrm.soloTemplates = sft.srlSense;
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
         }
-        if (includeSrl && acl14DepFeats) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
             fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
         }
         if (useTemplates) {
@@ -515,55 +530,7 @@ public class JointNlpRunner {
             fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
         }
     }
-
-    private void eval(String name, AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
-        printOracleAccuracyAfterPruning(predSents, goldSents, name);
-        printPredArgSelfLoopStats(goldSents);
-        DepParseEvaluator depEval = new DepParseEvaluator(name);
-        depEval.evaluate(goldSents, predSents);
-        RelationEvaluator relEval = new RelationEvaluator(name);
-        relEval.evaluate(goldSents, predSents);
-    }
-
-    private static void printOracleAccuracyAfterPruning(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
-        if (pruneByDist || pruneByModel) {
-            int numTot = 0;
-            int numCorrect = 0;
-            for (int i=0; i<predSents.size(); i++) {
-                AnnoSentence predSent = predSents.get(i);
-                AnnoSentence goldSent = goldSents.get(i);
-                if (predSent.getDepEdgeMask() != null) {
-                    for (int c=0; c<goldSent.size(); c++) {
-                        int p = goldSent.getParent(c);
-                        if (predSent.getDepEdgeMask().isKept(p, c)) {
-                            numCorrect++;
-                        }
-                        numTot++;
-                    }
-                }
-            }
-            log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
-        }
-    }
     
-    private static void printPredArgSelfLoopStats(AnnoSentenceCollection sents) {
-        int numPredArgSelfLoop = 0;
-        int numPredArgs = 0;
-        for (AnnoSentence sent : sents) {
-            if (sent.getSrlGraph() != null) {
-                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
-                    if (edge.getArg().getPosition() == edge.getPred().getPosition()) {
-                        numPredArgSelfLoop += 1;
-                    }
-                }
-                numPredArgs += sent.getSrlGraph().getEdges().size();
-            }
-        }
-        if (numPredArgs > 0) {
-            log.info(String.format("Proportion pred-arg self loops: %.4f (%d / %d)", (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
-        }
-    }
-
     /* --------- Factory Methods ---------- */
 
     private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() throws ParseException {
@@ -599,14 +566,14 @@ public class JointNlpRunner {
         prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
         // Relation Feature extraction.
-        if (includeRel) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
             if (relFeatTpls != null) { prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls); }
             prm.fgPrm.relPrm.featureHashMod = featureHashMod;
         }
         
-        prm.fgPrm.includeDp = includeDp;
-        prm.fgPrm.includeSrl = includeSrl;
-        prm.fgPrm.includeRel = includeRel;
+        prm.fgPrm.includeDp = CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE);
+        prm.fgPrm.includeSrl = CorpusHandler.getGoldOnlyAts().contains(AT.SRL);
+        prm.fgPrm.includeRel = CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS);
         
         // Feature extraction.
         prm.fePrm = fePrm;
@@ -648,7 +615,7 @@ public class JointNlpRunner {
         dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
         dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
-        if (includeSrl && acl14DepFeats) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
             // This special case is only for historical consistency.
             dpFePrm.onlyTrueBias = false;
             dpFePrm.onlyTrueEdges = false;
@@ -757,7 +724,8 @@ public class JointNlpRunner {
         prm.trainer = trainer;                
         
         // TODO: add options for other loss functions.
-        if (prm.trainer == Trainer.ERMA && includeDp && !includeSrl) {
+        if (prm.trainer == Trainer.ERMA && 
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             if (dpLoss == ErmaLoss.DP_DECODE_LOSS) {
                 DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
                 lossPrm.annealMse = dpAnnealMse;
@@ -845,34 +813,36 @@ public class JointNlpRunner {
     }
     
     public static void main(String[] args) {
+        int exitCode = 0;
+        ArgParser parser = null;
         try {
-            ArgParser parser = new ArgParser(JointNlpRunner.class);
+            parser = new ArgParser(JointNlpRunner.class);
             parser.addClass(JointNlpRunner.class);
             parser.addClass(CorpusHandler.class);
             parser.addClass(RelationsOptions.class);
-            try {
-                parser.parseArgs(args);
-            } catch (ParseException e) {
-                log.error(e.getMessage());
-                parser.printUsage();
-                System.exit(1);
-            }
+            parser.addClass(InsideOutsideDepParse.class);      
+            parser.addClass(ReporterManager.class);
+            parser.parseArgs(args);
             
+            ReporterManager.init(ReporterManager.reportOut, true);
             Prng.seed(seed);
-            
+
             JointNlpRunner pipeline = new JointNlpRunner();
-            try {
-                pipeline.run();
-            } catch (ParseException e1) {
-                log.error(e1.getMessage());
+            pipeline.run();
+        } catch (ParseException e1) {
+            log.error(e1.getMessage());
+            if (parser != null) {
                 parser.printUsage();
-                System.exit(1);
             }
+            exitCode = 1;
         } catch (Throwable t) {
             t.printStackTrace();
-            System.exit(1);
+            exitCode = 1;
+        } finally {
+            ReporterManager.close();
         }
-        System.exit(0);
+        
+        System.exit(exitCode);
     }
 
 }

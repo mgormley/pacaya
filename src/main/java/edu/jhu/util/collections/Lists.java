@@ -70,10 +70,18 @@ public class Lists {
         return list;
     }
 
-    public static <T> List<T> union(List<T> ats1, List<T> ats2) {
-        ArrayList<T> newList = new ArrayList<T>(ats1.size() + ats2.size());
-        newList.addAll(ats1);
-        newList.addAll(ats2);
+    public static <T> List<T> union(List<T> list1, List<T> list2) {
+        ArrayList<T> newList = new ArrayList<T>(list1.size() + list2.size());
+        newList.addAll(list1);
+        newList.addAll(list2);
+        return newList;
+    }
+    
+    public static <T> List<T> union(List<T> list1, List<T> list2, List<T> list3) {
+        ArrayList<T> newList = new ArrayList<T>(list1.size() + list2.size() + list3.size());
+        newList.addAll(list1);
+        newList.addAll(list2);
+        newList.addAll(list3);
         return newList;
     }
 
