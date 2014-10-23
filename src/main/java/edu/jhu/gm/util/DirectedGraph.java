@@ -1,8 +1,8 @@
 package edu.jhu.gm.util;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
@@ -212,7 +212,7 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
     /** Runs a breadth-first-search starting at the root node. */
     public List<N> bfs(N root) {
         List<N> order = new ArrayList<>();
-        Queue<N> queue = new LinkedList<>();
+        Queue<N> queue = new ArrayDeque<>();
         queue.add(root);
 
         // Unmark all the nodes.
@@ -239,28 +239,23 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
         return order;
     }
     
-    /**
-     * Gets a pre-order traversal over the nodes reachable from this one.
-     * @param root
-     */
-    public List<N> preOrderTraversal(N root) {
+    /** Visits the nodes in a pre-order traversal. */
+    public void preOrderTraversal(N root, Visitor<N> v) {
         setMarkedAllNodes(false);
-        ArrayList<N> nodes = new ArrayList<N>();
-        preOrderTraversal(root, nodes);
-        return nodes;
+        preOrderTraveralRecursive(root, v);
     }
-        
-    private void preOrderTraversal(N root, List<N> nodes) {
+    
+    private void preOrderTraveralRecursive(N root, Visitor<N> v) {
+        v.visit(root);
         root.setMarked(true);
-        nodes.add(root);
         for (Edge e : root.getOutEdges()) {
             N n = e.getChild();
             if (!n.isMarked()) {
-                preOrderTraversal(n, nodes);
+                preOrderTraveralRecursive(n, v);
             }
         }
     }
-
+    
     /**
      * Calls setMarked(marked) on all the nodes.
      */
