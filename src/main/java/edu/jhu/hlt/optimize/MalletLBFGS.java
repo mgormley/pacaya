@@ -152,7 +152,7 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
             converged = false;
         }
         t.stop();        
-        log.debug(String.format("Average time per iteration (min): %.2f ", t.totMin() / lbfgs.getIteration()));
+        log.debug(String.format("Average time per iteration (min): %.2g ", t.totMin() / lbfgs.getIteration()));
         
         return converged;
     }

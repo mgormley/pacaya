@@ -12,6 +12,23 @@ import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
 
+/**
+ * TODO: Current hprof shows that >43% of time is spent in the BfsMpSchedule especially on
+ * the preOrderTraversal() and bfs() methods of DirectedGraph.
+ * 
+ * CPU SAMPLES BEGIN (total = 12092) Thu Oct 23 14:16:36 2014
+rank   self  accum   count trace method
+   1 22.38% 22.38%    2706 300543 edu.jhu.gm.util.DirectedGraph.preOrderTraveralNoMark
+   2 20.95% 43.33%    2533 300691 java.util.ArrayDeque.removeFirst
+   3  8.04% 51.36%     972 300564 java.lang.StrictMath.log1p
+   4  6.24% 57.60%     754 300670 edu.jhu.gm.inf.BfsMpSchedule.<init>
+   5  5.90% 63.50%     713 300641 java.lang.String.intern
+   6  4.33% 67.82%     523 300423 java.io.FileInputStream.open
+   7  2.91% 70.73%     352 300657 edu.jhu.prim.vector.IntDoubleDenseVector.dot
+   8  2.49% 73.22%     301 300695 edu.jhu.prim.sort.ShortSort.partition
+   9  2.15% 75.37%     260 300653 edu.jhu.nlp.depparse.FastDepParseFe.addArcFactoredMSTFeats
+  10  1.12% 76.49%     135 300708 edu.jhu.parse.dep.ProjectiveDependencyParser.insideAlgorithm
+ */
 public class DepParseSpeedTest {
     
     /**

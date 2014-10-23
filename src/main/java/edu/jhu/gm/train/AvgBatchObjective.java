@@ -102,7 +102,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     }
 
     private void accum(IntDoubleVector params, int[] batch, final Accumulator ac) {
-        boolean isFullDataset = (batch.length == numExamples);
+        boolean isFullDataset = (batch.length >= numExamples);
         
         if (isFullDataset) {
             // Include some additional accumulators so that we can report at the end.

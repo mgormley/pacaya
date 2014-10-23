@@ -38,6 +38,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "dp-conllx",
+                    "dp-cll",
                     "dp-conllx-tmp",
                     "dp-conllx-tune",
                     "dp-pruning",
