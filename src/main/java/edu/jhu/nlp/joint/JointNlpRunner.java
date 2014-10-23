@@ -31,8 +31,8 @@ import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.hlt.optimize.AdaDelta;
 import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
-import edu.jhu.hlt.optimize.AdaGrad;
-import edu.jhu.hlt.optimize.AdaGrad.AdaGradPrm;
+import edu.jhu.hlt.optimize.AdaGradSchedule;
+import edu.jhu.hlt.optimize.AdaGradSchedule.AdaGradSchedulePrm;
 import edu.jhu.hlt.optimize.BottouSchedule;
 import edu.jhu.hlt.optimize.BottouSchedule.BottouSchedulePrm;
 import edu.jhu.hlt.optimize.MalletLBFGS;
@@ -700,9 +700,9 @@ public class JointNlpRunner {
                 boPrm.lambda = 1.0 / l2variance;
                 sgdPrm.sched = new BottouSchedule(boPrm);
             } else if (optimizer == Optimizer.ADAGRAD){
-                AdaGradPrm adaGradPrm = new AdaGradPrm();
+                AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
-                sgdPrm.sched = new AdaGrad(adaGradPrm);
+                sgdPrm.sched = new AdaGradSchedule(adaGradPrm);
             } else if (optimizer == Optimizer.ADADELTA){
                 AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
                 adaDeltaPrm.decayRate = adaDeltaDecayRate;
