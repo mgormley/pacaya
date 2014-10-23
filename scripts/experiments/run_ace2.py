@@ -146,7 +146,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)  
         if self.queue:
-            threads = 15
+            threads = 7
             work_mem_megs = 15*1024
         elif self.big_machine:
             threads = 2
@@ -253,7 +253,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # Hyperparameters
         hyperparams = []
-        for _ in range(2):
+        for _ in range(20):
             l2variance = loguniform_val(2, 100000)
             embScaler = loguniform_val(1, 60)
             hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
