@@ -175,7 +175,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Method for normalization of the embeddings.")
     public static Scaling embNorm = Scaling.L1_NORM;
     @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
-    public static double embScaler = 15.0;
+    public static double embScalar = 15.0;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "The structure of the Role variables.")
@@ -825,7 +825,7 @@ public class JointNlpRunner {
         EmbeddingsAnnotatorPrm prm = new EmbeddingsAnnotatorPrm();
         prm.embeddingsFile = embeddingsFile;
         prm.embNorm = embNorm;
-        prm.embScaler= embScaler;
+        prm.embScalar= embScalar;
         return prm;
     }
     

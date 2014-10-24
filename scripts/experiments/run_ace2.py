@@ -208,7 +208,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # Collections
         ace05_domains = [ace05_bc, ace05_bn, ace05_cts, ace05_nw, ace05_un, ace05_wl]
 
-        # Embeddings
+        # Embeddings 
         embeddings_dir = os.path.join(p.corpora_dir, "processed", "embeddings")
         polyglot_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.txt"),
                                   embedName="polyglot")
@@ -252,11 +252,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
-        hyperparams = []
-        for _ in range(20):
-            l2variance = loguniform_val(2, 100000)
-            embScaler = loguniform_val(1, 60)
-            hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
+        if False:
+            hyperparams = []
+            for _ in range(20):
+                l2variance = random.uniform(5000, 200000)
+                embScalar = random.uniform(2, 60)
+                hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))
+        else:            
+            hyperparams = []
+            for l2variance in [20000, 40000, 80000, 160000]:
+                for embScalar in [8, 16, 32, 64]:
+                    hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))            
         for x in hyperparams: print x
         
         # ------------------------ EXPERIMENTS --------------------------
@@ -365,13 +371,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 defaults.set("group", "scaling", incl_name=True, incl_arg=False)
                 for embed in [polyglot_en, polyglot_en_large_dstuned, polyglot_en_large_combined]:
                     for embNorm in ["L1_NORM", "L2_NORM", "STD_NORMAL"]:
-                        for embScaler in [2.0, 4.0, 8.0, 16.0, 32.0]:
+                        for embScalar in [2.0, 4.0, 8.0, 16.0, 32.0]:
                             feats = ReExpParams(embTmplPath=True, 
                                                 embTmplType=True,
                                                 embSlotPath=False,
                                                 embSlotHead=True,
                                                 embNorm=embNorm,
-                                                embScaler=embScaler)
+                                                embScalar=embScalar)
                             train = get_annotation_as_train(ace05_bn_nw)
                             experiment = defaults + setup + train + test + embed + feats
                             root.add_dependent(experiment)
