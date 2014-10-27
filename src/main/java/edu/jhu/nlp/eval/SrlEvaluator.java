@@ -87,6 +87,8 @@ public class SrlEvaluator implements Evaluator {
         log.info(String.format("SRL Recall on %s: %.4f", dataName, recall));
         log.info(String.format("SRL F1 on %s: %.4f", dataName, f1));
         
+        rep.report(dataName+"SrlPrecision", precision);
+        rep.report(dataName+"SrlRecall", recall);
         rep.report(dataName+"SrlF1", f1);
         
         return -f1;

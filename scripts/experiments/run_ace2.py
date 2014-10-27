@@ -294,7 +294,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(root.dependents)
             hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
                                       hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
-                                      argmax_key='devF1')
+                                      argmax_key='devRelF1')
             hypmax.add_prereqs(root.dependents)
             return root
                 
@@ -330,7 +330,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(root.dependents)  
             hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
                                       hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
-                                      argmax_key='devF1')
+                                      argmax_key='devRelF1')
             hypmax.add_prereqs(root.dependents)
             return root        
         

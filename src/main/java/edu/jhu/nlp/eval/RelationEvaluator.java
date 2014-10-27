@@ -78,7 +78,9 @@ public class RelationEvaluator implements Evaluator {
         log.info(String.format("Recall on %s: %.4f", dataName, recall));
         log.info(String.format("F1 on %s: %.4f", dataName, f1));
         
-        rep.report(dataName+"F1", f1);
+        rep.report(dataName+"RelPrecision", precision);
+        rep.report(dataName+"RelRecall", precision);
+        rep.report(dataName+"RelF1", f1);
         
         return -f1;
     }
