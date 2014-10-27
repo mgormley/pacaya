@@ -24,6 +24,9 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.FeaturizedSentence;
 import edu.jhu.nlp.features.FeaturizedTokenPair;
 import edu.jhu.nlp.features.LocalObservations;
+import edu.jhu.nlp.features.TemplateFeatureExtractor;
+import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
+import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
 import edu.jhu.parse.cky.data.NaryTree;
@@ -95,8 +98,8 @@ public class RelObsFe implements ObsFeatureExtractor {
 
         return fv;
     }
-
-    /** Add the features from Zhou et al. (2005). */
+    
+    /** Add the features from Sun et al. (2011) and Zhou et al. (2005). */
     private void addZhou05Features(LocalObservations local, ObjFeatVec<String> features) {
         NerMention m1 = local.getNe1();
         NerMention m2 = local.getNe2();
@@ -344,6 +347,62 @@ public class RelObsFe implements ObsFeatureExtractor {
         
         // TODO: Finish other features.
         
+
+        // ----------- Below are the extra features from Sun et al. (2011). -------------
+        // Bigram of the words between the two mentions: This was extracted by both Zhao and
+        // Grishman (2005) and Jiang and Zhai (2007).
+        //Span btwn = Span.getSpanBtwn(m1span, m2span);
+        for (int i=btwn.start(); i<=btwn.end(); i++) {
+            addBinFeat(features, "bigrwb:" + fsent.getFeatTok(i-1).getForm() + "_" + sent.getWord(i));
+        }
+        
+        // Patterns: There are three types of patterns: 
+        
+        // 1) the sequence of the tokens between the two mentions as used in Boschee et al. (2005);
+        StringBuilder seq = new StringBuilder();
+        for (int i=btwn.start(); i<btwn.end(); i++) {
+            seq.append(sent.getWord(i));
+            seq.append("_");
+        }
+        String seqwb = "seqwb:" + seq.toString();
+        addBinFeat(features, seqwb);        
+        addBinFeat(features, combo(et12, seqwb));
+        
+        // 2) the sequence of the heads of the constituents between the two mentions as used by
+        // Grishman et al. (2005);
+        // (basically following the highest cut through the parse tree between the two mentions)
+
+        // Since the above isn't clear, we instead just use the heads of the chunks between the mentions.        
+        StringBuilder chunkHeadPath = new StringBuilder();
+        for (int b=c1+1; b<=c2-1; b++) {
+            chunkHeadPath.append(sent.getWord(chunkHeads[b]));
+            chunkHeadPath.append("_");
+        }
+        String chnkhb = "chnkhb:"+chunkHeadPath;
+        addBinFeat(features, chnkhb);
+        addBinFeat(features, combo(et12, chnkhb));
+
+        // 3) the shortest dependency path between the two mentions in a dependency tree as adopted
+        // by Bunescu and Mooney (2005a).    
+        TemplateFeatureExtractor tfe = new TemplateFeatureExtractor(fsent, null);        
+        List<Pair<Integer, Dir>> path = fsent.getFeatTokPair(m1.getHead(), m2.getHead()).getDependencyPath();
+        List<String> posPath = tfe.getTokPropsForPath(TokProperty.POS, EdgeProperty.DIR, path);
+        List<String> wordPath = tfe.getTokPropsForPath(TokProperty.WORD, EdgeProperty.DIR, path);
+        List<String> relPath = tfe.getTokPropsForPath(null, EdgeProperty.EDGEREL, path);
+        relPath.addAll(tfe.getTokPropsForPath(null, EdgeProperty.DIR, path));
+        
+        addBinFeat(features, "posdppath:" + StringUtils.join(posPath, "_"));
+        addBinFeat(features, combo(et12, "posdppath:" + StringUtils.join(posPath.subList(1, posPath.size()-1), "_")));
+        addBinFeat(features, "reldppath:" + StringUtils.join(relPath, "_"));
+        addBinFeat(features, combo(et12, "reldppath:" + StringUtils.join(relPath.subList(1, relPath.size()-1), "_")));
+        addBinFeat(features, "worddppath:" + StringUtils.join(wordPath, "_"));
+        addBinFeat(features, combo(et12, "worddppath:" + StringUtils.join(wordPath.subList(1, wordPath.size()-1), "_")));
+        
+        // Title list: This is tailored for the EMP-ORG type of relations as the head of one of the
+        // mentions is usually a title. The features are decoded in a way similar to that of Sun
+        // (2009).
+        
+        // TODO: Finish above title feature.
     }
 
     // TODO: Move this somewhere else.

@@ -475,7 +475,7 @@ public class TemplateFeatureExtractor {
         }
     }
     
-    private List<String> getTokPropsForPath(TokProperty prop, EdgeProperty eprop, List<Pair<Integer,Dir>> path) {
+    public List<String> getTokPropsForPath(TokProperty prop, EdgeProperty eprop, List<Pair<Integer,Dir>> path) {
         List<String> props = new ArrayList<String>(path.size());
         for (int i=0; i<path.size(); i++) {
             Pair<Integer,Dir> edge = path.get(i);
