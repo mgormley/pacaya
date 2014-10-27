@@ -168,6 +168,9 @@ public class JointNlpRunner {
     // Options for Brown clusters.
     @Opt(hasArg = true, description = "Brown cluster file")
     public static File brownClusters = null;
+    @Opt(hasArg = true, description = "Max length for the brown clusters")
+    public static int bcMaxTagLength = Integer.MAX_VALUE;
+    
     
     // Options for Embeddings.
     @Opt(hasArg=true, description="Path to word embeddings text file.")
@@ -818,6 +821,7 @@ public class JointNlpRunner {
     private static BrownClusterTaggerPrm getBrownCluterTaggerPrm() {
         BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
         bcPrm.language = CorpusHandler.language;
+        bcPrm.maxTagLength = bcMaxTagLength;
         return bcPrm;
     }
 

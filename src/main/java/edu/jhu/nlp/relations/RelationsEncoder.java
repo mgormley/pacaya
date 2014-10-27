@@ -130,10 +130,10 @@ public class RelationsEncoder implements Encoder<AnnoSentence, List<String>> {
         sent.setRelLabels(relLabels);
         
         if (RelationsOptions.removeEntityTypes) {
-            // Replace entity types with POS tags.
+            // Replace entity types with Brown cluster tags.
             for (NerMention ne : nes) {
-                ne.setEntityType(sent.getPosTag(ne.getHead()));
-                ne.setEntitySubType(sent.getPosTag(ne.getHead()));
+                ne.setEntityType(sent.getCluster(ne.getHead()));
+                ne.setEntitySubType(sent.getCluster(ne.getHead()));
             }
         }
     }

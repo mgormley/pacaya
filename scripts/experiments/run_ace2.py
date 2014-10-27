@@ -182,7 +182,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    devGoldOut="./dev-gold.txt",
                    testGoldOut="./test-gold.txt",
                    modelOut="./model.binary.gz",  
-                   reportOut="./outparams.txt",                 
+                   reportOut="./outparams.txt",
                    )
         
         # Datasets
@@ -226,8 +226,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                   embedName="cbow-nyt11")
         defaults.set_incl_name("embeddingsFile", False)
         defaults.set_incl_arg("embedName", False)
-                
-                
+        
+        # Brown clusters
+        bc_bllip = ReExpParams(brownClusters=p.bllip_clusters, bcMaxTagLength=5)
+        defaults.set_incl_name("brownClusters", False)
+        
         # Models
         feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
         feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
@@ -285,6 +288,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup.update(optimizer="ADAGRAD", adaGradEta=0.05, adaGradConstantAddend=1, 
                          sgdAutoSelectLr=False, regularizer="NONE", sgdNumPasses=20,
                          sgdBatchSize=30)
+            setup += bc_bllip
             setup += get_annotation_as_train(ace05_bn_nw)
             for evl in [eval_pm13, eval_types13, eval_ng14]: #, eval_types7]:
                 for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),

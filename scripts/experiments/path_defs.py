@@ -130,12 +130,11 @@ class PathDefinitions():
                 
         # Brown Clusters.
         bc_256_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_256",
-                                           corpora_dir + "/embeddings/bc_out_256",
-                                           self.root_dir + "/data/bc_out_256")
+                                           corpora_dir + "/processed/brown_clusters/bc_out_256")
         bc_1000_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_1000",
-                                            corpora_dir + "/embeddings/bc_out_1000",
-                                            self.root_dir + "/data/bc_out_1000")
+                                            corpora_dir + "/processed/brown_clusters/bc_out_1000")
         p.bc_tiny = os.path.join(bc_1000_dir, "paths.tiny")
+        p.bllip_clusters = os.path.join(corpora_dir, "processed", "brown_clusters", "bllip-clusters")
         for lang_short in p.c09_lang_short_names:
             pl = p.langs[lang_short]
             pl.bc_256 = os.path.join(bc_256_dir, "full.txt_%s_256" % (lang_short), "paths.cutoff")
