@@ -93,17 +93,17 @@ def get_ace05_data(concrete_dir, prefix):
     return os.path.join(concrete_dir, prefix+"-comms.zip")
 
 def get_annotation_as_train(comm):
-    exp = ReExpParams(train=comm, trainType="CONCRETE")
+    exp = ReExpParams(train=comm, trainType="RE_CONCRETE")
     exp.set('trainName', os.path.basename(comm), incl_arg=False)
     return exp
 
 def get_annotation_as_dev(comm):
-    exp = ReExpParams(dev=comm, devType="CONCRETE")
+    exp = ReExpParams(dev=comm, devType="RE_CONCRETE")
     exp.set('devName', os.path.basename(comm), incl_arg=False)
     return exp
 
 def get_annotation_as_test(comm):
-    exp = ReExpParams(test=comm, testType="CONCRETE")
+    exp = ReExpParams(test=comm, testType="RE_CONCRETE")
     exp.set('testName', os.path.basename(comm), incl_arg=False)
     return exp
 

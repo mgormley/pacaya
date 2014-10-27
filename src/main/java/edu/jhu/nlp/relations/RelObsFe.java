@@ -84,6 +84,16 @@ public class RelObsFe implements ObsFeatureExtractor {
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
         fv.add("BIAS_FEATURE", 1.0);
         
+        // Set entity types to be Brown cluster tags if missing.
+        NerMention ne1 = local.getNe1();
+        if (ne1.getEntityType() == null) {
+            ne1.setEntityType(sent.getCluster(ne1.getHead()));
+        }
+        NerMention ne2 = local.getNe2();
+        if (ne2.getEntityType() == null) {
+            ne2.setEntityType(sent.getCluster(ne2.getHead()));
+        }
+        
         if (RelationsOptions.useZhou05Features) {
             addZhou05Features(local, fv);
         }

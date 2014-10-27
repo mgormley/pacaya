@@ -92,10 +92,14 @@ public class NerMention implements Comparable<NerMention> {
     }
 
     public void intern() {
-        entityType = entityType.intern();
-        entitySubType = entitySubType.intern();
-        phraseType = phraseType.intern();
-        id = id.intern();
+        entityType = safeIntern(entityType);
+        entitySubType = safeIntern(entitySubType);
+        phraseType = safeIntern(phraseType);
+        id = safeIntern(id);
+    }
+
+    private static String safeIntern(String s) {
+        return (s == null) ? null : s.intern();
     }
 
     @Override

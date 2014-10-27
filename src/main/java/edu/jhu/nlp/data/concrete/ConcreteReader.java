@@ -185,21 +185,6 @@ public class ConcreteReader {
 
             if (comm.getSituationMentionSetsSize() > 0) {
                 addSituationMentions(comm, tmpSents);
-                
-                for (AnnoSentence aSent : tmpSents) {     
-                    if (RelationsOptions.shortenEntityMentions) {
-                        for (NerMention m : aSent.getNamedEntities()) {
-                            // Set the end of the span to be the head token.
-                            m.getSpan().setEnd(m.getHead()+1);
-                        }
-                        aSent.getNamedEntities().sort();                       
-                    }
-                    // Add the named entity pairs.
-                    RelationsEncoder.addNePairsAndRelLabels(aSent);
-                }
-                tmpSents = RelationsEncoder.getSingletons(tmpSents);
-                // Deterministically shuffle the positive and negative examples for this communication.
-                Collections.shuffle(tmpSents, new Random(1234567890));
             }
         }
         

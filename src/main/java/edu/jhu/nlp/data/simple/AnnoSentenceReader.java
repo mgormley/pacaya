@@ -7,8 +7,10 @@ import java.io.InputStream;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.nlp.data.concrete.ConcreteIterable;
+import edu.jhu.nlp.data.concrete.ConcreteReader;
 import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
+import edu.jhu.nlp.data.concrete.ListCloseableIterable;
+import edu.jhu.nlp.data.concrete.ReConcreteReader;
 import edu.jhu.nlp.data.conll.CoNLL08FileReader;
 import edu.jhu.nlp.data.conll.CoNLL08Sentence;
 import edu.jhu.nlp.data.conll.CoNLL09FileReader;
@@ -44,7 +46,7 @@ public class AnnoSentenceReader {
         public ConcreteReaderPrm conPrm = new ConcreteReaderPrm();        
     }
     
-    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE, SEMEVAL_2010 };
+    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE, SEMEVAL_2010, RE_CONCRETE };
     
     public interface SASReader extends Iterable<AnnoSentence> {
         public void close();        
@@ -75,7 +77,11 @@ public class AnnoSentenceReader {
         
         CloseableIterable<AnnoSentence> reader = null;
         if (type == DatasetType.CONCRETE) {
-            reader = new ConcreteIterable(new ConcreteReaderPrm(), dataFile);
+            ConcreteReader cr = new ConcreteReader(new ConcreteReaderPrm());
+            reader = new ListCloseableIterable(cr.toSentences(dataFile));
+        } else if (type == DatasetType.RE_CONCRETE) {
+            ReConcreteReader cr = new ReConcreteReader(new ConcreteReaderPrm());
+                reader = new ListCloseableIterable(cr.toSentences(dataFile));
         } else {
             InputStream fis = new FileInputStream(dataFile);
             if (type == DatasetType.CONLL_2009) {
