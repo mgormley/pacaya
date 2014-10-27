@@ -102,7 +102,7 @@ public class FgModel implements Serializable, IFgModel {
         }
     }
     
-    private boolean shouldLogNumExplicitParams = true;
+    private static boolean shouldLogNumExplicitParams = true;
     
     public void add(FgModel other) {
         if (other.numParams != this.numParams) {
