@@ -258,11 +258,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 l2variance = random.uniform(5000, 200000)
                 embScalar = random.uniform(2, 60)
                 hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))
-        else:            
+        elif False:            
             hyperparams = []
             for l2variance in [20000, 40000, 80000, 160000]:
                 for embScalar in [8, 16, 32, 64]:
                     hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))            
+        else:
+            hyperparams = []
+            for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
+                for embScalar in [8, 16, 32, 64]:
+                    hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar))          
         for x in hyperparams: print x
         
         # ------------------------ EXPERIMENTS --------------------------
@@ -277,6 +282,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup= ReExpParams(propTrainAsDev=0.0,
                                useEmbeddingFeatures=True,
                                useZhou05Features=True)
+            setup.update(optimizer="ADAGRAD", adaGradEta=0.05, adaGradConstantAddend=1, 
+                         sgdAutoSelectLr=False, regularizer="NONE", sgdNumPasses=20,
+                         sgdBatchSize=30)
             setup += get_annotation_as_train(ace05_bn_nw)
             for evl in [eval_pm13, eval_types13, eval_ng14]: #, eval_types7]:
                 for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
