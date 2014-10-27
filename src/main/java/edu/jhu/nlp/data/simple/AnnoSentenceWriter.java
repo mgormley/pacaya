@@ -63,23 +63,28 @@ public class AnnoSentenceWriter {
             cw.close();
         } else if (type == DatasetType.SEMEVAL_2010) {
             SemEval2010Writer sw = new SemEval2010Writer(out);
-            int i = 0;
-            for (AnnoSentence sent : sents) {
-                // Write one SemEval-2010 sentence for each pair of entities.
-                if (!sent.hasAt(AT.NE_PAIRS)) {
-                    throw new RuntimeException("Sentence missing required annotation: " + AT.NE_PAIRS);
-                }
-                if (sent.getNePairs().size() > 0) {
-                    if (!sent.hasAt(AT.REL_LABELS)) {
-                        throw new RuntimeException("Sentence missing required annotation: " + AT.REL_LABELS);
+            try {
+                int i = 0;
+                for (AnnoSentence sent : sents) {
+                    // Write one SemEval-2010 sentence for each pair of entities.
+                    if (!sent.hasAt(AT.NE_PAIRS)) {
+                        throw new RuntimeException("Sentence missing required annotation: " + AT.NE_PAIRS);
                     }
-                    List<SemEval2010Sentence> seSents = SemEval2010Sentence.fromAnnoSentence(sent, i++);
-                    for (SemEval2010Sentence seSent : seSents) {                        
-                        sw.write(seSent);
-                    }
+                    if (sent.getNePairs().size() > 0) {
+                        if (!sent.hasAt(AT.REL_LABELS)) {
+                            //throw new RuntimeException("Sentence missing required annotation: " + AT.REL_LABELS);
+                            log.warn("Sentence missing required annotation: " + AT.REL_LABELS);
+                        } else {
+                            List<SemEval2010Sentence> seSents = SemEval2010Sentence.fromAnnoSentence(sent, i++);
+                            for (SemEval2010Sentence seSent : seSents) {                        
+                                sw.write(seSent);
+                            }
+                        }
+                    }                
                 }
+            } finally {
+                sw.close();
             }
-            sw.close();
         } else if (type == DatasetType.CONCRETE) {
             Communication comm = (Communication) sents.getSourceSents();
             ConcreteWriter w = new ConcreteWriter(false);
