@@ -139,9 +139,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.remove("devPredOut")
         g.defaults.remove("testGoldOut")
         g.defaults.remove("testPredOut")
-        g.defaults += g.adagrad 
         
-        defaults = g.lbfgs  + ReExpParams()        
+        defaults = ReExpParams()        
         defaults.set("expname", self.expname, False, False)
         defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)  
@@ -185,6 +184,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    reportOut="./outparams.txt",
                    )
         
+        defaults.update(propTrainAsDev=0.0,
+                        useEmbeddingFeatures=True,
+                        useZhou05Features=True)
+        defaults.update(optimizer="ADAGRAD", adaGradEta=0.05, adaGradConstantAddend=1, 
+                     sgdAutoSelectLr=True, regularizer="NONE", sgdNumPasses=20,
+                     sgdBatchSize=30)
         # Datasets
         
         # ACE 2005
@@ -230,7 +235,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # Brown clusters
         bc_bllip = ReExpParams(brownClusters=p.bllip_clusters, bcMaxTagLength=5)
         defaults.set_incl_name("brownClusters", False)
-        
+        defaults += bc_bllip
+
         # Models
         feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
         feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
@@ -270,7 +276,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             hyperparams = []
             for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
                 for embScalar in [8, 16, 32, 64]:
-                    hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar))          
+                    hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar, sgdAutoSelectLr=False))          
         for x in hyperparams: print x
         
         # ------------------------ EXPERIMENTS --------------------------
@@ -282,14 +288,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
-            setup= ReExpParams(propTrainAsDev=0.0,
-                               useEmbeddingFeatures=True,
-                               useZhou05Features=True)
-            setup.update(optimizer="ADAGRAD", adaGradEta=0.05, adaGradConstantAddend=1, 
-                         sgdAutoSelectLr=False, regularizer="NONE", sgdNumPasses=20,
-                         sgdBatchSize=30)
-            setup += bc_bllip
-            setup += get_annotation_as_train(ace05_bn_nw)
+            setup = get_annotation_as_train(ace05_bn_nw)
             for evl in [eval_pm13, eval_types13, eval_ng14]: #, eval_types7]:
                 for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
                                   (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
@@ -314,11 +313,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''Learning curve experiment.
             '''
             root = RootStage()
-            setup= ReExpParams(propTrainAsDev=0.0,
-                               useEmbeddingFeatures=True,
-                               useZhou05Features=True)
-            setup += get_annotation_as_train(ace05_bn_nw)
-            
+            setup = get_annotation_as_train(ace05_bn_nw)            
             for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
                               (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
                               #(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
