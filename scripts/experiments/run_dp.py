@@ -47,7 +47,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-aware-small",
                     "dp-erma",
                     "dp-erma-tune",
-                    "dp-init-model",                    
+                    "dp-init-model", 
+                    "dp-opt-avg",                   
                     )
     
     def __init__(self, options):
@@ -133,6 +134,24 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
         # ------------------------ EXPERIMENTS --------------------------
         
+        if self.expname == "dp-opt-avg":
+            # Compares learning with and without parameter averaging.
+            exps = []
+            g.defaults += g.cll
+            g.defaults.update(trainMaxSentenceLength=20, devMaxSentenceLength=20, 
+                              testMaxSentenceLength=20, work_mem_megs=5000)
+            g.defaults.remove("printModel")
+            g.defaults.remove("modelOut")
+            lang_short = "en"
+            gl = g.langs[lang_short]            
+            for optimizer in [g.asgd, g.fobos, g.sgd, g.adagrad]:
+                for sgdAveraging in [True, False]:
+                    for regularizer in ["NONE", "L2"]:
+                        exp = g.defaults + gl.cx_data + g.first_order + optimizer
+                        exp.update(sgdAveraging=sgdAveraging, regularizer=regularizer)
+                        exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
         if self.expname == "dp-init-model":
             # Compares training of an ERMA 2nd order model, initializing the model
             # to either zeroes or to the 1st order pruning model.
@@ -157,9 +176,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps.append(exp1)
             exps.append(exp0)
             
-            for exp in exps: exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
             return self._get_pipeline_from_exps(exps)
-                                    
+        
         elif self.expname == "dp-cll":
             # Conditional log-likelihood training of 1st and 2nd-order models for parsing.
             # Includes hyperparameter tuning.
@@ -211,7 +229,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
-        
         
         elif self.expname == "dp-aware":
             # Comparison of CLL and ERMA training with varying models and iterations.
