@@ -402,11 +402,13 @@ public class RelObsFe implements ObsFeatureExtractor {
         relPath.addAll(tfe.getTokPropsForPath(null, EdgeProperty.DIR, path));
         
         addBinFeat(features, "posdppath:" + StringUtils.join(posPath, "_"));
-        addBinFeat(features, combo(et12, "posdppath:" + StringUtils.join(posPath.subList(1, posPath.size()-1), "_")));
         addBinFeat(features, "reldppath:" + StringUtils.join(relPath, "_"));
-        addBinFeat(features, combo(et12, "reldppath:" + StringUtils.join(relPath.subList(1, relPath.size()-1), "_")));
         addBinFeat(features, "worddppath:" + StringUtils.join(wordPath, "_"));
-        addBinFeat(features, combo(et12, "worddppath:" + StringUtils.join(wordPath.subList(1, wordPath.size()-1), "_")));
+        if (path.size() >= 3) {
+            addBinFeat(features, combo(et12, "posdppath:" + StringUtils.join(posPath.subList(1, posPath.size()-1), "_")));
+            addBinFeat(features, combo(et12, "reldppath:" + StringUtils.join(relPath.subList(1, relPath.size()-1), "_")));
+            addBinFeat(features, combo(et12, "worddppath:" + StringUtils.join(wordPath.subList(1, wordPath.size()-1), "_")));
+        }
         
         // Title list: This is tailored for the EMP-ORG type of relations as the head of one of the
         // mentions is usually a title. The features are decoded in a way similar to that of Sun
