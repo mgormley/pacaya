@@ -98,7 +98,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class JointNlpRunner {
 
-    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA, FOBOS };
+    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA, FOBOS, ASGD };
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
@@ -310,6 +310,8 @@ public class JointNlpRunner {
     public static int sgdAutoSelecFreq = 5;
     @Opt(hasArg=true, description="Whether to compute the function value on iterations other than the last.")
     public static boolean sgdComputeValueOnNonFinalIter = true;
+    @Opt(hasArg=true, description="Whether to do parameter averaging.")
+    public static boolean sgdAveraging = false;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -694,7 +696,8 @@ public class JointNlpRunner {
         } else if (optimizer == Optimizer.QN) {
             prm.optimizer = getStanfordLbfgs();
             prm.batchOptimizer = null;            
-        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
+        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ASGD  ||
+                optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.optimizer = null;
             SGDPrm sgdPrm = getSgdPrm();
             if (optimizer == Optimizer.SGD){
@@ -702,6 +705,13 @@ public class JointNlpRunner {
                 boPrm.initialLr = sgdInitialLr;
                 boPrm.lambda = 1.0 / l2variance;
                 sgdPrm.sched = new BottouSchedule(boPrm);
+            } else if (optimizer == Optimizer.ASGD){
+                BottouSchedulePrm boPrm = new BottouSchedulePrm();
+                boPrm.initialLr = sgdInitialLr;
+                boPrm.lambda = 1.0 / l2variance;
+                boPrm.power = 0.75;
+                sgdPrm.sched = new BottouSchedule(boPrm);
+                sgdPrm.averaging = true;
             } else if (optimizer == Optimizer.ADAGRAD){
                 AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
@@ -782,6 +792,7 @@ public class JointNlpRunner {
         prm.autoSelectLr = sgdAutoSelectLr;
         prm.autoSelectFreq = sgdAutoSelecFreq;
         prm.computeValueOnNonFinalIter = sgdComputeValueOnNonFinalIter;
+        prm.averaging = sgdAveraging; 
         // Make sure we correctly set the schedule somewhere else.
         prm.sched = null;
     }
