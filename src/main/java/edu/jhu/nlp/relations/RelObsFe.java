@@ -396,18 +396,20 @@ public class RelObsFe implements ObsFeatureExtractor {
         // by Bunescu and Mooney (2005a).    
         TemplateFeatureExtractor tfe = new TemplateFeatureExtractor(fsent, null);        
         List<Pair<Integer, Dir>> path = fsent.getFeatTokPair(m1.getHead(), m2.getHead()).getDependencyPath();
-        List<String> posPath = tfe.getTokPropsForPath(TokProperty.POS, EdgeProperty.DIR, path);
-        List<String> wordPath = tfe.getTokPropsForPath(TokProperty.WORD, EdgeProperty.DIR, path);
-        List<String> relPath = tfe.getTokPropsForPath(null, EdgeProperty.EDGEREL, path);
-        relPath.addAll(tfe.getTokPropsForPath(null, EdgeProperty.DIR, path));
-        
-        addBinFeat(features, "posdppath:" + StringUtils.join(posPath, "_"));
-        addBinFeat(features, "reldppath:" + StringUtils.join(relPath, "_"));
-        addBinFeat(features, "worddppath:" + StringUtils.join(wordPath, "_"));
-        if (path.size() >= 3) {
-            addBinFeat(features, combo(et12, "posdppath:" + StringUtils.join(posPath.subList(1, posPath.size()-1), "_")));
-            addBinFeat(features, combo(et12, "reldppath:" + StringUtils.join(relPath.subList(1, relPath.size()-1), "_")));
-            addBinFeat(features, combo(et12, "worddppath:" + StringUtils.join(wordPath.subList(1, wordPath.size()-1), "_")));
+        if (path != null) {
+            List<String> posPath = tfe.getTokPropsForPath(TokProperty.POS, EdgeProperty.DIR, path);
+            List<String> wordPath = tfe.getTokPropsForPath(TokProperty.WORD, EdgeProperty.DIR, path);
+            List<String> relPath = tfe.getTokPropsForPath(null, EdgeProperty.EDGEREL, path);
+            relPath.addAll(tfe.getTokPropsForPath(null, EdgeProperty.DIR, path));
+            
+            addBinFeat(features, "posdppath:" + StringUtils.join(posPath, "_"));
+            addBinFeat(features, "reldppath:" + StringUtils.join(relPath, "_"));
+            addBinFeat(features, "worddppath:" + StringUtils.join(wordPath, "_"));
+            if (path.size() >= 3) {
+                addBinFeat(features, combo(et12, "posdppath:" + StringUtils.join(posPath.subList(1, posPath.size()-1), "_")));
+                addBinFeat(features, combo(et12, "reldppath:" + StringUtils.join(relPath.subList(1, relPath.size()-1), "_")));
+                addBinFeat(features, combo(et12, "worddppath:" + StringUtils.join(wordPath.subList(1, wordPath.size()-1), "_")));
+            }
         }
         
         // Title list: This is tailored for the EMP-ORG type of relations as the head of one of the
