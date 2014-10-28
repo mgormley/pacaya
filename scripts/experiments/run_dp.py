@@ -47,6 +47,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-aware-small",
                     "dp-erma",
                     "dp-erma-tune",
+                    "dp-init-model",                    
                     )
     
     def __init__(self, options):
@@ -72,14 +73,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.adagrad
         g.defaults.update(featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
-                          sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
+                          sgdAutoSelecFreq=5, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           logDomain=False,
                           algebra="LOG_SIGN",
+                          includeUnsupportedFeatures=True,
                           singleRoot=False)
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
+        g.defaults.set_incl_arg("group", False)
                 
         # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE",
@@ -130,26 +133,33 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
         # ------------------------ EXPERIMENTS --------------------------
         
-        if self.expname == "dp-conllx":
-            # CoNLL-X experiments.
+        if self.expname == "dp-init-model":
+            # Compares training of an ERMA 2nd order model, initializing the model
+            # to either zeroes or to the 1st order pruning model.
             exps = []
-            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
-            for lang_short in ["bg", "es", "en"]:
-                gl = g.langs[lang_short]
-                pl = p.langs[lang_short]
-                for parser in g.parsers:
-                    data = gl.cx_data
-                    data.update(pruneModel=gl.pruneModel,
-                                propTrainAsDev=0)  # TODO: Set to zero for final experiments.
-                    exp = g.defaults + data + parser
-                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    if parser in [g.second_order, g.second_grand, g.second_sib]:
-                        exps += get_oome_stages(exp)
-                    else:
-                        exps.append(exp)
-            exps = [x for x in exps if x.get("language") == "en"]
+            g.defaults += g.erma_dp
+            g.defaults.update(bpMaxIterations=10, trainMaxSentenceLength=20, devMaxSentenceLength=20, 
+                              testMaxSentenceLength=20, work_mem_megs=5000)
+            g.defaults.remove("printModel")
+            lang_short = "en"
+            gl = g.langs[lang_short]
+            
+            # Train a first-order pruning model.
+            prune_exp = g.defaults + gl.cx_data + g.first_order
+            exps.append(prune_exp)
+            pruneModel = StagePath(prune_exp, "model.binary.gz")     
+            # Train the pruned (e.g. second-order) models.
+            g.defaults.remove("modelOut") # Speedup.
+            exp1 = g.defaults + gl.cx_data + g.second_order + SrlExpParams(pruneModel=pruneModel, modelIn=pruneModel, group="init1st")
+            exp0 = g.defaults + gl.cx_data + g.second_order + SrlExpParams(pruneModel=pruneModel, group="init0")
+            exp1.add_prereq(prune_exp)
+            exp0.add_prereq(prune_exp)
+            exps.append(exp1)
+            exps.append(exp0)
+            
+            for exp in exps: exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
             return self._get_pipeline_from_exps(exps)
-                
+                                    
         elif self.expname == "dp-cll":
             # Conditional log-likelihood training of 1st and 2nd-order models for parsing.
             # Includes hyperparameter tuning.
@@ -159,7 +169,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.cll
             # Speedups
             g.defaults.update(trainMaxSentenceLength=20,
-                              includeUnsupportedFeatures=True,
                               sgdNumPasses=10,
                               work_mem_megs=5.*1000,
                               bpMaxIterations=10)
@@ -211,7 +220,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
             # Speedups
             g.defaults.update(trainMaxSentenceLength=50,
-                              includeUnsupportedFeatures=True,
                               sgdNumPasses=5)
             g.defaults.remove("printModel")
             
@@ -339,6 +347,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp = g.defaults + data + g.first_order + g.feat_mcdonald_basic + optimizer + trainer
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))                
                             exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "dp-conllx":
+            # CoNLL-X experiments.
+            exps = []
+            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            for lang_short in ["bg", "es", "en"]:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                for parser in g.parsers:
+                    data = gl.cx_data
+                    data.update(pruneModel=gl.pruneModel,
+                                propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                    exp = g.defaults + data + parser
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    if parser in [g.second_order, g.second_grand, g.second_sib]:
+                        exps += get_oome_stages(exp)
+                    else:
+                        exps.append(exp)
+            exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tune":
