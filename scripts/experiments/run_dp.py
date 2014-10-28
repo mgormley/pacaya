@@ -158,7 +158,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.erma_dp
             g.defaults.update(bpMaxIterations=10, trainMaxSentenceLength=20, devMaxSentenceLength=20, 
-                              testMaxSentenceLength=20, work_mem_megs=5000)
+                              testMaxSentenceLength=20, work_mem_megs=5000, regularizer="NONE")
             g.defaults.remove("printModel")
             lang_short = "en"
             gl = g.langs[lang_short]
