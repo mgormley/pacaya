@@ -112,7 +112,7 @@ public class MalletLBFGSTest {
         DifferentiableFunction f = negate(new SumSquares(offsets));
         JUnitUtils.assertArrayEquals(new double[]{0.0, 0.0, 0.0},
                 f.getGradient(new IntDoubleDenseVector(expected)).toNativeArray(),
-                1e13);
+                1e-13);
         opt.maximize(negate(new SumSquares(offsets)), new IntDoubleDenseVector(initial));
         double[] max = initial;
         Vectors.scale(offsets, -1.0);
@@ -128,7 +128,7 @@ public class MalletLBFGSTest {
         SumSquares f = new SumSquares(offsets);
         JUnitUtils.assertArrayEquals(new double[]{0.0, 0.0, 0.0},
                 f.getGradient(new IntDoubleDenseVector(expected)).toNativeArray(),
-                1e13);
+                1e-13);
         opt.minimize(f, new IntDoubleDenseVector(initial));
         double[] max = initial;
         Vectors.scale(offsets, -1.0);

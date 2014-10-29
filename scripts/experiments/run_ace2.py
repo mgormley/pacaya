@@ -188,7 +188,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         useEmbeddingFeatures=True,
                         useZhou05Features=True)
         defaults.update(optimizer="ADAGRAD", adaGradEta=0.05, adaGradConstantAddend=1, 
-                     sgdAutoSelectLr=True, regularizer="NONE", sgdNumPasses=20,
+                     sgdAutoSelectLr=True, regularizer="L2", sgdNumPasses=20,
                      sgdBatchSize=30)
         # Datasets
         
@@ -267,12 +267,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 l2variance = random.uniform(5000, 200000)
                 embScalar = random.uniform(2, 60)
                 hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))
-        elif False:            
+        elif True:            
             hyperparams = []
-            for l2variance in [20000, 40000, 80000, 160000]:
+            for l2variance in [10000, 20000, 40000, 80000, 160000]:
                 for embScalar in [8, 16, 32, 64]:
                     hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))            
-        else:
+        elif False:
             hyperparams = []
             for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
                 for embScalar in [8, 16, 32, 64]:
