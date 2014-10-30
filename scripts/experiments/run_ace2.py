@@ -282,9 +282,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar, sgdAutoSelectLr=False))          
         elif True:
             hyperparams = []
-            for l2variance in [10000, 20000, 40000, 80000, 160000]:
-                for embScalar in [8, 16, 32, 64]:
-                    for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
+            for l2variance in [20000, 60000, 160000]:
+                for embScalar in [8, 20, 64]:
+                    for adaGradEta in [0.025, 0.05, 0.1]:
                         hyperparams.append(ReExpParams(l2variance=l2variance, adaGradEta=adaGradEta, 
                                                        embScalar=embScalar, sgdAutoSelectLr=False))          
         for x in hyperparams: print x
