@@ -352,13 +352,19 @@ class SrlExpParamsRunner(ExpParamsRunner):
             defaults.remove("printModel")
             defaults.remove("modelOut")
             
+            setup.update(sgdAutoSelectLr=False)
             g.adagrad_comid = g.adagrad + ReExpParams(optimizer="ADAGRAD_COMID")
             g.adagrad_comid.update(regularizer="NONE")
             g.fobos.update(regularizer="NONE")
-            for l2variance in [10000, 20000, 40000, 80000, 160000]:
-                for optimizer in [g.fobos, g.adagrad_comid]:
-                    exp = defaults + setup + optimizer + ReExpParams(l2variance=l2variance)
-                    root.add_dependent(exp)
+            for l2variance in [10000, 40000, 160000]:
+                for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
+                    for adaGradConstantAddend in [1e-9, 0.1, 1.0]:
+                        for optimizer in [g.adagrad_comid]:
+                            exp = defaults + setup + optimizer
+                            exp += ReExpParams(l2variance=l2variance, 
+                                               adaGradEta=adaGradEta,
+                                               adaGradConstantAddend=adaGradConstantAddend)
+                            root.add_dependent(exp)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
