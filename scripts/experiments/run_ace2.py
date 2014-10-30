@@ -20,7 +20,7 @@ from pypipeline import pipeline
 import re
 import random
 from pypipeline.pipeline import write_script, RootStage, Stage
-from pypipeline.stages import get_oome_stages
+from pypipeline.stages import get_oome_stages, StagePath
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
@@ -159,6 +159,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_name("train", False)
         defaults.set_incl_name("dev", False)
         defaults.set_incl_name("test", False)
+        defaults.set_incl_name("modelIn", False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
                    featCountCutoff=0,
@@ -302,20 +303,34 @@ class SrlExpParamsRunner(ExpParamsRunner):
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
-            setup = get_annotation_as_train(ace05_bn_nw)
+            train = get_annotation_as_train(ace05_bn_nw)
             for evl in [eval_pm13 + ReExpParams(entityTypeRepl="BROWN"), 
                         eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
                         eval_types13]: # eval_ng14, eval_types7]:
-                for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
-                                  (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
-                                  (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
-                                  (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
-                                  ]:
-                    for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                        for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full_noch, feats_full, feats_emb_only]: 
-                            for hyperparam in hyperparams:
-                                exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
-                                root.add_dependent(exp)
+                for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                    for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full_noch, feats_full, feats_emb_only]: 
+                        for hyperparam in hyperparams:
+                            dev = get_annotation_as_dev(ace05_bc_dev)
+                            # CTS 
+                            train = get_annotation_as_train(ace05_bn_nw)
+                            test = get_annotation_as_test(ace05_cts)                           
+                            exp_cts = defaults + evl + train + dev + test + embed + feats + hyperparam
+                            root.add_dependent(exp_cts)
+                            # WL
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            test = get_annotation_as_test(ace05_wl)
+                            exp_wl = defaults + evl + train + dev + test + embed + feats + hyperparam
+                            exp_cts.add_dependent(exp_wl)
+                            # BC_TEST
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            test = get_annotation_as_test(ace05_bc_test)
+                            exp_bc = defaults + evl + train + dev + test + embed + feats + hyperparam
+                            exp_cts.add_dependent(exp_bc)
+                            # In-Domain
+                            train = get_annotation_as_train(ace05_bn_nw)
+                            dev = ReExpParams(propTrainAsDev=0.2)
+                            exp_bnnw = defaults + evl + train + dev + embed + feats + hyperparam
+                            root.add_dependent(exp_bnnw)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)

@@ -438,13 +438,16 @@ public class JointNlpRunner {
             }
         }
         
+
+        AnnoSentenceCollection devGold = null;
+        AnnoSentenceCollection devInput = null;
         if (corpus.hasTrain()) {
             String name = "train";            
             AnnoSentenceCollection trainGold = corpus.getTrainGold();
             AnnoSentenceCollection trainInput = corpus.getTrainInput();
             // (Dev data might be null.)
-            AnnoSentenceCollection devGold = corpus.getDevGold();
-            AnnoSentenceCollection devInput = corpus.getDevInput();
+            devGold = corpus.getDevGold();
+            devInput = corpus.getDevInput();
             
             // Train a model. (The PipelineAnnotator also annotates all the input.)
             anno.train(trainInput, trainGold, devInput, devGold);
@@ -453,22 +456,28 @@ public class JointNlpRunner {
             corpus.writeTrainPreds(trainInput);
             eval.evaluate(trainInput, trainGold, name);
             corpus.clearTrainCache();
-
-            if (corpus.hasDev()) {
-                // Write dev data predictions.
-                name = "dev";
-                corpus.writeDevPreds(devInput);
-                // Evaluate dev data.
-                eval.evaluate(devInput, devGold, name);
-                corpus.clearDevCache();
+            
+            if (modelOut != null) {
+                jointAnno.saveModel(modelOut);
+            }
+            if (printModel != null) {
+                jointAnno.printModel(printModel);
             }
         }
         
-        if (modelOut != null) {
-            jointAnno.saveModel(modelOut);
-        }
-        if (printModel != null) {
-            jointAnno.printModel(printModel);
+        if (corpus.hasDev()) {
+            // Write dev data predictions.
+            String name = "dev";
+            if (devInput == null) {
+                // Train did not yet annotate the dev data.
+                devInput = corpus.getDevInput();
+                anno.annotate(devInput);
+            }
+            corpus.writeDevPreds(devInput);
+            // Evaluate dev data.
+            devGold = corpus.getDevGold();
+            eval.evaluate(devInput, devGold, name);
+            corpus.clearDevCache();
         }
         
         if (corpus.hasTest()) {
