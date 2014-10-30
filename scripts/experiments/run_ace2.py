@@ -241,11 +241,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults += bc_bllip
 
         # Models
-        feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
-        feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+        feats_no_embed  = ReExpParams(modelName="zhou",           useEmbeddingFeatures=False)
+        feats_head_only = ReExpParams(modelName="zhou+head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
         feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+        feats_full_noch = ReExpParams(modelName="zhou+full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS")
         feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
-        feats_emb_only  = ReExpParams(modelName="full",  useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+        feats_emb_only  = ReExpParams(modelName="full",           useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
         defaults.set_incl_arg("modelName", False)
         
         # Evaluation settings
@@ -282,9 +283,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar, sgdAutoSelectLr=False))          
         elif True:
             hyperparams = []
-            for l2variance in [20000, 60000, 160000]:
-                for embScalar in [8, 20, 64]:
-                    for adaGradEta in [0.025, 0.05, 0.1]:
+            for l2variance in [20000, 40000, 60000]:
+                for embScalar in [15, 20, 25]:
+                    for adaGradEta in [0.025, 0.05]:
                         hyperparams.append(ReExpParams(l2variance=l2variance, adaGradEta=adaGradEta, 
                                                        embScalar=embScalar, sgdAutoSelectLr=False))          
         for x in hyperparams: print x

@@ -4,7 +4,7 @@ import edu.jhu.util.cli.Opt;
 
 public class RelationsOptions {
 
-    public enum EmbFeatType { HEAD_ONLY, HEAD_TYPE, FULL }
+    public enum EmbFeatType { HEAD_ONLY, HEAD_TYPE, FULL_NO_CHUNKS, FULL }
 
     // Relation settings.
     @Opt(hasArg=true, description="Whether to predict the roles for the arguments (i.e. direction of the relation).")

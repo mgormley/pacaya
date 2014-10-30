@@ -616,7 +616,26 @@ public class RelObsFe implements ObsFeatureExtractor {
         String ne1ne2 = ne1 + ne2;
                 
         switch (RelationsOptions.embFeatType) {
-        case FULL:        
+        case FULL:            
+            //     - chunk_head
+            //     - chunk_head+ne1
+            //     - chunk_head+ne2
+            //     - chunk_head+ne1+ne2
+            Pair<List<LabeledSpan>, IntArrayList> chunkPair = getSpansFromBIO(sent.getChunks(), true);
+            List<LabeledSpan> chunks = chunkPair.get1();
+            IntArrayList tokIdxToChunkIdx = chunkPair.get2();
+            int c1 = tokIdxToChunkIdx.get(m1.getHead());
+            int c2 = tokIdxToChunkIdx.get(m2.getHead());
+            int[] chunkHeads = getHeadsOfSpans(chunks, sent.getParents());
+            for (int b=c1+1; b<=c2-1; b++) {
+                int i = chunkHeads[b];
+                addEmbFeat("chunk_head", i, fv);
+                addEmbFeat("chunk_head"+ne1, i, fv);
+                addEmbFeat("chunk_head"+ne2, i, fv);
+                addEmbFeat("chunk_head"+ne1ne2, i, fv);
+            }
+            
+        case FULL_NO_CHUNKS:
             //     - in_between: is the word in between entities
             //     - in_between+ne1 if in_between = T: ne1 is the entity type
             //     - in_between+ne2 if in_between = T
