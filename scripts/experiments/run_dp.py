@@ -152,7 +152,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        if self.expname == "dp-init-model":
+        elif self.expname == "dp-init-model":
             # Compares training of an ERMA 2nd order model, initializing the model
             # to either zeroes or to the 1st order pruning model.
             exps = []

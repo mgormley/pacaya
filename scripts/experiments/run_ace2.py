@@ -112,7 +112,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
     # Class variables
     known_exps = (  "ace-pm13",
                     "ace-lc",
-                    "acl-feats"
+                    "ace-opt",
+                    "acl-feats",
                     )
     
     def __init__(self, options):
@@ -341,6 +342,33 @@ class SrlExpParamsRunner(ExpParamsRunner):
             hypmax.add_prereqs(root.dependents)
             return root        
         
+        elif self.expname == "ace-opt":
+            '''Compares various methods of optimization for the simplest ACE log-linear model.'''
+            root = RootStage()
+            setup = get_annotation_as_train(ace05_bn_nw)
+            setup += cbow_nyt11_en + eval_pm13 + feats_no_embed
+            setup += get_annotation_as_dev(ace05_bc_dev)
+            setup += get_annotation_as_test(ace05_cts)
+            defaults.remove("printModel")
+            defaults.remove("modelOut")
+            
+            g.adagrad_comid = g.adagrad + ReExpParams(optimizer="ADAGRAD_COMID")
+            g.adagrad_comid.update(regularizer="NONE")
+            g.fobos.update(regularizer="NONE")
+            for l2variance in [10000, 20000, 40000, 80000, 160000]:
+                for optimizer in [g.fobos, g.adagrad_comid]:
+                    exp = defaults + setup + optimizer + ReExpParams(l2variance=l2variance)
+                    root.add_dependent(exp)
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
+                                      argmax_key='devRelF1')
+            hypmax.add_prereqs(root.dependents)
+            return root
+        
+        
         elif self.expname == "ace-feats":
             '''Development results for in-domain and out-of-domain experiments, 
             comparing different feature sets.
@@ -443,6 +471,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         ''' Makes the stage run in a very short period of time (under 5 seconds).
         ''' 
         safe_update(stage, 
+                    sgdNumPasses=3,
                     maxLbfgsIterations=3,
                      trainMaxNumSentences=10,
                      devMaxNumSentences=10,

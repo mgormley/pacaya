@@ -31,6 +31,8 @@ import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.hlt.optimize.AdaDelta;
 import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
+import edu.jhu.hlt.optimize.AdaGradComidL2;
+import edu.jhu.hlt.optimize.AdaGradComidL2.AdaGradComidL2Prm;
 import edu.jhu.hlt.optimize.AdaGradSchedule;
 import edu.jhu.hlt.optimize.AdaGradSchedule.AdaGradSchedulePrm;
 import edu.jhu.hlt.optimize.BottouSchedule;
@@ -98,7 +100,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class JointNlpRunner {
 
-    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA, FOBOS, ASGD };
+    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADAGRAD_COMID, ADADELTA, FOBOS, ASGD };
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
@@ -725,6 +727,16 @@ public class JointNlpRunner {
                 sgdPrm.autoSelectLr = false;
             }
             prm.batchOptimizer = new SGD(sgdPrm);
+        } else if (optimizer == Optimizer.ADAGRAD_COMID) {
+            AdaGradComidL2Prm sgdPrm = new AdaGradComidL2Prm();
+            setSgdPrm(sgdPrm);
+            //TODO: sgdPrm.l1Lambda = l2Lambda;
+            sgdPrm.l2Lambda = 1.0 / l2variance;
+            sgdPrm.eta = adaGradEta;
+            sgdPrm.constantAddend = adaDeltaConstantAddend;
+            sgdPrm.sched = null;
+            prm.optimizer = null;
+            prm.batchOptimizer = new AdaGradComidL2(sgdPrm);
         } else if (optimizer == Optimizer.FOBOS) {
             SGDFobosPrm sgdPrm = new SGDFobosPrm();
             setSgdPrm(sgdPrm);
