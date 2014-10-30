@@ -305,7 +305,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup = get_annotation_as_train(ace05_bn_nw)
             for evl in [eval_pm13 + ReExpParams(entityTypeRepl="BROWN"), 
                         eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
-                        eval_types13, eval_ng14]: #, eval_types7]:
+                        eval_types13]: # eval_ng14, eval_types7]:
                 for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
                                   (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
                                   (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
