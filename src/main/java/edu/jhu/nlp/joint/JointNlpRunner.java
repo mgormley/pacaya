@@ -715,6 +715,7 @@ public class JointNlpRunner {
             } else if (optimizer == Optimizer.ADAGRAD){
                 AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
+                adaGradPrm.constantAddend = adaDeltaConstantAddend;
                 sgdPrm.sched = new AdaGradSchedule(adaGradPrm);
             } else if (optimizer == Optimizer.ADADELTA){
                 AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
