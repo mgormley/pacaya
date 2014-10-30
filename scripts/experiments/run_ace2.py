@@ -165,8 +165,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    featureHashMod=-1,
                    includeUnsupportedFeatures=True,
                    l2variance=40000,
-                   sgdBatchSize=20,
-                   sgdNumPasses=10,
+                   sgdBatchSize=7*4,
+                   sgdNumPasses=20,
                    useRelationSubtype=False,
                    cacheType="MEMORY_STORE", # Store all the examples in memory.
                    predAts="REL_LABELS",
@@ -189,8 +189,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         useEmbeddingFeatures=True,
                         useZhou05Features=True)
         defaults.update(optimizer="ADAGRAD_COMID", adaGradEta=0.05, adaGradConstantAddend=1, 
-                     sgdAutoSelectLr=True, regularizer="NONE", sgdNumPasses=20,
-                     sgdBatchSize=30)
+                     sgdAutoSelectLr=True, regularizer="NONE")
         #defaults += g.lbfgs + ReExpParams()
         
         # Datasets
