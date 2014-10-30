@@ -630,9 +630,9 @@ public class RelObsFe implements ObsFeatureExtractor {
             for (int b=c1+1; b<=c2-1; b++) {
                 int i = chunkHeads[b];
                 addEmbFeat("chunk_head", i, fv);
-                addEmbFeat("chunk_head"+ne1, i, fv);
-                addEmbFeat("chunk_head"+ne2, i, fv);
-                addEmbFeat("chunk_head"+ne1ne2, i, fv);
+                addEmbFeat("chunk_head-t1"+ne1, i, fv);
+                addEmbFeat("chunk_head-t2"+ne2, i, fv);
+                addEmbFeat("chunk_head-t1t2"+ne1ne2, i, fv);
             }
             
         case FULL_NO_CHUNKS:
@@ -643,9 +643,9 @@ public class RelObsFe implements ObsFeatureExtractor {
             Span btwn = Span.getSpanBtwn(m1span, m2span);
             for (int i=btwn.start(); i<btwn.end(); i++) {
                 addEmbFeat("in_between", i, fv);
-                addEmbFeat("in_between"+ne1, i, fv);
-                addEmbFeat("in_between"+ne2, i, fv);
-                addEmbFeat("in_between"+ne1ne2, i, fv);
+                addEmbFeat("in_between-t1"+ne1, i, fv);
+                addEmbFeat("in_between-t2"+ne2, i, fv);
+                addEmbFeat("in_between-t1t2"+ne1ne2, i, fv);
             }
     
             //     - on_path
@@ -658,9 +658,9 @@ public class RelObsFe implements ObsFeatureExtractor {
                 for (Pair<Integer,DepTree.Dir> pair : depPath) {
                     int i = pair.get1();
                     addEmbFeat("on_path", i, fv);
-                    addEmbFeat("on_path"+ne1, i, fv);
-                    addEmbFeat("on_path"+ne2, i, fv);
-                    addEmbFeat("on_path"+ne1ne2, i, fv);
+                    addEmbFeat("on_path-t1"+ne1, i, fv);
+                    addEmbFeat("on_path-t2"+ne2, i, fv);
+                    addEmbFeat("on_path-t1t2"+ne1ne2, i, fv);
                 }
             } else {
                 log.warn("No dependency path between mention heads");
@@ -688,16 +688,16 @@ public class RelObsFe implements ObsFeatureExtractor {
             //     - ne1_head+ne1
             //     - ne1_head+ne2
             //     - ne1_head+ne1+ne2
-            addEmbFeat("ne1_head"+ne1,    m1.getHead(), fv);
-            addEmbFeat("ne1_head"+ne2,    m1.getHead(), fv);
-            addEmbFeat("ne1_head"+ne1ne2, m1.getHead(), fv);
+            addEmbFeat("ne1_head-t1"+ne1,    m1.getHead(), fv);
+            addEmbFeat("ne1_head-t2"+ne2,    m1.getHead(), fv);
+            addEmbFeat("ne1_head-t1t2"+ne1ne2, m1.getHead(), fv);
             
             //     - ne2_head+ne1
             //     - ne2_head+ne2
             //     - ne2_head+ne1+ne2
-            addEmbFeat("ne2_head"+ne1,    m2.getHead(), fv);
-            addEmbFeat("ne2_head"+ne2,    m2.getHead(), fv);
-            addEmbFeat("ne2_head"+ne1ne2, m2.getHead(), fv);
+            addEmbFeat("ne2_head-t1"+ne1,    m2.getHead(), fv);
+            addEmbFeat("ne2_head-t2"+ne2,    m2.getHead(), fv);
+            addEmbFeat("ne2_head-t1t2"+ne1ne2, m2.getHead(), fv);
             
         case HEAD_ONLY:
             //     - ne1_head: true if is the head of the first entity
