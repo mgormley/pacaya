@@ -29,6 +29,7 @@ import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
 import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
+import edu.jhu.nlp.relations.RelationsOptions.EntityTypeRepl;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
@@ -87,11 +88,19 @@ public class RelObsFe implements ObsFeatureExtractor {
         // Set entity types to be Brown cluster tags if missing.
         NerMention ne1 = local.getNe1();
         if (ne1.getEntityType() == null) {
-            ne1.setEntityType(sent.getCluster(ne1.getHead()));
+            if (RelationsOptions.entityTypeRepl == EntityTypeRepl.BROWN) {
+                ne1.setEntityType(sent.getCluster(ne1.getHead()));
+            } else {
+                ne1.setEntityType("NOTYPE");
+            }
         }
         NerMention ne2 = local.getNe2();
         if (ne2.getEntityType() == null) {
-            ne2.setEntityType(sent.getCluster(ne2.getHead()));
+            if (RelationsOptions.entityTypeRepl == EntityTypeRepl.BROWN) {
+                ne2.setEntityType(sent.getCluster(ne2.getHead()));
+            } else {
+                ne2.setEntityType("NOTYPE");
+            }
         }
         
         if (RelationsOptions.useZhou05Features) {

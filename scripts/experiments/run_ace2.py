@@ -187,7 +187,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         defaults.update(propTrainAsDev=0.0,
                         useEmbeddingFeatures=True,
-                        useZhou05Features=True)
+                        useZhou05Features=True,
+                        entityTypeRepl="NONE")
         defaults.update(optimizer="ADAGRAD_COMID", adaGradEta=0.05, adaGradConstantAddend=1, 
                      sgdAutoSelectLr=True, regularizer="NONE")
         #defaults += g.lbfgs + ReExpParams()
@@ -264,23 +265,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
-        if False:
+        hyps=0
+        if hyps==0:
             hyperparams = []
-            for _ in range(20):
-                l2variance = random.uniform(5000, 200000)
-                embScalar = random.uniform(2, 60)
-                hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))
-        elif False:            
+            for _ in range(10):
+                l2variance = random.uniform(20000, 60000)
+                embScalar = random.uniform(15, 25)
+                adaGradEta = random.uniform(0.025, 0.050)
+                hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar, 
+                                               adaGradEta=adaGradEta, sgdAutoSelectLr=False))
+        elif hyps==1:            
             hyperparams = []
             for l2variance in [10000, 20000, 40000, 80000, 160000]:
                 for embScalar in [8, 16, 32, 64]:
                     hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))            
-        elif False:
+        elif hyps==2:
             hyperparams = []
             for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
                 for embScalar in [8, 16, 32, 64]:
                     hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar, sgdAutoSelectLr=False))          
-        elif True:
+        elif hyps==3:
             hyperparams = []
             for l2variance in [20000, 40000, 60000]:
                 for embScalar in [15, 20, 25]:
@@ -299,14 +303,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''
             root = RootStage()
             setup = get_annotation_as_train(ace05_bn_nw)
-            for evl in [eval_pm13, eval_types13, eval_ng14]: #, eval_types7]:
+            for evl in [eval_pm13 + ReExpParams(entityTypeRepl="BROWN"), 
+                        eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                        eval_types13, eval_ng14]: #, eval_types7]:
                 for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
                                   (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
                                   (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
                                   (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
                                   ]:
                     for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                        for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
+                        for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full_noch, feats_full, feats_emb_only]: 
                             for hyperparam in hyperparams:
                                 exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
                                 root.add_dependent(exp)

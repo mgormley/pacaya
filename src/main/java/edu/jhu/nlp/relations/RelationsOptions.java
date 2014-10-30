@@ -6,6 +6,8 @@ public class RelationsOptions {
 
     public enum EmbFeatType { HEAD_ONLY, HEAD_TYPE, FULL_NO_CHUNKS, FULL }
 
+    public enum EntityTypeRepl { BROWN, NONE };
+    
     // Relation settings.
     @Opt(hasArg=true, description="Whether to predict the roles for the arguments (i.e. direction of the relation).")
     public static boolean predictArgRoles = true;
@@ -15,6 +17,8 @@ public class RelationsOptions {
     public static int maxInterveningEntities = Integer.MAX_VALUE;
     @Opt(hasArg=true, description="Whether to remove entity types from mentions (odd setting, but needed for compat w/PM13).")
     public static boolean removeEntityTypes = false;
+    @Opt(hasArg=true, description="What to replace removed entity types with.")
+    public static EntityTypeRepl entityTypeRepl = EntityTypeRepl.NONE;
     @Opt(hasArg=true, description="Whether to shorten entity mention spans following Zhou et al. (2005)")
     public static boolean shortenEntityMentions = true;
     
