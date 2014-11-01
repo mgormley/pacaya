@@ -45,29 +45,95 @@ def df_to_exp_list(df):
 def hyperparam_argmax(exp_list, train_keys, hyperparam_keys, argmax_key):
     '''Groups by all train_keys except for the hyperparam_keys. 
     Then takes the argmax of each group over argmax_key.
-    '''
+    '''    
+
     # Check the keys for correctness
+    all_keys = get_all_keys(exp_list)
     assert argmax_key not in train_keys
-    assert argmax_key in get_all_keys(exp_list)
+    assert argmax_key in all_keys
     for key in hyperparam_keys: assert key in train_keys
-    
+
     # Convert to a DataFrame
     df = exp_list_to_df(exp_list)
-    
+
+    # Fill train columns with NA string.
+    for key in all_keys:
+        df[key].fillna("MISSING", inplace=True)
+        if key != argmax_key:
+            df[key] = df[key].astype(str)
     # Group by the experiment parameters excluding the hyperparameters.
     group_keys = list(set(train_keys) - set(hyperparam_keys))
     grp = df.groupby(group_keys)
-
+    
     # Argmax over argmax_key
-    df = df.ix[grp[argmax_key].idxmax(),:]
+    dfam = df.ix[grp[argmax_key].idxmax(),:]
 
-    return df_to_exp_list(df)
+    print "Groups:"
+    for g in grp.groups:
+        print "\t",str(g)
+    print "Train keys:" 
+    for key in train_keys: print "\t",key
+    print "Group keys:" 
+    for key in group_keys: print "\t",key
+    print "Group keys with unique values:"
+    for key in group_keys:
+        if len(df[key]) == len(set(df[key])):
+            print "\t",key
+    print "Hyperparam keys:"
+    for key in hyperparam_keys: print "\t",key
+    print "Argmax key:"
+    print "\t",argmax_key
+    print "Num exps = %d Num groups = %d Num in df = %d" % (len(exp_list), len(grp.groups), len(dfam))
+
+    #import ipdb; ipdb.set_trace() # drop into an IPython session
+    #from IPython import embed; embed() # drop into an IPython session.
+    
+    return df_to_exp_list(dfam)
 
 class HyperParamArgmaxScraper(Scraper):
     
     def __init__(self, options):
         Scraper.__init__(self, options)
         self.options = options
+
+    def scrape_exp(self, exp, exp_dir, stdout_file):
+        '''TODO: Remove this method.'''
+        if not os.path.exists(stdout_file):
+            return
+        
+        stdout_lines = self.read_stdout_lines(stdout_file)
+        
+        _, _, elapsed = get_time(stdout_lines)
+        exp.update(elapsed = elapsed)
+        ## exp.update(hours = to_int(get_group1(stdout_lines, "^(\d+) \[main\]", -1)) / 1000.0 / 60.0 / 60.0)
+
+        # Get stats about train/dev/test datasets.
+        exp.update(trainNumSentences = to_int(get_following_literal(stdout_lines, "Num train sentences: ", -1)))
+        exp.update(devNumSentences = to_int(get_following_literal(stdout_lines, "Num dev sentences: ", -1)))
+        exp.update(testNumSentences = to_int(get_following_literal(stdout_lines, "Num test sentences: ", -1)))
+        
+        exp.update(trainNumInstances = to_int(get_following_literal(stdout_lines, "Num train instances: ", -1)))
+        exp.update(devNumInstances = to_int(get_following_literal(stdout_lines, "Num dev instances: ", -1)))
+        exp.update(testNumInstances = to_int(get_following_literal(stdout_lines, "Num test instances: ", -1)))
+
+        exp.update(trainNumFeatures = to_int(get_following_literal(stdout_lines, "Number of train features after thresholding: ", -1)))
+        exp.update(trainNumLabels = to_int(get_following_literal(stdout_lines, "Number of train labels: ", -1)))
+        
+        # Get train/dev/test results.
+        exp.update(trainTruePositives = to_int(get_following_literal(stdout_lines, "Num true positives on train: ", -1)))
+        exp.update(trainPrecision = get_following_literal(stdout_lines, "Precision on train: ", -1))
+        exp.update(trainRecall = get_following_literal(stdout_lines, "Recall on train: ", -1))
+        exp.update(trainF1 = get_following_literal(stdout_lines, "F1 on train: ", -1))
+        
+        exp.update(devTruePositives = to_int(get_following_literal(stdout_lines, "Num true positives on dev: ", -1)))
+        exp.update(devPrecision = get_following_literal(stdout_lines, "Precision on dev: ", -1))
+        exp.update(devRecall = get_following_literal(stdout_lines, "Recall on dev: ", -1))
+        exp.update(devF1 = get_following_literal(stdout_lines, "F1 on dev: ", -1))
+                
+        exp.update(testTruePositives = to_int(get_following_literal(stdout_lines, "Num true positives on test: ", -1)))
+        exp.update(testPrecision = get_following_literal(stdout_lines, "Precision on test: ", -1))
+        exp.update(testRecall = get_following_literal(stdout_lines, "Recall on test: ", -1))
+        exp.update(testF1 = get_following_literal(stdout_lines, "F1 on test: ", -1))
 
     def process_all(self, orig_list, exp_list):
         train_keys = set(get_all_keys(orig_list)) - set()
