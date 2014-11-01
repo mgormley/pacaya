@@ -271,7 +271,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
-        hyps=0
+        hyps=4
         if hyps==0:
             hyperparams = []
             for _ in range(10):
@@ -296,9 +296,41 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for embScalar in [15, 20, 25]:
                     for adaGradEta in [0.025, 0.05]:
                         hyperparams.append(ReExpParams(l2variance=l2variance, adaGradEta=adaGradEta, 
-                                                       embScalar=embScalar, sgdAutoSelectLr=False))          
+                                                       embScalar=embScalar, sgdAutoSelectLr=False))   
+        elif hyps==4:                   
+            hyperparams = []
+            num_hyp = 12
+            def uniform_range(minval, maxval, num):
+                rate = float(maxval - minval) / (num - 1.0)
+                return [minval + i*rate for i in range(num)]
+            def loguniform_range(minval, maxval, num):
+                minexp = math.log(minval)
+                maxexp = math.log(maxval)
+                return map(math.exp, uniform_range(minexp, maxexp, num))
+            def combine(hyp_lists):
+                num = len(hyp_lists[0])
+                for hl in hyp_lists:
+                    assert len(hl) == num
+                stride = 1
+                combo = None
+                for i, hl in enumerate(hyp_lists):
+                    if i == 0:
+                        combo = hl
+                    else:
+                        cur = 0
+                        for start in range(stride):
+                            for j in range(start, len(hl), stride):
+                                combo[j] += hl[cur]
+                                cur += 1
+                    stride += 1
+                return combo
+            hyp_lists = []
+            hyp_lists.append([ReExpParams(l2variance=x) for x in loguniform_range(1000, 200000, num_hyp)])
+            hyp_lists.append([ReExpParams(embScalar=x) for x in loguniform_range(8, 80, num_hyp)])
+            hyp_lists.append([ReExpParams(adaGradEta=x) for x in loguniform_range(0.005, 0.01, num_hyp)])
+            hyperparams = combine(hyp_lists)
         for x in hyperparams: print x
-        
+
         # ------------------------ EXPERIMENTS --------------------------
         
         
@@ -309,12 +341,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''
             root = RootStage()
             train = get_annotation_as_train(ace05_bn_nw)
-            for evl in [eval_pm13 + ReExpParams(entityTypeRepl="BROWN"), 
-                        eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
-                        eval_types13]: # eval_ng14, eval_types7]:
+            for evl in [eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                        eval_types13,
+                        eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
+                        ]: # eval_ng14, eval_types7]:
                 for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                    for feats in [feats_zhou, feats_zhou_head_only, feats_zhou_head_type, feats_zhou_full_noch, 
-                                  feats_zhou_full, feats_emb_only, feats_emb_only_noch]: 
+                    for feats in [feats_zhou, feats_zhou_head_only, feats_zhou_full_noch, feats_emb_only_noch]: 
+                        # SKIPPING: feats_zhou_head_type, feats_zhou_full, feats_emb_only 
                         for hyperparam in hyperparams:
                             dev = get_annotation_as_dev(ace05_bc_dev)
                             # CTS 
