@@ -335,7 +335,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
             hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
-                                      hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
+                                      hyperparam_keys=",".join(list(experiment_runner.get_all_keys(hyperparams))+['modelIn']),
                                       argmax_key='devRelF1')
             hypmax.add_prereqs(root.dependents)
             return root
