@@ -111,6 +111,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "ace-pm13",
+                    "ace-params",
                     "ace-lc",
                     "ace-opt",
                     "acl-feats",
@@ -242,11 +243,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults += bc_bllip
 
         # Models
-        feats_no_embed  = ReExpParams(modelName="zhou",           useEmbeddingFeatures=False)
-        feats_head_only = ReExpParams(modelName="zhou+head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
-        feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
-        feats_full_noch = ReExpParams(modelName="zhou+full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS")
-        feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
+        feats_head_only = ReExpParams(modelName="head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY", useZhou05Features=False)
+        feats_head_type = ReExpParams(modelName="head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE", useZhou05Features=False)
+        
+        feats_zhou  = ReExpParams(modelName="zhou",           useEmbeddingFeatures=False)
+        feats_zhou_head_only = ReExpParams(modelName="zhou+head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+        feats_zhou_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+        feats_zhou_full_noch = ReExpParams(modelName="zhou+full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS")
+        feats_zhou_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
+        feats_emb_only_noch  = ReExpParams(modelName="full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS", useZhou05Features=False)
         feats_emb_only  = ReExpParams(modelName="full",           useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
         defaults.set_incl_arg("modelName", False)
         
@@ -308,7 +313,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
                         eval_types13]: # eval_ng14, eval_types7]:
                 for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                    for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full_noch, feats_full, feats_emb_only]: 
+                    for feats in [feats_zhou, feats_zhou_head_only, feats_zhou_head_type, feats_zhou_full_noch, 
+                                  feats_zhou_full, feats_emb_only, feats_emb_only_noch]: 
                         for hyperparam in hyperparams:
                             dev = get_annotation_as_dev(ace05_bc_dev)
                             # CTS 
@@ -338,6 +344,28 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       hyperparam_keys=",".join(list(experiment_runner.get_all_keys(hyperparams))+['modelIn']),
                                       argmax_key='devRelF1')
             hypmax.add_prereqs(root.dependents)
+            return root
+                
+        elif self.expname == "ace-params":
+            '''Comparse # of model parameters
+            '''
+            root = RootStage()
+            train = get_annotation_as_train(ace05_bn_nw)
+            for evl in [#eval_pm13 + ReExpParams(entityTypeRepl="BROWN"), 
+                        eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                        #eval_types13,
+                        ]: # eval_ng14, eval_types7]:
+                for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                    for feats in [feats_head_only, feats_head_type]:
+                        dev = get_annotation_as_dev(ace05_bc_dev)
+                        # CTS 
+                        train = get_annotation_as_train(ace05_bn_nw)
+                        test = get_annotation_as_test(ace05_cts)                           
+                        exp_cts = defaults + evl + train + dev + test + embed + feats 
+                        root.add_dependent(exp_cts)
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
             return root
                 
         elif self.expname == "ace-lc":
