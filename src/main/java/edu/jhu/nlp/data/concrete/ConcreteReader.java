@@ -88,6 +88,7 @@ public class ConcreteReader {
 
     private ConcreteReaderPrm prm;
     private int numEntityMentions = 0;
+    private int numOverlapingMentions = 0;
     private int numSituationMentions = 0;
     
     public ConcreteReader(ConcreteReaderPrm prm) {
@@ -102,6 +103,7 @@ public class ConcreteReader {
             sents = sentsFromCommFile(inFile);
         }
         log.debug("Num entity mentions: " + numEntityMentions);
+        log.debug("Num overlapping entity mentions: " + numOverlapingMentions);        
         log.debug("Num situation mentions: " + numSituationMentions);
         return sents;
     }
@@ -230,6 +232,7 @@ public class ConcreteReader {
         for (int i=0; i<tmpSents.size(); i++) {
             AnnoSentence aSent = tmpSents.get(i);
             NerMentions ner = new NerMentions(aSent.size(), mentions.get(i));
+            numOverlapingMentions += ner.getNumOverlapping();
             aSent.setNamedEntities(ner);
         }
         

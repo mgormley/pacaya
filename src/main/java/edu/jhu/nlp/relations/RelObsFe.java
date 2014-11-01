@@ -167,7 +167,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         // words in between
         // • WBO: other words in between except first and
         // last words when at least three words in between 
-        Span btwn = Span.getSpanBtwn(m1span, m2span);
+        Span btwn = new Span(m1.getHead()+1, m2.getHead());
         if (btwn.size() == 0) {
             addBinFeat(features, "wbNull");
         } else if (btwn.size() == 1) {
@@ -481,7 +481,9 @@ public class RelObsFe implements ObsFeatureExtractor {
     }
     
     public static int getNumBtwn(AnnoSentence sent, NerMention m1, NerMention m2) {
-        Span btwn = Span.getSpanBtwn(m1.getSpan(), m2.getSpan());
+        int m1h = m1.getHead();
+        int m2h = m2.getHead();
+        Span btwn = new Span(Math.min(m1h, m2h), Math.max(m1h, m2h));
         int numMentsBtwn = 0;
         for (NerMention m : sent.getNamedEntities()) {
             if (m != m1 && m != m2 && btwn.contains(m.getSpan().start())) {
@@ -649,7 +651,7 @@ public class RelObsFe implements ObsFeatureExtractor {
             //     - in_between+ne1 if in_between = T: ne1 is the entity type
             //     - in_between+ne2 if in_between = T
             //     - in_between+ne1+ne2 if in_between = T
-            Span btwn = Span.getSpanBtwn(m1span, m2span);
+            Span btwn = new Span(m1.getHead()+1, m2.getHead());
             for (int i=btwn.start(); i<btwn.end(); i++) {
                 addEmbFeat("in_between", i, fv);
                 addEmbFeat("in_between-t1"+ne1, i, fv);

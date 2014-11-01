@@ -1,6 +1,7 @@
 package edu.jhu.nlp.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -108,6 +109,28 @@ public class NerMentions implements Iterable<NerMention> {
 
     public void sort() {
         Collections.sort(ments);
+    }
+
+    // TODO: Maybe make this faster than O(n^2).
+    public int getNumOverlapping() {
+        boolean[] overlap = new boolean[ments.size()];
+        Arrays.fill(overlap, false);
+        int count = 0;
+        for (int i=0; i<ments.size(); i++) {
+            NerMention m1 = ments.get(i);
+            for (int j=i+1; j<ments.size(); j++) {
+                NerMention m2 = ments.get(j);
+                if (m1.getSpan().overlaps(m2.getSpan())) {
+                    if (overlap[i] == false) {
+                        overlap[i] = true;
+                        // TODO: Could mark and count j here too.
+                        count++;
+                        break;
+                    }
+                }
+            }
+        }
+        return count;
     }
 
 }
