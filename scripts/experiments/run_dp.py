@@ -48,7 +48,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-erma",
                     "dp-erma-tune",
                     "dp-init-model", 
-                    "dp-opt-avg",                   
+                    "dp-opt-avg",  
+                    "dp-opt",                 
                     )
     
     def __init__(self, options):
@@ -133,8 +134,29 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
             
         # ------------------------ EXPERIMENTS --------------------------
+                
+        if self.expname is None:
+            raise Exception("expname must be specified")
         
-        if self.expname == "dp-opt-avg":
+        elif self.expname == "dp-opt":
+            # Compares learning with and without parameter averaging.
+            exps = []
+            g.defaults += g.cll
+            g.defaults.update(trainMaxSentenceLength=20, devMaxSentenceLength=20, 
+                              testMaxSentenceLength=20, work_mem_megs=5000,
+                              regularizer="NONE", l2variance=16000)
+            g.defaults.remove("printModel")
+            g.defaults.remove("modelOut")
+            lang_short = "en"
+            gl = g.langs[lang_short]
+            for optimizer in [g.fobos, g.sgd, g.adagrad, g.adagrad_comid]:
+                for sgdEarlyStopping in [True, False]:
+                    exp = g.defaults + gl.cx_data + g.first_order + optimizer
+                    exp.update(sgdEarlyStopping=sgdEarlyStopping)
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "dp-opt-avg":
             # Compares learning with and without parameter averaging.
             exps = []
             g.defaults += g.cll

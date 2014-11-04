@@ -437,7 +437,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''Compares various methods of optimization for the simplest ACE log-linear model.'''
             root = RootStage()
             setup = get_annotation_as_train(ace05_bn_nw)
-            setup += cbow_nyt11_en + eval_pm13 + feats_no_embed
+            setup += cbow_nyt11_en + eval_pm13 + feats_zhou
             setup += get_annotation_as_dev(ace05_bc_dev)
             setup += get_annotation_as_test(ace05_cts)
             defaults.remove("printModel")

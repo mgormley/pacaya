@@ -314,6 +314,8 @@ public class JointNlpRunner {
     public static boolean sgdComputeValueOnNonFinalIter = true;
     @Opt(hasArg=true, description="Whether to do parameter averaging.")
     public static boolean sgdAveraging = false;
+    @Opt(hasArg=true, description="Whether to do early stopping.")
+    public static boolean sgdEarlyStopping = true;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -815,6 +817,7 @@ public class JointNlpRunner {
         prm.autoSelectFreq = sgdAutoSelecFreq;
         prm.computeValueOnNonFinalIter = sgdComputeValueOnNonFinalIter;
         prm.averaging = sgdAveraging; 
+        prm.earlyStopping = sgdEarlyStopping; 
         // Make sure we correctly set the schedule somewhere else.
         prm.sched = null;
     }

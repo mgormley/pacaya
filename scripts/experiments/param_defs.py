@@ -260,8 +260,9 @@ class ParamDefinitions():
     def _define_groups_optimizer(self, g):
         g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.1, sgdAutoSelectLr=True)
         g.asgd = g.sgd + SrlExpParams(optimizer="ASGD")
-        g.fobos = g.sgd + SrlExpParams(optimizer="FOBOS")
-        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=True)
+        g.fobos = g.sgd + SrlExpParams(optimizer="FOBOS", regularizer="NONE")
+        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=True)        
+        g.adagrad_comid = g.adagrad + SrlExpParams(optimizer="ADAGRAD_COMID", regularizer="NONE")
         g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0), sgdAutoSelectLr=False)
         g.lbfgs = SrlExpParams(optimizer="LBFGS")
         
