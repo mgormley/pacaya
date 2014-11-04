@@ -56,8 +56,7 @@ public class Var implements Comparable<Var>, Serializable {
         }
         this.type = type;
         this.numStates = numStates;
-        // Intern the name, but not the state names.
-        this.name = name.intern();
+        this.name = name;
         this.stateNames = stateNames;
     }
 

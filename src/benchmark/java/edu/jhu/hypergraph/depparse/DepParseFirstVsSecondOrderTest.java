@@ -180,6 +180,7 @@ public class DepParseFirstVsSecondOrderTest {
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
+        fgPrm.useProjDepTreeFactor = true;        
         fgPrm.grandparentFactors = true;
         fgPrm.siblingFactors = true;    
         DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(fgPrm);

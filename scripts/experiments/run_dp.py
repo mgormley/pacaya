@@ -143,7 +143,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.remove("printModel")
             g.defaults.remove("modelOut")
             lang_short = "en"
-            gl = g.langs[lang_short]            
+            gl = g.langs[lang_short]
             for optimizer in [g.asgd, g.fobos, g.sgd, g.adagrad]:
                 for sgdAveraging in [True, False]:
                     for regularizer in ["NONE", "L2"]:

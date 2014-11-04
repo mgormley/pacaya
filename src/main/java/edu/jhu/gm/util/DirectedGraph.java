@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
+import org.apache.log4j.Logger;
+
 /**
  * Undirected bipartite graph.
  * 
@@ -14,6 +16,7 @@ import java.util.Queue;
  */
 public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends DirectedGraph<N,E>.Edge> implements Serializable {
     
+    private static final Logger log = Logger.getLogger(DirectedGraph.class);
     private static final long serialVersionUID = 1L;
 
     // Due to a compiler error in Java 1.7, the fields in Node/Edge are package
