@@ -149,11 +149,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.remove("modelOut")
             lang_short = "en"
             gl = g.langs[lang_short]
-            for optimizer in [g.fobos, g.sgd, g.adagrad, g.adagrad_comid]:
+            for optimizer in [g.sgd, g.adagrad, g.adagrad_comid]:
                 for sgdEarlyStopping in [True, False]:
-                    exp = g.defaults + gl.cx_data + g.first_order + optimizer
-                    exp.update(sgdEarlyStopping=sgdEarlyStopping)
-                    exps.append(exp)
+                    for sgdBatchSize in [1, 30]:
+                        exp = g.defaults + gl.cx_data + g.first_order + optimizer
+                        exp.update(sgdEarlyStopping=sgdEarlyStopping, sgdBatchSize=sgdBatchSize)
+                        if sgdBatchSize < exp.get("threads"): exp.update(threads=sgdBatchSize)
+                        exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-opt-avg":
