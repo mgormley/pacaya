@@ -30,7 +30,8 @@ public class FastDepParseFe {
      * H = head
      * M = modifier
      * W = word
-     * P = pos tag
+     * P = POS tag
+     * Q = coarse POS tag
      * W5 = prefix of length 5
      * l = token to the left of following position
      * r = token to the right of following position
@@ -39,11 +40,7 @@ public class FastDepParseFe {
     private static class ArcTs {
         private static int templ = 0;
         protected static byte next() {
-            if (0 <= templ && templ <= BYTE_MAX) {
-                return SafeCast.safeIntToUnsignedByte(templ++);
-            } else {
-                throw new IllegalStateException("Too many templates.");
-            }
+            return SafeCast.safeIntToUnsignedByte(templ++);
         }
         // McDonald et al. (2005) features templates.
         public static final byte HW = next();
@@ -71,7 +68,7 @@ public class FastDepParseFe {
         public static final byte HP_MP_rMP = next();
         public static final byte HP_rHP_MP = next();
         public static final byte BTWNP_HP_MP = next();
-        public static final byte HW5_HP_CP = next();
+        public static final byte HW5_HP_MP = next();
         public static final byte HW5_HP = next();
         public static final byte HW5 = next();
         public static final byte MW5_HP_MP = next();
@@ -81,6 +78,34 @@ public class FastDepParseFe {
         public static final byte HW5_MW5_MP = next();
         public static final byte HW5_MW5_HP = next();
         public static final byte HW5_MW5 = next();
+        // Coarse POS tag versions of McDonald et al. (2005) features templates.
+        public static final byte HW_HQ = next();
+        public static final byte HQ = next();
+        public static final byte MW_MQ = next();
+        public static final byte MQ = next();
+        public static final byte HW_MW_HQ_MQ = next();
+        public static final byte MW_HQ_MQ = next();
+        public static final byte HW_MW_MQ = next();
+        public static final byte HW_HQ_MQ = next();
+        public static final byte HW_MW_HQ = next();
+        public static final byte HQ_MQ = next();
+        public static final byte HQ_rHQ_lMQ_MQ = next();
+        public static final byte lHQ_HQ_lMQ_MQ = next();
+        public static final byte HQ_rHQ_MQ_rMQ = next();
+        public static final byte lHQ_HQ_MQ_rMQ = next();
+        public static final byte lHQ_HQ_MQ = next();
+        public static final byte HQ_lMQ_MQ = next();
+        public static final byte HQ_MQ_rMQ = next();
+        public static final byte HQ_rHQ_MQ = next();
+        public static final byte BTWNP_HQ_MQ = next();
+        public static final byte HW5_HQ_MQ = next();
+        public static final byte HW5_HQ = next();
+        public static final byte MW5_HQ_MQ = next();
+        public static final byte MW5_MQ = next();
+        public static final byte HW5_MW5_HQ_MQ = next();
+        public static final byte HW5_MW5_MQ = next();
+        public static final byte HW5_MW5_HQ = next();
+
     }
     
     /** 
@@ -89,24 +114,22 @@ public class FastDepParseFe {
     private static class TriTs {
         private static int templ = 0;
         protected static byte next() {
-            if (0 <= templ && templ <= BYTE_MAX) {
-                return SafeCast.safeIntToUnsignedByte(templ++);
-            } else {
-                throw new IllegalStateException("Too many templates.");
-            }
+            return SafeCast.safeIntToUnsignedByte(templ++);
         }
-        public static final byte HQ_SQ = 0;
-        public static final byte MQ_SQ = 0;
-        public static final byte HQ_MQ = 0;
-        public static final byte SW_HQ = 0;
-        public static final byte SW_MQ = 0;
-        public static final byte HW_SQ = 0;
-        public static final byte MW_SQ = 0;
-        public static final byte MW_HQ = 0;
-        public static final byte HW_MQ = 0;
-        public static final byte HW_SW = 0;
-        public static final byte MW_SW = 0;
-        public static final byte HW_MW = 0;
+        // Carreras et al. (2007) templates.
+        public static final byte HQ_MQ_SQ = next();
+        public static final byte HQ_SQ = next();
+        public static final byte MQ_SQ = next();
+        public static final byte HQ_MQ = next();
+        public static final byte SW_HQ = next();
+        public static final byte SW_MQ = next();
+        public static final byte HW_SQ = next();
+        public static final byte MW_SQ = next();
+        public static final byte MW_HQ = next();
+        public static final byte HW_MQ = next();
+        public static final byte HW_SW = next();
+        public static final byte MW_SW = next();
+        public static final byte HW_MW = next();
         
     }
     
@@ -121,7 +144,8 @@ public class FastDepParseFe {
     }
     
     /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." */
-    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, FeatureVector feats, boolean basicOnly) {
+    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, FeatureVector feats, 
+            boolean basicOnly, boolean coarseTagFeats) {
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
         // by c (for child).
         short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
@@ -173,36 +197,49 @@ public class FastDepParseFe {
                 flags |= binnedDist << 5; // 3 bits. (8 total)
             }
             
-            // Bias features.
-            //    # TODO: It's not clear whether these were included in McDonald et al. (2005), 
-            //    # but Koo et al. (2008) had them.
-            addFeat(feats, encodeFeatureB___(ArcTs.BIAS, flags, (byte)0));
-            if (mode == 0) {
-                addFeat(feats, encodeFeatureB___(ArcTs.DIR, flags, direction));
-                addFeat(feats, encodeFeatureB___(ArcTs.BIN_DIST, flags, binnedDist));
+            extractMstFeaturesWithPos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
+                    pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binnedDist, direction, mode,
+                    flags);
+            if (coarseTagFeats) {
+                extractMstFeaturesWithCpos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
+                        pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binnedDist, direction, mode,
+                        flags);
             }
-            
-            //    # Basic Unigram Features
-            addFeat(feats, encodeFeatureSB__(ArcTs.HW_HP, flags, pWord, pPos));
-            addFeat(feats, encodeFeatureS___(ArcTs.HW, flags, pWord));
-            addFeat(feats, encodeFeatureB___(ArcTs.HP, flags, pPos));
-            addFeat(feats, encodeFeatureSB__(ArcTs.MW_MP, flags, cWord, cPos));
-            addFeat(feats, encodeFeatureS___(ArcTs.MW, flags, cWord));
-            addFeat(feats, encodeFeatureB___(ArcTs.MP, flags, cPos));
-            
-            //    # Basic Bigram Features
-            addFeat(feats, encodeFeatureSSBB(ArcTs.HW_MW_HP_MP, flags, pWord, cWord, pPos, cPos));
-            addFeat(feats, encodeFeatureSBB_(ArcTs.MW_HP_MP, flags, cWord, pPos, cPos));
-            addFeat(feats, encodeFeatureSSB_(ArcTs.HW_MW_MP, flags, pWord, cWord, cPos));
-            addFeat(feats, encodeFeatureSBB_(ArcTs.HW_HP_MP, flags, pWord, pPos, cPos));
-            addFeat(feats, encodeFeatureSSB_(ArcTs.HW_MW_HP, flags, pWord, cWord, pPos));
-            addFeat(feats, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
-            addFeat(feats, encodeFeatureBB__(ArcTs.HP_MP, flags, pPos, cPos));            
-            
-            if (basicOnly) {
-                continue;   
-            }
-            
+        }
+    }
+
+    /** Regular POS tag versions of the MST features. */
+    private static void extractMstFeaturesWithPos(IntAnnoSentence sent, int p, int c, FeatureVector feats,
+            boolean basicOnly, short pWord, short cWord, byte pPos, byte cPos, short pPrefix, short cPrefix,
+            boolean pPrefixFeats, boolean cPrefixFeats, byte lpPos, byte lcPos, byte rpPos, byte rcPos, int distance,
+            byte binnedDist, byte direction, byte mode, byte flags) {
+        // Bias features.
+        //    # TODO: It's not clear whether these were included in McDonald et al. (2005), 
+        //    # but Koo et al. (2008) had them.
+        addFeat(feats, encodeFeatureB___(ArcTs.BIAS, flags, (byte)0));
+        if (mode == 0) {
+            addFeat(feats, encodeFeatureB___(ArcTs.DIR, flags, direction));
+            addFeat(feats, encodeFeatureB___(ArcTs.BIN_DIST, flags, binnedDist));
+        }
+        
+        //    # Basic Unigram Features
+        addFeat(feats, encodeFeatureSB__(ArcTs.HW_HP, flags, pWord, pPos));
+        addFeat(feats, encodeFeatureS___(ArcTs.HW, flags, pWord));
+        addFeat(feats, encodeFeatureB___(ArcTs.HP, flags, pPos));
+        addFeat(feats, encodeFeatureSB__(ArcTs.MW_MP, flags, cWord, cPos));
+        addFeat(feats, encodeFeatureS___(ArcTs.MW, flags, cWord));
+        addFeat(feats, encodeFeatureB___(ArcTs.MP, flags, cPos));
+        
+        //    # Basic Bigram Features
+        addFeat(feats, encodeFeatureSSBB(ArcTs.HW_MW_HP_MP, flags, pWord, cWord, pPos, cPos));
+        addFeat(feats, encodeFeatureSBB_(ArcTs.MW_HP_MP, flags, cWord, pPos, cPos));
+        addFeat(feats, encodeFeatureSSB_(ArcTs.HW_MW_MP, flags, pWord, cWord, cPos));
+        addFeat(feats, encodeFeatureSBB_(ArcTs.HW_HP_MP, flags, pWord, pPos, cPos));
+        addFeat(feats, encodeFeatureSSB_(ArcTs.HW_MW_HP, flags, pWord, cWord, pPos));
+        addFeat(feats, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
+        addFeat(feats, encodeFeatureBB__(ArcTs.HP_MP, flags, pPos, cPos));            
+        
+        if (!basicOnly) {            
             //    # Surrounding Word POS Features
             addFeat(feats, encodeFeatureBBBB(ArcTs.HP_rHP_lMP_MP, flags, pPos, rpPos, lcPos, cPos));
             addFeat(feats, encodeFeatureBBBB(ArcTs.lHP_HP_lMP_MP, flags, lpPos, pPos, lcPos, cPos));
@@ -234,7 +271,7 @@ public class FastDepParseFe {
             //    # These features are added for both the entire words as well as the
             //    # 5-gram prefix if the word is longer than 5 characters.
             if (pPrefixFeats) {
-                addFeat(feats, encodeFeatureSBB_(ArcTs.HW5_HP_CP, flags, pPrefix, pPos, cPos));
+                addFeat(feats, encodeFeatureSBB_(ArcTs.HW5_HP_MP, flags, pPrefix, pPos, cPos));
                 addFeat(feats, encodeFeatureSB__(ArcTs.HW5_HP, flags, pPrefix, pPos));
                 addFeat(feats, encodeFeatureS___(ArcTs.HW5, flags, pPrefix));
             }
@@ -248,6 +285,89 @@ public class FastDepParseFe {
                 addFeat(feats, encodeFeatureSSB_(ArcTs.HW5_MW5_MP, flags, pPrefix, cPrefix, cPos));
                 addFeat(feats, encodeFeatureSSB_(ArcTs.HW5_MW5_HP, flags, pPrefix, cPrefix, pPos));
                 addFeat(feats, encodeFeatureSS__(ArcTs.HW5_MW5, flags, pPrefix, cPrefix));
+            }
+        }
+    }
+    
+    /** Coarse POS tag versions of the MST features. */
+    private static void extractMstFeaturesWithCpos(IntAnnoSentence sent, int p, int c, FeatureVector feats,
+            boolean basicOnly, short pWord, short cWord, byte pPos_NOTUSED, byte cPos_NOTUSED, short pPrefix,
+            short cPrefix, boolean pPrefixFeats, boolean cPrefixFeats, byte lpPos_NOTUSED, byte lcPos_NOTUSED, 
+            byte rpPos_NOTUSED, byte rcPos_NOTUSED,
+            int distance, byte binnedDist, byte direction, byte mode, byte flags) {
+        byte pCpos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
+        byte cCpos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
+
+        // Surrounding words / POS tags. 
+        int sentLen = sent.size();
+        byte lpCpos = (p-1 < 0) ? TOK_START_INT : sent.getCposTag(p-1);
+        byte lcCpos = (c-1 < 0) ? TOK_START_INT : sent.getCposTag(c-1);
+        byte rpCpos = (p+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(p+1);
+        byte rcCpos = (c+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(c+1);
+        
+        //    # Basic Unigram Features
+        addFeat(feats, encodeFeatureSB__(ArcTs.HW_HQ, flags, pWord, pCpos));
+        // word only: addFeat(feats, encodeFeatureS___(ArcTs.HW, flags, pWord));
+        addFeat(feats, encodeFeatureB___(ArcTs.HQ, flags, pCpos));
+        addFeat(feats, encodeFeatureSB__(ArcTs.MW_MQ, flags, cWord, cCpos));
+        // word only: addFeat(feats, encodeFeatureS___(ArcTs.MW, flags, cWord));
+        addFeat(feats, encodeFeatureB___(ArcTs.MQ, flags, cCpos));
+        
+        //    # Basic Bigram Features
+        addFeat(feats, encodeFeatureSSBB(ArcTs.HW_MW_HQ_MQ, flags, pWord, cWord, pCpos, cCpos));
+        addFeat(feats, encodeFeatureSBB_(ArcTs.MW_HQ_MQ, flags, cWord, pCpos, cCpos));
+        addFeat(feats, encodeFeatureSSB_(ArcTs.HW_MW_MQ, flags, pWord, cWord, cCpos));
+        addFeat(feats, encodeFeatureSBB_(ArcTs.HW_HQ_MQ, flags, pWord, pCpos, cCpos));
+        addFeat(feats, encodeFeatureSSB_(ArcTs.HW_MW_HQ, flags, pWord, cWord, pCpos));
+        // word only: addFeat(feats, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
+        addFeat(feats, encodeFeatureBB__(ArcTs.HQ_MQ, flags, pCpos, cCpos));            
+        
+        if (!basicOnly) {            
+            //    # Surrounding Word POS Features
+            addFeat(feats, encodeFeatureBBBB(ArcTs.HQ_rHQ_lMQ_MQ, flags, pCpos, rpCpos, lcCpos, cCpos));
+            addFeat(feats, encodeFeatureBBBB(ArcTs.lHQ_HQ_lMQ_MQ, flags, lpCpos, pCpos, lcCpos, cCpos));
+            addFeat(feats, encodeFeatureBBBB(ArcTs.HQ_rHQ_MQ_rMQ, flags, pCpos, rpCpos, cCpos, rcCpos));
+            addFeat(feats, encodeFeatureBBBB(ArcTs.lHQ_HQ_MQ_rMQ, flags, lpCpos, pCpos, cCpos, rcCpos));
+            
+            //    # Backed-off versions of Surrounding Word POS Features
+            addFeat(feats, encodeFeatureBBB_(ArcTs.lHQ_HQ_MQ, flags, lpCpos, pCpos, cCpos));
+            addFeat(feats, encodeFeatureBBB_(ArcTs.HQ_lMQ_MQ, flags, pCpos, lcCpos, cCpos));
+            addFeat(feats, encodeFeatureBBB_(ArcTs.HQ_MQ_rMQ, flags, pCpos, cCpos, rcCpos));
+            addFeat(feats, encodeFeatureBBB_(ArcTs.HQ_rHQ_MQ, flags, pCpos, rpCpos, cCpos));
+            
+            //    # In Between POS Features
+            int leftTok  = (p < c) ? p : c;
+            int rightTok = (p > c) ? p : c;
+            // TODO: Switch to bytes.
+            short[] btwnPos = new short[distance+1];
+            int j = 0;
+            for (int i=leftTok; i<=rightTok; i++) {
+                btwnPos[j++] = (i < 0) ? TOK_START_INT : sent.getPosTag(i);
+            }
+            ShortSort.sortAsc(btwnPos);
+            for (int i=0; i<btwnPos.length; i++) {
+                if (i == 0 || btwnPos[i] != btwnPos[i-1]) {
+                    addFeat(feats, encodeFeatureSBB_(ArcTs.BTWNP_HQ_MQ, flags, btwnPos[i], pCpos, cCpos));
+                }
+            }
+            
+            //    # These features are added for both the entire words as well as the
+            //    # 5-gram prefix if the word is longer than 5 characters.
+            if (pPrefixFeats) {
+                addFeat(feats, encodeFeatureSBB_(ArcTs.HW5_HQ_MQ, flags, pPrefix, pCpos, cCpos));
+                addFeat(feats, encodeFeatureSB__(ArcTs.HW5_HQ, flags, pPrefix, pCpos));
+                // word only: addFeat(feats, encodeFeatureS___(ArcTs.HW5, flags, pPrefix));
+            }
+            if (cPrefixFeats) {
+                addFeat(feats, encodeFeatureSBB_(ArcTs.MW5_HQ_MQ, flags, cPrefix, pCpos, cCpos));
+                addFeat(feats, encodeFeatureSB__(ArcTs.MW5_MQ, flags, cPrefix, cCpos));
+                // word only: addFeat(feats, encodeFeatureS___(ArcTs.MW5, flags, cPrefix));
+            }
+            if (pPrefixFeats || cPrefixFeats) {
+                addFeat(feats, encodeFeatureSSBB(ArcTs.HW5_MW5_HQ_MQ, flags, pPrefix, cPrefix, pCpos, cCpos));
+                addFeat(feats, encodeFeatureSSB_(ArcTs.HW5_MW5_MQ, flags, pPrefix, cPrefix, cCpos));
+                addFeat(feats, encodeFeatureSSB_(ArcTs.HW5_MW5_HQ, flags, pPrefix, cPrefix, pCpos));
+                // word only: addFeat(feats, encodeFeatureSS__(ArcTs.HW5_MW5, flags, pPrefix, cPrefix));
             }
         }
     }
@@ -318,13 +438,11 @@ public class FastDepParseFe {
         byte pCpos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
         byte cCpos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
         byte sCpos = (s < 0) ? TOK_WALL_INT : sent.getCposTag(s);
-        
-        byte templ = 0;
-        
+                
         // --- Triplet features. ----
         
         //    cpos(p) + cpos(c) + cpos(s)
-        addFeat(feats, encodeFeatureBBB_(templ++, flags, pCpos, cCpos, sCpos));
+        addFeat(feats, encodeFeatureBBB_(TriTs.HQ_MQ_SQ, flags, pCpos, cCpos, sCpos));
 
         // --- Pairwise features. ----
         

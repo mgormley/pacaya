@@ -43,6 +43,8 @@ public class DepParseSpeedTest {
      * on 11/03/14        s=2401 n=56427 tot= 848.30 t0=178566.46 t1=4282.88 t2=6269666.67 t3=6388.20 t4=1355.51 t5=22197.88
      * w/no interning of Var.name, FastMath.logAddTable=true, bpPrm.s = Algebras.REAL_ALGEBRA:
      *                    s=2401 n=56427 tot=1220.41 t0=191277.97 t1=5084.89 t2=28213500.00 t3=6462.09 t4=2346.24 t5=27565.71
+     * w/coarse POS tag feats:
+     *                    s=2401 n=56427 tot=1115.82 t0=122667.39 t1=5162.58 t2=28213500.00 t3=3775.64 t4=2578.11 t5=24124.41
      *
      * BELOW ARE WITHOUT PROJDEPTREEGLOBALFACTOR.
      * w/Narad.StrFeats   s=2401 n=56427 Toks / sec: 662.01

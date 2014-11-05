@@ -57,7 +57,7 @@ public class FastDepParseFeSpeedTest {
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
                         FeatureVector feats = new FeatureVector();
-                        FastDepParseFe.addArcFactoredMSTFeats(isent, i, j, feats, false);
+                        FastDepParseFe.addArcFactoredMSTFeats(isent, i, j, feats, false, false);
 
                         if (true) {
                             for (int k=0; k<sent.size(); k++) {
