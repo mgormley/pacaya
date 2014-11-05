@@ -34,7 +34,7 @@ public class IntAnnoSentence {
     private ArrayList<ShortArrayList> feats;
     private ByteArrayList deprels;
     // TODO: private IntNaryTree naryTree;
-        
+    
     private AnnoSentence sent;
     private AlphabetStore store;
     

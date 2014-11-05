@@ -121,7 +121,7 @@ class ParamDefinitions():
             #maxEntriesInMemory=g.defaults.get("sgdBatchSize")
             )
         
-        g.defaults += g.adagrad
+        g.defaults += g.adagrad_comid
         g.defaults += g.feat_tpl_bjork_ig
         
         # Exclude parameters from the command line arguments.

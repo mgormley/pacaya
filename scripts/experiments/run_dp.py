@@ -72,7 +72,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g, l, p = self.prm_defs.get_param_groups_and_lists_and_paths()
         
         g.defaults += g.feat_mcdonald
-        g.defaults += g.adagrad
+        g.defaults += g.adagrad_comid
         g.defaults.update(featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=5, sgdAutoSelectLr=True, pruneByDist=True,

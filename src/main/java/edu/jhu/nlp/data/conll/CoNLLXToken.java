@@ -69,7 +69,7 @@ public class CoNLLXToken {
         id = Integer.parseInt(splits[0]);
         form = splits[1];
         lemma = fromUnderscoreString(splits[2]);
-        cpostag = splits[3];
+        cpostag = fromUnderscoreString(splits[3]);
         postag = splits[4];
         feats = getFeats(fromUnderscoreString(splits[5]));
         head = Integer.parseInt(splits[6]);
