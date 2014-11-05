@@ -14,6 +14,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.data.simple.AlphabetStore;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpEncoderPrm;
@@ -68,8 +69,10 @@ public class JointNlpFgExamplesBuilder {
     
     public FgExampleList getData(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents) {
         if (!cs.isInitialized()) {
+            // TODO: This seems like an odd place to initialize CorpusStatistics. Should this live in JointNlpAnnotator?
             log.info("Initializing corpus statistics.");
-            cs.init(goldSents);
+            cs.init(goldSents, false);
+            cs.store = new AlphabetStore(inputSents);
         }
         JointNlpEncoder.checkForRequiredAnnotations(jePrm, inputSents);
         

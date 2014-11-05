@@ -81,6 +81,7 @@ import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
+import edu.jhu.nlp.tag.FileMapTagReducer;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
@@ -173,6 +174,9 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Max length for the brown clusters")
     public static int bcMaxTagLength = Integer.MAX_VALUE;
     
+    // Options for Tag Maps
+    @Opt(hasArg = true, description = "Type or file indicating tag mapping")
+    public static File reduceTags = null;
     
     // Options for Embeddings.
     @Opt(hasArg=true, description="Path to word embeddings text file.")
@@ -394,6 +398,11 @@ public class JointNlpRunner {
                 });
             } else {
                 log.info("No Brown clusters file specified.");
+            }
+            // Apply a tag map to reduce the POS tagset.
+            if (reduceTags != null) {
+                log.info("Reducing tags with file map: " + reduceTags);
+                anno.add(new FileMapTagReducer(reduceTags));
             }
             // Add word embeddings.
             if (embeddingsFile != null) {

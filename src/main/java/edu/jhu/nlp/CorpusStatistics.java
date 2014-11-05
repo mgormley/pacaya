@@ -89,7 +89,13 @@ public class CorpusStatistics implements Serializable {
     }
 
     public void init(Iterable<AnnoSentence> cr) {
-        this.store = new AlphabetStore(cr);
+        init(cr, true);
+    }
+
+    public void init(Iterable<AnnoSentence> cr, boolean initAlphabetStore) {
+        if (initAlphabetStore) {
+            this.store = new AlphabetStore(cr);
+        }      
         
         Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
         Set<String> knownRoles = new HashSet<String>();

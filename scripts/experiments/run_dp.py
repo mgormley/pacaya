@@ -129,7 +129,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       language=lang_short, trainUseCoNLLXPhead=True,
                                       l2variance=l2var_map[lang_short])        
             if lang_short == "en":
-                gl.cx_data += SrlExpParams(dev=pl.cx_dev)
+                gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
             
