@@ -58,6 +58,7 @@ import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
+import edu.jhu.nlp.depparse.Projectivizer;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
@@ -425,7 +426,7 @@ public class JointNlpRunner {
             }
             if (pruneByModel) {
                 if (pruneModel == null) {
-                    throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
+                    throw new IllegalStateException("If pruneByModel is true, pruneModel must be specified.");
                 }
                 anno.add(new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm()));
             }

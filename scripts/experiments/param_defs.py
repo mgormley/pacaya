@@ -55,7 +55,7 @@ class ParamDefinitions():
         p = self.path_defs.get_paths()
         g.langs = {} # Language-specific parameter groups. (always reference as "gl")
         l.langs = {} # Language-specific parameter lists.  (always reference as "ll")
-        for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:            
+        for lang_short in p.c09_lang_short_names + p.cx_lang_short_names + p.c07_lang_short_names:            
             g.langs[lang_short] = ParamGroups()
             l.langs[lang_short] = ParamGroups()
         

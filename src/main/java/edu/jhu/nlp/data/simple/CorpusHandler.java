@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.data.simple.AnnoSentenceWriter.AnnoSentenceWriterPrm;
+import edu.jhu.nlp.depparse.Projectivizer;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
 import edu.jhu.util.cli.Opt;
@@ -37,8 +38,11 @@ public class CorpusHandler {
     @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
     public static int trainMaxNumSentences = Integer.MAX_VALUE; 
     @Opt(hasArg = true, description = "CoNLL-X: whether to use the P(rojective)HEAD column for parents.")
-    public static boolean trainUseCoNLLXPhead = true;
-    
+    public static boolean trainUseCoNLLXPhead = false;
+    // Options for dependency parse pre-processing.
+    @Opt(hasArg = true, description = "Whether to projectivize the training depedendency parses")
+    public static boolean trainProjectivize = false;
+        
     // Options for dev data
     @Opt(hasArg = true, description = "Testing data input file or directory.")
     public static File dev = null;
@@ -164,6 +168,12 @@ public class CorpusHandler {
             AnnoSentenceCollection tmp = new AnnoSentenceCollection();
             sample(trainGoldSents, propTrainAsDev, trainAsDevSents, tmp);
             trainGoldSents = tmp;
+        }
+        
+        // TODO: Maybe move into a pre-processing pipeline.
+        if (trainProjectivize) {
+            log.info("Projectivizing training trees");
+            new Projectivizer().projectivize(trainGoldSents);
         }
         
         if (trainGoldOut != null) {

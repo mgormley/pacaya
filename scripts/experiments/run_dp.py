@@ -49,7 +49,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-erma-tune",
                     "dp-init-model", 
                     "dp-opt-avg",  
-                    "dp-opt",                 
+                    "dp-opt", 
+                    "dp-conll07",                
                     )
     
     def __init__(self, options):
@@ -105,8 +106,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.erma_dp = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
         g.erma_mse = SrlExpParams(trainer="ERMA", dpLoss="MSE")
         g.erma_er = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL")
-        g.cll = SrlExpParams(trainer="CLL")
-                
+        g.cll = SrlExpParams(trainer="CLL", trainProjectivize=True) # TODO: projectivize for ERMA?
+        
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_000"),
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"),
@@ -126,13 +127,24 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl.pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
             gl.cx_data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
                                       test=pl.cx_test, testType="CONLL_X", 
-                                      language=lang_short, trainUseCoNLLXPhead=True,
-                                      l2variance=l2var_map[lang_short])        
+                                      language=lang_short, l2variance=l2var_map[lang_short])        
             if lang_short == "en":
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
-            
+        
+        
+        # This is a map from language to number of sentences.
+        # ["ar", "eu", "ca", "zh", "cs", "en", "el", "hu", "it", "tr"]
+        c07_l2var_map = {"ar" : 2900, "eu" : 3200, "ca" : 15000, "zh" : 57000, "cs" : 25400, 
+                         "en" : 18600, "el" : 2700, "hu" : 6000, "it" : 3100, "tr" : 5600}
+        for lang_short in p.c07_lang_short_names:
+            gl = g.langs[lang_short]
+            pl = p.langs[lang_short]
+            gl.c07_data = SrlExpParams(train=pl.c07_train, trainType="CONLL_X", devType="CONLL_X",
+                                      test=pl.c07_test, testType="CONLL_X", propTrainAsDev=0.10,
+                                      language=lang_short, l2variance=c07_l2var_map[lang_short])
+                    
         # ------------------------ EXPERIMENTS --------------------------
                 
         if self.expname is None:
@@ -390,14 +402,35 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
+        elif self.expname == "dp-conll07":
+            # CoNLL-X experiments.
+            exps = []
+            g.defaults += g.cll
+            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            for lang_short in p.c07_lang_short_names:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                for parser in g.unpruned_parsers:
+                    data = gl.c07_data
+                    data.update(propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                    exp = g.defaults + data + parser
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    if parser in [g.second_order, g.second_grand, g.second_sib]:
+                        exps += get_oome_stages(exp)
+                    else:
+                        exps.append(exp)
+            exps = [x for x in exps if x.get("language") == "en"]
+            return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "dp-conllx":
             # CoNLL-X experiments.
             exps = []
+            g.defaults += g.cll
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
-            for lang_short in ["bg", "es", "en"]:
+            for lang_short in p.cx_lang_short_names:
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
-                for parser in g.parsers:
+                for parser in g.unpruned_parsers:
                     data = gl.cx_data
                     data.update(pruneModel=gl.pruneModel,
                                 propTrainAsDev=0)  # TODO: Set to zero for final experiments.
