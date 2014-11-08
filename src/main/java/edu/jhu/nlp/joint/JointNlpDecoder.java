@@ -68,11 +68,6 @@ public class JointNlpDecoder implements Decoder<AnnoSentence, AnnoSentence> {
             DepParseDecoder.addDepParseAssignment(parents, fg.getDpBuilder(), mbrVarConfig);
             predSent.setParents(parents);
         }
-        // Get the dependency edge mask.
-        DepEdgeMask depEdgeMask = (new DepEdgeMaskDecoder(prm.maskPrm)).decode(inf, ex, sent);
-        if (depEdgeMask != null) {
-            predSent.setDepEdgeMask(depEdgeMask);
-        }
         // Get the relations.
         List<String> rels = RelationsDecoder.getRelLabelsFromVarConfig(mbrVarConfig);
         if (rels != null) {

@@ -430,7 +430,6 @@ public class JointNlpRunner {
                 }
                 anno.add(new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm()));
             }
-            
             // Various NLP annotations.
             anno.add(jointAnno);
         }

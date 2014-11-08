@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
@@ -72,19 +74,16 @@ public class FirstOrderPruner implements Annotator {
         for (int i = 0; i < inputSents.size(); i++) {
             LFgExample ex = data.get(i);
             AnnoSentence inputSent = inputSents.get(i);
-            // TODO: Because we use the JointNlpDecoder, we end up computing the MBR parse twice
-            // (once for the mask, once for the parents array).
-            JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
-            AnnoSentence predSent = decoder.decode(model, ex, inputSent);
             
-            // Update the dependency tree on the sentence.
-            int[] parents = predSent.getParents();
-            if (parents != null) {
-                inputSent.setParents(parents);
-            }
-
+            // Decode.
+            DepEdgeMaskDecoder decoder = new DepEdgeMaskDecoder(dPrm.maskPrm);
+            FactorGraph fgLatPred = ex.getFgLatPred();
+            fgLatPred.updateFromModel(model);
+            FgInferencer infLatPred = dPrm.mbrPrm.infFactory.getInferencer(fgLatPred);
+            infLatPred.run();
+            DepEdgeMask mask = decoder.decode(infLatPred, ex, inputSent);
+            
             // Update the pruning mask.
-            DepEdgeMask mask = predSent.getDepEdgeMask();
             if (mask != null) {
                 if (inputSent.getDepEdgeMask() == null) {
                     inputSent.setDepEdgeMask(mask);
@@ -93,7 +92,7 @@ public class FirstOrderPruner implements Annotator {
                 }
             }
             numEdgesKept += mask.getCount();
-            int n = predSent.getWords().size();
+            int n = inputSent.getWords().size();
             numEdgesTot += n*n;                
         }
         timer.stop();
