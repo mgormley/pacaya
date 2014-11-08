@@ -26,7 +26,7 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
     public double loss(AnnoSentence pred, AnnoSentence gold) {
         correct = 0;
         total = 0;
-        evaluate(gold, pred);
+        evaluate(pred, gold);
         return getErrors();
     }
 
@@ -38,14 +38,14 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
         for (int i = 0; i < goldSents.size(); i++) {
             AnnoSentence gold = goldSents.get(i);
             AnnoSentence pred = predSents.get(i);
-            evaluate(gold, pred);
+            evaluate(pred, gold);
         }
         accuracy = (double) correct / (double) total;
         log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));        
         return getErrors();
     }
 
-    private void evaluate(AnnoSentence gold, AnnoSentence pred) {
+    private void evaluate(AnnoSentence pred, AnnoSentence gold) {
         int[] goldParents = gold.getParents();
         int[] parseParents = pred.getParents();
         if (parseParents != null) {

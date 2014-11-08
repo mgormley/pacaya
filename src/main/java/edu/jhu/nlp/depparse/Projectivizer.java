@@ -1,8 +1,10 @@
 package edu.jhu.nlp.depparse;
 
+import java.io.Serializable;
+
+import org.apache.log4j.Logger;
+
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
-import edu.jhu.nlp.Trainable;
-import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.parse.dep.EdgeScores;
@@ -14,13 +16,41 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser;
  * 
  * @author mgormley
  */
-public class Projectivizer {
+public class Projectivizer implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+    private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
+
+    private int total;
+    private int correct;
+    private double accuracy;
     
     public void projectivize(AnnoSentenceCollection sents) {
+        total = 0;
+        correct = 0;
         for (AnnoSentence sent : sents) {
-            if (sent.getParents() != null) {
-                sent.setParents(projectivize(sent.getParents()));
+            int[] oldrents = sent.getParents();
+            if (oldrents != null) {
+                int[] newrents = projectivize(oldrents);
+                evaluate(newrents, oldrents);
+                sent.setParents(newrents);
             }
+        }
+        accuracy = (double) correct / (double) total;
+        log.info(String.format("Oracle accuracy of projectivized trees: %.4f", accuracy));
+    }
+    
+    private void evaluate(int[] parseParents, int[] goldParents) {
+        if (parseParents != null) {
+            assert(parseParents.length == goldParents.length);
+        }
+        for (int j = 0; j < goldParents.length; j++) {
+            if (parseParents != null) {
+                if (goldParents[j] == parseParents[j]) {
+                    correct++;
+                }
+            }
+            total++;
         }
     }
     
