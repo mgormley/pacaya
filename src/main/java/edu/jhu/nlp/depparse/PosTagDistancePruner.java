@@ -40,7 +40,7 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
-        alphabet.stopGrowth();
+        // Don't stop growth of alphabet.
         
         mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
         mat.fill(0);
