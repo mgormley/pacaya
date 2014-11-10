@@ -13,7 +13,13 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 public class PruningEfficiency implements Evaluator {
 
     private static final Logger log = Logger.getLogger(PruningEfficiency.class);
-        
+
+    private boolean skipPunctuation;
+
+    public PruningEfficiency(boolean skipPunctuation) {
+        this.skipPunctuation = skipPunctuation;
+    }
+    
     @Override
     public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         int numTot = 0;
@@ -27,6 +33,10 @@ public class PruningEfficiency implements Evaluator {
                     if (goldSent.getParent(c) == p) {
                         // Don't count gold edges.
                         continue; 
+                    }
+                    if (skipPunctuation && DepParseEvaluator.isPunctuation(goldSent.getWord(c))) {
+                        // Don't score punctuation.
+                        continue;
                     }
                     if (predSent.getDepEdgeMask() != null && predSent.getDepEdgeMask().isPruned(p, c)) {
                         numPruned++;

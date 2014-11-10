@@ -85,6 +85,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
+        g.defaults.set_incl_name("dpSkipPunctuation", False)
         g.defaults.set_incl_arg("group", False)
                 
         # Parsers
@@ -129,11 +130,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       test=pl.cx_test, testType="CONLL_X", 
                                       language=lang_short, l2variance=l2var_map[lang_short])        
             if lang_short.startswith("en"):
-                gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb)
+                gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb,
+                                           dpSkipPunctuation=True)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
-        
-        
+                
         # This is a map from language to number of sentences.
         # ["ar", "eu", "ca", "zh", "cs", "en", "el", "hu", "it", "tr"]
         c07_l2var_map = {"ar" : 2900, "eu" : 3200, "ca" : 15000, "zh" : 57000, "cs" : 25400, 

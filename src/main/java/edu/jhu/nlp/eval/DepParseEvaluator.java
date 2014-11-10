@@ -1,5 +1,7 @@
 package edu.jhu.nlp.eval;
 
+import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.app.Loss;
@@ -15,12 +17,19 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  */
 public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
 
+    /** Regex for matching words consisting of entirely Unicode punctuation characters. */
+    static final Pattern PUNCT_RE = Pattern.compile("^\\p{Punct}+$", Pattern.UNICODE_CHARACTER_CLASS);
     private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
 
     private double accuracy;
     private int correct;
     private int total;
+    private boolean skipPunctuation;
 
+    public DepParseEvaluator(boolean skipPunctuation) {
+        this.skipPunctuation = skipPunctuation;
+    }
+    
     /** Gets the number of incorrect dependencies. */
     @Override
     public double loss(AnnoSentence pred, AnnoSentence gold) {
@@ -51,14 +60,23 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
         if (parseParents != null) {
             assert(parseParents.length == goldParents.length);
         }
-        for (int j = 0; j < goldParents.length; j++) {
+        for (int c = 0; c < goldParents.length; c++) {
+            if (skipPunctuation && isPunctuation(gold.getWord(c))) {
+                // Don't score punctuation.
+                continue;
+            }
             if (parseParents != null) {
-                if (goldParents[j] == parseParents[j]) {
+                if (goldParents[c] == parseParents[c]) {
                     correct++;
                 }
             }
             total++;
+            
         }
+    }
+    
+    public static boolean isPunctuation(String word) {
+        return PUNCT_RE.matcher(word).matches();
     }
 
     public double getAccuracy() {

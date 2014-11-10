@@ -348,6 +348,10 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
     public static ErmaLoss dpLoss = ErmaLoss.DP_DECODE_LOSS;
     
+    // Options for evaluation.
+    @Opt(hasArg=true, description="Whether to skip punctuation in dependency parse evaluation.")
+    public static boolean dpSkipPunctuation = false;
+    
     public JointNlpRunner() {
     }
 
@@ -435,11 +439,11 @@ public class JointNlpRunner {
         }
         {
             if (pruneByDist || pruneByModel) {
-                eval.add(new PruningEfficiency());
-                eval.add(new OraclePruningAccuracy());
+                eval.add(new PruningEfficiency(dpSkipPunctuation));
+                eval.add(new OraclePruningAccuracy(dpSkipPunctuation));
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE)) {
-                eval.add(new DepParseEvaluator());
+                eval.add(new DepParseEvaluator(dpSkipPunctuation));
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
                 eval.add(new SrlSelfLoops());
@@ -570,6 +574,7 @@ public class JointNlpRunner {
         prm.dePrm = getDecoderPrm();
         prm.initParams = initParams;
         prm.ofcPrm = getObsFeatureConjoinerPrm();
+        prm.dpSkipPunctuation = dpSkipPunctuation;
         JointNlpFeatureExtractorPrm fePrm = getJointNlpFeatureExtractorPrm();
         prm.buPrm = getSrlFgExampleBuilderPrm(fePrm);
         return prm;
