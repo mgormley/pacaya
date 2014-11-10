@@ -76,7 +76,7 @@ public class HyperDepParserSpeedTest {
             Timer timer = new Timer();
             timer.start();
             for (int t=0; t<trials; t++) {
-                DepParseHypergraph graph = new DepParseHypergraph(root, child, s, true);
+                O1DpHypergraph graph = new O1DpHypergraph(root, child, s, true);
                 Scores scores = new Scores();
                 Hyperalgo.insideAlgorithm(graph, graph.getPotentials(), s, scores);
             }
