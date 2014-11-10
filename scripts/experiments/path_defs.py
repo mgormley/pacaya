@@ -57,7 +57,7 @@ class PathDefinitions():
     
     def get_paths(self):
         p = Paths()
-        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en"]
+        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en", "en-st"]
         p.c07_lang_short_names = ["ar", "eu", "ca", "zh", "cs", "en", "el", "hu", "it", "tr"]
         p.c09_lang_short_names = ["ca", "cs", "es", "de", "en", "zh"] 
 
@@ -101,8 +101,7 @@ class PathDefinitions():
         # Languages: arabic, bulgarian, czech, danish, dutch, german, portuguese, slovene, spanish, swedish, turkish.
         # Missing: japanese, chinese.
         # TODO: Fix language codes.
-        conllx_dir = get_first_that_exists(corpora_dir + "/CoNLL-X",
-                                           self.root_dir + "/data/conllx/CoNLL-X")
+        conllx_dir = get_first_that_exists(corpora_dir + "/CoNLL-X")
         self._set_paths_for_conllx_lang(p, "Arabic",     "ar", "PADT", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Bulgarian",  "bg", "bultreebank", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Czech",      "cs", "pdt", conllx_dir, require=True)
@@ -117,6 +116,7 @@ class PathDefinitions():
         self._set_paths_for_conllx_lang(p, "Turkish",    "tr", "metu_sabanci", conllx_dir, require=True)
         # Other data in CoNLL-X format.
         self._set_paths_for_conllx_lang(p, "English",    "en", "ptb_ym", conllx_dir, require=False, has_dev=True)
+        self._set_paths_for_conllx_lang(p, "English",    "en-st", "ptb-stanford", conllx_dir, require=False, has_dev=True)
         
         # CoNLL-2007 Shared Task datasets.
         conll07_dir = get_first_that_exists(corpora_dir + "/CoNLL-2007")
@@ -206,13 +206,13 @@ class PathDefinitions():
             require - Whether to require these files to exist.
         '''
         lang_low = lang_long.lower() 
-        # Example: ./CoNLL-X/train/data/arabic/PADT/train/arabic_PADT_train.conll
-        # Example: ./CoNLL-X/test/data/arabic/PADT/test/arabic_PADT_test.conll
-        # Example: ./CoNLL-X/test_blind/data/czech/pdt/test/czech_pdt_test_blind.conll
-        train = os.path.join(data_dir, "train", "data", lang_low, treebank, "train", lang_low + "_" + treebank + "_train.conll")
-        test = os.path.join(data_dir, "test", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test.conll")
-        test_blind  = os.path.join(data_dir, "test_blind", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test_blind.conll")
-        if has_dev: dev = os.path.join(data_dir, "train", "data", lang_low, treebank, "train", lang_low + "_" + treebank + "_dev.conll")
+        # Example: ./CoNLL-X/arabic/PADT/train/arabic_PADT_train.conll
+        # Example: ./CoNLL-X/arabic/PADT/test/arabic_PADT_test.conll
+        # Example: ./CoNLL-X/czech/pdt/test/czech_pdt_test_blind.conll
+        train = os.path.join(data_dir, lang_low, treebank, "train", lang_low + "_" + treebank + "_train.conll")
+        test = os.path.join(data_dir, lang_low, treebank, "test", lang_low + "_" + treebank + "_test.conll")
+        test_blind  = os.path.join(data_dir, lang_low, treebank, "test", lang_low + "_" + treebank + "_test_blind.conll")
+        if has_dev: dev = os.path.join(data_dir, lang_low, treebank, "train", lang_low + "_" + treebank + "_dev.conll")
         # Set with setattr.
         p.set(lang_short + "_cx_train", train)
         p.set(lang_short + "_cx_test",   test)

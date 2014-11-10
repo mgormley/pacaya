@@ -119,7 +119,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # This is a map from language to number of sentences.
         l2var_map = {"ar" : 1500, "zh" : 57000, "cs" : 72700, "da" : 5200, "nl" : 13300,
                      "de" : 39200, "ja" : 17000, "pt" : 9100, "sl" : 1500, "es" : 3300,
-                     "sv" : 11000, "tr" : 5000, "bg" : 12800, "en" : 40000}
+                     "sv" : 11000, "tr" : 5000, "bg" : 12800, "en" : 40000, "en-st" : 40000}
 
         for lang_short in p.cx_lang_short_names:
             gl = g.langs[lang_short]
@@ -128,7 +128,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl.cx_data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
                                       test=pl.cx_test, testType="CONLL_X", 
                                       language=lang_short, l2variance=l2var_map[lang_short])        
-            if lang_short == "en":
+            if lang_short.startswith("en"):
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
@@ -440,7 +440,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exps += get_oome_stages(exp)
                     else:
                         exps.append(exp)
-            exps = [x for x in exps if x.get("language") == "en"]
+            exps = [x for x in exps if x.get("language").startswith("en")]
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tune":

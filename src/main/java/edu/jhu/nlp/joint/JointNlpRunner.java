@@ -58,12 +58,12 @@ import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
-import edu.jhu.nlp.depparse.Projectivizer;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.eval.DepParseEvaluator;
 import edu.jhu.nlp.eval.OraclePruningAccuracy;
+import edu.jhu.nlp.eval.PruningEfficiency;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
 import edu.jhu.nlp.eval.SrlSelfLoops;
@@ -82,8 +82,8 @@ import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
-import edu.jhu.nlp.tag.FileMapTagReducer;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
+import edu.jhu.nlp.tag.FileMapTagReducer;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
@@ -435,6 +435,7 @@ public class JointNlpRunner {
         }
         {
             if (pruneByDist || pruneByModel) {
+                eval.add(new PruningEfficiency());
                 eval.add(new OraclePruningAccuracy());
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE)) {
