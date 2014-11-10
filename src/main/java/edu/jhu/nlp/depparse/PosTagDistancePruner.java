@@ -28,6 +28,8 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
+    private static final String WALL_TAG = "__WALL_TAG__";
+    private int wallTagIdx = -1;
     public static final int LEFT = 0;
     public static final int RIGHT = 1;    
     private Alphabet<String> alphabet = new Alphabet<String>();
@@ -42,6 +44,7 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
+        wallTagIdx = alphabet.lookupIndex(WALL_TAG);
         // Don't stop growth of alphabet.
         
         mat = new int[alphabet.size()][alphabet.size()][2];
@@ -54,16 +57,13 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
             // For each observed dependency edge...
             for (int c=0; c<parents.length; c++) {
                 int p = parents[c];
-                if (p == -1) {
-                    // We don't prune edges to the wall node.
-                    continue;
-                }
-                int dist = Math.abs(p - c);
+                int pTag = (p == -1) ? wallTagIdx : tags[p];
+                int dist = (p == -1) ? 1 : Math.abs(p - c);
                 int dir = (p < c) ? RIGHT : LEFT;
-                if (dist > mat[tags[p]][tags[c]][dir]) {
+                if (dist > mat[pTag][tags[c]][dir]) {
                     // Record the max dependency length for the observed parent
                     // / child tag types.
-                    mat[tags[p]][tags[c]][dir] = dist;
+                    mat[pTag][tags[c]][dir] = dist;
                 }
             }
         }
@@ -88,24 +88,25 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
             int[] tags = tagSeq.getLabelIds();
 
-            // For each possible dependency edge (not including edges to the wall)...
-            for (int p = 0; p < tags.length; p++) {
+            // For each possible dependency edge (including edges to the wall)
+            for (int p = -1; p < tags.length; p++) {
+                int pTag = (p == -1) ? wallTagIdx : tags[p];
                 for (int c = 0; c < tags.length; c++) {
                     numEdgesTot++;
-                    if (tags[p] >= mat.length || tags[c] >= mat.length) {
+                    if (pTag >= mat.length || tags[c] >= mat.length) {
                         // Don't prune unknown tags.
                         continue;
                     }
-                    int dist = Math.abs(p - c);
+                    int dist = (p == -1) ? 1 : Math.abs(p - c);
                     int dir = (p < c) ? RIGHT : LEFT;
-                    if (dist > mat[tags[p]][tags[c]][dir]) {
+                    if (dist > mat[pTag][tags[c]][dir]) {
                         // Prune any edge for which the distance is longer than
                         // the longest observed distance for the parent / child
                         // tag types.
                         mask.setIsPruned(p, c, true);
                         if (log.isTraceEnabled()) {
                             log.trace(String.format("Pruned edge: parent=%s child=%s dist=%d",
-                                    alphabet.lookupObject(tags[p]), alphabet.lookupObject(tags[c]), dist));
+                                    alphabet.lookupObject(pTag), alphabet.lookupObject(tags[c]), dist));
                         }
                     } else {
                         numEdgesKept++;
