@@ -88,6 +88,7 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
             // For each possible dependency edge (not including edges to the wall)...
             for (int i = 0; i < tags.length; i++) {
                 for (int j = 0; j < tags.length; j++) {
+                    numEdgesTot++;
                     if (tags[i] >= mat.getNumRows() || tags[j] >= mat.getNumRows()) {
                         // Don't prune unknown tags.
                         continue;
@@ -105,7 +106,6 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
                     } else {
                         numEdgesKept++;
                     }
-                    numEdgesTot++;
                 }
             }
             // Count the edges to the wall, which will never be pruned.
