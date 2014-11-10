@@ -1,8 +1,10 @@
 package edu.jhu.nlp.eval;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
-import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.util.report.Reporter;
@@ -12,23 +14,17 @@ import edu.jhu.util.report.Reporter;
  * 
  * @author mgormley
  */
-public class RelationEvaluator {
+public class RelationEvaluator implements Evaluator {
 
     private static final Logger log = Logger.getLogger(RelationEvaluator.class);
     private static final Reporter rep = Reporter.getReporter(RelationEvaluator.class);
 
-    private String dataName;
-
     private double precision;
     private double recall;
     private double f1;
-
-    public RelationEvaluator(String dataName) {
-        this.dataName = dataName;
-    }
     
     /** Computes the precision, recall, and micro-averaged F1 of relations mentions. */
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
         // Precision = # correctly predicted positive / # predicted positive
         // Recall = # correctly predicted positive / # true positive
         int numCorrectPositive = 0;
@@ -36,42 +32,45 @@ public class RelationEvaluator {
         int numPredictPositive = 0;
         int numTruePositive = 0;
         int numInstances = 0;
-
+        int numMissing = 0;
+        
         assert predSents.size() == goldSents.size();
         
         // For each sentence.
         for (int s = 0; s < goldSents.size(); s++) {
-            AnnoSentence gold = goldSents.get(s);
-            AnnoSentence pred = predSents.get(s);
+            List<String> gold = goldSents.get(s).getRelLabels();
+            List<String> pred = predSents.get(s).getRelLabels();
             
-            if (pred.getRelLabels() != null) {
-                // For each pair of named entities.
-                for (int k=0; k<pred.getRelLabels().size(); k++) {                
-                    String goldLabel = gold.getRelLabels().get(k);
-                    String predLabel = pred.getRelLabels().get(k);
-                    
-                    if (predLabel.equals(goldLabel)) {
-                        if (!goldLabel.equals(RelationsEncoder.getNoRelationLabel())) {
-                            numCorrectPositive++;
-                        } else {
-                            numCorrectNegative++;
-                        }
-                    }
+            if (gold == null) { continue; }
+            if (pred == null) { numMissing++; }
+            
+            // For each pair of named entities.
+            for (int k=0; k<gold.size(); k++) {                
+                String goldLabel = gold.get(k);
+                String predLabel = (pred == null) ? null : pred.get(k);
+                
+                if (goldLabel.equals(predLabel)) {
                     if (!goldLabel.equals(RelationsEncoder.getNoRelationLabel())) {
-                        numTruePositive++;
+                        numCorrectPositive++;
+                    } else {
+                        numCorrectNegative++;
                     }
-                    if (!predLabel.equals(RelationsEncoder.getNoRelationLabel())) {
-                        numPredictPositive++;
-                    }
-                    numInstances++;
-                    log.trace(String.format("goldLabel=%s predLabel=%s", goldLabel, predLabel));                    
                 }
+                if (!RelationsEncoder.getNoRelationLabel().equals(goldLabel)) {
+                    numTruePositive++;
+                }
+                if (!RelationsEncoder.getNoRelationLabel().equals(predLabel)) {
+                    numPredictPositive++;
+                }
+                numInstances++;
+                log.trace(String.format("goldLabel=%s predLabel=%s", goldLabel, predLabel));                    
             }
         }
-        precision = (double) numCorrectPositive / numPredictPositive;
-        recall = (double) numCorrectPositive / numTruePositive;
-        f1 = (double) (2 * precision * recall) / (precision + recall);
+        precision = numPredictPositive == 0 ? 0.0 : (double) numCorrectPositive / numPredictPositive;
+        recall = numTruePositive == 0 ? 0.0 :  (double) numCorrectPositive / numTruePositive;
+        f1 = (precision == 0.0 && recall == 0.0) ? 0.0 : (double) (2 * precision * recall) / (precision + recall);
         
+        log.info(String.format("Num sents not annotated on %s: %d", dataName, numMissing));
         log.info(String.format("Relation accuracy on %s: %.4f", dataName, (double)(numCorrectPositive + numCorrectNegative)/numInstances));
         log.info(String.format("Num relation instances on %s: %d", dataName, numInstances));
         log.info(String.format("Num true positives on %s: %d", dataName, numTruePositive));
@@ -79,7 +78,11 @@ public class RelationEvaluator {
         log.info(String.format("Recall on %s: %.4f", dataName, recall));
         log.info(String.format("F1 on %s: %.4f", dataName, f1));
         
-        rep.report(dataName+"F1", f1);
+        rep.report(dataName+"RelPrecision", precision);
+        rep.report(dataName+"RelRecall", recall);
+        rep.report(dataName+"RelF1", f1);
+        
+        return -f1;
     }
 
     public double getPrecision() {

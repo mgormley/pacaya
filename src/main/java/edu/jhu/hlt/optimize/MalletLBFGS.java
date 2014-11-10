@@ -9,6 +9,7 @@ import cc.mallet.optimize.Optimizable;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.prim.vector.IntDoubleVector;
+import edu.jhu.util.Timer;
 
 /**
  * Wrapper of Mallet's L-BFGS implementation.
@@ -141,6 +142,8 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
         btls.setRelTolx(prm.lsRelTolx);
         lbfgs.setLineOptimizer(btls);
         
+        Timer t = new Timer();
+        t.start();
         try {
             converged = lbfgs.optimize(prm.maxIterations);
         } catch (InvalidOptimizableException e) {
@@ -148,6 +151,8 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
             log.warn("Continuing as if there were no error.");
             converged = false;
         }
+        t.stop();        
+        log.debug(String.format("Average time per iteration (min): %.2g ", t.totMin() / lbfgs.getIteration()));
         
         return converged;
     }

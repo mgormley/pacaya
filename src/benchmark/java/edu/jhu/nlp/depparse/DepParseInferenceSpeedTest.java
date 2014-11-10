@@ -11,6 +11,7 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.util.Timer;
+import edu.jhu.util.semiring.Algebras;
 
 public class DepParseInferenceSpeedTest {
     
@@ -53,6 +54,7 @@ public class DepParseInferenceSpeedTest {
         bpPrm.maxIterations = numIters;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
+        //bpPrm.s = Algebras.REAL_ALGEBRA;
         ErmaBp bp = new ErmaBp(fg, bpPrm);
         bp.run();
         for (Var v : fg.getVars()) {

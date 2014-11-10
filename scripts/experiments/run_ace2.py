@@ -20,7 +20,7 @@ from pypipeline import pipeline
 import re
 import random
 from pypipeline.pipeline import write_script, RootStage, Stage
-from pypipeline.stages import get_oome_stages
+from pypipeline.stages import get_oome_stages, StagePath
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
@@ -93,17 +93,17 @@ def get_ace05_data(concrete_dir, prefix):
     return os.path.join(concrete_dir, prefix+"-comms.zip")
 
 def get_annotation_as_train(comm):
-    exp = ReExpParams(train=comm, trainType="CONCRETE")
+    exp = ReExpParams(train=comm, trainType="RE_CONCRETE")
     exp.set('trainName', os.path.basename(comm), incl_arg=False)
     return exp
 
 def get_annotation_as_dev(comm):
-    exp = ReExpParams(dev=comm, devType="CONCRETE")
+    exp = ReExpParams(dev=comm, devType="RE_CONCRETE")
     exp.set('devName', os.path.basename(comm), incl_arg=False)
     return exp
 
 def get_annotation_as_test(comm):
-    exp = ReExpParams(test=comm, testType="CONCRETE")
+    exp = ReExpParams(test=comm, testType="RE_CONCRETE")
     exp.set('testName', os.path.basename(comm), incl_arg=False)
     return exp
 
@@ -111,8 +111,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "ace-pm13",
+                    "ace-params",
                     "ace-lc",
-                    "acl-feats"
+                    "ace-opt",
+                    "acl-feats",
                     )
     
     def __init__(self, options):
@@ -139,14 +141,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.remove("devPredOut")
         g.defaults.remove("testGoldOut")
         g.defaults.remove("testPredOut")
-        g.defaults += g.adagrad 
         
-        defaults = g.lbfgs  + ReExpParams()        
+        defaults = ReExpParams()        
         defaults.set("expname", self.expname, False, False)
         defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)  
         if self.queue:
-            threads = 15
+            threads = 7
             work_mem_megs = 15*1024
         elif self.big_machine:
             threads = 2
@@ -159,20 +160,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_name("train", False)
         defaults.set_incl_name("dev", False)
         defaults.set_incl_name("test", False)
+        defaults.set_incl_name("modelIn", False)
         defaults.update(seed=random.getrandbits(63),
                    propTrainAsDev=0.1,
                    featCountCutoff=0,
                    featureHashMod=-1,
                    includeUnsupportedFeatures=True,
                    l2variance=40000,
-                   sgdBatchSize=20,
-                   sgdNumPasses=10,
+                   sgdBatchSize=7*4,
+                   sgdNumPasses=20,
                    useRelationSubtype=False,
-                   includeDp=False,
-                   includeSrl=False,
-                   includeRel=True,
                    cacheType="MEMORY_STORE", # Store all the examples in memory.
-                   predAts="RELATIONS,REL_LABELS",
+                   predAts="REL_LABELS",
                    inference="BRUTE_FORCE",
                    trainTypeOut="SEMEVAL_2010",
                    devTypeOut="SEMEVAL_2010",
@@ -185,8 +184,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    devGoldOut="./dev-gold.txt",
                    testGoldOut="./test-gold.txt",
                    modelOut="./model.binary.gz",  
-                   reportOut="./outparams.txt",                 
+                   reportOut="./outparams.txt",
                    )
+        
+        defaults.update(propTrainAsDev=0.0,
+                        useEmbeddingFeatures=True,
+                        useZhou05Features=True,
+                        entityTypeRepl="NONE")
+        defaults.update(optimizer="ADAGRAD_COMID", adaGradEta=0.05, adaGradConstantAddend=1, 
+                     sgdAutoSelectLr=True, regularizer="NONE")
+        #defaults += g.lbfgs + ReExpParams()
         
         # Datasets
         
@@ -211,7 +218,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # Collections
         ace05_domains = [ace05_bc, ace05_bn, ace05_cts, ace05_nw, ace05_un, ace05_wl]
 
-        # Embeddings
+        # Embeddings 
         embeddings_dir = os.path.join(p.corpora_dir, "processed", "embeddings")
         polyglot_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "polyglot-en.txt"),
                                   embedName="polyglot")
@@ -229,35 +236,101 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                   embedName="cbow-nyt11")
         defaults.set_incl_name("embeddingsFile", False)
         defaults.set_incl_arg("embedName", False)
-                
-                
+        
+        # Brown clusters
+        bc_bllip = ReExpParams(brownClusters=p.bllip_clusters, bcMaxTagLength=5)
+        defaults.set_incl_name("brownClusters", False)
+        defaults += bc_bllip
+
         # Models
-        feats_no_embed  = ReExpParams(modelName="zhou",  useEmbeddingFeatures=False)
-        feats_head_only = ReExpParams(modelName="zhou+head", useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
-        feats_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
-        feats_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
-        feats_emb_only  = ReExpParams(modelName="full",  useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+        feats_head_only = ReExpParams(modelName="head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY", useZhou05Features=False)
+        feats_head_type = ReExpParams(modelName="head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE", useZhou05Features=False)
+        
+        feats_zhou  = ReExpParams(modelName="zhou",           useEmbeddingFeatures=False)
+        feats_zhou_head_only = ReExpParams(modelName="zhou+head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
+        feats_zhou_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
+        feats_zhou_full_noch = ReExpParams(modelName="zhou+full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS")
+        feats_zhou_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
+        feats_emb_only_noch  = ReExpParams(modelName="full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS", useZhou05Features=False)
+        feats_emb_only  = ReExpParams(modelName="full",           useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
         defaults.set_incl_arg("modelName", False)
         
         # Evaluation settings
         eval_ng14    = ReExpParams(group="NG14", predictArgRoles=False, 
-                                   maxInterveningEntities=3, removeEntityTypes=True)
+                                   maxInterveningEntities=3, removeEntityTypes=True,                                   
+                                   useRelationSubtype=False)
         eval_pm13    = ReExpParams(group="PM13", predictArgRoles=True, 
-                                   maxInterveningEntities=3, removeEntityTypes=True)
+                                   maxInterveningEntities=3, removeEntityTypes=True,                                   
+                                   useRelationSubtype=False)
         eval_types7 = ReExpParams(group="TYPES7", predictArgRoles=False, 
-                                   maxInterveningEntities=9999, removeEntityTypes=False)
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=False)
         eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
-                                   maxInterveningEntities=9999, removeEntityTypes=False)            
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=False)            
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
-        hyperparams = []
-        for _ in range(20):
-            l2variance = loguniform_val(2, 100000)
-            embScaler = loguniform_val(1, 60)
-            hyperparams.append(ReExpParams(l2variance=l2variance, embScaler=embScaler))            
+        hyps=4
+        if hyps==0:
+            hyperparams = []
+            for _ in range(10):
+                l2variance = random.uniform(20000, 60000)
+                embScalar = random.uniform(15, 25)
+                adaGradEta = random.uniform(0.025, 0.050)
+                hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar, 
+                                               adaGradEta=adaGradEta, sgdAutoSelectLr=False))
+        elif hyps==1:            
+            hyperparams = []
+            for l2variance in [10000, 20000, 40000, 80000, 160000]:
+                for embScalar in [8, 16, 32, 64]:
+                    hyperparams.append(ReExpParams(l2variance=l2variance, embScalar=embScalar))            
+        elif hyps==2:
+            hyperparams = []
+            for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
+                for embScalar in [8, 16, 32, 64]:
+                    hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar, sgdAutoSelectLr=False))          
+        elif hyps==3:
+            hyperparams = []
+            for l2variance in [20000, 40000, 60000]:
+                for embScalar in [15, 20, 25]:
+                    for adaGradEta in [0.025, 0.05]:
+                        hyperparams.append(ReExpParams(l2variance=l2variance, adaGradEta=adaGradEta, 
+                                                       embScalar=embScalar, sgdAutoSelectLr=False))   
+        elif hyps==4:                   
+            hyperparams = []
+            num_hyp = 12
+            def uniform_range(minval, maxval, num):
+                rate = float(maxval - minval) / (num - 1.0)
+                return [minval + i*rate for i in range(num)]
+            def loguniform_range(minval, maxval, num):
+                minexp = math.log(minval)
+                maxexp = math.log(maxval)
+                return map(math.exp, uniform_range(minexp, maxexp, num))
+            def combine(hyp_lists):
+                num = len(hyp_lists[0])
+                for hl in hyp_lists:
+                    assert len(hl) == num
+                stride = 1
+                combo = None
+                for i, hl in enumerate(hyp_lists):
+                    if i == 0:
+                        combo = hl
+                    else:
+                        cur = 0
+                        for start in range(stride):
+                            for j in range(start, len(hl), stride):
+                                combo[j] += hl[cur]
+                                cur += 1
+                    stride += 1
+                return combo
+            hyp_lists = []
+            hyp_lists.append([ReExpParams(l2variance=x) for x in loguniform_range(1000, 200000, num_hyp)])
+            hyp_lists.append([ReExpParams(embScalar=x) for x in loguniform_range(8, 80, num_hyp)])
+            hyp_lists.append([ReExpParams(adaGradEta=x) for x in loguniform_range(0.005, 0.01, num_hyp)])
+            hyperparams = combine(hyp_lists)
         for x in hyperparams: print x
-        
+
         # ------------------------ EXPERIMENTS --------------------------
         
         
@@ -267,23 +340,62 @@ class SrlExpParamsRunner(ExpParamsRunner):
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
-            setup= ReExpParams(propTrainAsDev=0.0,
-                               useEmbeddingFeatures=True,
-                               useZhou05Features=True,
-                               useRelationSubtype=True)
-            setup += get_annotation_as_train(ace05_bn_nw)
-
-            for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
-                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
-                              (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
-                              (ReExpParams(propTrainAsDev=0.2), ReExpParams()),
-                              ]:
+            train = get_annotation_as_train(ace05_bn_nw)
+            for evl in [eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                        eval_types13,
+                        eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
+                        ]: # eval_ng14, eval_types7]:
                 for embed in [cbow_nyt11_en]: #, polyglot_en]:
-                    for feats in [feats_no_embed, feats_head_only, feats_head_type, feats_full, feats_emb_only]: 
-                        for evl in [eval_pm13, eval_ng14, eval_types7, eval_types13]:
-                            for hyperparam in hyperparams[:1]:
-                                exp = defaults + setup + evl + dev + test + embed + feats + hyperparam
-                                root.add_dependent(exp)
+                    for feats in [feats_zhou, feats_zhou_head_only, feats_zhou_full_noch, feats_emb_only_noch]: 
+                        # SKIPPING: feats_zhou_head_type, feats_zhou_full, feats_emb_only 
+                        for hyperparam in hyperparams:
+                            dev = get_annotation_as_dev(ace05_bc_dev)
+                            # CTS 
+                            train = get_annotation_as_train(ace05_bn_nw)
+                            test = get_annotation_as_test(ace05_cts)                           
+                            exp_cts = defaults + evl + train + dev + test + embed + feats + hyperparam
+                            root.add_dependent(exp_cts)
+                            # WL
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            test = get_annotation_as_test(ace05_wl)
+                            exp_wl = defaults + evl + train + dev + test + embed + feats + hyperparam
+                            exp_cts.add_dependent(exp_wl)
+                            # BC_TEST
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            test = get_annotation_as_test(ace05_bc_test)
+                            exp_bc = defaults + evl + train + dev + test + embed + feats + hyperparam
+                            exp_cts.add_dependent(exp_bc)
+                            # In-Domain
+                            train = get_annotation_as_train(ace05_bn_nw)
+                            dev = ReExpParams(propTrainAsDev=0.2)
+                            exp_bnnw = defaults + evl + train + dev + embed + feats + hyperparam
+                            root.add_dependent(exp_bnnw)
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(list(experiment_runner.get_all_keys(hyperparams))+['modelIn']),
+                                      argmax_key='devRelF1')
+            hypmax.add_prereqs(root.dependents)
+            return root
+                
+        elif self.expname == "ace-params":
+            '''Comparse # of model parameters
+            '''
+            root = RootStage()
+            train = get_annotation_as_train(ace05_bn_nw)
+            for evl in [#eval_pm13 + ReExpParams(entityTypeRepl="BROWN"), 
+                        eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                        #eval_types13,
+                        ]: # eval_ng14, eval_types7]:
+                for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                    for feats in [feats_head_only, feats_head_type]:
+                        dev = get_annotation_as_dev(ace05_bc_dev)
+                        # CTS 
+                        train = get_annotation_as_train(ace05_bn_nw)
+                        test = get_annotation_as_test(ace05_cts)                           
+                        exp_cts = defaults + evl + train + dev + test + embed + feats 
+                        root.add_dependent(exp_cts)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
@@ -293,11 +405,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''Learning curve experiment.
             '''
             root = RootStage()
-            setup= ReExpParams(propTrainAsDev=0.0,
-                               useEmbeddingFeatures=True,
-                               useZhou05Features=True)
-            setup += get_annotation_as_train(ace05_bn_nw)
-            
+            setup = get_annotation_as_train(ace05_bn_nw)            
             for dev, test in [(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_cts)),
                               (get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_wl)),
                               #(get_annotation_as_dev(ace05_bc_dev), get_annotation_as_test(ace05_bc_test)),                              
@@ -321,9 +429,42 @@ class SrlExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(root.dependents)  
             hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
                                       hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
-                                      argmax_key='devF1')
+                                      argmax_key='devRelF1')
             hypmax.add_prereqs(root.dependents)
             return root        
+        
+        elif self.expname == "ace-opt":
+            '''Compares various methods of optimization for the simplest ACE log-linear model.'''
+            root = RootStage()
+            setup = get_annotation_as_train(ace05_bn_nw)
+            setup += cbow_nyt11_en + eval_pm13 + feats_zhou
+            setup += get_annotation_as_dev(ace05_bc_dev)
+            setup += get_annotation_as_test(ace05_cts)
+            defaults.remove("printModel")
+            defaults.remove("modelOut")
+            
+            setup.update(sgdAutoSelectLr=False)
+            g.adagrad_comid = g.adagrad + ReExpParams(optimizer="ADAGRAD_COMID")
+            g.adagrad_comid.update(regularizer="NONE")
+            g.fobos.update(regularizer="NONE")
+            for l2variance in [10000, 40000, 160000]:
+                for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
+                    for adaGradConstantAddend in [1e-9, 0.1, 1.0]:
+                        for optimizer in [g.adagrad_comid]:
+                            exp = defaults + setup + optimizer
+                            exp += ReExpParams(l2variance=l2variance, 
+                                               adaGradEta=adaGradEta,
+                                               adaGradConstantAddend=adaGradConstantAddend)
+                            root.add_dependent(exp)
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(experiment_runner.get_all_keys(hyperparams)),
+                                      argmax_key='devRelF1')
+            hypmax.add_prereqs(root.dependents)
+            return root
+        
         
         elif self.expname == "ace-feats":
             '''Development results for in-domain and out-of-domain experiments, 
@@ -362,13 +503,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 defaults.set("group", "scaling", incl_name=True, incl_arg=False)
                 for embed in [polyglot_en, polyglot_en_large_dstuned, polyglot_en_large_combined]:
                     for embNorm in ["L1_NORM", "L2_NORM", "STD_NORMAL"]:
-                        for embScaler in [2.0, 4.0, 8.0, 16.0, 32.0]:
+                        for embScalar in [2.0, 4.0, 8.0, 16.0, 32.0]:
                             feats = ReExpParams(embTmplPath=True, 
                                                 embTmplType=True,
                                                 embSlotPath=False,
                                                 embSlotHead=True,
                                                 embNorm=embNorm,
-                                                embScaler=embScaler)
+                                                embScalar=embScalar)
                             train = get_annotation_as_train(ace05_bn_nw)
                             experiment = defaults + setup + train + test + embed + feats
                             root.add_dependent(experiment)
@@ -427,6 +568,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         ''' Makes the stage run in a very short period of time (under 5 seconds).
         ''' 
         safe_update(stage, 
+                    sgdNumPasses=3,
                     maxLbfgsIterations=3,
                      trainMaxNumSentences=10,
                      devMaxNumSentences=10,

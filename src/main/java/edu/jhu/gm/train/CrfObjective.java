@@ -109,7 +109,7 @@ public class CrfObjective implements ExampleObjective {
         if (ac.accumWeight) {
             ac.weight += ex.getWeight();
         }
-        if (ac.accumTrainLoss) {
+        if (ac.accumLoss) {
             //if (loss != null) { ac.trainLoss += loss.getLoss(i, ex, infLatPred); }
             //ac.trainLoss += getMseLoss(ex, infLatPred);
         }

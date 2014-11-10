@@ -55,7 +55,7 @@ class ParamDefinitions():
         p = self.path_defs.get_paths()
         g.langs = {} # Language-specific parameter groups. (always reference as "gl")
         l.langs = {} # Language-specific parameter lists.  (always reference as "ll")
-        for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:            
+        for lang_short in p.c09_lang_short_names + p.cx_lang_short_names + p.c07_lang_short_names:            
             g.langs[lang_short] = ParamGroups()
             l.langs[lang_short] = ParamGroups()
         
@@ -117,16 +117,13 @@ class ParamDefinitions():
             numFeatsToSelect=32,
             numSentsForFeatSelect=1000,
             #stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
-            predAts="SRL",
-            includeSrl=True,
-            includeDp=True,
             cacheType="NONE",
             #maxEntriesInMemory=g.defaults.get("sgdBatchSize")
             )
         
-        g.defaults += g.adagrad
+        g.defaults += g.adagrad_comid
         g.defaults += g.feat_tpl_bjork_ig
-                
+        
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
         g.defaults.set_incl_arg("language", False)
@@ -262,7 +259,10 @@ class ParamDefinitions():
     
     def _define_groups_optimizer(self, g):
         g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.1, sgdAutoSelectLr=True)
-        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=True)
+        g.asgd = g.sgd + SrlExpParams(optimizer="ASGD")
+        g.fobos = g.sgd + SrlExpParams(optimizer="FOBOS", regularizer="NONE")
+        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=True)        
+        g.adagrad_comid = g.adagrad + SrlExpParams(optimizer="ADAGRAD_COMID", regularizer="NONE")
         g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0), sgdAutoSelectLr=False)
         g.lbfgs = SrlExpParams(optimizer="LBFGS")
         
@@ -270,14 +270,20 @@ class ParamDefinitions():
         l.optimizers = [g.sgd, g.adagrad, g.adadelta, g.lbfgs]    
     
     def _define_groups_model(self, g):
-        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
-        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="SRL,DEP_TREE", removeAts="DEPREL")
-        g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
-        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
-        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="SRL,DEP_TREE", removeAts="DEPREL")
-        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")
+        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", 
+                                           predAts="SRL", latAts="DEP_TREE", removeAts="DEPREL")
+        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", 
+                                           predAts="SRL,DEP_TREE", removeAts="DEPREL")
+        g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED",
+                                           predAts="SRL")                        
+        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", 
+                                           predAts="SRL", latAts="DEP_TREE", removeAts="DEPREL")
+        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", 
+                                           predAts="SRL,DEP_TREE", removeAts="DEPREL")
+        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED",
+                                           predAts="SRL")
         g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, 
-                                                                         binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")                        
+                                                                         binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")
 
     def _define_lists_model(self, g, l):
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
@@ -400,7 +406,7 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*3*1024
                 else:
                     base_work_mem_megs = 5*1024
-            elif exp.get("includeSrl") == False:
+            elif exp.get("predAts") == "DEP_TREE":
                 base_work_mem_megs = 5 * 1000
                 is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
                 if is_higher_order: 

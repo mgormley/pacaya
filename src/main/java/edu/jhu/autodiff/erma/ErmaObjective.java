@@ -122,8 +122,8 @@ public class ErmaObjective implements ExampleObjective {
         if (ac.accumWeight) {
             ac.weight += ex.getWeight();
         }
-        if (ac.accumTrainLoss) {
-            ac.trainLoss += loss;
+        if (ac.accumLoss) {
+            ac.loss += loss;
         }
         t0.stop(); tot.add(t0);
     }

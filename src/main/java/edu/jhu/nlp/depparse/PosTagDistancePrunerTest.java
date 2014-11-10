@@ -18,7 +18,7 @@ public class PosTagDistancePrunerTest {
         AnnoSentenceCollection sents = getSents(3, 10, 10);
         System.out.println(sents);
         PosTagDistancePruner pruner = new PosTagDistancePruner();
-        pruner.train(sents);
+        pruner.train(null, sents, null, null);
         pruner.annotate(sents);
         System.out.println(sents);
         AnnoSentence sent = sents.get(0);
@@ -57,7 +57,7 @@ public class PosTagDistancePrunerTest {
         sents2.add(sent2);
         
         PosTagDistancePruner pruner = new PosTagDistancePruner();
-        pruner.train(sents1);
+        pruner.train(null, sents1, null, null);
         pruner.annotate(sents2);        
 
         System.out.println(sents1);
@@ -71,6 +71,36 @@ public class PosTagDistancePrunerTest {
         assertTrue(sent2.getDepEdgeMask().isPruned(1, 5)); // V P
         assertTrue(!sent2.getDepEdgeMask().isPruned(5, 6)); // P N
     }    
+    
+    @Test
+    public void testDirection() {
+        AnnoSentenceCollection sents1 = new AnnoSentenceCollection();        
+        AnnoSentence sent1 = new AnnoSentence();
+        sent1.setWords(  Lists.getList("0", "1", "2", "3"));
+        sent1.setPosTags(Lists.getList("N", "N", "V", "V"));
+        sent1.setParents(new int[]    {  3,   3,  3,   -1});
+        sents1.add(sent1);
+        
+        AnnoSentenceCollection sents2 = new AnnoSentenceCollection();        
+        AnnoSentence sent2 = new AnnoSentence();
+        sent2.setWords(  Lists.getList("0", "1", "2", "3", "4"));
+        sent2.setPosTags(Lists.getList("V", "V", "N", "N", "V"));
+        sents2.add(sent2);
+        
+        PosTagDistancePruner pruner = new PosTagDistancePruner();
+        pruner.train(null, sents1, null, null);
+        pruner.annotate(sents2);        
+
+        System.out.println(sents1);
+        System.out.println(sents2);
+        
+        assertTrue(sent2.getDepEdgeMask().isPruned(0, 1)); // V V Right
+        assertTrue(!sent2.getDepEdgeMask().isPruned(1, 0)); // V V Left
+        assertTrue(sent2.getDepEdgeMask().isPruned(0, 2)); // V N Right
+        assertTrue(sent2.getDepEdgeMask().isPruned(2, 0)); // N V Left
+        assertTrue(!sent2.getDepEdgeMask().isPruned(4, 2)); // V N Left
+        assertTrue(sent2.getDepEdgeMask().isPruned(2, 4)); // N V Right
+    }
 
     @Test
     public void testUnknownTag() {
@@ -89,7 +119,7 @@ public class PosTagDistancePrunerTest {
         sents2.add(sent2);
         
         PosTagDistancePruner pruner = new PosTagDistancePruner();
-        pruner.train(sents1);
+        pruner.train(null, sents1, null, null);
         pruner.annotate(sents2);        
 
         System.out.println(sents1);

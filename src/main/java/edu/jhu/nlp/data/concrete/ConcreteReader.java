@@ -88,6 +88,7 @@ public class ConcreteReader {
 
     private ConcreteReaderPrm prm;
     private int numEntityMentions = 0;
+    private int numOverlapingMentions = 0;
     private int numSituationMentions = 0;
     
     public ConcreteReader(ConcreteReaderPrm prm) {
@@ -102,6 +103,7 @@ public class ConcreteReader {
             sents = sentsFromCommFile(inFile);
         }
         log.debug("Num entity mentions: " + numEntityMentions);
+        log.debug("Num overlapping entity mentions: " + numOverlapingMentions);        
         log.debug("Num situation mentions: " + numSituationMentions);
         return sents;
     }
@@ -185,21 +187,6 @@ public class ConcreteReader {
 
             if (comm.getSituationMentionSetsSize() > 0) {
                 addSituationMentions(comm, tmpSents);
-                
-                for (AnnoSentence aSent : tmpSents) {     
-                    if (RelationsOptions.shortenEntityMentions) {
-                        for (NerMention m : aSent.getNamedEntities()) {
-                            // Set the end of the span to be the head token.
-                            m.getSpan().setEnd(m.getHead()+1);
-                        }
-                        aSent.getNamedEntities().sort();                       
-                    }
-                    // Add the named entity pairs.
-                    RelationsEncoder.addNePairsAndRelLabels(aSent);
-                }
-                tmpSents = RelationsEncoder.getSingletons(tmpSents);
-                // Deterministically shuffle the positive and negative examples for this communication.
-                Collections.shuffle(tmpSents, new Random(1234567890));
             }
         }
         
@@ -245,6 +232,7 @@ public class ConcreteReader {
         for (int i=0; i<tmpSents.size(); i++) {
             AnnoSentence aSent = tmpSents.get(i);
             NerMentions ner = new NerMentions(aSent.size(), mentions.get(i));
+            numOverlapingMentions += ner.getNumOverlapping();
             aSent.setNamedEntities(ner);
         }
         

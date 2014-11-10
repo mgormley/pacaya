@@ -19,6 +19,7 @@ import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.RelationMention;
 import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
 import edu.jhu.prim.tuple.Pair;
@@ -130,10 +131,9 @@ public class RelationsEncoder implements Encoder<AnnoSentence, List<String>> {
         sent.setRelLabels(relLabels);
         
         if (RelationsOptions.removeEntityTypes) {
-            // Replace entity types with POS tags.
             for (NerMention ne : nes) {
-                ne.setEntityType(sent.getPosTag(ne.getHead()));
-                ne.setEntitySubType(sent.getPosTag(ne.getHead()));
+                ne.setEntityType(null);
+                ne.setEntitySubType(null);
             }
         }
     }
@@ -200,8 +200,8 @@ public class RelationsEncoder implements Encoder<AnnoSentence, List<String>> {
         }
     }
 
-    public static List<AnnoSentence> getSingletons(List<AnnoSentence> sents) {
-        List<AnnoSentence> singles = new ArrayList<>();
+    public static AnnoSentenceCollection getSingletons(AnnoSentenceCollection sents) {
+        AnnoSentenceCollection singles = new AnnoSentenceCollection();
         for (int i=0; i<sents.size(); i++) {
             AnnoSentence sent = sents.get(i);
             for (int k=0; k<sent.getRelLabels().size(); k++) {

@@ -14,14 +14,15 @@ import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.Optimizer;
+import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
+import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.prim.sort.IntSort;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -63,7 +64,12 @@ public class CrfTrainer {
         }
     }
     
-    public FgModel train(FgModel model, FgExampleList data) {        
+    @Deprecated
+    public FgModel train(FgModel model, FgExampleList data) {
+        return train(model, data, null);
+    }
+    
+    public FgModel train(FgModel model, FgExampleList data, Function validation) {        
         ExampleObjective exObj;
         boolean isMinimize;
         if (prm.trainer == Trainer.ERMA) {
@@ -99,12 +105,16 @@ public class CrfTrainer {
                 DifferentiableBatchFunction nbr = isMinimize ? new BatchFunctionOpts.NegateFunction(br) : br;
                 fn = new BatchFunctionOpts.AddFunctions(objective, nbr);
             }
-            if (isMinimize == true) {
-                prm.batchOptimizer.minimize(fn, model.getParams());   
+            if (prm.batchOptimizer instanceof SGD && validation != null) {
+                SGD sgd = (SGD) prm.batchOptimizer;
+                sgd.optimize(fn, model.getParams(), !isMinimize, validation);
             } else {
-                prm.batchOptimizer.maximize(fn, model.getParams());   
+                if (isMinimize == true) {
+                    prm.batchOptimizer.minimize(fn, model.getParams());   
+                } else {
+                    prm.batchOptimizer.maximize(fn, model.getParams());   
+                }
             }
-            log.info("Final objective value: " + fn.getValue(model.getParams(), IntSort.getIndexArray(fn.getNumExamples())));
         }
         objective.shutdown();
         return model;

@@ -195,6 +195,7 @@ public class DepTree implements Iterable<DepTreeNode> {
      * @param parents The parents array.
      * @return The path as a list of pairs containing the word positions and the
      *         direction of the edge, inclusive of the start and end.
+     *         Or null if there is no path.
      */
     public static List<Pair<Integer,Dir>> getDependencyPath(int start, int end, int[] parents) {
         int n = parents.length;
@@ -207,10 +208,14 @@ public class DepTree implements Iterable<DepTreeNode> {
         IntHashSet endAncSet = new IntHashSet();
         IntArrayList endAncList = new IntArrayList();
         int curPos = end;
-        while (curPos != WallDepTreeNode.WALL_POSITION) {
+        while (curPos != WallDepTreeNode.WALL_POSITION && curPos != -2 && !endAncSet.contains(curPos)) {
             endAncSet.add(curPos);
             endAncList.add(curPos);
             curPos = parents[curPos];
+        }
+        if (curPos != -1) {
+            // No path to the wall. Possibly a cycle.
+            return null;
         }
         endAncSet.add(curPos); // Don't forget the wall node.
         endAncList.add(curPos);
@@ -219,10 +224,16 @@ public class DepTree implements Iterable<DepTreeNode> {
         List<Pair<Integer,Dir>> path = new ArrayList<Pair<Integer,Dir>>();
         
         // Add all the "edges" from the start up to the one pointing at the LCA.
+        IntHashSet startAncSet = new IntHashSet();
         curPos = start;
-        while (!endAncSet.contains(curPos)) {
+        while (!endAncSet.contains(curPos) && curPos != -2 && !startAncSet.contains(curPos)) {
             path.add(new Pair<Integer,Dir>(curPos, Dir.UP));
+            startAncSet.add(curPos);
             curPos = parents[curPos];
+        }
+        if (!endAncSet.contains(curPos)) {
+            // No path to any nodes in endAncSet or a cycle.
+            return null;
         }
 
         // Least common ancestor.

@@ -1,8 +1,11 @@
 package edu.jhu.nlp.eval;
 
+import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.app.Loss;
+import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
@@ -12,57 +15,68 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  * 
  * @author mgormley
  */
-public class DepParseEvaluator implements Loss<AnnoSentence> {
+public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
 
+    /** Regex for matching words consisting of entirely Unicode punctuation characters. */
+    static final Pattern PUNCT_RE = Pattern.compile("^\\p{Punct}+$", Pattern.UNICODE_CHARACTER_CLASS);
     private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
-
-    private String dataName;
 
     private double accuracy;
     private int correct;
     private int total;
+    private boolean skipPunctuation;
 
-    public DepParseEvaluator(String dataName) {
-        this.dataName = dataName;
+    public DepParseEvaluator(boolean skipPunctuation) {
+        this.skipPunctuation = skipPunctuation;
     }
-
+    
     /** Gets the number of incorrect dependencies. */
     @Override
     public double loss(AnnoSentence pred, AnnoSentence gold) {
         correct = 0;
         total = 0;
-        evaluate(gold, pred);
-        return total-correct;
-    }  
+        evaluate(pred, gold);
+        return getErrors();
+    }
 
     /** Computes the number of correct dependencies, total dependencies, and accuracy. */
-    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String dataName) {
         correct = 0;
         total = 0;
         assert(predSents.size() == goldSents.size());
         for (int i = 0; i < goldSents.size(); i++) {
             AnnoSentence gold = goldSents.get(i);
             AnnoSentence pred = predSents.get(i);
-            evaluate(gold, pred);
+            evaluate(pred, gold);
         }
         accuracy = (double) correct / (double) total;
-        log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));
+        log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));        
+        return getErrors();
     }
 
-    private void evaluate(AnnoSentence gold, AnnoSentence pred) {
+    private void evaluate(AnnoSentence pred, AnnoSentence gold) {
         int[] goldParents = gold.getParents();
         int[] parseParents = pred.getParents();
         if (parseParents != null) {
             assert(parseParents.length == goldParents.length);
         }
-        for (int j = 0; j < goldParents.length; j++) {
+        for (int c = 0; c < goldParents.length; c++) {
+            if (skipPunctuation && isPunctuation(gold.getWord(c))) {
+                // Don't score punctuation.
+                continue;
+            }
             if (parseParents != null) {
-                if (goldParents[j] == parseParents[j]) {
+                if (goldParents[c] == parseParents[c]) {
                     correct++;
                 }
             }
             total++;
+            
         }
+    }
+    
+    public static boolean isPunctuation(String word) {
+        return PUNCT_RE.matcher(word).matches();
     }
 
     public double getAccuracy() {
@@ -75,6 +89,10 @@ public class DepParseEvaluator implements Loss<AnnoSentence> {
 
     public int getTotal() {
         return total;
-    }  
+    }
+
+    public double getErrors() {
+        return total - correct;
+    }
 
 }

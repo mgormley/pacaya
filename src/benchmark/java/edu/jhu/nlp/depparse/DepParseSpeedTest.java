@@ -9,21 +9,49 @@ import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
 
+/**
+ * TODO: Current hprof shows that >43% of time is spent in the BfsMpSchedule especially on
+ * the preOrderTraversal() and bfs() methods of DirectedGraph.
+ * 
+ * CPU SAMPLES BEGIN (total = 12092) Thu Oct 23 14:16:36 2014
+rank   self  accum   count trace method
+   1 22.38% 22.38%    2706 300543 edu.jhu.gm.util.DirectedGraph.preOrderTraveralNoMark
+   2 20.95% 43.33%    2533 300691 java.util.ArrayDeque.removeFirst
+   3  8.04% 51.36%     972 300564 java.lang.StrictMath.log1p
+   4  6.24% 57.60%     754 300670 edu.jhu.gm.inf.BfsMpSchedule.<init>
+   5  5.90% 63.50%     713 300641 java.lang.String.intern
+   6  4.33% 67.82%     523 300423 java.io.FileInputStream.open
+   7  2.91% 70.73%     352 300657 edu.jhu.prim.vector.IntDoubleDenseVector.dot
+   8  2.49% 73.22%     301 300695 edu.jhu.prim.sort.ShortSort.partition
+   9  2.15% 75.37%     260 300653 edu.jhu.nlp.depparse.FastDepParseFe.addArcFactoredMSTFeats
+  10  1.12% 76.49%     135 300708 edu.jhu.parse.dep.ProjectiveDependencyParser.insideAlgorithm
+ */
 public class DepParseSpeedTest {
     
     /**
      * Speed test results.
      * 
-     * For numParams = 100,000  (t3 is the feature extraction and dot product)
+     * t1: Build factor graph
+     * t3: the feature extraction and dot product
+     * t4: Run BP
      * 
+     * For numParams = 100,000  
+     * on 11/03/14        s=2401 n=56427 tot= 848.30 t0=178566.46 t1=4282.88 t2=6269666.67 t3=6388.20 t4=1355.51 t5=22197.88
+     * w/no interning of Var.name, FastMath.logAddTable=true, bpPrm.s = Algebras.REAL_ALGEBRA:
+     *                    s=2401 n=56427 tot=1220.41 t0=191277.97 t1=5084.89 t2=28213500.00 t3=6462.09 t4=2346.24 t5=27565.71
+     * w/coarse POS tag feats:
+     *                    s=2401 n=56427 tot=1115.82 t0=122667.39 t1=5162.58 t2=28213500.00 t3=3775.64 t4=2578.11 t5=24124.41
+     *
+     * BELOW ARE WITHOUT PROJDEPTREEGLOBALFACTOR.
      * w/Narad.StrFeats   s=2401 n=56427 Toks / sec: 662.01
      * w/McDon.StrFeats   s=2401 n=56427 tot= 204.06 t1=4300.51 t2=11285400.00 t3= 245.32 t4=1778.12 t5=35355.26
      * w/IntFeats         s=2401 n=56427 tot= 868.67 t1=4592.79 t2=14106750.00 t3=2922.32 t4=1776.28 t5=35849.43
      * w/DirectToFv       s=2401 n=56427 tot= 931.51 t0=217026.92 t1=5106.98 t2=11285400.00 t3=3332.37 t4=1830.98 t5=37643.10
-     * 
+     *    
      * For numParams = 1,000,000
      * w/IntFeats         s=2401 n=56427 tot= 831.90 t1=4307.40 t2=28213500.00 t3=2727.52 t4=1742.17 t5=35069.61
      * 
@@ -33,6 +61,7 @@ public class DepParseSpeedTest {
      */
     //@Test
     public void testSpeed() {
+        FastMath.useLogAddTable = true;
         for (int trial = 0; trial < 2; trial++) {
             Timer t = new Timer();
             Timer t0 = new Timer();

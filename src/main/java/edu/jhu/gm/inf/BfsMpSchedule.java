@@ -2,7 +2,6 @@ package edu.jhu.gm.inf;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +11,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
+import edu.jhu.gm.util.Visitor;
 
 /**
  * A sequential schedule for (optionally disconnected) factor graphs in which
@@ -39,28 +39,35 @@ public class BfsMpSchedule implements MpSchedule {
             List<FgNode> topoOrder = getTopoOrder(fg, root);
             
             // Make a map from node ids to where they come in the topological order.
-            Map<FgNode,Integer> nodeToTopoPosition = getNodeToTopoPositionMap(fg, topoOrder); // {id:i for i, id in enumerate(topological_order)}
+            int[][] nodeToTopoPosition = getNodeToTopoPositionMap(fg, topoOrder); // {id:i for i, id in enumerate(topological_order)}
             
             // Add to the schedule.
-            addToSchedule(topoOrder, nodeToTopoPosition);            
+            addToSchedule(topoOrder, nodeToTopoPosition);
         }
     }
 
-    private FgNode chooseRoot(FactorGraph fg, FgNode root) {
-        // If we have a single global factor, make it the root.
+    private static class GlobalFactorVisitor implements Visitor<FgNode> {
         int numGlobalFactors = 0;
         FgNode lastGlobalFactor = null;
-        for (FgNode node : fg.preOrderTraversal(root)) {
+        @Override
+        public void visit(FgNode node) {
             if (node.isFactor() && node.getFactor() instanceof GlobalFactor) {
                 lastGlobalFactor = node;
                 numGlobalFactors++;
             }
         }
-        if (numGlobalFactors > 1) {
-            log.debug("Factor graph: " + fg);
-            // TODO: How could we handle this case?
-            throw new RuntimeException("More than one global factor is not (yet) supported with BfsBpSchedule.");
-        } else if (numGlobalFactors == 1) {
+    }
+    
+    private FgNode chooseRoot(FactorGraph fg, FgNode root) {
+        // If we have a single global factor, make it the root.
+        GlobalFactorVisitor v = new GlobalFactorVisitor();
+        fg.preOrderTraversal(root, v);
+
+        if (v.numGlobalFactors == 1) {
+            if (v.numGlobalFactors > 1) {
+                // TODO: How could we better handle this case?
+                log.warn("More than one global factor is not (yet) supported with BfsBpSchedule.");
+            }
             // Setting the (unique) global factor to the root, given that
             // the connected component is a tree will ensure that the factor
             // only needs to compute all its messages once per iteration,
@@ -68,7 +75,7 @@ public class BfsMpSchedule implements MpSchedule {
             //
             // TODO: This approach is very brittle. It would be nice to have
             // a more general purpose solution.
-            return lastGlobalFactor;
+            return v.lastGlobalFactor;
         } else {
             return root;
         }
@@ -83,24 +90,39 @@ public class BfsMpSchedule implements MpSchedule {
         return topoOrder;
     }
 
-//    private int VAR_IDX = 0;
-//    private int FAC_IDX = 1;
-//    
-//    private int[][] getNodeToTopoPositionMap(FactorGraph fg, List<FgNode> topoOrder) {
-//        int[][] n2p = new int[2][];
-//        n2p[VAR_IDX] = new int[fg.getNumVars()];
-//        n2p[FAC_IDX] = new int[fg.getNumFactors()];
-        
-    private Map<FgNode, Integer> getNodeToTopoPositionMap(FactorGraph fg, List<FgNode> topoOrder) {
-        Map<FgNode, Integer> n2p = new HashMap<>();       
+    private static int VAR_IDX = 0;
+    private static int FAC_IDX = 1;
+    
+    private int[][] getNodeToTopoPositionMap(FactorGraph fg, List<FgNode> topoOrder) {
+        int[][] n2p = new int[2][];
+        n2p[VAR_IDX] = new int[fg.getNumVars()];
+        n2p[FAC_IDX] = new int[fg.getNumFactors()];
         for (int i=0; i<topoOrder.size(); i++) {
             FgNode node = topoOrder.get(i);
-            n2p.put(node, i);
+            setPosition(node, n2p, i);
         }
         return n2p;
     }
-    
-    private void addToSchedule(List<FgNode> topoOrder, Map<FgNode, Integer> nodeToTopoPosition) {
+
+    private static void setPosition(FgNode node, int[][] n2p, int pos) {
+        if (node.isVar()) {
+            n2p[VAR_IDX][node.getVar().getId()] = pos;
+        } else {
+            n2p[FAC_IDX][node.getFactor().getId()] = pos;
+        }
+    }
+
+    private static int getPosition(FgNode node, int[][] n2p) {
+        int pos;
+        if (node.isVar()) {
+            pos = n2p[VAR_IDX][node.getVar().getId()];
+        } else {
+            pos = n2p[FAC_IDX][node.getFactor().getId()];
+        }
+        return pos;
+    }
+        
+    private void addToSchedule(List<FgNode> topoOrder, int[][] nodeToTopoPosition) {
         // Pass from earlier to later nodes.
         for (int i=0; i<topoOrder.size(); i++) {
             FgNode node = topoOrder.get(i);
@@ -111,7 +133,7 @@ public class BfsMpSchedule implements MpSchedule {
             } else {
                 for (FgEdge edge : node.getOutEdges()) {
                     FgNode neighbor = edge.getChild();
-                    if (i < nodeToTopoPosition.get(neighbor)) {
+                    if (i < getPosition(neighbor, nodeToTopoPosition)) {
                         order.add(edge);
                     }
                 }
@@ -127,7 +149,7 @@ public class BfsMpSchedule implements MpSchedule {
             } else {
                 for (FgEdge edge : node.getOutEdges()) {
                     FgNode neighbor = edge.getChild();
-                    if (i > nodeToTopoPosition.get(neighbor)) {
+                    if (i > getPosition(neighbor, nodeToTopoPosition)) {
                         order.add(edge);
                     }
                 }

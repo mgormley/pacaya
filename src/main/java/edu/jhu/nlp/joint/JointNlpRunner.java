@@ -31,23 +31,28 @@ import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.hlt.optimize.AdaDelta;
 import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
-import edu.jhu.hlt.optimize.AdaGrad;
-import edu.jhu.hlt.optimize.AdaGrad.AdaGradPrm;
+import edu.jhu.hlt.optimize.AdaGradComidL2;
+import edu.jhu.hlt.optimize.AdaGradComidL2.AdaGradComidL2Prm;
+import edu.jhu.hlt.optimize.AdaGradSchedule;
+import edu.jhu.hlt.optimize.AdaGradSchedule.AdaGradSchedulePrm;
 import edu.jhu.hlt.optimize.BottouSchedule;
 import edu.jhu.hlt.optimize.BottouSchedule.BottouSchedulePrm;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.SGDFobos;
+import edu.jhu.hlt.optimize.SGDFobos.SGDFobosPrm;
 import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
+import edu.jhu.nlp.AnnoPipeline;
+import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
-import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
@@ -57,7 +62,11 @@ import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
 import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.OraclePruningAccuracy;
+import edu.jhu.nlp.eval.PruningEfficiency;
 import edu.jhu.nlp.eval.RelationEvaluator;
+import edu.jhu.nlp.eval.SrlEvaluator;
+import edu.jhu.nlp.eval.SrlSelfLoops;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
@@ -74,6 +83,7 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
+import edu.jhu.nlp.tag.FileMapTagReducer;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
@@ -92,7 +102,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class JointNlpRunner {
 
-    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADADELTA };
+    public static enum Optimizer { LBFGS, QN, SGD, ADAGRAD, ADAGRAD_COMID, ADADELTA, FOBOS, ASGD };
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
@@ -162,6 +172,12 @@ public class JointNlpRunner {
     // Options for Brown clusters.
     @Opt(hasArg = true, description = "Brown cluster file")
     public static File brownClusters = null;
+    @Opt(hasArg = true, description = "Max length for the brown clusters")
+    public static int bcMaxTagLength = Integer.MAX_VALUE;
+    
+    // Options for Tag Maps
+    @Opt(hasArg = true, description = "Type or file indicating tag mapping")
+    public static File reduceTags = null;
     
     // Options for Embeddings.
     @Opt(hasArg=true, description="Path to word embeddings text file.")
@@ -169,11 +185,9 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Method for normalization of the embeddings.")
     public static Scaling embNorm = Scaling.L1_NORM;
     @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
-    public static double embScaler = 15.0;
+    public static double embScalar = 15.0;
     
     // Options for SRL factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model SRL.")
-    public static boolean includeSrl = true;
     @Opt(hasArg = true, description = "The structure of the Role variables.")
     public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
     @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
@@ -234,8 +248,6 @@ public class JointNlpRunner {
     public static File argFeatTplsOut = null;
 
     // Options for dependency parse factor graph structure.
-    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
-    public static boolean includeDp = true;
     @Opt(hasArg = true, description = "The type of the link variables.")
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
@@ -266,8 +278,6 @@ public class JointNlpRunner {
     public static boolean dpFastFeats = true;
     
     // Options for relation extraction.
-    @Opt(hasArg = true, description = "Whether to model Relation Extraction.")
-    public static boolean includeRel = false;
     @Opt(hasArg = true, description = "Relation feature templates.")
     public static String relFeatTpls = null;
     
@@ -294,7 +304,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
     public static int maxLbfgsIterations = 1000;
     @Opt(hasArg=true, description="Number of effective passes over the dataset for SGD.")
-    public static double sgdNumPasses = 30;
+    public static int sgdNumPasses = 30;
     @Opt(hasArg=true, description="The batch size to use at each step of SGD.")
     public static int sgdBatchSize = 15;
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
@@ -307,6 +317,10 @@ public class JointNlpRunner {
     public static int sgdAutoSelecFreq = 5;
     @Opt(hasArg=true, description="Whether to compute the function value on iterations other than the last.")
     public static boolean sgdComputeValueOnNonFinalIter = true;
+    @Opt(hasArg=true, description="Whether to do parameter averaging.")
+    public static boolean sgdAveraging = false;
+    @Opt(hasArg=true, description="Whether to do early stopping.")
+    public static boolean sgdEarlyStopping = true;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -334,6 +348,10 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
     public static ErmaLoss dpLoss = ErmaLoss.DP_DECODE_LOSS;
     
+    // Options for evaluation.
+    @Opt(hasArg=true, description="Whether to skip punctuation in dependency parse evaluation.")
+    public static boolean dpSkipPunctuation = false;
+    
     public JointNlpRunner() {
     }
 
@@ -353,7 +371,6 @@ public class JointNlpRunner {
         // Initialize the data reader/writer.
         CorpusHandler corpus = new CorpusHandler();
         
-        PosTagDistancePruner ptdPruner = null;
         // Get a model.
         if (modelIn == null && !corpus.hasTrain()) {
         	throw new ParseException("Either --modelIn or --train must be specified.");
@@ -361,116 +378,139 @@ public class JointNlpRunner {
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
         if (modelIn == null && corpus.hasTrain()) {
             // Feature selection.
+            // TODO: Move feature selection into the pipeline.
             featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
         }
+        
+        AnnoPipeline anno = new AnnoPipeline();
+        EvalPipeline eval = new EvalPipeline();
         JointNlpAnnotator jointAnno = new JointNlpAnnotator(prm);
         if (modelIn != null) {
             jointAnno.loadModel(modelIn);
         }
+        {
+            // Add Brown clusters.
+            if (brownClusters != null) {      
+                anno.add(new Annotator() {                    
+                    @Override
+                    public void annotate(AnnoSentenceCollection sents) {
+                        log.info("Adding Brown clusters.");
+                        BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
+                        bct.read(brownClusters);
+                        bct.annotate(sents);
+                        log.info("Brown cluster hit rate: " + bct.getHitRate());                        
+                    }
+                });
+            } else {
+                log.info("No Brown clusters file specified.");
+            }
+            // Apply a tag map to reduce the POS tagset.
+            if (reduceTags != null) {
+                log.info("Reducing tags with file map: " + reduceTags);
+                anno.add(new FileMapTagReducer(reduceTags));
+            }
+            // Add word embeddings.
+            if (embeddingsFile != null) {
+                anno.add(new Annotator() {                   
+                    @Override
+                    public void annotate(AnnoSentenceCollection sents) {
+                        log.info("Adding word embeddings.");
+                        EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
+                        ea.annotate(sents);
+                        log.info("Embeddings hit rate: " + ea.getHitRate());                        
+                    }
+                });
+            } else {
+                log.info("No embeddings file specified.");
+            }
+            
+            if (pruneByDist) {
+                // Prune via the distance-based pruner.
+                anno.add(new PosTagDistancePruner());
+            }
+            if (pruneByModel) {
+                if (pruneModel == null) {
+                    throw new IllegalStateException("If pruneByModel is true, pruneModel must be specified.");
+                }
+                anno.add(new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm()));
+            }
+            // Various NLP annotations.
+            anno.add(jointAnno);
+        }
+        {
+            if (pruneByDist || pruneByModel) {
+                eval.add(new PruningEfficiency(dpSkipPunctuation));
+                eval.add(new OraclePruningAccuracy(dpSkipPunctuation));
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE)) {
+                eval.add(new DepParseEvaluator(dpSkipPunctuation));
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
+                eval.add(new SrlSelfLoops());
+                eval.add(new SrlEvaluator());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
+                eval.add(new RelationEvaluator());
+            }
+        }
         
+
+        AnnoSentenceCollection devGold = null;
+        AnnoSentenceCollection devInput = null;
         if (corpus.hasTrain()) {
             String name = "train";            
-            AnnoSentenceCollection goldSents = corpus.getTrainGold();
-            AnnoSentenceCollection inputSents = corpus.getTrainInput();
-
-            // Add brown clusters, word embeddings.            
-            addClustersAndEmbeddings(inputSents);
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.EMBED);
-            // Train the distance-based pruner. 
-            if (pruneByDist) {
-                ptdPruner = new PosTagDistancePruner();
-                ptdPruner.train(goldSents);
-            }
-            addPruneMask(inputSents, ptdPruner, name);
-            // Ensure that the gold data is annotated with the pruning mask as well.
-            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
-            printOracleAccuracyAfterPruning(inputSents, goldSents, name);
+            AnnoSentenceCollection trainGold = corpus.getTrainGold();
+            AnnoSentenceCollection trainInput = corpus.getTrainInput();
+            // (Dev data might be null.)
+            devGold = corpus.getDevGold();
+            devInput = corpus.getDevInput();
             
-            // Train a model.
-            jointAnno.train(goldSents);
+            // Train a model. (The PipelineAnnotator also annotates all the input.)
+            anno.train(trainInput, trainGold, devInput, devGold);
             
             // Decode and evaluate the train data.
-            jointAnno.annotate(inputSents);
-            corpus.writeTrainPreds(inputSents);
-            eval(name, goldSents, inputSents);
+            corpus.writeTrainPreds(trainInput);
+            eval.evaluate(trainInput, trainGold, name);
             corpus.clearTrainCache();
+            
+            if (modelOut != null) {
+                jointAnno.saveModel(modelOut);
+            }
+            if (printModel != null) {
+                jointAnno.printModel(printModel);
+            }
         }
         
-        if (modelOut != null) {
-            jointAnno.saveModel(modelOut);
-        }
-        if (printModel != null) {
-            jointAnno.printModel(printModel);
-        }
-
         if (corpus.hasDev()) {
-            // Decode dev data.
+            // Write dev data predictions.
             String name = "dev";
-            AnnoSentenceCollection inputSents = corpus.getDevInput();
-            addClustersAndEmbeddings(inputSents);
-            addPruneMask(inputSents, ptdPruner, name);
-            jointAnno.annotate(inputSents);
-            corpus.writeDevPreds(inputSents);
+            if (devInput == null) {
+                // Train did not yet annotate the dev data.
+                devInput = corpus.getDevInput();
+                anno.annotate(devInput);
+            }
+            corpus.writeDevPreds(devInput);
             // Evaluate dev data.
-            AnnoSentenceCollection goldSents = corpus.getDevGold();
-            eval(name, goldSents, inputSents);
+            devGold = corpus.getDevGold();
+            eval.evaluate(devInput, devGold, name);
             corpus.clearDevCache();
         }
         
         if (corpus.hasTest()) {
             // Decode test data.
             String name = "test";
-            AnnoSentenceCollection inputSents = corpus.getTestInput();
-            addClustersAndEmbeddings(inputSents);
-            addPruneMask(inputSents, ptdPruner, name);
-            jointAnno.annotate(inputSents);
-            corpus.writeTestPreds(inputSents);
+            AnnoSentenceCollection testInput = corpus.getTestInput();
+            anno.annotate(testInput);
+            corpus.writeTestPreds(testInput);
             // Evaluate test data.
-            AnnoSentenceCollection goldSents = corpus.getTestGold();
-            eval(name, goldSents, inputSents);
+            AnnoSentenceCollection testGold = corpus.getTestGold();
+            eval.evaluate(testInput, testGold, name);
             corpus.clearTestCache();
         }
         t.stop();
         rep.report("elapsedSec", t.totSec());
     }
 
-    private void addClustersAndEmbeddings(AnnoSentenceCollection sents) throws IOException {
-        // Add Brown clusters.
-        if (brownClusters != null) {            
-            log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
-            bct.read(brownClusters);
-            bct.annotate(sents);
-            log.info("Brown cluster hit rate: " + bct.getHitRate());
-        } else {
-            log.warn("No Brown cluster file specified.");            
-        }
-        // Add word embeddings.
-        if (embeddingsFile != null) {
-            log.info("Adding word embeddings.");
-            EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
-            ea.annotate(sents);
-            log.info("Embeddings hit rate: " + ea.getHitRate());
-        } else {
-            log.info("No embeddings file specified.");
-        }
-    }
-
-    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) throws ParseException {
-        if (pruneByDist) {
-            // Prune via the distance-based pruner.
-            ptdPruner.annotate(inputSents);
-        }
-        if (pruneByModel) {
-            if (pruneModel == null) {
-                throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
-            }
-            FirstOrderPruner foPruner = new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm());
-            foPruner.annotate(inputSents);
-        }
-    }
-    
     /**
      * Do feature selection and update fePrm with the chosen feature templates.
      */
@@ -495,7 +535,7 @@ public class JointNlpRunner {
             srlFePrm.fePrm.soloTemplates = sft.srlSense;
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
         }
-        if (includeSrl && acl14DepFeats) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
             fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
         }
         if (useTemplates) {
@@ -524,55 +564,7 @@ public class JointNlpRunner {
             fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
         }
     }
-
-    private void eval(String name, AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
-        printOracleAccuracyAfterPruning(predSents, goldSents, name);
-        printPredArgSelfLoopStats(goldSents);
-        DepParseEvaluator depEval = new DepParseEvaluator(name);
-        depEval.evaluate(goldSents, predSents);
-        RelationEvaluator relEval = new RelationEvaluator(name);
-        relEval.evaluate(goldSents, predSents);
-    }
-
-    private static void printOracleAccuracyAfterPruning(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
-        if (pruneByDist || pruneByModel) {
-            int numTot = 0;
-            int numCorrect = 0;
-            for (int i=0; i<predSents.size(); i++) {
-                AnnoSentence predSent = predSents.get(i);
-                AnnoSentence goldSent = goldSents.get(i);
-                if (predSent.getDepEdgeMask() != null) {
-                    for (int c=0; c<goldSent.size(); c++) {
-                        int p = goldSent.getParent(c);
-                        if (predSent.getDepEdgeMask().isKept(p, c)) {
-                            numCorrect++;
-                        }
-                        numTot++;
-                    }
-                }
-            }
-            log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
-        }
-    }
     
-    private static void printPredArgSelfLoopStats(AnnoSentenceCollection sents) {
-        int numPredArgSelfLoop = 0;
-        int numPredArgs = 0;
-        for (AnnoSentence sent : sents) {
-            if (sent.getSrlGraph() != null) {
-                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
-                    if (edge.getArg().getPosition() == edge.getPred().getPosition()) {
-                        numPredArgSelfLoop += 1;
-                    }
-                }
-                numPredArgs += sent.getSrlGraph().getEdges().size();
-            }
-        }
-        if (numPredArgs > 0) {
-            log.info(String.format("Proportion pred-arg self loops: %.4f (%d / %d)", (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
-        }
-    }
-
     /* --------- Factory Methods ---------- */
 
     private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() throws ParseException {
@@ -582,6 +574,7 @@ public class JointNlpRunner {
         prm.dePrm = getDecoderPrm();
         prm.initParams = initParams;
         prm.ofcPrm = getObsFeatureConjoinerPrm();
+        prm.dpSkipPunctuation = dpSkipPunctuation;
         JointNlpFeatureExtractorPrm fePrm = getJointNlpFeatureExtractorPrm();
         prm.buPrm = getSrlFgExampleBuilderPrm(fePrm);
         return prm;
@@ -608,14 +601,14 @@ public class JointNlpRunner {
         prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
         // Relation Feature extraction.
-        if (includeRel) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
             if (relFeatTpls != null) { prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls); }
             prm.fgPrm.relPrm.featureHashMod = featureHashMod;
         }
         
-        prm.fgPrm.includeDp = includeDp;
-        prm.fgPrm.includeSrl = includeSrl;
-        prm.fgPrm.includeRel = includeRel;
+        prm.fgPrm.includeDp = CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE);
+        prm.fgPrm.includeSrl = CorpusHandler.getGoldOnlyAts().contains(AT.SRL);
+        prm.fgPrm.includeRel = CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS);
         
         // Feature extraction.
         prm.fePrm = fePrm;
@@ -657,7 +650,7 @@ public class JointNlpRunner {
         dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
         dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
-        if (includeSrl && acl14DepFeats) {
+        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
             // This special case is only for historical consistency.
             dpFePrm.onlyTrueBias = false;
             dpFePrm.onlyTrueEdges = false;
@@ -731,7 +724,8 @@ public class JointNlpRunner {
         } else if (optimizer == Optimizer.QN) {
             prm.optimizer = getStanfordLbfgs();
             prm.batchOptimizer = null;            
-        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
+        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ASGD  ||
+                optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.optimizer = null;
             SGDPrm sgdPrm = getSgdPrm();
             if (optimizer == Optimizer.SGD){
@@ -739,10 +733,18 @@ public class JointNlpRunner {
                 boPrm.initialLr = sgdInitialLr;
                 boPrm.lambda = 1.0 / l2variance;
                 sgdPrm.sched = new BottouSchedule(boPrm);
+            } else if (optimizer == Optimizer.ASGD){
+                BottouSchedulePrm boPrm = new BottouSchedulePrm();
+                boPrm.initialLr = sgdInitialLr;
+                boPrm.lambda = 1.0 / l2variance;
+                boPrm.power = 0.75;
+                sgdPrm.sched = new BottouSchedule(boPrm);
+                sgdPrm.averaging = true;
             } else if (optimizer == Optimizer.ADAGRAD){
-                AdaGradPrm adaGradPrm = new AdaGradPrm();
+                AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
-                sgdPrm.sched = new AdaGrad(adaGradPrm);
+                adaGradPrm.constantAddend = adaDeltaConstantAddend;
+                sgdPrm.sched = new AdaGradSchedule(adaGradPrm);
             } else if (optimizer == Optimizer.ADADELTA){
                 AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
                 adaDeltaPrm.decayRate = adaDeltaDecayRate;
@@ -751,6 +753,27 @@ public class JointNlpRunner {
                 sgdPrm.autoSelectLr = false;
             }
             prm.batchOptimizer = new SGD(sgdPrm);
+        } else if (optimizer == Optimizer.ADAGRAD_COMID) {
+            AdaGradComidL2Prm sgdPrm = new AdaGradComidL2Prm();
+            setSgdPrm(sgdPrm);
+            //TODO: sgdPrm.l1Lambda = l2Lambda;
+            sgdPrm.l2Lambda = 1.0 / l2variance;
+            sgdPrm.eta = adaGradEta;
+            sgdPrm.constantAddend = adaDeltaConstantAddend;
+            sgdPrm.sched = null;
+            prm.optimizer = null;
+            prm.batchOptimizer = new AdaGradComidL2(sgdPrm);
+        } else if (optimizer == Optimizer.FOBOS) {
+            SGDFobosPrm sgdPrm = new SGDFobosPrm();
+            setSgdPrm(sgdPrm);
+            //TODO: sgdPrm.l1Lambda = l2Lambda;            
+            sgdPrm.l2Lambda = 1.0 / l2variance;
+            BottouSchedulePrm boPrm = new BottouSchedulePrm();
+            boPrm.initialLr = sgdInitialLr;
+            boPrm.lambda = 1.0 / l2variance;
+            sgdPrm.sched = new BottouSchedule(boPrm);  
+            prm.optimizer = null;
+            prm.batchOptimizer = new SGDFobos(sgdPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
@@ -766,7 +789,8 @@ public class JointNlpRunner {
         prm.trainer = trainer;                
         
         // TODO: add options for other loss functions.
-        if (prm.trainer == Trainer.ERMA && includeDp && !includeSrl) {
+        if (prm.trainer == Trainer.ERMA && 
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             if (dpLoss == ErmaLoss.DP_DECODE_LOSS) {
                 DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
                 lossPrm.annealMse = dpAnnealMse;
@@ -795,6 +819,11 @@ public class JointNlpRunner {
     
     private static SGDPrm getSgdPrm() {
         SGDPrm prm = new SGDPrm();
+        setSgdPrm(prm);
+        return prm;
+    }
+
+    private static void setSgdPrm(SGDPrm prm) {
         prm.numPasses = sgdNumPasses;
         prm.batchSize = sgdBatchSize;
         prm.withReplacement = sgdWithRepl;
@@ -802,9 +831,10 @@ public class JointNlpRunner {
         prm.autoSelectLr = sgdAutoSelectLr;
         prm.autoSelectFreq = sgdAutoSelecFreq;
         prm.computeValueOnNonFinalIter = sgdComputeValueOnNonFinalIter;
+        prm.averaging = sgdAveraging; 
+        prm.earlyStopping = sgdEarlyStopping; 
         // Make sure we correctly set the schedule somewhere else.
         prm.sched = null;
-        return prm;
     }
 
     private static FgInferencerFactory getInfFactory() throws ParseException {
@@ -842,6 +872,7 @@ public class JointNlpRunner {
     private static BrownClusterTaggerPrm getBrownCluterTaggerPrm() {
         BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
         bcPrm.language = CorpusHandler.language;
+        bcPrm.maxTagLength = bcMaxTagLength;
         return bcPrm;
     }
 
@@ -849,7 +880,7 @@ public class JointNlpRunner {
         EmbeddingsAnnotatorPrm prm = new EmbeddingsAnnotatorPrm();
         prm.embeddingsFile = embeddingsFile;
         prm.embNorm = embNorm;
-        prm.embScaler= embScaler;
+        prm.embScalar= embScalar;
         return prm;
     }
     

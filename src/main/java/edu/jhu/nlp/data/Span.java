@@ -117,5 +117,9 @@ public class Span implements Comparable<Span> {
     public int size() {
         return end - start;
     }
+
+    public boolean overlaps(Span other) {
+        return other.contains(this.start) || this.contains(other.start);
+    }
     
 }

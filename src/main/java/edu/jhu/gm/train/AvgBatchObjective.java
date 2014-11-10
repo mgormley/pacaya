@@ -102,18 +102,21 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     }
 
     private void accum(IntDoubleVector params, int[] batch, final Accumulator ac) {
-        boolean isFullDataset = (batch.length == numExamples);
-
+        boolean isFullDataset = (batch.length >= numExamples);
+        
         if (isFullDataset) {
             // Include some additional accumulators so that we can report at the end.
             ac.accumValue = true;
-            ac.accumTrainLoss = true;
-            ac.accumDevLoss = true;
+            ac.accumLoss = true;
             ac.accumWeight = true;
         }
         if (ac.accumGradient) {
-            this.gradient.zero();
-            ac.gradient = this.gradient;
+            if (isFullDataset) {
+                this.gradient.zero();
+                ac.gradient = this.gradient;
+            } else {
+                ac.gradient = this.gradient.getSparseZeroedCopy();
+            }
         }
         
         model.setParams(params);        
@@ -141,9 +144,9 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         if (isFullDataset) {
             // Print out the likelihood if we're computing it on the entire dataset.
-            log.info(String.format("Summary: avg value = %.2g train loss = %.2g dev loss = %.2g weight = %.2g",
-                    ac.value, ac.trainLoss, ac.devLoss, ac.weight));
-            exObj.report();            
+            log.info(String.format("Summary: avg value = %.2g loss = %.2g weight = %.2g",
+                    ac.value, ac.loss, ac.weight));
+            exObj.report();
         }
     }
 
@@ -189,7 +192,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         return numParams;
     }
 
-    /** Gets the number of examples in the training dataset. */
+    /** Gets the number of examples in the dataset. */
     @Override
     public int getNumExamples() {
         return numExamples;

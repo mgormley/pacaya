@@ -18,7 +18,7 @@ public class EmbeddingsAnnotator implements Annotator {
         // Method for normalization of the embeddings.
         public Scaling embNorm = Scaling.L1_NORM;
         // Amount to scale embeddings after normalization.
-        public double embScaler = 15.0;
+        public double embScalar = 15.0;
     }
     
     private EmbeddingsAnnotatorPrm prm;
@@ -35,7 +35,7 @@ public class EmbeddingsAnnotator implements Annotator {
             throw new RuntimeException(e);
         }
         embeddings.normPerWord(prm.embNorm);
-        embeddings.scalePerWord(prm.embScaler);
+        embeddings.scalePerWord(prm.embScalar);
     }
     
     @Override

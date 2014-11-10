@@ -17,7 +17,7 @@ import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
-import edu.jhu.prim.vector.IntDoubleUnsortedVector;
+import edu.jhu.prim.vector.IntDoubleHashVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
 
@@ -69,7 +69,7 @@ public class FgModel implements Serializable, IFgModel {
     
     /** Copy constructor, which initializes the parameter vector to all zeros. */
     public FgModel getSparseZeroedCopy() {
-        return new FgModel(this, new IntDoubleUnsortedVector());
+        return new FgModel(this, new IntDoubleHashVector());
     }
 
     public void updateModelFromDoubles(double[] inParams) {
@@ -102,7 +102,7 @@ public class FgModel implements Serializable, IFgModel {
         }
     }
     
-    private boolean shouldLogNumExplicitParams = true;
+    private static boolean shouldLogNumExplicitParams = true;
     
     public void add(FgModel other) {
         if (other.numParams != this.numParams) {
@@ -119,24 +119,11 @@ public class FgModel implements Serializable, IFgModel {
     
     public double dot(FeatureVector fv) {
         // Check for features which don't have a corresponding model parameter
-        int maxIdx = getMaxIdx(fv);
+        int maxIdx = fv.getMaxIdx();
         if (maxIdx >= this.numParams) {
             throw new IllegalArgumentException("Invalid feature: " + maxIdx);
         }
         return params.dot(fv);
-    }
-
-    // TODO: Move this to prim.
-    public static int getMaxIdx(IntDoubleVector vec) {
-        final MutableInt max = new MutableInt(Integer.MIN_VALUE);
-        vec.iterate(new FnIntDoubleToVoid() {
-            public void call(int idx, double val) {
-                if (val > max.v) {
-                    max.v = idx;
-                }
-            }
-        });
-        return max.v;
     }
     
     public int getNumParams() {
@@ -212,12 +199,7 @@ public class FgModel implements Serializable, IFgModel {
     }
 
     public void scale(final double multiplier) {
-        apply(new FnIntDoubleToDouble() {
-            @Override
-            public double call(int idx, double val) {
-                return multiplier * val;
-            }
-        });
+        params.scale(multiplier);
     }
 
     public double l2Norm() {

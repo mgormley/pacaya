@@ -74,7 +74,7 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
             LinkVar var = (LinkVar) vars.get(0);
             int p = var.getParent();
             int c = var.getChild();
-            FastDepParseFe.addArcFactoredMSTFeats(isent, p, c, feats, false);            
+            FastDepParseFe.addArcFactoredMSTFeats(isent, p, c, feats, false, true);            
         } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
             O2FeTypedFactor f2 = (O2FeTypedFactor)f;
             FastDepParseFe.add2ndOrderSiblingFeats(isent, f2.i, f2.j, f2.k, feats);

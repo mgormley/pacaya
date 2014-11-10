@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -15,6 +16,7 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.nlp.data.DepTree;
+import edu.jhu.nlp.data.DepTree.Dir;
 import edu.jhu.nlp.data.LabeledSpan;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.Span;
@@ -22,8 +24,12 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.FeaturizedSentence;
 import edu.jhu.nlp.features.FeaturizedTokenPair;
 import edu.jhu.nlp.features.LocalObservations;
+import edu.jhu.nlp.features.TemplateFeatureExtractor;
+import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
+import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
+import edu.jhu.nlp.relations.RelationsOptions.EntityTypeRepl;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
@@ -36,7 +42,9 @@ import edu.jhu.util.FeatureNames;
  * @author mgormley
  */
 public class RelObsFe implements ObsFeatureExtractor {
-    
+
+    private static final Logger log = Logger.getLogger(RelObsFe.class);
+
     private RelationsFactorGraphBuilderPrm prm;
     private AnnoSentence sent;
     private FactorTemplateList fts;
@@ -77,6 +85,24 @@ public class RelObsFe implements ObsFeatureExtractor {
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
         fv.add("BIAS_FEATURE", 1.0);
         
+        // Set entity types to be Brown cluster tags if missing.
+        NerMention ne1 = local.getNe1();
+        if (ne1.getEntityType() == null) {
+            if (RelationsOptions.entityTypeRepl == EntityTypeRepl.BROWN) {
+                ne1.setEntityType(sent.getCluster(ne1.getHead()));
+            } else {
+                ne1.setEntityType("NOTYPE");
+            }
+        }
+        NerMention ne2 = local.getNe2();
+        if (ne2.getEntityType() == null) {
+            if (RelationsOptions.entityTypeRepl == EntityTypeRepl.BROWN) {
+                ne2.setEntityType(sent.getCluster(ne2.getHead()));
+            } else {
+                ne2.setEntityType("NOTYPE");
+            }
+        }
+        
         if (RelationsOptions.useZhou05Features) {
             addZhou05Features(local, fv);
         }
@@ -91,8 +117,8 @@ public class RelObsFe implements ObsFeatureExtractor {
 
         return fv;
     }
-
-    /** Add the features from Zhou et al. (2005). */
+    
+    /** Add the features from Sun et al. (2011) and Zhou et al. (2005). */
     private void addZhou05Features(LocalObservations local, ObjFeatVec<String> features) {
         NerMention m1 = local.getNe1();
         NerMention m2 = local.getNe2();
@@ -141,7 +167,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         // words in between
         // • WBO: other words in between except first and
         // last words when at least three words in between 
-        Span btwn = Span.getSpanBtwn(m1span, m2span);
+        Span btwn = new Span(m1.getHead()+1, m2.getHead());
         if (btwn.size() == 0) {
             addBinFeat(features, "wbNull");
         } else if (btwn.size() == 1) {
@@ -340,6 +366,66 @@ public class RelObsFe implements ObsFeatureExtractor {
         
         // TODO: Finish other features.
         
+
+        // ----------- Below are the extra features from Sun et al. (2011). -------------
+        // Bigram of the words between the two mentions: This was extracted by both Zhao and
+        // Grishman (2005) and Jiang and Zhai (2007).
+        //Span btwn = Span.getSpanBtwn(m1span, m2span);
+        for (int i=btwn.start(); i<=btwn.end(); i++) {
+            addBinFeat(features, "bigrwb:" + fsent.getFeatTok(i-1).getForm() + "_" + sent.getWord(i));
+        }
+        
+        // Patterns: There are three types of patterns: 
+        
+        // 1) the sequence of the tokens between the two mentions as used in Boschee et al. (2005);
+        StringBuilder seq = new StringBuilder();
+        for (int i=btwn.start(); i<btwn.end(); i++) {
+            seq.append(sent.getWord(i));
+            seq.append("_");
+        }
+        String seqwb = "seqwb:" + seq.toString();
+        addBinFeat(features, seqwb);        
+        addBinFeat(features, combo(et12, seqwb));
+        
+        // 2) the sequence of the heads of the constituents between the two mentions as used by
+        // Grishman et al. (2005);
+        // (basically following the highest cut through the parse tree between the two mentions)
+
+        // Since the above isn't clear, we instead just use the heads of the chunks between the mentions.        
+        StringBuilder chunkHeadPath = new StringBuilder();
+        for (int b=c1+1; b<=c2-1; b++) {
+            chunkHeadPath.append(sent.getWord(chunkHeads[b]));
+            chunkHeadPath.append("_");
+        }
+        String chnkhb = "chnkhb:"+chunkHeadPath;
+        addBinFeat(features, chnkhb);
+        addBinFeat(features, combo(et12, chnkhb));
+
+        // 3) the shortest dependency path between the two mentions in a dependency tree as adopted
+        // by Bunescu and Mooney (2005a).    
+        TemplateFeatureExtractor tfe = new TemplateFeatureExtractor(fsent, null);        
+        List<Pair<Integer, Dir>> path = fsent.getFeatTokPair(m1.getHead(), m2.getHead()).getDependencyPath();
+        if (path != null) {
+            List<String> posPath = tfe.getTokPropsForPath(TokProperty.POS, EdgeProperty.DIR, path);
+            List<String> wordPath = tfe.getTokPropsForPath(TokProperty.WORD, EdgeProperty.DIR, path);
+            List<String> relPath = tfe.getTokPropsForPath(null, EdgeProperty.EDGEREL, path);
+            relPath.addAll(tfe.getTokPropsForPath(null, EdgeProperty.DIR, path));
+            
+            addBinFeat(features, "posdppath:" + StringUtils.join(posPath, "_"));
+            addBinFeat(features, "reldppath:" + StringUtils.join(relPath, "_"));
+            addBinFeat(features, "worddppath:" + StringUtils.join(wordPath, "_"));
+            if (path.size() >= 3) {
+                addBinFeat(features, combo(et12, "posdppath:" + StringUtils.join(posPath.subList(1, posPath.size()-1), "_")));
+                addBinFeat(features, combo(et12, "reldppath:" + StringUtils.join(relPath.subList(1, relPath.size()-1), "_")));
+                addBinFeat(features, combo(et12, "worddppath:" + StringUtils.join(wordPath.subList(1, wordPath.size()-1), "_")));
+            }
+        }
+        
+        // Title list: This is tailored for the EMP-ORG type of relations as the head of one of the
+        // mentions is usually a title. The features are decoded in a way similar to that of Sun
+        // (2009).
+        
+        // TODO: Finish above title feature.
     }
 
     // TODO: Move this somewhere else.
@@ -395,7 +481,9 @@ public class RelObsFe implements ObsFeatureExtractor {
     }
     
     public static int getNumBtwn(AnnoSentence sent, NerMention m1, NerMention m2) {
-        Span btwn = Span.getSpanBtwn(m1.getSpan(), m2.getSpan());
+        int m1h = m1.getHead();
+        int m2h = m2.getHead();
+        Span btwn = new Span(Math.min(m1h, m2h), Math.max(m1h, m2h));
         int numMentsBtwn = 0;
         for (NerMention m : sent.getNamedEntities()) {
             if (m != m1 && m != m2 && btwn.contains(m.getSpan().start())) {
@@ -539,17 +627,36 @@ public class RelObsFe implements ObsFeatureExtractor {
         String ne1ne2 = ne1 + ne2;
                 
         switch (RelationsOptions.embFeatType) {
-        case FULL:        
+        case FULL:            
+            //     - chunk_head
+            //     - chunk_head+ne1
+            //     - chunk_head+ne2
+            //     - chunk_head+ne1+ne2
+            Pair<List<LabeledSpan>, IntArrayList> chunkPair = getSpansFromBIO(sent.getChunks(), true);
+            List<LabeledSpan> chunks = chunkPair.get1();
+            IntArrayList tokIdxToChunkIdx = chunkPair.get2();
+            int c1 = tokIdxToChunkIdx.get(m1.getHead());
+            int c2 = tokIdxToChunkIdx.get(m2.getHead());
+            int[] chunkHeads = getHeadsOfSpans(chunks, sent.getParents());
+            for (int b=c1+1; b<=c2-1; b++) {
+                int i = chunkHeads[b];
+                addEmbFeat("chunk_head", i, fv);
+                addEmbFeat("chunk_head-t1"+ne1, i, fv);
+                addEmbFeat("chunk_head-t2"+ne2, i, fv);
+                addEmbFeat("chunk_head-t1t2"+ne1ne2, i, fv);
+            }
+            
+        case FULL_NO_CHUNKS:
             //     - in_between: is the word in between entities
             //     - in_between+ne1 if in_between = T: ne1 is the entity type
             //     - in_between+ne2 if in_between = T
             //     - in_between+ne1+ne2 if in_between = T
-            Span btwn = Span.getSpanBtwn(m1span, m2span);
+            Span btwn = new Span(m1.getHead()+1, m2.getHead());
             for (int i=btwn.start(); i<btwn.end(); i++) {
                 addEmbFeat("in_between", i, fv);
-                addEmbFeat("in_between"+ne1, i, fv);
-                addEmbFeat("in_between"+ne2, i, fv);
-                addEmbFeat("in_between"+ne1ne2, i, fv);
+                addEmbFeat("in_between-t1"+ne1, i, fv);
+                addEmbFeat("in_between-t2"+ne2, i, fv);
+                addEmbFeat("in_between-t1t2"+ne1ne2, i, fv);
             }
     
             //     - on_path
@@ -557,12 +664,17 @@ public class RelObsFe implements ObsFeatureExtractor {
             //     - on_path+ne2 if on_path = T
             //     - on_path+ne1+ne2 if on_path = T
             FeaturizedTokenPair ftp = fsent.getFeatTokPair(m1.getHead(), m2.getHead());        
-            for (Pair<Integer,DepTree.Dir> pair : ftp.getDependencyPath()) {
-                int i = pair.get1();
-                addEmbFeat("on_path", i, fv);
-                addEmbFeat("on_path"+ne1, i, fv);
-                addEmbFeat("on_path"+ne2, i, fv);
-                addEmbFeat("on_path"+ne1ne2, i, fv);
+            List<Pair<Integer, Dir>> depPath = ftp.getDependencyPath();
+            if (depPath != null) {
+                for (Pair<Integer,DepTree.Dir> pair : depPath) {
+                    int i = pair.get1();
+                    addEmbFeat("on_path", i, fv);
+                    addEmbFeat("on_path-t1"+ne1, i, fv);
+                    addEmbFeat("on_path-t2"+ne2, i, fv);
+                    addEmbFeat("on_path-t1t2"+ne1ne2, i, fv);
+                }
+            } else {
+                log.warn("No dependency path between mention heads");
             }
             
             //     - -1_ne1: immediately to the left of the ne1 head
@@ -587,16 +699,16 @@ public class RelObsFe implements ObsFeatureExtractor {
             //     - ne1_head+ne1
             //     - ne1_head+ne2
             //     - ne1_head+ne1+ne2
-            addEmbFeat("ne1_head"+ne1,    m1.getHead(), fv);
-            addEmbFeat("ne1_head"+ne2,    m1.getHead(), fv);
-            addEmbFeat("ne1_head"+ne1ne2, m1.getHead(), fv);
+            addEmbFeat("ne1_head-t1"+ne1,    m1.getHead(), fv);
+            addEmbFeat("ne1_head-t2"+ne2,    m1.getHead(), fv);
+            addEmbFeat("ne1_head-t1t2"+ne1ne2, m1.getHead(), fv);
             
             //     - ne2_head+ne1
             //     - ne2_head+ne2
             //     - ne2_head+ne1+ne2
-            addEmbFeat("ne2_head"+ne1,    m2.getHead(), fv);
-            addEmbFeat("ne2_head"+ne2,    m2.getHead(), fv);
-            addEmbFeat("ne2_head"+ne1ne2, m2.getHead(), fv);
+            addEmbFeat("ne2_head-t1"+ne1,    m2.getHead(), fv);
+            addEmbFeat("ne2_head-t2"+ne2,    m2.getHead(), fv);
+            addEmbFeat("ne2_head-t1t2"+ne1ne2, m2.getHead(), fv);
             
         case HEAD_ONLY:
             //     - ne1_head: true if is the head of the first entity

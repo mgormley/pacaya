@@ -1,4 +1,4 @@
-package edu.jhu.nlp.depparse;
+package edu.jhu.hypergraph.depparse;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -27,6 +27,12 @@ import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
+import edu.jhu.nlp.depparse.DepParseDecoder;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilderSpeedTest;
+import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
+import edu.jhu.nlp.depparse.DepParseInferenceSpeedTest;
+import edu.jhu.nlp.depparse.FastDepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.O2FeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
@@ -211,6 +217,7 @@ public class DepParseFirstVsSecondOrderTest {
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
+        fgPrm.useProjDepTreeFactor = true;        
         fgPrm.grandparentFactors = true;
         fgPrm.siblingFactors = true;    
         DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(fgPrm);
