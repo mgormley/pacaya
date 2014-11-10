@@ -51,6 +51,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-opt-avg",  
                     "dp-opt", 
                     "dp-conll07",                
+                    "dp-en",
                     )
     
     def __init__(self, options):
@@ -87,6 +88,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("grandparentFactors", False)
         g.defaults.set_incl_name("dpSkipPunctuation", False)
         g.defaults.set_incl_arg("group", False)
+        g.defaults.set_incl_arg("datasource", False)
                 
         # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE",
@@ -127,7 +129,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             pl = p.langs[lang_short]
             gl.pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
             gl.cx_data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
-                                      test=pl.cx_test, testType="CONLL_X", 
+                                      test=pl.cx_test, testType="CONLL_X", datasource="CoNLL-X",
                                       language=lang_short, l2variance=l2var_map[lang_short])        
             if lang_short.startswith("en"):
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb,
@@ -143,7 +145,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl = g.langs[lang_short]
             pl = p.langs[lang_short]
             gl.c07_data = SrlExpParams(train=pl.c07_train, trainType="CONLL_X", devType="CONLL_X",
-                                      test=pl.c07_test, testType="CONLL_X", propTrainAsDev=0.10,
+                                      test=pl.c07_test, testType="CONLL_X", datasource="CoNLL-2007",
+                                      propTrainAsDev=0.10,
                                       language=lang_short, l2variance=c07_l2var_map[lang_short])
                     
         # ------------------------ EXPERIMENTS --------------------------
@@ -216,8 +219,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-cll":
-            # Conditional log-likelihood training of 1st and 2nd-order models for parsing.
-            # Includes hyperparameter tuning.
+            '''Conditional log-likelihood training of 1st and 2nd-order models for parsing.
+                Includes hyperparameter tuning.'''
             exps = []
             languages = ["en"]
             
@@ -253,7 +256,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
                 
         elif self.expname == "dp-pruning":            
-            # Trains the pruning models for the CoNLL-X languages.
+            '''Trains the pruning models for the CoNLL-X languages.'''
             exps = []
             g.defaults += g.feat_mcdonald_basic
             g.defaults.update(pruneByDist=False) # TODO: Consider changing this.
@@ -268,7 +271,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-aware":
-            # Comparison of CLL and ERMA training with varying models and iterations.
+            '''Comparison of CLL and ERMA training with varying models and iterations.'''
             exps = []
             languages = ["es", "bg", "en"]
             
@@ -311,8 +314,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
                 
         elif self.expname == "dp-aware-small":
-            # Comparison of CLL and ERMA training with varying models and iterations.
-            # Here we use a small dataset and no pruning.
+            '''Comparison of CLL and ERMA training with varying models and iterations.
+                Here we use a small dataset and no pruning.'''
             exps = []
             overrides = SrlExpParams(trainMaxNumSentences=1000,
                               trainMaxSentenceLength=10,
@@ -342,7 +345,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
          
         elif self.expname == "dp-erma":
-            # Comparison of CLL and ERMA training with varying models and iterations.
+            '''Comparison of CLL and ERMA training with varying models and iterations.'''
             exps = []
             g.defaults += g.erma_mse #TODO: Change to DEP_PARSE_DECODE_LOSS
             g.defaults.set_incl_name("l2variance", False)
@@ -382,7 +385,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-erma-tune":
-            # Tuning optimization for gradients computed by ERMA.
+            '''Tuning optimization for gradients computed by ERMA.'''
             exps = []
             #g.defaults.update(trainMaxNumSentences=)
             g.defaults.set_incl_name("l2variance", False)
@@ -403,8 +406,21 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
+        elif self.expname == "dp-en":
+            '''English-only experiments with first order parsers.'''
+            exps = []
+            g.defaults += g.cll + g.first_order
+            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            for data in [g.langs['en'].c07_data, g.langs['en'].cx_data, g.langs['en-st'].cx_data]:
+                for pruneByDist in [True, False]:
+                    data.update(propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                    exp = g.defaults + data
+                    exp.update(pruneByDist=pruneByDist, work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "dp-conll07":
-            # CoNLL-X experiments.
+            '''CoNLL-2007 experiments.'''
             exps = []
             g.defaults += g.cll
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
@@ -424,7 +440,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx":
-            # CoNLL-X experiments.
+            '''CoNLL-X experiments.'''
             exps = []
             g.defaults += g.cll
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
@@ -445,7 +461,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tune":
-            # CoNLL-X experiments.
+            '''Tuning for CoNLL-X experiments.'''
             exps = []
             g.defaults.update(seed=123456789) # NOTE THE FIXED SEED
             for lang_short in ["es", "bg"]:
@@ -463,7 +479,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tmp":
-            # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
+            '''Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).'''
             exps = []
             g.defaults += g.feat_mcdonald #tpl_narad 
             g.defaults.update(sgdNumPasses=2, sgdAutoSelectLr=False)
