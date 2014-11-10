@@ -12,15 +12,15 @@ import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.LabelSequence;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
-import edu.jhu.prim.matrix.DenseIntegerMatrix;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.Alphabet;
 
 /**
  * Distance-based pruning method from Rush & Petrov (2012).
  * 
- * For any pair of POS tag types, this approach prunes any edge for which the
- * distance is longer than the maximum distance observed at training time for
- * that POS tag type pair.
+ * For any pair of POS tag types and a direction (left or right), this approach prunes any edge for
+ * which the distance is longer than the maximum distance observed at training time for that POS tag
+ * type pair.
  * 
  * @author mgormley
  */
@@ -28,8 +28,10 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
+    public static final int LEFT = 0;
+    public static final int RIGHT = 1;    
     private Alphabet<String> alphabet = new Alphabet<String>();
-    private DenseIntegerMatrix mat;
+    private int[][][] mat;
     
     public PosTagDistancePruner() { }
     
@@ -42,8 +44,8 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
         }
         // Don't stop growth of alphabet.
         
-        mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
-        mat.fill(0);
+        mat = new int[alphabet.size()][alphabet.size()][2];
+        IntArrays.fill(mat, 0);
         // For each sentence...
         for (AnnoSentence sent : trainGold) {
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
@@ -57,10 +59,11 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
                     continue;
                 }
                 int dist = Math.abs(p - c);
-                if (dist > mat.get(tags[p], tags[c])) {
+                int dir = (p < c) ? RIGHT : LEFT;
+                if (dist > mat[tags[p]][tags[c]][dir]) {
                     // Record the max dependency length for the observed parent
                     // / child tag types.
-                    mat.set(tags[p], tags[c], dist);
+                    mat[tags[p]][tags[c]][dir] = dist;
                 }
             }
         }
@@ -86,22 +89,23 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
             int[] tags = tagSeq.getLabelIds();
 
             // For each possible dependency edge (not including edges to the wall)...
-            for (int i = 0; i < tags.length; i++) {
-                for (int j = 0; j < tags.length; j++) {
+            for (int p = 0; p < tags.length; p++) {
+                for (int c = 0; c < tags.length; c++) {
                     numEdgesTot++;
-                    if (tags[i] >= mat.getNumRows() || tags[j] >= mat.getNumRows()) {
+                    if (tags[p] >= mat.length || tags[c] >= mat.length) {
                         // Don't prune unknown tags.
                         continue;
                     }
-                    int dist = Math.abs(i - j);
-                    if (dist > mat.get(tags[i], tags[j])) {
+                    int dist = Math.abs(p - c);
+                    int dir = (p < c) ? RIGHT : LEFT;
+                    if (dist > mat[tags[p]][tags[c]][dir]) {
                         // Prune any edge for which the distance is longer than
                         // the longest observed distance for the parent / child
                         // tag types.
-                        mask.setIsPruned(i, j, true);
+                        mask.setIsPruned(p, c, true);
                         if (log.isTraceEnabled()) {
                             log.trace(String.format("Pruned edge: parent=%s child=%s dist=%d",
-                                    alphabet.lookupObject(tags[i]), alphabet.lookupObject(tags[j]), dist));
+                                    alphabet.lookupObject(tags[p]), alphabet.lookupObject(tags[c]), dist));
                         }
                     } else {
                         numEdgesKept++;
