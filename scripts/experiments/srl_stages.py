@@ -33,7 +33,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
         experiment_runner.JavaExpParams.__init__(self,keywords)
-            
+    
     def get_initial_keys(self):
         return "tagger_parser".split()
     
@@ -56,11 +56,11 @@ class SrlExpParams(experiment_runner.JavaExpParams):
             script += self.get_eval09_script("test", False)
         
         if self.get("train") and self.get("trainType") == "CONLL_X":
-            script += self.get_eval07_script("train")
+            script += self.get_eval07_script("train", self.get("dpSkipPunctuation"))
         if (self.get("dev") or self.get("propTrainAsDev") > 0) and self.get("devType") == "CONLL_X":
-            script += self.get_eval07_script("dev")
+            script += self.get_eval07_script("dev", self.get("dpSkipPunctuation"))
         if self.get("test") and self.get("testType") == "CONLL_X":
-            script += self.get_eval07_script("test")
+            script += self.get_eval07_script("test", self.get("dpSkipPunctuation"))
         
         return script
     
@@ -79,10 +79,11 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         script += 'grep --after-context 11 "SEMANTIC SCORES:" %s\n' % (eval_out)        
         return script
     
-    def get_eval07_script(self, data_name):    
+    def get_eval07_script(self, data_name, skip_punct):    
         script = "\n"
         script += 'echo "Evaluating %s"\n' % (data_name)
         eval_args = "" 
+        if skip_punct: eval_args += " -p "            
         eval_args += " -g " + self.get(data_name + "GoldOut") + " -s " + self.get(data_name + "PredOut")
         eval_out = data_name + "-eval.out"
         script += "perl %s/scripts/eval/eval07.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)

@@ -56,7 +56,8 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         public JointNlpDecoderPrm dePrm = new JointNlpDecoderPrm();
         // How to initialize the parameters of the model
         public InitParams initParams = InitParams.UNIFORM;
-
+        // Whether to skip punctuation when evaluating dependency parsing.
+        public boolean dpSkipPunctuation = false;
         // --------------------------------------------------------------------
         // These parameters are only used if a NEW model is created. If a model
         // is loaded from disk, these are ignored.
@@ -119,7 +120,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         final JointNlpAnnotator anno = this;
         final Evaluator eval;
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
-            eval = new DepParseEvaluator();
+            eval = new DepParseEvaluator(prm.dpSkipPunctuation);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL))) {
             eval = new SrlEvaluator();
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {
