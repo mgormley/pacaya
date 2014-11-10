@@ -66,7 +66,7 @@ public class O2AllGraDpHypergraphTest extends AbstractHypergraphTest {
         
         DependencyScorer scorer = new DependencyScorer() {            
             @Override
-            public double getGraScore(int p, int c, int g) {
+            public double getScore(int p, int c, int g) {
                 System.out.printf("Score request: g=%d p=%d c=%d score=%f\n", g, p, c, scores[g][p][c]);
                 return scores[g][p][c];
             }
@@ -82,25 +82,18 @@ public class O2AllGraDpHypergraphTest extends AbstractHypergraphTest {
     
     public static class ExplicitDependencyScorer implements DependencyScorer {
 
-        private double[][] arcScores;
-        private double[][][] graScores;
+        private double[][][] scores;
         private int n;
                 
-        public ExplicitDependencyScorer(double[][] arcScores, double[][][] graScores, int n) {
+        public ExplicitDependencyScorer(double[][][] scores, int n) {
             super();
-            this.arcScores = arcScores;
-            this.graScores = graScores;
+            this.scores = scores;
             this.n = n;
         }
 
         @Override
-        public double getScore(int p, int c) {
-            return arcScores[p][c];
-        }
-
-        @Override
-        public double getGraScore(int p, int c, int g) {
-            return graScores[p][c][g];
+        public double getScore(int p, int c, int g) {
+            return scores[p][c][g];
         }
 
         @Override

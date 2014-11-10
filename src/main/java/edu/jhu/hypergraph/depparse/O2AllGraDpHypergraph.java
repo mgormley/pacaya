@@ -46,8 +46,7 @@ public class O2AllGraDpHypergraph implements Hypergraph {
     private boolean singleRoot;
     
     public interface DependencyScorer {
-        double getScore(int p, int c);
-        double getGraScore(int p, int c, int g);
+        double getScore(int p, int c, int g);
         int getNumTokens();
     }
 
@@ -155,8 +154,8 @@ public class O2AllGraDpHypergraph implements Hypergraph {
                 for (int g = 0; g < nplus; g++) {
                     if (i <= g && g <= j && !(i==0 && g==NIL && width == nplus-1)) { continue; }
                     // Incomplete items.
-                    double sij = scorer.getGraScore(i, j, g);
-                    double sji = scorer.getGraScore(j, i, g);
+                    double sij = scorer.getScore(i, j, g);
+                    double sji = scorer.getScore(j, i, g);
                     for (int r=i; r<j; r++) {
                         // Right.
                         e.setHeadNode(chart[i][j][g][INCOMPLETE]);
@@ -299,8 +298,8 @@ public class O2AllGraDpHypergraph implements Hypergraph {
                     }
                     
                     // Incomplete items.
-                    double sij = scorer.getGraScore(i, j, g);
-                    double sji = scorer.getGraScore(j, i, g);
+                    double sij = scorer.getScore(i, j, g);
+                    double sji = scorer.getScore(j, i, g);
                     for (int r=i; r<j; r++) {
                         // Right.
                         e.setHeadNode(chart[i][j][g][INCOMPLETE]);
