@@ -223,10 +223,12 @@ public class ProjDepTreeModule implements Module<Tensor> {
         oddsRatioCount++;
         if (s.minus(s.plus(maxOddsRatio, minOddsRatio), maxOddsRatio) == s.zero()) {
             extremeOddsRatios++;            
-            log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
-            log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
-            // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
-            log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
+            if (log.isTraceEnabled()) {
+                log.trace(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
+                log.trace(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
+                // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
+                log.trace(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
+            }
         }
     }
 

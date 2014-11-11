@@ -52,6 +52,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-opt", 
                     "dp-conll07",                
                     "dp-en",
+                    "dp-logadd",
                     )
     
     def __init__(self, options):
@@ -172,6 +173,24 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp.update(sgdEarlyStopping=sgdEarlyStopping, sgdBatchSize=sgdBatchSize)
                         if sgdBatchSize < exp.get("threads"): exp.update(threads=sgdBatchSize)
                         exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "dp-logadd":
+            # Checks whether using a logAddTable adversely affects accuracy.
+            exps = []
+            g.defaults += g.cll
+            g.defaults.update(trainMaxSentenceLength=20, devMaxSentenceLength=20, 
+                              testMaxSentenceLength=20, work_mem_megs=5000,
+                              l2variance=16000, sgdBatchSize=1, threads=1)
+            g.defaults.remove("printModel")
+            g.defaults.remove("modelOut")
+            lang_short = "en"
+            gl = g.langs[lang_short]
+            for algebra in ["LOG", "LOG_SIGN", "REAL"]:
+                for useLogAddTable in [True, False]:
+                    exp = g.defaults + gl.cx_data + g.first_order 
+                    exp.update(useLogAddTable=useLogAddTable, algebra=algebra)
+                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-opt-avg":

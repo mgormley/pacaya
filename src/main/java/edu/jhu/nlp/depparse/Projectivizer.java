@@ -19,7 +19,7 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser;
 public class Projectivizer implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
+    private static final Logger log = Logger.getLogger(Projectivizer.class);
 
     private int total;
     private int correct;
