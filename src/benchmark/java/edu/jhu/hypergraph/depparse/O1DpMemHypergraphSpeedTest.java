@@ -19,7 +19,7 @@ import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogViterbiSemiring;
 import edu.jhu.util.semiring.Semiring;
 
-public class O1DpMemHypergraph {
+public class O1DpMemHypergraphSpeedTest {
 
     /**
      * Comparison of bottom-up for-loops for hyperedge enumeration vs. building a hypergraph edge

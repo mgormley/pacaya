@@ -32,6 +32,7 @@ rank   self  accum   count trace method
  */
 public class DepParseSpeedTest {
     
+    // TODO: Try with ErmaBpPrm.keepTape = false.
     /**
      * Speed test results.
      * 

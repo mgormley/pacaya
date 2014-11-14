@@ -66,6 +66,7 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
     private DependencyScorer getDepScorerFromFg(FactorGraph fg, int n) {
         double[][][] scores = new double[n+1][n+1][n+1];
         DoubleArrays.fill(scores, 0.0);
+        boolean containsProjDepTreeConstraint = false;
         for (Factor f : fg.getFactors()) {
             if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
                 GraFeTypedFactor ff = (GraFeTypedFactor) f;
@@ -80,9 +81,14 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
                     scores[p][c][g] += ff.getLogUnormalizedScore(LinkVar.TRUE);
                 }
             } else if (f instanceof ProjDepTreeFactor || f instanceof SimpleProjDepTreeFactor) {
+                containsProjDepTreeConstraint = true;
             } else {
                 throw new RuntimeException("Unsupported factor type: " + f.getClass());
             }
+        }
+        if (!containsProjDepTreeConstraint) {
+            throw new IllegalStateException("This inference method is only applicable to factor graphs containing "
+                        + " a factor constraining to a projective dependency tree.");
         }
         
         Algebras.convertAlgebra(scores, Algebras.LOG_SEMIRING, s);
