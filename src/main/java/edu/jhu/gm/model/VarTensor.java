@@ -258,19 +258,29 @@ public class VarTensor extends Tensor implements Serializable {
 
     @Override
     public String toString() {
+        return toString(false);
+    }
+    
+    /** Returns a string representation of the VarTensor, which (optionally) excludes zero-valued rows. */
+    public String toString(boolean sparse) {
         StringBuilder sb = new StringBuilder();
         sb.append("VarTensor [\n");
         for (Var var : vars) {
-            sb.append(String.format("%5s", var.getName()));
+            String name = var.getName();
+            // Take the 5-char suffix if the variable name is too long.
+            name = name.substring(Math.max(0, name.length()-5));
+            sb.append(String.format("%6s", name));
         }
         sb.append(String.format("  |  %s\n", "value"));
         for (int c=0; c<vars.calcNumConfigs(); c++) {
-            int[] states = vars.getVarConfigAsArray(c);
-            for (int state : states) {
-                // TODO: use string names for states if available.
-                sb.append(String.format("%5d", state));
+            if (!sparse || values[c] != 0.0) {
+                int[] states = vars.getVarConfigAsArray(c);
+                for (int state : states) {
+                    // TODO: use string names for states if available.
+                    sb.append(String.format("%6d", state));
+                }
+                sb.append(String.format("  |  %g\n", values[c]));
             }
-            sb.append(String.format("  |  %g\n", values[c]));
         }
         sb.append("]");
         return sb.toString();
