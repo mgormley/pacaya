@@ -19,8 +19,11 @@ public class LinkVar extends Var {
     // The variable states.
     public static final int TRUE = 1;
     public static final int FALSE = 0;
+    // The config ID of a factor with two TRUE LinkVars.
+    public static final int TRUE_TRUE = 3;
     
     private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
+
     private int parent;
     private int child;     
     

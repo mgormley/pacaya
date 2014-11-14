@@ -161,4 +161,28 @@ public class Algebras {
         }
     }
     
+    public static void convertAlgebra(double[] vals, Algebra src, Algebra dst) {
+        for (int i=0; i<vals.length; i++) {
+            vals[i] = convertAlgebra(vals[i], src, dst);   
+        }
+    }
+    
+    public static void convertAlgebra(double[][] vals, Algebra src, Algebra dst) {
+        for (int i=0; i<vals.length; i++) {
+            convertAlgebra(vals[i], src, dst); 
+        }
+    }
+
+    public static void convertAlgebra(double[][][] vals, Algebra src, Algebra dst) {
+        for (int i=0; i<vals.length; i++) {
+            convertAlgebra(vals[i], src, dst);
+        }
+    }
+
+    public static void convertAlgebra(double[][][][] vals, Algebra src, Algebra dst) {
+        for (int i=0; i<vals.length; i++) {
+            convertAlgebra(vals[i], src, dst);
+        }
+    }
+    
 }
