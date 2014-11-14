@@ -20,17 +20,16 @@ import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.O2FeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.SibFeTypedFactor;
 import edu.jhu.nlp.features.FeaturizedSentence;
 import edu.jhu.nlp.features.LocalObservations;
 import edu.jhu.nlp.features.TemplateFeatureExtractor;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.features.TemplateSets;
 import edu.jhu.nlp.relations.FeatureUtils;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
-import edu.jhu.util.hash.MurmurHash3;
 
 public class DepParseFeatureExtractor implements FeatureExtractor {
 
@@ -93,9 +92,12 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
                 int pidx = var.getParent();
                 int cidx = var.getChild();
                 ext.addFeatures(prm.firstOrderTpls, LocalObservations.newPidxCidx(pidx, cidx), obsFeats);
-            } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT || ft == DepParseFactorTemplate.LINK_SIBLING) {
-                O2FeTypedFactor f2 = (O2FeTypedFactor)f;
-                ext.addFeatures(prm.secondOrderTpls, LocalObservations.newPidxCidxMidx(f2.i, f2.j, f2.k), obsFeats);
+            } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
+                SibFeTypedFactor f2 = (SibFeTypedFactor)f;
+                ext.addFeatures(prm.secondOrderTpls, LocalObservations.newPidxCidxMidx(f2.p, f2.c, f2.s), obsFeats);
+            } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT) {
+                GraFeTypedFactor f2 = (GraFeTypedFactor)f;
+                ext.addFeatures(prm.secondOrderTpls, LocalObservations.newPidxCidxMidx(f2.p, f2.c, f2.g), obsFeats);
             } else {
                 throw new RuntimeException("Unsupported template: " + ft);
             }

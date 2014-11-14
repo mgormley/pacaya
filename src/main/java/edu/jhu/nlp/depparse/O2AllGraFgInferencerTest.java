@@ -28,7 +28,7 @@ import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.O2FeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebras;
@@ -150,9 +150,9 @@ public class O2AllGraFgInferencerTest {
             if (f instanceof FeTypedFactor) {
                 LinkVar lv = (LinkVar) f.getVars().get(0);
                 fv.add(alphabet.lookupIndex(lv.getParent() + "_" + lv.getChild()), 1.0);
-            } else if (f instanceof O2FeTypedFactor) {
-                O2FeTypedFactor ff = (O2FeTypedFactor)f;
-                fv.add(alphabet.lookupIndex(ff.i + "_" + ff.j + "_" + ff.k), 1.0);
+            } else if (f instanceof GraFeTypedFactor) {
+                GraFeTypedFactor ff = (GraFeTypedFactor)f;
+                fv.add(alphabet.lookupIndex(ff.g + "_" + ff.p + "_" + ff.c), 1.0);
             } else {
                 throw new RuntimeException("unsupported factor type");
             }
@@ -183,9 +183,8 @@ public class O2AllGraFgInferencerTest {
         for (Factor f : fg.getFactors()) {
             if (!compareGlobalFactors && f instanceof GlobalFactor) {
                 continue;
-            } else if (f instanceof O2FeTypedFactor) {
+            } else if (f instanceof GraFeTypedFactor) {
                 // Compare only the value for the marginal where both values are true.
-                O2FeTypedFactor ff = (O2FeTypedFactor) f;
                 {
                     VarTensor bfm = bf.getMarginals(f);
                     VarTensor bpm = bp.getMarginals(f);

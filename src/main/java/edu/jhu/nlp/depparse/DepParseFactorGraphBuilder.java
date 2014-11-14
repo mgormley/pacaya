@@ -66,14 +66,25 @@ public class DepParseFactorGraphBuilder implements Serializable {
         LINK_UNARY, LINK_GRANDPARENT, LINK_SIBLING
     }
     
-    public static class O2FeTypedFactor extends FeTypedFactor {
+    public static class GraFeTypedFactor extends FeTypedFactor {
         private static final long serialVersionUID = 1L;
-        public int i,j,k;
-        public O2FeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int i, int j, int k) {
+        public int p,c,g;
+        public GraFeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int p, int c, int g) {
             super(vars, type, fe);
-            this.i = i;
-            this.j = j;
-            this.k = k;
+            this.p = p;
+            this.c = c;
+            this.g = g;
+        }        
+    }
+    
+    public static class SibFeTypedFactor extends FeTypedFactor {
+        private static final long serialVersionUID = 1L;
+        public int p,c,s;
+        public SibFeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int p, int c, int s) {
+            super(vars, type, fe);
+            this.p = p;
+            this.c = c;
+            this.s = s;
         }        
     }
     
@@ -163,14 +174,14 @@ public class DepParseFactorGraphBuilder implements Serializable {
                                 if (!prm.excludeNonprojectiveGrandparents || !isNonprojectiveGrandparent) {
                                     LinkVar jkVar = getLinkVar(j, k);
                                     if (prm.grandparentFactors && jkVar != null && !depEdgeMask.isPruned(j, k)) {
-                                        fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, jkVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, i, j, k));
+                                        fg.addFactor(new GraFeTypedFactor(new VarSet(ijVar, jkVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, j, k, i));
                                     }
                                 }
                                 if (j < k) {
                                     // Add sibling factors.
                                     LinkVar ikVar = getLinkVar(i, k);
                                     if (prm.siblingFactors && ikVar != null && !depEdgeMask.isPruned(i, k)) {
-                                        fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, i, j, k));
+                                        fg.addFactor(new SibFeTypedFactor(new VarSet(ijVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, i, j, k));
                                     }
                                 }
                             }

@@ -23,7 +23,7 @@ import edu.jhu.hypergraph.depparse.O2AllGraDpHypergraph.DependencyScorer;
 import edu.jhu.hypergraph.depparse.O2AllGraDpHypergraphTest.ExplicitDependencyScorer;
 import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.O2FeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.semiring.Algebra;
@@ -67,9 +67,9 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         double[][][] scores = new double[n+1][n+1][n+1];
         DoubleArrays.fill(scores, 0.0);
         for (Factor f : fg.getFactors()) {
-            if (f instanceof O2FeTypedFactor && ((O2FeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
-                O2FeTypedFactor ff = (O2FeTypedFactor) f;
-                scores[ff.j+1][ff.k+1][ff.i+1] += ff.getLogUnormalizedScore(LinkVar.TRUE_TRUE);
+            if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
+                GraFeTypedFactor ff = (GraFeTypedFactor) f;
+                scores[ff.p+1][ff.c+1][ff.g+1] += ff.getLogUnormalizedScore(LinkVar.TRUE_TRUE);
             } else if (f instanceof FeTypedFactor) {
                 FeTypedFactor ff = (FeTypedFactor) f;
                 LinkVar lv = (LinkVar) ff.getVars().get(0);
@@ -132,11 +132,11 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
 
     @Override
     protected VarTensor getFactorBeliefs(Factor f) {
-        if (f instanceof O2FeTypedFactor && ((O2FeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
-            O2FeTypedFactor ff = (O2FeTypedFactor) f;
-            int g = ff.i+1;
-            int p = ff.j+1;
-            int c = ff.k+1;                        
+        if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
+            GraFeTypedFactor ff = (GraFeTypedFactor) f;
+            int g = ff.g+1;
+            int p = ff.p+1;
+            int c = ff.c+1;                        
             VarTensor b = new VarTensor(s, f.getVars());
             b.fill(s.zero());
             int id = graph.getChart()[p][c][g][O2AllGraDpHypergraph.INCOMPLETE].getId();            
