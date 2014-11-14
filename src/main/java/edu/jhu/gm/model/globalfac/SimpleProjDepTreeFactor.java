@@ -427,7 +427,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
             return s.zero();
         }
         int[] parents = getParents(n, vc);
-        if (!DepTree.isDepTree(parents, true)) {
+        if (!DepTree.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
             log.warn("Tree is not a valid dependency tree.");
             return s.zero();
         }

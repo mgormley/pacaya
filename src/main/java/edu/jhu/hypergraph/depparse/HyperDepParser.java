@@ -143,24 +143,40 @@ public class HyperDepParser {
         return new Pair<O1DpHypergraph, Scores>(graph, scores);
     }
     
-    public static EdgeScores insideOutsideO2AllGra(DependencyScorer scorer, Algebra s) {
-        O2AllGraDpHypergraph graph = new O2AllGraDpHypergraph(scorer, s, true);
+    /** Runs inside outside on an all-grandparents hypergraph and returns the edge marginals in the real semiring. */
+    public static EdgeScores insideOutsideO2AllGraSingleRoot(DependencyScorer scorer, Algebra s) {
+        return insideOutside02AllGra(scorer, s, true);
+    }
+    
+    /** Runs inside outside on an all-grandparents hypergraph and returns the edge marginals in the real semiring. */
+    public static EdgeScores insideOutsideO2AllGraMultiRoot(DependencyScorer scorer, Algebra s) {
+        return insideOutside02AllGra(scorer, s, false);
+    }
+
+    protected static EdgeScores insideOutside02AllGra(DependencyScorer scorer, Algebra s, boolean singleRoot) {
+        O2AllGraDpHypergraph graph = new O2AllGraDpHypergraph(scorer, s, singleRoot);
         Scores sc = new Scores();
         Hyperalgo.forward(graph, graph.getPotentials(), s, sc);
-        int nplus = scorer.getNumTokens()+1;
+        return getEdgeMarginalsRealSemiring(graph, sc);
+    }
+
+    /** Gets the edge marginals in the real semiring from an all-grandparents hypergraph and its marginals in scores. */
+    public static EdgeScores getEdgeMarginalsRealSemiring(O2AllGraDpHypergraph graph, Scores sc) {
+        Algebra s = graph.getAlgebra();
+        int nplus = graph.getNumTokens()+1;
 
         Hypernode[][][][] c = graph.getChart();
-        EdgeScores marg = new EdgeScores(scorer.getNumTokens(), 0.0);
+        EdgeScores marg = new EdgeScores(graph.getNumTokens(), 0.0);
         for (int width = 1; width < nplus; width++) {
             for (int i = 0; i < nplus - width; i++) {
                 int j = i + width;
                 for (int g=0; g<nplus; g++) {
                     if (i <= g && g <= j && !(i==0 && g==O2AllGraDpHypergraph.NIL)) { continue; }
                     if (j > 0) {
-                        marg.incrScore(i-1, j-1, s.toReal(sc.marginal[c[i][j][g][0].getId()]));
+                        marg.incrScore(i-1, j-1, s.toReal(sc.marginal[c[i][j][g][O2AllGraDpHypergraph.INCOMPLETE].getId()]));
                     } 
                     if (i > 0) {
-                        marg.incrScore(j-1, i-1, s.toReal(sc.marginal[c[j][i][g][0].getId()]));
+                        marg.incrScore(j-1, i-1, s.toReal(sc.marginal[c[j][i][g][O2AllGraDpHypergraph.INCOMPLETE].getId()]));
                     }
                 }
             }

@@ -14,6 +14,7 @@ public class MemHypergraph implements Hypergraph {
     
     public static class MemHypernode implements Hypernode {
 
+        private static final long serialVersionUID = 1L;
         private String label;
         private int id;
         private List<Hyperedge> outEdges = new ArrayList<Hyperedge>();
@@ -44,6 +45,46 @@ public class MemHypergraph implements Hypergraph {
 
         public String toString() {
             return label;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + id;
+            result = prime * result + ((inEdges == null) ? 0 : inEdges.hashCode());
+            result = prime * result + ((label == null) ? 0 : label.hashCode());
+            result = prime * result + ((outEdges == null) ? 0 : outEdges.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            MemHypernode other = (MemHypernode) obj;
+            if (id != other.id)
+                return false;
+            if (inEdges == null) {
+                if (other.inEdges != null)
+                    return false;
+            } else if (!inEdges.equals(other.inEdges))
+                return false;
+            if (label == null) {
+                if (other.label != null)
+                    return false;
+            } else if (!label.equals(other.label))
+                return false;
+            if (outEdges == null) {
+                if (other.outEdges != null)
+                    return false;
+            } else if (!outEdges.equals(other.outEdges))
+                return false;
+            return true;
         }
         
     }

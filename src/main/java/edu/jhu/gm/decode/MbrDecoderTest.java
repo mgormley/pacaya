@@ -20,7 +20,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
 import edu.jhu.util.collections.Lists;
 
 public class MbrDecoderTest {
@@ -37,7 +37,7 @@ public class MbrDecoderTest {
     
     public void testAccuracy(boolean useLogDomain) {
         FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);

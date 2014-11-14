@@ -195,7 +195,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             return s.zero();
         }
         int[] parents = getParents(n, vc);
-        if (!DepTree.isDepTree(parents, true)) {
+        if (!DepTree.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
             log.trace("Tree is not a valid dependency tree.");
             return s.zero();
         }

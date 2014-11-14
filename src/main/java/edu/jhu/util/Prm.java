@@ -11,8 +11,9 @@ public abstract class Prm implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    //TODO: Move this to a utility class.
     @SuppressWarnings("unchecked")
-    public static <T extends Prm> T clonePrm(T prm) {
+    public static <T extends Serializable> T clone(T prm) {
         try {
             ByteArrayOutputStream strOut = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(strOut);

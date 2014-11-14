@@ -1,6 +1,10 @@
 package edu.jhu.hypergraph;
 
-public interface Hypernode {
+import java.io.Serializable;
+
+// We implement serializable to allow for easy deep copies when unit testing.
+// A Hypernode must also implement hashCode and equals.
+public interface Hypernode extends Serializable {
 
     /** Gets a name for this node. */
     public String getLabel();

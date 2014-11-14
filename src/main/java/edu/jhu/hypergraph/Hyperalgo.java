@@ -1,5 +1,6 @@
 package edu.jhu.hypergraph;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
@@ -230,6 +231,17 @@ public class Hyperalgo {
         public double[] marginalAdj;   // Adjoints of the marginals.
         public double[] weightAdj;     // Weights of the hyperedges.
         public double[] betaFoe;       // Inside scores for first-order expectation semiring.
+        
+        public void prettyPrint(Hypergraph graph) {
+            PrintStream w = System.out;
+            w.printf("|%20s|%10s|%10s|%10s|\n", "node-name", "alpha", "beta", "marginal");
+            w.printf("|%20s+%10s+%10s+%10s|\n", "-------------------", "----------", "----------", "----------");
+            for (Hypernode n : graph.getNodes()) {
+                int i = n.getId();
+                w.printf("|%20s|%10f|%10f|%10f|\n", n.getLabel(), alpha[i], beta[i], marginal[i]);
+            }
+            w.printf("|%20s+%10s+%10s+%10s|\n", "-------------------", "----------", "----------", "----------");
+        }
     }
 
     /**

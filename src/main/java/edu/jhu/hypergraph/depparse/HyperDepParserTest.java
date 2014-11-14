@@ -275,4 +275,60 @@ public class HyperDepParserTest {
         assertEquals(1.685678668864755, entropy, 1e-10);
     }    
     
+    @Test
+    public void testTreeCountSingleRoot() {
+        double edgeWeight = 1.0;
+        assertEquals(1, countTrees(1, true, edgeWeight), 1e-13);
+        assertEquals(2, countTrees(2, true, edgeWeight), 1e-13);
+        assertEquals(7, countTrees(3, true, edgeWeight), 1e-13);
+        assertEquals(30, countTrees(4, true, edgeWeight), 1e-13);
+        assertEquals(143, countTrees(5, true, edgeWeight), 1e-13);
+        assertEquals(728, countTrees(6, true, edgeWeight), 1e-13);        
+    }
+
+    @Test
+    public void testTreeCountMultiRoot() {
+        double edgeWeight = 1.0;
+        assertEquals(1, countTrees(1, false, edgeWeight), 1e-13);
+        assertEquals(3, countTrees(2, false, edgeWeight), 1e-13);
+        assertEquals(12, countTrees(3, false, edgeWeight), 1e-13);
+        assertEquals(55, countTrees(4, false, edgeWeight), 1e-13);
+        assertEquals(273, countTrees(5, false, edgeWeight), 1e-13);
+        assertEquals(1428, countTrees(6, false, edgeWeight), 1e-10);
+    }
+
+    @Test
+    public void testTreeCountSingleRootWeight2() {
+        double edgeWeight = 2.0;
+        assertEquals(1 * Math.pow(edgeWeight, 1), countTrees(1, true, edgeWeight), 1e-13);
+        assertEquals(2 * Math.pow(edgeWeight, 2), countTrees(2, true, edgeWeight), 1e-13);
+        assertEquals(7 * Math.pow(edgeWeight, 3), countTrees(3, true, edgeWeight), 1e-13);
+        assertEquals(30 * Math.pow(edgeWeight, 4), countTrees(4, true, edgeWeight), 1e-10);
+        assertEquals(143 * Math.pow(edgeWeight, 5), countTrees(5, true, edgeWeight), 1e-10);
+        assertEquals(728 * Math.pow(edgeWeight, 6), countTrees(6, true, edgeWeight), 1e-8);
+    }
+    
+    @Test
+    public void testTreeCountMultiRootWeight2() {
+        double edgeWeight = 2.0;
+        assertEquals(1 * Math.pow(edgeWeight, 1), countTrees(1, false, edgeWeight), 1e-13);
+        assertEquals(3 * Math.pow(edgeWeight, 2), countTrees(2, false, edgeWeight), 1e-13);
+        assertEquals(12 * Math.pow(edgeWeight, 3), countTrees(3, false, edgeWeight), 1e-13);
+        assertEquals(55 * Math.pow(edgeWeight, 4), countTrees(4, false, edgeWeight), 1e-10);
+        assertEquals(273 * Math.pow(edgeWeight, 5), countTrees(5, false, edgeWeight), 1e-10);
+        assertEquals(1428 * Math.pow(edgeWeight, 6), countTrees(6, false, edgeWeight), 1e-8);
+    }
+
+    /** Returns the partition function from running the inside algorithm on a sentence of length n with the given edge weights. */
+    protected double countTrees(int n, boolean singleRoot, double edgeWeight) {
+        double[] root = new double[n]; 
+        double[][] child = new double[n][n];
+        DoubleArrays.fill(root, edgeWeight);
+        DoubleArrays.fill(child, edgeWeight);
+        DoubleArrays.log(root);
+        DoubleArrays.log(child);        
+        DepIoChart chart = singleRoot ? HyperDepParser.insideOutsideSingleRoot(root,  child) : HyperDepParser.insideOutsideMultiRoot(root,  child);
+        return Math.exp(chart.getLogPartitionFunction());
+    }
+    
 }

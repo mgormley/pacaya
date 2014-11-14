@@ -28,8 +28,8 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.LinkVar;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
-import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.ObsFeTypedFactor;
@@ -328,8 +328,8 @@ public class JointNlpFactorGraphTest {
     public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
-        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new FeatureNames()); 
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        FeatureExtractor fe = new SimpleVCFeatureExtractor(new FeatureNames()); 
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---                                         ---
         Map<String,List<String>> psMap = new HashMap<String,List<String>>() {

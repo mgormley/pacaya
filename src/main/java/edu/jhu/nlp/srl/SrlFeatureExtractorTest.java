@@ -18,8 +18,8 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
-import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -222,8 +222,8 @@ public class SrlFeatureExtractorTest {
     private static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
-        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new FeatureNames());
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        FeatureExtractor fe = new SimpleVCFeatureExtractor(new FeatureNames());
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---        
         IntHashSet knownPreds = IntHashSet.fromArray(0, 2);

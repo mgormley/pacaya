@@ -6,7 +6,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
 
 public class FgExampleListTest {
 
@@ -19,7 +19,7 @@ public class FgExampleListTest {
         }
         
         FactorTemplateList fts = new FactorTemplateList();
-        LFgExample ex = new LabeledFgExample(fg, vc, new SimpleVCFeatureExtractor(fts), fts);
+        LFgExample ex = new LabeledFgExample(fg, vc, new SimpleVCObsFeatureExtractor(fts), fts);
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         data.add(ex);
         
