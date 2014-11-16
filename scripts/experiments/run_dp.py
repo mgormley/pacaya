@@ -297,7 +297,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             languages = ["es", "bg", "en"]
             
             # Speedups
-            g.defaults.update(trainMaxSentenceLength=20,
+            g.defaults.update(trainMaxSentenceLength=15,
+                              devMaxSentenceLength=15,
+                              testMaxSentenceLength=15,
                               sgdNumPasses=5)
             g.defaults.remove("printModel")
             
