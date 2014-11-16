@@ -2,63 +2,41 @@ package edu.jhu.nlp.depparse;
 
 import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.gm.data.UFgExample;
+import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
+import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
+import edu.jhu.nlp.features.TemplateSets;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
+import edu.jhu.util.semiring.Algebras;
 
 /**
- * TODO: Current hprof shows that >43% of time is spent in the BfsMpSchedule especially on
- * the preOrderTraversal() and bfs() methods of DirectedGraph.
- * 
- * CPU SAMPLES BEGIN (total = 12092) Thu Oct 23 14:16:36 2014
-rank   self  accum   count trace method
-   1 22.38% 22.38%    2706 300543 edu.jhu.gm.util.DirectedGraph.preOrderTraveralNoMark
-   2 20.95% 43.33%    2533 300691 java.util.ArrayDeque.removeFirst
-   3  8.04% 51.36%     972 300564 java.lang.StrictMath.log1p
-   4  6.24% 57.60%     754 300670 edu.jhu.gm.inf.BfsMpSchedule.<init>
-   5  5.90% 63.50%     713 300641 java.lang.String.intern
-   6  4.33% 67.82%     523 300423 java.io.FileInputStream.open
-   7  2.91% 70.73%     352 300657 edu.jhu.prim.vector.IntDoubleDenseVector.dot
-   8  2.49% 73.22%     301 300695 edu.jhu.prim.sort.ShortSort.partition
-   9  2.15% 75.37%     260 300653 edu.jhu.nlp.depparse.FastDepParseFe.addArcFactoredMSTFeats
-  10  1.12% 76.49%     135 300708 edu.jhu.parse.dep.ProjectiveDependencyParser.insideAlgorithm
+ * Speed test for 2nd order all grandparents inference using either BP or dynamic programming.
  */
-public class DepParseSpeedTest {
+public class O2AllGraDepParseSpeedTest {
     
-    // TODO: Try with ErmaBpPrm.keepTape = false.
     /**
      * Speed test results.
      * 
      * t1: Build factor graph
      * t3: the feature extraction and dot product
-     * t4: Run BP
+     * t4: Run inference
      * 
-     * For numParams = 100,000  
-     * on 11/03/14        s=2401 n=56427 tot= 848.30 t0=178566.46 t1=4282.88 t2=6269666.67 t3=6388.20 t4=1355.51 t5=22197.88
-     * w/no interning of Var.name, FastMath.logAddTable=true, bpPrm.s = Algebras.REAL_ALGEBRA:
-     *                    s=2401 n=56427 tot=1220.41 t0=191277.97 t1=5084.89 t2=28213500.00 t3=6462.09 t4=2346.24 t5=27565.71
-     * w/coarse POS tag feats:
-     *                    s=2401 n=56427 tot=1115.82 t0=122667.39 t1=5162.58 t2=28213500.00 t3=3775.64 t4=2578.11 t5=24124.41
-     *
-     * BELOW ARE WITHOUT PROJDEPTREEGLOBALFACTOR.
-     * w/Narad.StrFeats   s=2401 n=56427 Toks / sec: 662.01
-     * w/McDon.StrFeats   s=2401 n=56427 tot= 204.06 t1=4300.51 t2=11285400.00 t3= 245.32 t4=1778.12 t5=35355.26
-     * w/IntFeats         s=2401 n=56427 tot= 868.67 t1=4592.79 t2=14106750.00 t3=2922.32 t4=1776.28 t5=35849.43
-     * w/DirectToFv       s=2401 n=56427 tot= 931.51 t0=217026.92 t1=5106.98 t2=11285400.00 t3=3332.37 t4=1830.98 t5=37643.10
-     *    
-     * For numParams = 1,000,000
-     * w/IntFeats         s=2401 n=56427 tot= 831.90 t1=4307.40 t2=28213500.00 t3=2727.52 t4=1742.17 t5=35069.61
-     * 
-     * For numParams = 1
-     * w/IntFeats         s=2401 n=56427 tot=1052.02 t1=4293.31 t2=28213500.00 t3=9267.04 t4=1723.54 t5=34681.62
-     *
+     * With numParams = 100000:
+     * BP (iters=1): s=111 n=2610 tot=  31.66 t0=2394.50 t1= 728.03 t2=Infinity t3= 692.68 t4=  35.33 t5=20880.00
+     * BP (iters=5): s=111 n=2610 tot=  16.30 t0=2824.68 t1= 505.72 t2=Infinity t3= 578.20 t4=  17.47 t5=20880.00
+     * DP:           s=111 n=2610 tot= 143.34 t0=2305.65 t1= 543.75 t2=Infinity t3=1015.17 t4= 274.30 t5=13957.22
      */
     //@Test
     public void testSpeed() {
@@ -93,7 +71,7 @@ public class DepParseSpeedTest {
     
             for (AnnoSentence sent : sents) {
                 t1.start(); 
-                UFgExample ex = DepParseFactorGraphBuilderSpeedTest.get1stOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderFg(sent, cs, alphabet, numParams, onlyFast);
                 t1.stop();
                 
                 t2.start();
@@ -105,7 +83,16 @@ public class DepParseSpeedTest {
                 t3.stop();
                 
                 t4.start(); 
-                ErmaBp bp = DepParseInferenceSpeedTest.runBp(fg);
+                FgInferencer bp = null;
+                //System.out.println("size:"+sent.size());
+                //for (int i=0; i<1000; i++) {
+                if (true) {
+                    bp = DepParseInferenceSpeedTest.runBp(fg, 5);
+                } else {
+                    bp = new O2AllGraFgInferencer(fg, Algebras.LOG_SEMIRING);
+                    bp.run();
+                }
+                //}
                 t4.stop();
                 
                 t5.start(); 
@@ -116,7 +103,7 @@ public class DepParseSpeedTest {
                 t5.stop();
                 
                 n+=sent.size();
-                if (s++%100 == 0) {
+                if (s++%10 == 0) {
                     t.stop();
                     System.out.println(String.format("s=%d n=%d tot=%7.2f t0=%7.2f t1=%7.2f t2=%7.2f t3=%7.2f t4=%7.2f t5=%7.2f", s, n, 
                             (n/t.totSec()), 
@@ -137,8 +124,28 @@ public class DepParseSpeedTest {
         }
     }
     
+    public static UFgExample get2ndOrderFg(AnnoSentence sent, CorpusStatistics cs, FeatureNames alphabet, int numParams, boolean onlyFast) {
+        FactorGraph fg = new FactorGraph();
+        DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
+        fePrm.featureHashMod = numParams;
+        fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        FeatureExtractor fe = onlyFast?
+                new FastDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
+                new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
+        
+        DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
+        fgPrm.useProjDepTreeFactor = true;        
+        fgPrm.grandparentFactors = true;
+        fgPrm.siblingFactors = false;    
+        DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(fgPrm);
+        builder.build(sent, fe, fg);
+        
+        UnlabeledFgExample ex = new UnlabeledFgExample(fg, new VarConfig());
+        return ex;
+    }
+    
     public static void main(String[] args) {
-        (new DepParseSpeedTest()).testSpeed();
+        (new O2AllGraDepParseSpeedTest()).testSpeed();
     }
     
 }

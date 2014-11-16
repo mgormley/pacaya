@@ -15,7 +15,7 @@ import edu.jhu.gm.model.VarSet;
  */
 public abstract class SlowFeatureExtractor implements FeatureExtractor {
 
-    private VarConfig obsConfig;
+    public VarConfig obsConfig;
 
     public SlowFeatureExtractor() {
     }

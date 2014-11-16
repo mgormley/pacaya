@@ -10,10 +10,13 @@ import edu.jhu.util.semiring.Algebras;
 
 public abstract class AbstractFgInferencer implements FgInferencer {
     
+    /** Gets the normalized variable beliefs in the semiring of the inferencer. */
     protected abstract VarTensor getVarBeliefs(Var var);
 
+    /** Gets the normalized factor beliefs in the semiring of the inferencer. */
     protected abstract VarTensor getFactorBeliefs(Factor factor);
     
+    /** Gets the partition belief in the semiring of the inferencer. */
     public abstract double getPartitionBelief();
     
     public abstract FactorGraph getFactorGraph();

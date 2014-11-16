@@ -224,7 +224,7 @@ public class JointNlpFgExamplesBuilderTest {
         
         int[] parents = ProjDepTreeFactor.getParents(sents.get(0).size(), vc);
         System.out.println(Arrays.toString(parents));
-        assertTrue(DepTree.checkIsProjective(parents));
+        assertTrue(DepTree.isProjective(parents));
         assertArrayEquals(new int[]{2, 2, -1, 4, 2, 4, 7, 5, 7, 8, 7, 14, 11, 11, 10, 14, 17, 15, 2}, parents);
     }
 

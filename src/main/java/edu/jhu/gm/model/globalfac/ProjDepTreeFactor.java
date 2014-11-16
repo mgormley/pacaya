@@ -16,7 +16,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.DepParseHypergraph;
+import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
@@ -195,7 +195,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             return s.zero();
         }
         int[] parents = getParents(n, vc);
-        if (!DepTree.isDepTree(parents, true)) {
+        if (!DepTree.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
             log.trace("Tree is not a valid dependency tree.");
             return s.zero();
         }
@@ -315,8 +315,8 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Algebra s = Algebras.LOG_SIGN_ALGEBRA;
-        Pair<DepParseHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
-        DepParseHypergraph graph = pair.get1();
+        Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
+        O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
         int rt = graph.getRoot().getId();        

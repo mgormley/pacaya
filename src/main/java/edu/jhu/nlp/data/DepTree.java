@@ -1,12 +1,14 @@
 package edu.jhu.nlp.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.list.IntStack;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -19,6 +21,7 @@ public class DepTree implements Iterable<DepTreeNode> {
     protected List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
     protected int[] parents;
     protected boolean isProjective;
+    protected final boolean isSingleHeaded = true;
     
     protected DepTree() {
         // Only for subclasses.
@@ -93,12 +96,14 @@ public class DepTree implements Iterable<DepTreeNode> {
             throw new IllegalStateException("Found an empty parent cell. emptyCount=" + emptyCount);
         }
         int wallCount = countChildrenOf(parents, WallDepTreeNode.WALL_POSITION);
-        if (wallCount != 1) {
+        if (isSingleHeaded && wallCount != 1) {
             log.warn("There must be exactly one node with the wall as a parent. wallCount=" + wallCount);
+        } else if (wallCount < 1) {
+            log.warn("There must be some node with the wall as a parent. wallCount=" + wallCount);
         }
         
         // Check that there are no cyles
-        if (containsCycle(parents)) {
+        if (!isConnectedAndAcyclic(parents)) {
             throw new IllegalStateException("Found cycle in parents array");
         }
 
@@ -109,7 +114,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         
         // Check for projectivity if necessary
         if (isProjective) {
-            if (!checkIsProjective(parents)) {
+            if (!isProjective(parents)) {
                 throw new IllegalStateException("Found non-projective arcs in tree");
             }
         }
@@ -119,25 +124,29 @@ public class DepTree implements Iterable<DepTreeNode> {
      * Returns whether this is a valid depedency tree: a directed acyclic graph
      * with a single root which covers all the tokens.
      */
-    public static boolean isDepTree(int[] parents, boolean isProjective) {
-        // Check that there is exactly one node with the WALL as its parent
+    public static boolean isDepTree(int[] parents, boolean isProjective, boolean isSingleHeaded) {
+        // Check that every token has some head. (Note that the parents array encoding ensures we
+        // can't have multiple heads per token.)
         int emptyCount = countChildrenOf(parents, EMPTY_POSITION);
         if (emptyCount != 0) {
             return false;
         }
+        // Check that there is exactly one node with the WALL as its parent
         int wallCount = countChildrenOf(parents, WallDepTreeNode.WALL_POSITION);
-        if (wallCount != 1) {
+        if (isSingleHeaded && wallCount != 1) {
+            return false;
+        } else if (wallCount < 1) {
             return false;
         }
         
         // Check that there are no cyles
-        if (containsCycle(parents)) {
+        if (!isConnectedAndAcyclic(parents)) {
             return false;
         }
         
         // Check for projectivity if necessary
         if (isProjective) {
-            if (!checkIsProjective(parents)) {
+            if (!isProjective(parents)) {
                 return false;
             }
         }
@@ -269,6 +278,42 @@ public class DepTree implements Iterable<DepTreeNode> {
     }
 
     /**
+     * Whether the directed graph (including an implicit wall node) denoted by this parents array is
+     * fully connected. If a singly-headed directed graph is connected it must also be acyclic.
+     */
+    public static boolean isConnectedAndAcyclic(int[] parents) {
+        int numVisited = 0;
+        // 1-indexed array indicating whether each node (including the wall at position 0) has been visited.
+        boolean[] visited = new boolean[parents.length+1];
+        Arrays.fill(visited, false);
+        // Visit the nodes reachable from the wall in a pre-order traversal. 
+        IntStack stack = new IntStack();
+        stack.push(-1);
+        while (stack.size() > 0) {
+            // Pop off the current node from the stack.
+            int cur = stack.pop();
+            if (visited[cur+1] == true) {
+                continue;
+            }
+            // Mark it as visited.
+            visited[cur+1] = true;
+            numVisited++;
+            // Push the current node's unvisited children onto the stack.
+            for (int i=0; i<parents.length; i++) {
+                if (parents[i] == cur && visited[i+1] == false) {
+                    stack.push(i);
+                }
+            }
+        }
+        return numVisited == parents.length + 1;
+    }
+    
+    // TODO: Is an acyclic singly-headed directed graph also connected?
+    public static boolean isAcyclic(int[] parents) {
+        return !containsCycle(parents);
+    }
+
+    /**
      * Checks if a dependency tree represented as a parents array contains a cycle.
      * 
      * @param parents
@@ -303,7 +348,7 @@ public class DepTree implements Iterable<DepTreeNode> {
      * @return True if the tree specified by the parents array is projective,
      *         False otherwise.
      */
-    public static boolean checkIsProjective(int[] parents) {
+    public static boolean isProjective(int[] parents) {
         for (int i=0; i<parents.length; i++) {
             int pari = (parents[i] == WallDepTreeNode.WALL_POSITION) ? parents.length : parents[i];
             int minI = i < pari ? i : pari;

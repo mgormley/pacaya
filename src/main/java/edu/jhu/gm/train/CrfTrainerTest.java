@@ -67,11 +67,11 @@ public class CrfTrainerTest {
      * 
      * @author mgormley
      */
-    public static class SimpleVCFeatureExtractor2 extends SlowFeatureExtractor {
+    public static class SimpleVCFeatureExtractor extends SlowFeatureExtractor {
 
-        private FeatureNames alphabet;
+        protected FeatureNames alphabet;
 
-        public SimpleVCFeatureExtractor2(FeatureNames alphabet) {
+        public SimpleVCFeatureExtractor(FeatureNames alphabet) {
             super();
             this.alphabet = alphabet;          
         }
@@ -114,11 +114,11 @@ public class CrfTrainerTest {
      * 
      * @author mgormley
      */
-    public static class SimpleVCFeatureExtractor extends SlowObsFeatureExtractor {
+    public static class SimpleVCObsFeatureExtractor extends SlowObsFeatureExtractor {
 
-        private FactorTemplateList fts;
+        protected FactorTemplateList fts;
 
-        public SimpleVCFeatureExtractor(FactorTemplateList fts) {
+        public SimpleVCObsFeatureExtractor(FactorTemplateList fts) {
             super();
             this.fts = fts;
         }
@@ -239,7 +239,7 @@ public class CrfTrainerTest {
     public void testTrainNoLatentVars() {
         // Boiler plate feature extraction code.
         FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
@@ -288,7 +288,7 @@ public class CrfTrainerTest {
     @Test
     public void testTrainWithLatentVars() {
         FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
@@ -323,7 +323,7 @@ public class CrfTrainerTest {
     @Test
     public void testTrainWithGlobalFactor() {
         FactorTemplateList fts = new FactorTemplateList();  
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         
         final int n = 3;

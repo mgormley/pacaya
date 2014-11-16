@@ -1,7 +1,5 @@
 package edu.jhu.nlp.depparse;
 
-import java.util.List;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
@@ -16,15 +14,9 @@ import edu.jhu.nlp.FeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.O2FeTypedFactor;
-import edu.jhu.nlp.features.LocalObservations;
-import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
-import edu.jhu.nlp.features.TemplateSets;
-import edu.jhu.prim.list.LongArrayList;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.SibFeTypedFactor;
 import edu.jhu.util.FeatureNames;
-import edu.jhu.util.Prm;
-import edu.jhu.util.hash.MurmurHash;
 
 public class FastDepParseFeatureExtractor implements FeatureExtractor {
 
@@ -76,11 +68,11 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
             int c = var.getChild();
             FastDepParseFe.addArcFactoredMSTFeats(isent, p, c, feats, false, true);            
         } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
-            O2FeTypedFactor f2 = (O2FeTypedFactor)f;
-            FastDepParseFe.add2ndOrderSiblingFeats(isent, f2.i, f2.j, f2.k, feats);
+            SibFeTypedFactor f2 = (SibFeTypedFactor)f;
+            FastDepParseFe.add2ndOrderSiblingFeats(isent, f2.p, f2.c, f2.s, feats);
         } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT) {
-            O2FeTypedFactor f2 = (O2FeTypedFactor)f;
-            FastDepParseFe.add2ndOrderGrandparentFeats(isent, f2.k, f2.i, f2.j, feats);
+            GraFeTypedFactor f2 = (GraFeTypedFactor)f;
+            FastDepParseFe.add2ndOrderGrandparentFeats(isent, f2.g, f2.p, f2.c, feats);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

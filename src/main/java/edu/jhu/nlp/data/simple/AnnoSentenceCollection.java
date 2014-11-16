@@ -79,7 +79,7 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
                 labels.add(t);
             }
             Sentence sentence = new Sentence(alphabet, labels);
-            boolean isProjective = DepTree.checkIsProjective(sent.getParents());
+            boolean isProjective = DepTree.isProjective(sent.getParents());
             trees.add(new DepTree(sentence, sent.getParents(), isProjective));
         }
         return trees; 

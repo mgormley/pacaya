@@ -83,7 +83,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           logDomain=False,
                           algebra="LOG_SIGN",
                           includeUnsupportedFeatures=True,
-                          singleRoot=False)
+                          singleRoot=False,
+                          inference="BP")
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
@@ -100,9 +101,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                   useMseForValue=True)
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, 
                                                        tagger_parser="2nd-gra")
+        g.second_grand_exact = g.second_grand + SrlExpParams(inference="DP")
         g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, 
                                                      tagger_parser="2nd-sib")
-        g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
+        g.unpruned_parsers = [g.second_grand_exact, g.second_sib, g.first_order, g.second_order, g.second_grand]
         g.pruned_parsers = pruned_parsers(g.unpruned_parsers)
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
@@ -295,7 +297,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             languages = ["es", "bg", "en"]
             
             # Speedups
-            g.defaults.update(trainMaxSentenceLength=50,
+            g.defaults.update(trainMaxSentenceLength=20,
                               sgdNumPasses=5)
             g.defaults.remove("printModel")
             
@@ -315,7 +317,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.remove("modelOut") # Speedup.
             for lang_short in languages:
                 for bpMaxIterations in [1, 2, 3, 4]:
-                    for trainer in [g.erma_mse, g.cll, g.erma_dp]:
+                    for trainer in [g.cll, g.erma_mse, g.erma_dp]:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
                         for parser in g.pruned_parsers:

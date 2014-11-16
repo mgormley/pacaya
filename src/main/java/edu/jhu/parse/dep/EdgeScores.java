@@ -42,6 +42,14 @@ public class EdgeScores {
         }
     }
     
+    public void incrScore(int p, int c, double incr) {
+        if (p == -1) {
+            root[c] += incr;
+        } else {
+            child[p][c] += incr;
+        }
+    }
+    
     /** Safely checks whether the child array contains a value -- ignoring diagonal entries. */
     public static boolean childContains(double[][] child, double value, double delta) {
         for (int i=0; i<child.length; i++) {

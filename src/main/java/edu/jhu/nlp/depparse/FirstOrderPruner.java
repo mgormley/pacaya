@@ -35,7 +35,7 @@ public class FirstOrderPruner implements Annotator {
 
     public FirstOrderPruner(File pruneModel, JointNlpFgExampleBuilderPrm exPrm, JointNlpDecoderPrm dPrm) {
         this.pruneModel = pruneModel;
-        this.exPrm = Prm.clonePrm(exPrm);
+        this.exPrm = Prm.clone(exPrm);
         this.dPrm = dPrm;
     }
     

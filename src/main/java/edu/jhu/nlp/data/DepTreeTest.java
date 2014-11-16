@@ -17,11 +17,42 @@ public class DepTreeTest {
 
     @Test
     public void testIsProjective() {
-        assertTrue(DepTree.checkIsProjective(new int[]{ 1, -1, 1 }));
-        assertTrue(DepTree.checkIsProjective(new int[]{ -1, -1, -1 }));
+        assertTrue(DepTree.isProjective(new int[]{ 1, -1, 1 }));
+        assertTrue(DepTree.isProjective(new int[]{ -1, -1, -1 }));
         
-        assertFalse(DepTree.checkIsProjective(new int[]{ 2, -1, 1, 1 }));
-        assertFalse(DepTree.checkIsProjective(new int[]{ 2, -1, 3, 1 }));
+        assertFalse(DepTree.isProjective(new int[]{ 2, -1, 1, 1 }));
+        assertFalse(DepTree.isProjective(new int[]{ 2, -1, 3, 1 }));
+    }
+    
+    @Test
+    public void testIsConnected() {
+        assertTrue(DepTree.isConnectedAndAcyclic(new int[]{ 1, -1, 1 }));
+        assertTrue(DepTree.isConnectedAndAcyclic(new int[]{ -1, -1, -1 }));       
+        assertTrue(DepTree.isConnectedAndAcyclic(new int[]{ 2, -1, 1, 1 }));
+        assertTrue(DepTree.isConnectedAndAcyclic(new int[]{ 2, -1, 3, 1 }));
+        
+        // This is not counted as connected since there is no connection to the wall node.
+        assertFalse(DepTree.isConnectedAndAcyclic(new int[]{ 1, 2, 0 }));
+        
+        assertFalse(DepTree.isConnectedAndAcyclic(new int[]{ 1, 0, -1 }));
+        assertFalse(DepTree.isConnectedAndAcyclic(new int[]{ 3, 4, 5, 6 }));
+        assertFalse(DepTree.isConnectedAndAcyclic(new int[]{ 2, -1, 0, 1 }));
+    }
+    
+    @Test
+    public void testIsAcyclic() {
+        assertTrue(DepTree.isAcyclic(new int[]{ 1, -1, 1 }));
+        assertTrue(DepTree.isAcyclic(new int[]{ -1, -1, -1 }));       
+        assertTrue(DepTree.isAcyclic(new int[]{ 2, -1, 1, 1 }));
+        assertTrue(DepTree.isAcyclic(new int[]{ 2, -1, 3, 1 }));
+        
+        // This is not counted as connected since there is no connection to the wall node.
+        assertFalse(DepTree.isAcyclic(new int[]{ 1, 2, 0 }));
+        
+        assertFalse(DepTree.isAcyclic(new int[]{ 1, 0, -1 }));
+        //assertFalse(DepTree.isAcyclic(new int[]{ 3, 4, 5, 6 }));
+        assertFalse(DepTree.isAcyclic(new int[]{ 2, -1, 0, 1 }));
+        
     }
     
     @Test

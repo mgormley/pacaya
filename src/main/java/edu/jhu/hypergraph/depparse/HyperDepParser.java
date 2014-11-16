@@ -6,7 +6,9 @@ import edu.jhu.hypergraph.Hyperedge;
 import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.hypergraph.Hyperpotential;
 import edu.jhu.hypergraph.HyperpotentialFoe;
+import edu.jhu.hypergraph.depparse.O2AllGraDpHypergraph.DependencyScorer;
 import edu.jhu.parse.dep.DepIoChart;
+import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjTreeChart;
 import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
@@ -80,7 +82,7 @@ public class HyperDepParser {
         //Semirings.fromLogProb(fracRoot, semiring);
         //Semirings.fromLogProb(fracChild, semiring);
         
-        DepParseHypergraph graph = new DepParseHypergraph(fracRoot, fracChild, semiring, singleRoot);
+        O1DpHypergraph graph = new O1DpHypergraph(fracRoot, fracChild, semiring, singleRoot);
         Scores scores = new Scores();
         Hyperalgo.insideAlgorithm(graph, graph.getPotentials(), semiring, scores);
         Hyperalgo.outsideAlgorithm(graph, graph.getPotentials(), semiring, scores);
@@ -88,7 +90,7 @@ public class HyperDepParser {
         return getDepIoChart(graph, scores);
     }
     
-    public static DepIoChart getDepIoChart(DepParseHypergraph graph, Scores scores) {
+    public static DepIoChart getDepIoChart(O1DpHypergraph graph, Scores scores) {
         final int nplus = graph.getNumTokens() + 1;        
         final ProjTreeChart inChart = new ProjTreeChart(nplus, DepParseType.INSIDE);
         final ProjTreeChart outChart = new ProjTreeChart(nplus, DepParseType.INSIDE);
@@ -116,29 +118,70 @@ public class HyperDepParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @return The parse chart.
      */
-    public static Pair<DepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
+    public static Pair<O1DpHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
         final Algebra semiring = new LogSignAlgebra();         
         return insideSingleRootEntropyFoe(fracRoot, fracChild, semiring);
     }
 
-    public static Pair<DepParseHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot,
+    public static Pair<O1DpHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot,
             double[][] fracChild, final Algebra semiring) {
         boolean singleRoot = true;
         return insideEntropyFoe(fracRoot, fracChild, semiring, singleRoot);
     }
 
-    public static Pair<DepParseHypergraph, Scores> insideEntropyFoe(double[] fracRoot, double[][] fracChild,
+    public static Pair<O1DpHypergraph, Scores> insideEntropyFoe(double[] fracRoot, double[][] fracChild,
             final Algebra semiring, boolean singleRoot) {
         Algebras.fromLogProb(fracRoot, semiring);
         Algebras.fromLogProb(fracChild, semiring);
         
-        DepParseHypergraph graph = new DepParseHypergraph(fracRoot, fracChild, semiring, singleRoot);
+        O1DpHypergraph graph = new O1DpHypergraph(fracRoot, fracChild, semiring, singleRoot);
         Scores scores = new Scores();
         final Hyperpotential w = graph.getPotentials();
         HyperpotentialFoe wFoe = new EntropyHyperpotentialFoe(w);
         Hyperalgo.insideAlgorithmFirstOrderExpect(graph, wFoe, semiring, scores);
 
-        return new Pair<DepParseHypergraph, Scores>(graph, scores);
+        return new Pair<O1DpHypergraph, Scores>(graph, scores);
+    }
+    
+    /** Runs inside outside on an all-grandparents hypergraph and returns the edge marginals in the real semiring. */
+    public static EdgeScores insideOutsideO2AllGraSingleRoot(DependencyScorer scorer, Algebra s) {
+        return insideOutside02AllGra(scorer, s, true);
+    }
+    
+    /** Runs inside outside on an all-grandparents hypergraph and returns the edge marginals in the real semiring. */
+    public static EdgeScores insideOutsideO2AllGraMultiRoot(DependencyScorer scorer, Algebra s) {
+        return insideOutside02AllGra(scorer, s, false);
+    }
+
+    protected static EdgeScores insideOutside02AllGra(DependencyScorer scorer, Algebra s, boolean singleRoot) {
+        O2AllGraDpHypergraph graph = new O2AllGraDpHypergraph(scorer, s, singleRoot);
+        Scores sc = new Scores();
+        Hyperalgo.forward(graph, graph.getPotentials(), s, sc);
+        return getEdgeMarginalsRealSemiring(graph, sc);
+    }
+
+    /** Gets the edge marginals in the real semiring from an all-grandparents hypergraph and its marginals in scores. */
+    public static EdgeScores getEdgeMarginalsRealSemiring(O2AllGraDpHypergraph graph, Scores sc) {
+        Algebra s = graph.getAlgebra();
+        int nplus = graph.getNumTokens()+1;
+
+        Hypernode[][][][] c = graph.getChart();
+        EdgeScores marg = new EdgeScores(graph.getNumTokens(), 0.0);
+        for (int width = 1; width < nplus; width++) {
+            for (int i = 0; i < nplus - width; i++) {
+                int j = i + width;
+                for (int g=0; g<nplus; g++) {
+                    if (i <= g && g <= j && !(i==0 && g==O2AllGraDpHypergraph.NIL)) { continue; }
+                    if (j > 0) {
+                        marg.incrScore(i-1, j-1, s.toReal(sc.marginal[c[i][j][g][O2AllGraDpHypergraph.INCOMPLETE].getId()]));
+                    } 
+                    if (i > 0) {
+                        marg.incrScore(j-1, i-1, s.toReal(sc.marginal[c[j][i][g][O2AllGraDpHypergraph.INCOMPLETE].getId()]));
+                    }
+                }
+            }
+        }
+        return marg;
     }
     
 }
