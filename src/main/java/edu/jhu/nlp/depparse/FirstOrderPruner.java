@@ -59,6 +59,15 @@ public class FirstOrderPruner implements Annotator {
         exPrm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         exPrm.fgPrm.dpPrm.pruneEdges = true;
         exPrm.fePrm = fePrm;
+                
+        final ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.s = Algebras.LOG_SEMIRING;
+        bpPrm.schedule = BpScheduleType.TREE_LIKE;
+        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        bpPrm.normalizeMessages = false;
+        bpPrm.maxIterations = 1;
+        bpPrm.convergenceThreshold = 0;
+        bpPrm.keepTape = false;
         
         // Get unlabeled data.
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(exPrm, ofc, cs, false);
