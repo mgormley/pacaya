@@ -294,13 +294,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-aware":
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             exps = []
-            languages = ["es", "bg", "en"]
+            languages = ["en"] #["es", "bg", "en"]
             
             # Speedups
-            g.defaults.update(trainMaxSentenceLength=15,
-                              devMaxSentenceLength=15,
-                              testMaxSentenceLength=15,
-                              sgdNumPasses=5)
+            g.defaults.update(sgdNumPasses=5)
             g.defaults.remove("printModel")
             
             # Train a first-order pruning model for each language
