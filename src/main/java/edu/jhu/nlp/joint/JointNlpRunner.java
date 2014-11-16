@@ -57,6 +57,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
+import edu.jhu.nlp.depparse.O2AllGraFgInferencer.O2AllGraFgInferencerFactory;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
@@ -106,7 +107,7 @@ public class JointNlpRunner {
 
     public enum ErmaLoss { MSE, EXPECTED_RECALL, DP_DECODE_LOSS };
 
-    public enum Inference { BRUTE_FORCE, BP };
+    public enum Inference { BRUTE_FORCE, BP, DP };
     
     public enum RegularizerType { L2, NONE };
     
@@ -855,6 +856,13 @@ public class JointNlpRunner {
                 bpPrm.dumpDir = Paths.get(bpDumpDir.getAbsolutePath());
             }
             return bpPrm;
+        } else if (inference == Inference.DP) {
+            if (CorpusHandler.getPredAts().size() == 1 && CorpusHandler.getPredAts().get(0) == AT.DEP_TREE
+                    && grandparentFactors && !siblingFactors) { 
+                return new O2AllGraFgInferencerFactory(algebra.getAlgebra());
+            } else {
+                throw new ParseException("DP inference only supported for dependency parsing with all grandparent factors.");
+            }
         } else {
             throw new ParseException("Unsupported inference method: " + inference);
         }

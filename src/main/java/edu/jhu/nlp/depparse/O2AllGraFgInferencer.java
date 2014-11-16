@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.autodiff.erma.AbstractFgInferencer;
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.FgInferencerFactory;
+import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
@@ -31,6 +33,25 @@ import edu.jhu.util.semiring.Algebras;
 
 public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInferencer {
 
+    public static class O2AllGraFgInferencerFactory implements FgInferencerFactory {
+
+        private Algebra s;
+        public O2AllGraFgInferencerFactory(Algebra s) {
+            this.s = s;
+        }
+        
+        @Override
+        public FgInferencer getInferencer(FactorGraph fg) { 
+            return new O2AllGraFgInferencer(fg, s);
+        }
+
+        @Override
+        public Algebra getAlgebra() {
+            return s;
+        }
+        
+    }
+    
     private static final Logger log = Logger.getLogger(O2AllGraFgInferencer.class);
 
     private final Algebra s;
@@ -71,17 +92,18 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
             if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
                 GraFeTypedFactor ff = (GraFeTypedFactor) f;
                 scores[ff.p+1][ff.c+1][ff.g+1] += ff.getLogUnormalizedScore(LinkVar.TRUE_TRUE);
-            } else if (f instanceof FeTypedFactor) {
-                FeTypedFactor ff = (FeTypedFactor) f;
-                LinkVar lv = (LinkVar) ff.getVars().get(0);
+            } else if (f.getVars().size() == 1 && f.getVars().get(0) instanceof LinkVar) {
+                LinkVar lv = (LinkVar) f.getVars().get(0);
                 int p = lv.getParent() + 1;
                 int c = lv.getChild() + 1;
                 for (int g=0; g<n+1; g++) {
                     if (p <= g && g <= c && !(p==0 && g == O2AllGraDpHypergraph.NIL)) { continue; }
-                    scores[p][c][g] += ff.getLogUnormalizedScore(LinkVar.TRUE);
+                    scores[p][c][g] += f.getLogUnormalizedScore(LinkVar.TRUE);
                 }
             } else if (f instanceof ProjDepTreeFactor || f instanceof SimpleProjDepTreeFactor) {
                 containsProjDepTreeConstraint = true;
+            } else if (f.getVars().size() == 0) {
+                // Ignore clamped factor.
             } else {
                 throw new RuntimeException("Unsupported factor type: " + f.getClass());
             }
@@ -149,8 +171,10 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
             b.setValue(LinkVar.TRUE_TRUE, sc.marginal[id]);
             log.trace(String.format("p=%d c=%d g=%d b=%s", p, c, g, b.toString()));
             return b;
-        } else if (f instanceof FeTypedFactor) {
+        } else if (f.getVars().size() == 1 && f.getVars().get(0) instanceof LinkVar) {
             return getVarBeliefs(f.getVars().get(0));
+        } else if (f.getVars().size() == 0) {
+            return new VarTensor(s, new VarSet());
         //} else if (f instanceof ProjDepTreeFactor || f instanceof SimpleProjDepTreeFactor) {
         } else {
             throw new RuntimeException("Unsupported factor type: " + f.getClass());
