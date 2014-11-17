@@ -158,7 +158,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             raise Exception("expname must be specified")
         
         elif self.expname == "dp-opt":
-            # Compares learning with and without parameter averaging.
+            # Examines optimizer / annotator speed up with different numbers of threads / batch sizes.
             exps = []
             g.defaults += g.cll
             g.defaults.update(trainMaxSentenceLength=20, devMaxSentenceLength=20, 
@@ -168,9 +168,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.remove("modelOut")
             lang_short = "en"
             gl = g.langs[lang_short]
-            for optimizer in [g.sgd, g.adagrad, g.adagrad_comid]:
-                for sgdEarlyStopping in [True, False]:
-                    for sgdBatchSize in [1, 30]:
+            for optimizer in [g.adagrad_comid]:
+                for sgdEarlyStopping in [True]:
+                    for sgdBatchSize in [1, 2, 7, 30]:
                         exp = g.defaults + gl.cx_data + g.first_order + optimizer
                         exp.update(sgdEarlyStopping=sgdEarlyStopping, sgdBatchSize=sgdBatchSize)
                         if sgdBatchSize < exp.get("threads"): exp.update(threads=sgdBatchSize)
