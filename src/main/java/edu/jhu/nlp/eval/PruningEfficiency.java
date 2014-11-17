@@ -34,7 +34,7 @@ public class PruningEfficiency implements Evaluator {
                         // Don't count gold edges.
                         continue; 
                     }
-                    if (skipPunctuation && DepParseEvaluator.isPunctuation(goldSent.getWord(c))) {
+                    if (skipPunctuation && DepParseAccuracy.isPunctuation(goldSent.getWord(c))) {
                         // Don't score punctuation.
                         continue;
                     }

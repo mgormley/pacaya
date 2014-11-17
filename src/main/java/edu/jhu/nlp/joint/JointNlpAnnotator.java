@@ -27,7 +27,7 @@ import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
-import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.DepParseAccuracy;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
@@ -122,7 +122,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         final JointNlpAnnotator anno = this;
         final Evaluator eval;
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
-            eval = new DepParseEvaluator(prm.dpSkipPunctuation);
+            eval = new DepParseAccuracy(prm.dpSkipPunctuation);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL))) {
             eval = new SrlEvaluator();
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {

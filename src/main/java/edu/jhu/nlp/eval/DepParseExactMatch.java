@@ -6,20 +6,24 @@ import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
-public class OraclePruningAccuracy implements Evaluator {
+/**
+ * Proportion of gold trees not pruned.
+ * @author mgormley
+ */
+public class DepParseExactMatch implements Evaluator {
 
-    private static final Logger log = Logger.getLogger(OraclePruningAccuracy.class);
+    private static final Logger log = Logger.getLogger(DepParseExactMatch.class);
 
     private boolean skipPunctuation;
 
-    public OraclePruningAccuracy(boolean skipPunctuation) {
+    public DepParseExactMatch(boolean skipPunctuation) {
         this.skipPunctuation = skipPunctuation;
     }
     
     @Override
     public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         int numTot = 0;
-        int numCorrect = 0;
+        int numIncorrect = 0;
         for (int i=0; i<predSents.size(); i++) {
             AnnoSentence predSent = predSents.get(i);
             AnnoSentence goldSent = goldSents.get(i);
@@ -28,14 +32,16 @@ public class OraclePruningAccuracy implements Evaluator {
                     // Don't score punctuation.
                     continue;
                 }
-                int p = goldSent.getParent(c);
-                if (predSent.getDepEdgeMask() == null || predSent.getDepEdgeMask().isKept(p, c)) {
-                    numCorrect++;
+                if (predSent.getParents() == null || predSent.getParent(c) != goldSent.getParent(c)) {
+                    // A gold edge is incorrect.
+                    numIncorrect++;
+                    break;
                 }
-                numTot++;
             }
+            numTot++;
         }
-        log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
+        int numCorrect = numTot - numIncorrect;
+        log.info("Unlabeled exact match on " + name + ": " + (double) numCorrect / numTot);
         // Return the number of errors.
         return numTot - numCorrect;
     }

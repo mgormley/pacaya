@@ -57,13 +57,16 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
+import edu.jhu.nlp.depparse.GoldDepParseUnpruner;
 import edu.jhu.nlp.depparse.O2AllGraFgInferencer.O2AllGraFgInferencerFactory;
 import edu.jhu.nlp.depparse.PosTagDistancePruner;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator;
 import edu.jhu.nlp.embed.EmbeddingsAnnotator.EmbeddingsAnnotatorPrm;
-import edu.jhu.nlp.eval.DepParseEvaluator;
+import edu.jhu.nlp.eval.DepParseAccuracy;
+import edu.jhu.nlp.eval.DepParseExactMatch;
 import edu.jhu.nlp.eval.OraclePruningAccuracy;
+import edu.jhu.nlp.eval.OraclePruningExactMatch;
 import edu.jhu.nlp.eval.PruningEfficiency;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
@@ -436,6 +439,9 @@ public class JointNlpRunner {
                 }
                 anno.add(new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm()));
             }
+            if ((pruneByDist || pruneByModel ) && trainer == Trainer.CLL) {
+                anno.add(new GoldDepParseUnpruner());
+            }
             // Various NLP annotations.
             anno.add(jointAnno);
         }
@@ -443,9 +449,11 @@ public class JointNlpRunner {
             if (pruneByDist || pruneByModel) {
                 eval.add(new PruningEfficiency(dpSkipPunctuation));
                 eval.add(new OraclePruningAccuracy(dpSkipPunctuation));
+                eval.add(new OraclePruningExactMatch(dpSkipPunctuation));
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE)) {
-                eval.add(new DepParseEvaluator(dpSkipPunctuation));
+                eval.add(new DepParseAccuracy(dpSkipPunctuation));
+                eval.add(new DepParseExactMatch(dpSkipPunctuation));
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
                 eval.add(new SrlSelfLoops());

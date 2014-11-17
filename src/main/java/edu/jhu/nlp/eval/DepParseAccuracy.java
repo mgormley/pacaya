@@ -15,18 +15,18 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  * 
  * @author mgormley
  */
-public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
+public class DepParseAccuracy implements Loss<AnnoSentence>, Evaluator {
 
     /** Regex for matching words consisting of entirely Unicode punctuation characters. */
     static final Pattern PUNCT_RE = Pattern.compile("^\\p{Punct}+$", Pattern.UNICODE_CHARACTER_CLASS);
-    private static final Logger log = Logger.getLogger(DepParseEvaluator.class);
+    private static final Logger log = Logger.getLogger(DepParseAccuracy.class);
 
     private double accuracy;
     private int correct;
     private int total;
     private boolean skipPunctuation;
 
-    public DepParseEvaluator(boolean skipPunctuation) {
+    public DepParseAccuracy(boolean skipPunctuation) {
         this.skipPunctuation = skipPunctuation;
     }
     
@@ -70,8 +70,7 @@ public class DepParseEvaluator implements Loss<AnnoSentence>, Evaluator {
                     correct++;
                 }
             }
-            total++;
-            
+            total++;            
         }
     }
     

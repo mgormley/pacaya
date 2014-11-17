@@ -81,6 +81,31 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         sc = new Scores();
         Hyperalgo.forward(graph, graph.getPotentials(), s, sc);
         if (sc.beta[graph.getRoot().getId()] == s.zero()) {
+            int i;
+            i=0;
+            for (Factor f : fg.getFactors()) {
+                if (f.getVars().size() == 1) {
+                    LinkVar lv = (LinkVar) f.getVars().get(0);
+                    int p = lv.getParent();
+                    int c = lv.getChild();
+                    if (f.getLogUnormalizedScore(LinkVar.TRUE) == 0.0) {
+                        System.out.printf("p=%d c=%d lv=TRUE sc=%f f=%d\n", p, c, f.getLogUnormalizedScore(LinkVar.TRUE), i);
+                    }
+                }
+                i++;
+            }
+            i=0;
+            for (Factor f : fg.getFactors()) {
+                if (f.getVars().size() == 1) {
+                    LinkVar lv = (LinkVar) f.getVars().get(0);
+                    int p = lv.getParent();
+                    int c = lv.getChild();
+                    if (f.getLogUnormalizedScore(LinkVar.TRUE) != 0.0) {
+                        System.out.printf("p=%d c=%d lv=FALSE sc=%f f=%d \n", p, c, f.getLogUnormalizedScore(LinkVar.TRUE), i);
+                    }
+                }
+                i++;
+            }
             throw new IllegalStateException("Scores disallowed all possible parses.");
         }
         if (log.isTraceEnabled()) { sc.prettyPrint(graph); }
@@ -88,6 +113,7 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
     }
     
     private DependencyScorer getDepScorerFromFg(FactorGraph fg, int n) {
+        // Create the scores in the log semiring.
         double[][][] scores = new double[n+1][n+1][n+1];
         DoubleArrays.fill(scores, 0.0);
         boolean containsProjDepTreeConstraint = false;
@@ -116,6 +142,7 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
                         + " a factor constraining to a projective dependency tree.");
         }
         
+        // Convert the scores to the semiring used by this inference method.
         Algebras.convertAlgebra(scores, Algebras.LOG_SEMIRING, s);
         
         if (log.isTraceEnabled()) { log.trace("scores: " + Arrays.deepToString(scores)); }
