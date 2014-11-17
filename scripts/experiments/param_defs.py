@@ -86,13 +86,13 @@ class ParamDefinitions():
         g.defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         g.defaults.update(seed=random.getrandbits(63))
         if self.queue:
-            threads = 15
+            threads = 7
         elif self.big_machine:
             threads = 2
         else:
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
-        g.defaults.set("sgdBatchSize", 30)
+        g.defaults.set("sgdBatchSize", 14)
                 
         g.defaults.update(
             printModel="./model.txt.gz",                          
