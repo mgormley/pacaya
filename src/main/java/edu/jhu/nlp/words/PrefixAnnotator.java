@@ -2,6 +2,7 @@ package edu.jhu.nlp.words;
 
 import java.util.ArrayList;
 
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -13,26 +14,27 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class PrefixAnnotator implements Annotator {
-
-    @Override
-    public void annotate(AnnoSentenceCollection sents) {
-        addPrefixes(sents);
+public class PrefixAnnotator extends AbstractParallelAnnotator implements Annotator {
+    
+    public static void addPrefixes(AnnoSentenceCollection sents) {
+        (new PrefixAnnotator()).annotate(sents);
     }
 
-    public static void addPrefixes(AnnoSentenceCollection sents) {
-        for (AnnoSentence sent : sents) {
-            ArrayList<String> prefixes = new ArrayList<>();
-            for (String word : sent.getWords()) {
-                if (word.length() > 5) {
-                    prefixes.add(word.substring(0, Math.min(word.length(), 5)));
-                } else {
-                    prefixes.add(word);
-                }
+    public void annotate(AnnoSentence sent) {
+        addPrefixes(sent);
+    }
+    
+    public static void addPrefixes(AnnoSentence sent) {
+        ArrayList<String> prefixes = new ArrayList<>();
+        for (String word : sent.getWords()) {
+            if (word.length() > 5) {
+                prefixes.add(word.substring(0, Math.min(word.length(), 5)));
+            } else {
+                prefixes.add(word);
             }
-            Lists.intern(prefixes);
-            sent.setPrefixes(prefixes);
         }
+        Lists.intern(prefixes);
+        sent.setPrefixes(prefixes);
     }
 
 }

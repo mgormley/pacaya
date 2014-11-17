@@ -29,6 +29,7 @@ import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate0;
 import edu.jhu.nlp.features.TemplateLanguage.OtherFeat;
 import edu.jhu.nlp.features.TemplateSets;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.matrix.DenseDoubleMatrix;
 import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.tuple.Pair;
@@ -309,7 +310,7 @@ public class InformationGainFeatureTemplateSelector {
      * @param featCount 
      */
     private List<FeatTemplate> filterFeatTemplates(List<FeatTemplate> allTpls, ValExtractor valExt, double[] ig, int[] featCount, Writer writer, int numToSelect) throws IOException {            
-        int[] indices = IntDoubleSort.getIntIndexArray(ig.length);
+        int[] indices = IntArrays.range(ig.length);
         double[] values = DoubleArrays.copyOf(ig);
         IntDoubleSort.sortValuesDesc(values, indices);
         

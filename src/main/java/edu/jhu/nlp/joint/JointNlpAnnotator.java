@@ -33,8 +33,10 @@ import edu.jhu.nlp.eval.SrlEvaluator;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.prim.util.Lambda.FnIntToVoid;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prm;
+import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
@@ -164,21 +166,24 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));
     }
 
-    private void annotate(AnnoSentenceCollection sents, FgExampleList data) {
+    private void annotate(final AnnoSentenceCollection sents, final FgExampleList data) {
         // Add the new predictions to the input sentences.
-        for (int i = 0; i < sents.size(); i++) {
-            UFgExample ex = data.get(i);
-            AnnoSentence inputSent = sents.get(i);
-            try {
-                JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
-                AnnoSentence predSent = decoder.decode(model, ex, inputSent);
-                sents.set(i, predSent);
-            } catch (Throwable t) {
-                // TODO: Maybe move this elsewhere.
-                log.error("Caught throwable: " + t.getMessage());
-                t.printStackTrace();
+        Threads.forEach(0, sents.size(), new FnIntToVoid() {            
+            @Override
+            public void call(int i) {
+                UFgExample ex = data.get(i);
+                AnnoSentence inputSent = sents.get(i);
+                try {
+                    JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
+                    AnnoSentence predSent = decoder.decode(model, ex, inputSent);
+                    sents.set(i, predSent);
+                } catch (Throwable t) {
+                    // TODO: Maybe move this elsewhere.
+                    log.error("Caught throwable: " + t.getMessage());
+                    t.printStackTrace();
+                }
             }
-        }
+        });
     }
     
     public void loadModel(File modelIn) {

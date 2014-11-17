@@ -87,6 +87,7 @@ import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.tag.FileMapTagReducer;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
@@ -906,6 +907,7 @@ public class JointNlpRunner {
             
             ReporterManager.init(ReporterManager.reportOut, true);
             Prng.seed(seed);
+            Threads.initDefaultPool(threads);
 
             JointNlpRunner pipeline = new JointNlpRunner();
             pipeline.run();
@@ -919,6 +921,7 @@ public class JointNlpRunner {
             t.printStackTrace();
             exitCode = 1;
         } finally {
+            Threads.shutdownDefaultPool();
             ReporterManager.close();
         }
         

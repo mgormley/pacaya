@@ -80,6 +80,9 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         graph = new O2AllGraDpHypergraph(scorer, s, InsideOutsideDepParse.singleRoot);
         sc = new Scores();
         Hyperalgo.forward(graph, graph.getPotentials(), s, sc);
+        if (sc.beta[graph.getRoot().getId()] == s.zero()) {
+            throw new IllegalStateException("Scores disallowed all possible parses.");
+        }
         if (log.isTraceEnabled()) { sc.prettyPrint(graph); }
         edgeMarg = getEdgeMarginals(graph, sc);
     }
@@ -89,7 +92,9 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         DoubleArrays.fill(scores, 0.0);
         boolean containsProjDepTreeConstraint = false;
         for (Factor f : fg.getFactors()) {
-            if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
+            if (f instanceof ProjDepTreeFactor || f instanceof SimpleProjDepTreeFactor) {
+                containsProjDepTreeConstraint = true;
+            } else if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
                 GraFeTypedFactor ff = (GraFeTypedFactor) f;
                 scores[ff.p+1][ff.c+1][ff.g+1] += ff.getLogUnormalizedScore(LinkVar.TRUE_TRUE);
             } else if (f.getVars().size() == 1 && f.getVars().get(0) instanceof LinkVar) {
@@ -100,8 +105,6 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
                     if (p <= g && g <= c && !(p==0 && g == O2AllGraDpHypergraph.NIL)) { continue; }
                     scores[p][c][g] += f.getLogUnormalizedScore(LinkVar.TRUE);
                 }
-            } else if (f instanceof ProjDepTreeFactor || f instanceof SimpleProjDepTreeFactor) {
-                containsProjDepTreeConstraint = true;
             } else if (f.getVars().size() == 0) {
                 // Ignore clamped factor.
             } else {

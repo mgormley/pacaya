@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
@@ -17,14 +18,85 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntSort;
+import edu.jhu.prim.util.Lambda;
 
 public class Threads {
 
     private static final Logger log = Logger.getLogger(Threads.class);
-
     private static final int DONE = -1;
 
-    public static <T> List<Future<T>> executeAll(ExecutorService pool, Collection<? extends Callable<T>> tasks) {
+    public static ExecutorService defaultPool = null;
+    
+    private Threads() { }
+    
+    public static void initDefaultPool(int numThreads) {
+        defaultPool = Executors.newFixedThreadPool(numThreads);
+    }
+    
+    public static void shutdownDefaultPool() {
+        if (defaultPool != null) {
+            shutdownSafelyOrDie(defaultPool);
+        }
+    }
+    
+    /* ------------------- Functions using the default pool ----------------- */
+    
+    public static void forEach(int endIdx, final Lambda.FnIntToVoid fn) {
+        forEach(0, endIdx, fn);
+    }
+    
+    public static void forEach(int startIdx, int endIdx, final Lambda.FnIntToVoid fn) {
+        List<Callable<Integer>> tasks = new ArrayList<>(endIdx - startIdx);
+        for (int i=startIdx; i<endIdx; i++) {
+            final int idx = i;
+            tasks.add(new Callable<Integer>() {                
+                @Override
+                public Integer call() {
+                    fn.call(idx);
+                    return idx;
+                }
+            });
+        }
+        invokeAndAwaitAll(defaultPool, tasks);
+    }
+    
+    /* ------------------- Functions using a given pool ----------------- */
+
+    public static <T> List<Future<T>> invokeAndAwaitAll(ExecutorService pool, List<Callable<T>> tasks) {
+        List<Future<T>> futures = executeAll(pool, tasks);
+        awaitAll(pool, futures);
+        return futures;
+    }
+
+    public static <T> List<T> getAllResults(ExecutorService pool, ArrayList<Callable<T>> tasks) {
+        try {
+            List<T> results = new ArrayList<T>();
+            List<Future<T>> futures = invokeAndAwaitAll(pool, tasks);
+            for (Future<T> f : futures) {
+                results.add(f.get());
+            }
+            return results;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public static <T> void addAllResults(ExecutorService pool, ArrayList<Callable<T>> tasks, List<T> results) {
+        try {
+            List<Future<T>> futures = invokeAndAwaitAll(pool, tasks);
+            for (Future<T> f : futures) {
+                results.add(f.get());
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private static <T> List<Future<T>> executeAll(ExecutorService pool, Collection<? extends Callable<T>> tasks) {
         List<Future<T>> futures = new ArrayList<Future<T>>(tasks.size());
         boolean done = false;
         try {
@@ -44,7 +116,7 @@ public class Threads {
         }
     }
     
-    public static <T> void awaitAll(ExecutorService pool, List<Future<T>> futures) {
+    private static <T> void awaitAll(ExecutorService pool, List<Future<T>> futures) {
         int count = 0;
         try {
             boolean[] isDone = new boolean[futures.size()];
@@ -86,40 +158,6 @@ public class Threads {
         }
     }
 
-    public static <T> List<Future<T>> invokeAndAwaitAll(ExecutorService pool, List<Callable<T>> tasks) {
-        List<Future<T>> futures = executeAll(pool, tasks);
-        awaitAll(pool, futures);
-        return futures;
-    }
-
-    public static <T> List<T> getAllResults(ExecutorService pool, ArrayList<Callable<T>> tasks) {
-        try {
-            List<T> results = new ArrayList<T>();
-            List<Future<T>> futures = invokeAndAwaitAll(pool, tasks);
-            for (Future<T> f : futures) {
-                results.add(f.get());
-            }
-            return results;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
-
-    public static <T> void addAllResults(ExecutorService pool, ArrayList<Callable<T>> tasks, List<T> results) {
-        try {
-            List<Future<T>> futures = invokeAndAwaitAll(pool, tasks);
-            for (Future<T> f : futures) {
-                results.add(f.get());
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
     
     public interface TaskFactory<T> {
         Callable<T> getTask(int i);
@@ -143,12 +181,6 @@ public class Threads {
             Threads.addAllResults(pool, tasks, results);
         }
         return results;
-    }
-
-    public static void runAll(ExecutorService pool, List<Runnable> tasks) {
-        for (Runnable task : tasks) {
-            pool.execute(task);
-        }
     }
 
     public static void shutdownSafelyOrDie(ExecutorService pool) {

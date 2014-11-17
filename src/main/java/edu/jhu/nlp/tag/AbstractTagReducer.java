@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.DepTreeNode;
@@ -13,7 +14,7 @@ import edu.jhu.nlp.data.DepTreebank;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
-public abstract class AbstractTagReducer implements Annotator {
+public abstract class AbstractTagReducer extends AbstractParallelAnnotator implements Annotator {
 
     private static final Logger log = Logger.getLogger(AbstractTagReducer.class);
     private Set<String> unknownTags;
@@ -22,14 +23,12 @@ public abstract class AbstractTagReducer implements Annotator {
         super();
     }
 
-    public void annotate(AnnoSentenceCollection sents) {
-        for (AnnoSentence sent : sents) {
-            ArrayList<String> cposTags = new ArrayList<>();
-            for (String pos : sent.getPosTags()) {
-                cposTags.add(reduceTag(pos));                
-            }
-            sent.setCposTags(cposTags);
+    public void annotate(AnnoSentence sent) {
+        ArrayList<String> cposTags = new ArrayList<>();
+        for (String pos : sent.getPosTags()) {
+            cposTags.add(reduceTag(pos));                
         }
+        sent.setCposTags(cposTags);
     }
 
     public void reduceTags(DepTreebank trees) {

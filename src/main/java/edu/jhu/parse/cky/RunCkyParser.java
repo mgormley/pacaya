@@ -23,7 +23,7 @@ import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.parse.cky.data.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.parse.cky.data.NaryTreebank;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
@@ -145,7 +145,7 @@ public class RunCkyParser {
     }
 
     private void removeRefinements(BinaryTreebank binaryParses) {
-        LambdaOne<BinaryTree> refineRemover = new LambdaOne<BinaryTree>() {
+        FnO1ToVoid<BinaryTree> refineRemover = new FnO1ToVoid<BinaryTree>() {
             @Override
             public void call(BinaryTree node) {
                 if (!node.isLexical()) {
@@ -165,7 +165,7 @@ public class RunCkyParser {
 
     private void useSignaturesForUnknownWords(NaryTreebank naryTrees,
             final CnfGrammar grammar) {
-        LambdaOne<NaryTree> ftRemover = new LambdaOne<NaryTree>() {
+        FnO1ToVoid<NaryTree> ftRemover = new FnO1ToVoid<NaryTree>() {
             private final Alphabet<String> emptySet = Alphabet.getEmptyStoppedAlphabet();
             @Override
             public void call(NaryTree node) {
@@ -187,7 +187,7 @@ public class RunCkyParser {
     }
     
     private void removeFunctionTagsAndTraces(NaryTreebank naryTrees) {
-        LambdaOne<NaryTree> ftRemover = new LambdaOne<NaryTree>() {
+        FnO1ToVoid<NaryTree> ftRemover = new FnO1ToVoid<NaryTree>() {
             @Override
             public void call(NaryTree node) {
                 if (!node.isLexical()) {

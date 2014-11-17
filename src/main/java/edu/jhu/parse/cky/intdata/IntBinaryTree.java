@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.GrammarConstants;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -96,7 +96,7 @@ public class IntBinaryTree {
         }
     }
 
-    public void preOrderTraversal(LambdaOne<IntBinaryTree> function) {
+    public void preOrderTraversal(FnO1ToVoid<IntBinaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
@@ -108,7 +108,7 @@ public class IntBinaryTree {
         }
     }
 
-    public void inOrderTraversal(LambdaOne<IntBinaryTree> function) {
+    public void inOrderTraversal(FnO1ToVoid<IntBinaryTree> function) {
         // In-order traversal of left child.
         if (leftChild != null) {
             leftChild.inOrderTraversal(function);
@@ -121,7 +121,7 @@ public class IntBinaryTree {
         }
     }
     
-    public void postOrderTraversal(LambdaOne<IntBinaryTree> function) {
+    public void postOrderTraversal(FnO1ToVoid<IntBinaryTree> function) {
         // Post-order traversal of each child.
         if (leftChild != null) {
             leftChild.postOrderTraversal(function);
@@ -243,7 +243,7 @@ public class IntBinaryTree {
                 + ", rightChildNode=" + rightChild + "]";
     }
 
-    private class LeafCollector implements LambdaOne<IntBinaryTree> {
+    private class LeafCollector implements FnO1ToVoid<IntBinaryTree> {
 
         public ArrayList<IntBinaryTree> leaves = new ArrayList<IntBinaryTree>();
         
@@ -256,7 +256,7 @@ public class IntBinaryTree {
         
     }
     
-    private class UpdateStartEnd implements LambdaOne<IntBinaryTree> {
+    private class UpdateStartEnd implements FnO1ToVoid<IntBinaryTree> {
 
         @Override
         public void call(IntBinaryTree node) {
@@ -305,7 +305,7 @@ public class IntBinaryTree {
 
     public void resetAlphabets(final Alphabet<String> lexAlphabet,
             final Alphabet<String> ntAlphabet) {
-        preOrderTraversal(new LambdaOne<IntBinaryTree>() {
+        preOrderTraversal(new FnO1ToVoid<IntBinaryTree>() {
             public void call(IntBinaryTree node) {
                 String label = node.getSymbolLabel();
                 node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;

@@ -3,26 +3,26 @@ package edu.jhu.nlp.tag;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.Sentence;
 import edu.jhu.nlp.data.SentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentence;
-import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.util.Alphabet;
 
 /**
  * Reads a brown clusters file and tags a sentence, by replacing each word with
  * its corresponding cluster.
  */
-public class BrownClusterTagger implements Annotator {
+public class BrownClusterTagger extends AbstractParallelAnnotator implements Annotator {
 
     public static class BrownClusterTaggerPrm {
         /** Maximum length for Brown cluster tag. */
@@ -41,8 +41,8 @@ public class BrownClusterTagger implements Annotator {
     private HashMap<String,String> map;
     private BrownClusterTaggerPrm prm;
     // Internal counting for miss rate.
-    private int numLookups = 0;
-    private int numMisses = 0;
+    private AtomicInteger numLookups = new AtomicInteger(0);
+    private AtomicInteger numMisses = new AtomicInteger(0);
     
     public BrownClusterTagger(BrownClusterTaggerPrm prm) {
         this.prm = prm;
@@ -80,9 +80,9 @@ public class BrownClusterTagger implements Annotator {
         }
         if (cluster == null) {
             cluster = OOV_CLUSTER;
-            numMisses++;
+            numMisses.incrementAndGet();
         }
-        numLookups++;
+        numLookups.incrementAndGet();
         return cluster;
     }
 
@@ -115,15 +115,9 @@ public class BrownClusterTagger implements Annotator {
     }
     
     public double getHitRate() {
-        return (double) (numLookups - numMisses) / numLookups;
+        return (double) (numLookups.get() - numMisses.get()) / numLookups.get();
     }
-
-    public void annotate(AnnoSentenceCollection sents) {
-        for (AnnoSentence s : sents) {
-            annotate(s);
-        }
-    }
-
+    
     public void annotate(AnnoSentence sent) {
         ArrayList<String> clusters = new ArrayList<String>();
         for (String word : sent.getWords()) {

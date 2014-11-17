@@ -12,6 +12,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.parse.dep.EdgeScores;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.tuple.Pair;
 
@@ -85,7 +86,7 @@ public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
         // For each token...
         for (int c = 0; c < n; c++) {
             // Keep only the top K.
-            int[] heads = IntDoubleSort.getIntIndexArray(n);
+            int[] heads = IntArrays.range(n);
             double[] margs = new double[n];
             for (int p = -1; p < n; p++) {
                 if (p == c) { continue; }

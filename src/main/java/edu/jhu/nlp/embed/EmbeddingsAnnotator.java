@@ -4,13 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
 
-public class EmbeddingsAnnotator implements Annotator {
+public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements Annotator {
 
     public static class EmbeddingsAnnotatorPrm {
         // Path to word embeddings text file.
@@ -23,8 +25,9 @@ public class EmbeddingsAnnotator implements Annotator {
     
     private EmbeddingsAnnotatorPrm prm;
     private Embeddings embeddings;
-    private int numLookups = 0;
-    private int numMisses = 0;
+    // Internal counting for miss rate.
+    private AtomicInteger numLookups = new AtomicInteger(0);
+    private AtomicInteger numMisses = new AtomicInteger(0);
     
     public EmbeddingsAnnotator(EmbeddingsAnnotatorPrm prm) {
         this.prm = prm;
@@ -38,24 +41,21 @@ public class EmbeddingsAnnotator implements Annotator {
         embeddings.scalePerWord(prm.embScalar);
     }
     
-    @Override
-    public void annotate(AnnoSentenceCollection sents) {
-        for (AnnoSentence sent : sents) {
-            List<double[]> embeds = new ArrayList<>(sent.size());
-            for (int i=0; i<sent.size(); i++) {
-                String word = sent.getWord(i);
-                embeds.add(embeddings.getEmbedding(word));
-                if (embeds.get(i) == null) {
-                    numMisses++;
-                }
-                numLookups++;
+    public void annotate(AnnoSentence sent) {
+        List<double[]> embeds = new ArrayList<>(sent.size());
+        for (int i=0; i<sent.size(); i++) {
+            String word = sent.getWord(i);
+            embeds.add(embeddings.getEmbedding(word));
+            if (embeds.get(i) == null) {
+                numMisses.incrementAndGet();
             }
-            sent.setEmbeds(embeds);
+            numLookups.incrementAndGet();
         }
+        sent.setEmbeds(embeds);
     }
 
     public double getHitRate() {
-        return (double) (numLookups - numMisses) / numLookups;
+        return (double) (numLookups.get() - numMisses.get()) / numLookups.get();
     }
 
 }

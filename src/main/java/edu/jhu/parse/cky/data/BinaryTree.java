@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.GrammarConstants;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -102,7 +102,7 @@ public class BinaryTree {
         }
     }
 
-    public void preOrderTraversal(LambdaOne<BinaryTree> function) {
+    public void preOrderTraversal(FnO1ToVoid<BinaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
@@ -114,7 +114,7 @@ public class BinaryTree {
         }
     }
 
-    public void inOrderTraversal(LambdaOne<BinaryTree> function) {
+    public void inOrderTraversal(FnO1ToVoid<BinaryTree> function) {
         // In-order traversal of left child.
         if (leftChild != null) {
             leftChild.inOrderTraversal(function);
@@ -127,7 +127,7 @@ public class BinaryTree {
         }
     }
     
-    public void postOrderTraversal(LambdaOne<BinaryTree> function) {
+    public void postOrderTraversal(FnO1ToVoid<BinaryTree> function) {
         // Post-order traversal of each child.
         if (leftChild != null) {
             leftChild.postOrderTraversal(function);
@@ -247,7 +247,7 @@ public class BinaryTree {
         return words;
     }
 
-    private class LeafCollector implements LambdaOne<BinaryTree> {
+    private class LeafCollector implements FnO1ToVoid<BinaryTree> {
 
         public ArrayList<BinaryTree> leaves = new ArrayList<BinaryTree>();
         
@@ -260,7 +260,7 @@ public class BinaryTree {
         
     }
     
-    private class LexicalLeafCollector implements LambdaOne<BinaryTree> {
+    private class LexicalLeafCollector implements FnO1ToVoid<BinaryTree> {
 
         public ArrayList<BinaryTree> leaves = new ArrayList<BinaryTree>();
         
@@ -273,7 +273,7 @@ public class BinaryTree {
         
     }
     
-    private class UpdateStartEnd implements LambdaOne<BinaryTree> {
+    private class UpdateStartEnd implements FnO1ToVoid<BinaryTree> {
 
         @Override
         public void call(BinaryTree node) {

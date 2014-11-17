@@ -8,7 +8,7 @@ import java.util.List;
 
 import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.GrammarConstants;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.files.Files;
 
@@ -217,7 +217,7 @@ public class NaryTree {
         return c == ' ' || c == '\n' || c == '\t';
     }
     
-    public void preOrderTraversal(LambdaOne<NaryTree> function) {
+    public void preOrderTraversal(FnO1ToVoid<NaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
@@ -228,7 +228,7 @@ public class NaryTree {
         }
     }
     
-    public void postOrderTraversal(LambdaOne<NaryTree> function) {
+    public void postOrderTraversal(FnO1ToVoid<NaryTree> function) {
         // Post-order traversal of each child.
         if (children != null) {
             for (NaryTree child : children) {
@@ -295,7 +295,7 @@ public class NaryTree {
      * Keep only those nodes which the filter accepts.
      */
     public void postOrderFilterNodes(final NaryTreeNodeFilter filter) {
-        postOrderTraversal(new LambdaOne<NaryTree>() {
+        postOrderTraversal(new FnO1ToVoid<NaryTree>() {
             @Override
             public void call(NaryTree node) {
                 if (!node.isLeaf()) {
@@ -371,7 +371,7 @@ public class NaryTree {
         return words;
     }
 
-    private class LeafCollector implements LambdaOne<NaryTree> {
+    private class LeafCollector implements FnO1ToVoid<NaryTree> {
 
         public ArrayList<NaryTree> leaves = new ArrayList<NaryTree>();
         
@@ -384,7 +384,7 @@ public class NaryTree {
         
     }
     
-    private class LexicalLeafCollector implements LambdaOne<NaryTree> {
+    private class LexicalLeafCollector implements FnO1ToVoid<NaryTree> {
 
         public ArrayList<NaryTree> leaves = new ArrayList<NaryTree>();
         
@@ -439,7 +439,7 @@ public class NaryTree {
         return new BinaryTree(symbol, start, end, leftChild, rightChild , isLexical);                
     }
     
-    private class UpdateStartEnd implements LambdaOne<NaryTree> {
+    private class UpdateStartEnd implements FnO1ToVoid<NaryTree> {
 
         @Override
         public void call(NaryTree node) {

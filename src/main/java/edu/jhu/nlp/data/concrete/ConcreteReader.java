@@ -57,7 +57,7 @@ import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.map.IntIntHashMap;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 
 /**
  * Reader of Concrete protocol buffer files.
@@ -432,7 +432,7 @@ public class ConcreteReader {
         }
         
         final MutableInt numNodes = new MutableInt(0);
-        root.preOrderTraversal(new LambdaOne<NaryTree>() {
+        root.preOrderTraversal(new FnO1ToVoid<NaryTree>() {
             @Override
             public void call(NaryTree obj) {
                 numNodes.v++;
