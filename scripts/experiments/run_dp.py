@@ -166,6 +166,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               regularizer="NONE", l2variance=16000)
             g.defaults.remove("printModel")
             g.defaults.remove("modelOut")
+            g.defaults.set_incl_name("threads", True)
             lang_short = "en"
             gl = g.langs[lang_short]
             for optimizer in [g.adagrad_comid]:
