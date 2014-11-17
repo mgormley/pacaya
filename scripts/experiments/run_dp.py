@@ -170,11 +170,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl = g.langs[lang_short]
             for optimizer in [g.adagrad_comid]:
                 for sgdEarlyStopping in [True]:
-                    for sgdBatchSize in [1, 2, 7, 30]:
-                        exp = g.defaults + gl.cx_data + g.first_order + optimizer
-                        exp.update(sgdEarlyStopping=sgdEarlyStopping, sgdBatchSize=sgdBatchSize)
-                        if sgdBatchSize < exp.get("threads"): exp.update(threads=sgdBatchSize)
-                        exps.append(exp)
+                    for threads in [1, 2, 7, 15]:
+                        for sgdBatchSizeScale in [1, 2, 4, 8]:
+                            exp = g.defaults + gl.cx_data + g.first_order + optimizer
+                            exp.update(sgdEarlyStopping=sgdEarlyStopping, threads=threads, 
+                                       sgdBatchSize=threads*sgdBatchSizeScale)
+                            exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-logadd":
