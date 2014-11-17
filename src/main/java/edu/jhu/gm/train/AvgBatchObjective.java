@@ -54,7 +54,6 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     private int numExamples;
     private FgModel model;
     private FgModel gradient;
-    private ExecutorService pool;
     private ExampleObjective exObj;
     // For nonstationary functions:
     private int curIter;
@@ -68,7 +67,6 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         this.model = model;
         this.gradient = model.getDenseCopy();
         this.gradient.zero();
-        this.pool = Executors.newFixedThreadPool(numThreads);
     }
 
     /** @inheritDoc */
@@ -133,7 +131,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
                     return new AccumValueGradientOfExample(ac, i);
                 }
             };
-            Threads.safelyParallelizeBatch(pool, batch, factory);
+            Threads.safelyParallelizeBatch(Threads.defaultPool, batch, factory);
         }
         
         if (ac.accumValue) {
@@ -196,10 +194,6 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     @Override
     public int getNumExamples() {
         return numExamples;
-    }
-
-    public void shutdown() {
-        Threads.shutdownSafelyOrDie(pool);
     }
 
     @Override

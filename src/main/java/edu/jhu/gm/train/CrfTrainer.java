@@ -116,7 +116,6 @@ public class CrfTrainer {
                 }
             }
         }
-        objective.shutdown();
         return model;
     }
     
