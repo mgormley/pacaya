@@ -64,6 +64,7 @@ public class FirstOrderPruner implements Annotator {
         exPrm.fgPrm.dpPrm.siblingFactors = false;
         exPrm.fgPrm.dpPrm.unaryFactors = true;
         exPrm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        // TODO: This should only be true if we already ran a pruner before this one.
         exPrm.fgPrm.dpPrm.pruneEdges = true;
         exPrm.fePrm = fePrm;
                 
