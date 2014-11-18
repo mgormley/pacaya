@@ -221,12 +221,12 @@
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-core</artifactId>
-      <version>3.3.2-SNAPSHOT</version>
+      <version>3.8.0</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-util</artifactId>
-      <version>3.3.2-SNAPSHOT</version>
+      <version>3.8.0</version>
     </dependency>
     <dependency>
       <groupId>cc.mallet</groupId>
