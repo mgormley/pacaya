@@ -95,6 +95,7 @@ class ParamDefinitions():
         g.defaults.set("sgdBatchSize", 14)
                 
         g.defaults.update(
+            reportOut="./outparams.txt",
             printModel="./model.txt.gz",                          
             trainPredOut="./train-pred.txt",
             devPredOut="./dev-pred.txt",

@@ -3,7 +3,7 @@
 .#*
 \#*\#
 ~$*
- 
+
 # Specific directories
 /target
 /exp
@@ -19,5 +19,5 @@
 java.hprof.txt
 warn.log
 tmp
-/scripts/plot/.Rhistory
+.Rhistory
 .DS_Store
