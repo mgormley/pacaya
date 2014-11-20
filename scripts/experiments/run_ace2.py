@@ -111,6 +111,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "ace-pm13",
+                    "ace-subtypes",
                     "ace-params",
                     "ace-lc",
                     "ace-opt",
@@ -267,7 +268,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                    useRelationSubtype=False)
         eval_types13 = ReExpParams(group="TYPES13", predictArgRoles=True, 
                                    maxInterveningEntities=9999, removeEntityTypes=False,                                   
-                                   useRelationSubtype=False)            
+                                   useRelationSubtype=False) 
+        eval_types36 = ReExpParams(group="TYPES36", predictArgRoles=True, 
+                                   maxInterveningEntities=9999, removeEntityTypes=False,                                   
+                                   useRelationSubtype=True)
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
@@ -334,17 +338,21 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # ------------------------ EXPERIMENTS --------------------------
         
         
-        if self.expname == "ace-pm13":
+        if self.expname == "ace-pm13" or self.expname == "ace-subtypes":
             '''Follows the two distinct test evaluations of Plank & Moschitti (2013) 
             and Nguyen & Grishman (2014) for ACE '05. 
             Train on the union of bn and nw, test on bc_test, and the other domains.
             '''
             root = RootStage()
             train = get_annotation_as_train(ace05_bn_nw)
-            for evl in [eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+            if self.expname == "ace-pm13":
+                evls = [eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
                         eval_types13,
                         eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
-                        ]: # eval_ng14, eval_types7]:
+                        ] # eval_ng14, eval_types7]:
+            else:
+                evls = [eval_types36]
+            for evl in evls:
                 for embed in [cbow_nyt11_en]: #, polyglot_en]:
                     for feats in [feats_zhou, feats_zhou_head_only, feats_zhou_full_noch, feats_emb_only_noch]: 
                         # SKIPPING: feats_zhou_head_type, feats_zhou_full, feats_emb_only 
