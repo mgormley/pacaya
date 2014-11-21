@@ -21,13 +21,13 @@ import edu.jhu.util.files.Files;
 import edu.jhu.util.report.ReporterManager;
 
 /**
- * Pacaya implementation of {@link PostStanfordAnnotationTool}.
+ * Annotator of communication that takes a serialized AnnoPipeline and annotates communications.
+ * This is intended for use within a PostStanfordAnnotationTool for Annotated Gigaword v2.0.
  * 
- * @author max
  * @author mgormley
  */
-public class PacayaPostStanfordAnnotationToolImpl { // TODO: implements PostStanfordAnnotationTool {
-    private static final Logger log = LoggerFactory.getLogger(PacayaPostStanfordAnnotationToolImpl.class);
+public class CommunicationAnnotator { // TODO: implements PostStanfordAnnotationTool {
+    private static final Logger log = LoggerFactory.getLogger(CommunicationAnnotator.class);
 
     // Parameters.
     private File pipeIn;
@@ -39,7 +39,7 @@ public class PacayaPostStanfordAnnotationToolImpl { // TODO: implements PostStan
     // Cached.
     private AnnoPipeline anno;    
         
-    public PacayaPostStanfordAnnotationToolImpl(File pipeIn, boolean concreteSrlIsSyntax, int threads, long seed, File reportOut) {
+    public CommunicationAnnotator(File pipeIn, boolean concreteSrlIsSyntax, int threads, long seed, File reportOut) {
         if (pipeIn == null) {
             throw new IllegalArgumentException("pipeIn must not be null");
         }
@@ -71,7 +71,7 @@ public class PacayaPostStanfordAnnotationToolImpl { // TODO: implements PostStan
         return c;
     }
     
-    public void shutdown() {
+    public void close() {
         Threads.shutdownDefaultPool();
         ReporterManager.close();
     }
