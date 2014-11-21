@@ -53,6 +53,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-conll07",                
                     "dp-en",
                     "dp-logadd",
+                    "dp-agiga2",
                     )
     
     def __init__(self, options):
@@ -521,6 +522,27 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
             return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "dp-agiga2":
+            '''Trains an English-only model for making predictions on for Annotated Gigaword 2.0'''
+            root = RootStage()
+            g.defaults += g.cll + g.first_order
+            g.defaults.update(pruneByDist=True, work_mem_megs=self.prm_defs.get_srl_work_mem_megs(g.defaults))
+            train = g.defaults + g.langs['en'].cx_data
+            comm = glob(p.concrete380 + "/*")[0]
+            comm_name = os.path.basename(comm)
+            train.update(pruneByDist=False, trainMaxNumSentences=3, devMaxNumSentences=3,
+                         trainMaxSentenceLength=7, devMaxSentenceLength=7,  
+                         featureHashMod=1000, sgdNumPasses=2) 
+            train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
+            root.add_dependent(train)
+            for comm in glob(p.concrete380 + "/*"):
+                exp = g.defaults + SrlExpParams(modelIn=StagePath(train, train.get("modelOut")))
+                exp.remove("testGoldOut")
+                comm_name = os.path.basename(comm)
+                exp.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name)
+                train.add_dependent(exp)
+            return root
             
         elif self.expname == "gobble-memory":
             exps = []

@@ -130,7 +130,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
                 TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
             }
         }
-        if (prm.fgPrm.includeDp) {
+        if (prm.fgPrm.includeDp && !prm.fePrm.dpFePrm.onlyFast) {
             TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
             if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
                 TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);

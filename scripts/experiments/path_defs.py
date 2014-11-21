@@ -157,6 +157,9 @@ class PathDefinitions():
         univ_pos_tags = os.path.join(corpora_dir, "universal_pos_tags.1.02")
         p.tag_map_en_ptb = os.path.join(univ_pos_tags, "en-ptb.map")
         
+        # Concrete 3.8.0 samples
+        p.concrete380 = os.path.join(corpora_dir, "processed", "concrete-3.8.0-post-stanford")
+        
         return p
     
     def _set_paths_for_conll09_lang(self, p, lang_long, lang_short, data_dir, require=False):

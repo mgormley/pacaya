@@ -67,6 +67,7 @@ import edu.jhu.nlp.eval.DepParseAccuracy;
 import edu.jhu.nlp.eval.DepParseExactMatch;
 import edu.jhu.nlp.eval.OraclePruningAccuracy;
 import edu.jhu.nlp.eval.OraclePruningExactMatch;
+import edu.jhu.nlp.eval.ProportionAnnotated;
 import edu.jhu.nlp.eval.PruningEfficiency;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
@@ -356,6 +357,9 @@ public class JointNlpRunner {
     // Options for evaluation.
     @Opt(hasArg=true, description="Whether to skip punctuation in dependency parse evaluation.")
     public static boolean dpSkipPunctuation = false;
+    @Opt(hasArg=true, description="Whether to evaluate test data.")
+    public static boolean evalTest = true;
+    
     
     public JointNlpRunner() {
     }
@@ -462,6 +466,7 @@ public class JointNlpRunner {
             if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
                 eval.add(new RelationEvaluator());
             }
+            eval.add(new ProportionAnnotated());
         }
         
 
@@ -514,7 +519,11 @@ public class JointNlpRunner {
             corpus.writeTestPreds(testInput);
             // Evaluate test data.
             AnnoSentenceCollection testGold = corpus.getTestGold();
-            eval.evaluate(testInput, testGold, name);
+            if (evalTest) {
+                eval.evaluate(testInput, testGold, name);
+            } else {
+                (new ProportionAnnotated()).evaluate(testInput, testGold, name);
+            }
             corpus.clearTestCache();
         }
         t.stop();

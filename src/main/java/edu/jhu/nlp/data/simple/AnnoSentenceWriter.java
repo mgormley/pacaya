@@ -7,12 +7,12 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.apache.thrift.TException;
-import org.apache.thrift.TSerializer;
-import org.apache.thrift.protocol.TBinaryProtocol;
 
 import edu.jhu.hlt.concrete.Communication;
+import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.nlp.data.concrete.ConcreteWriter;
+import edu.jhu.nlp.data.concrete.TokenizationUtils;
 import edu.jhu.nlp.data.conll.CoNLL08Sentence;
 import edu.jhu.nlp.data.conll.CoNLL08Writer;
 import edu.jhu.nlp.data.conll.CoNLL09Sentence;
@@ -28,6 +28,7 @@ public class AnnoSentenceWriter {
 
     public static class AnnoSentenceWriterPrm {
         public String name = "";
+        public boolean concreteSrlIsSyntax = false;
     }
 
     private static final Logger log = Logger.getLogger(AnnoSentenceWriter.class);
@@ -86,15 +87,8 @@ public class AnnoSentenceWriter {
                 sw.close();
             }
         } else if (type == DatasetType.CONCRETE) {
-            Communication comm = (Communication) sents.getSourceSents();
-            ConcreteWriter w = new ConcreteWriter(false);
-            w.addDependencyParse(sents, comm);
-            try {
-                byte[] bytez = new TSerializer(new TBinaryProtocol.Factory()).serialize(comm);
-                Files.write(Paths.get(out.getAbsolutePath()), bytez);
-            } catch (TException e) {
-                throw new RuntimeException(e);
-            }
+            ConcreteWriter w = new ConcreteWriter(prm.concreteSrlIsSyntax);
+            w.write(sents, out);
         } else {
             throw new IllegalStateException("Unsupported data type: " + type);
         }

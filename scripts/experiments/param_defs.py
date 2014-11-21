@@ -138,6 +138,8 @@ class ParamDefinitions():
         g.defaults.set_incl_name('removeAts', False)
         g.defaults.set_incl_name('predAts', False)
         g.defaults.set_incl_name('pruneModel', False)
+        g.defaults.set_incl_name('modelIn', False)
+        g.defaults.set_incl_name('modelOut', False)
 
     def _define_groups_features(self, g, p):
         g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
