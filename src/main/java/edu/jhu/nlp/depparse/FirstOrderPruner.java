@@ -35,6 +35,7 @@ import edu.jhu.util.semiring.Algebras;
 
 public class FirstOrderPruner implements Annotator {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(FirstOrderPruner.class);
     private File pruneModel;
     private JointNlpFgExampleBuilderPrm exPrm;

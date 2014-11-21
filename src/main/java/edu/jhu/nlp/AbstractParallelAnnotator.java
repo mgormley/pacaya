@@ -10,6 +10,7 @@ import edu.jhu.util.Threads;
 public abstract class AbstractParallelAnnotator implements Annotator {
 
     private static final Logger log = Logger.getLogger(AbstractParallelAnnotator.class);
+    private static final long serialVersionUID = 1L;
 
     @Override
     public void annotate(final AnnoSentenceCollection sents) {

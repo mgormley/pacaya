@@ -1,5 +1,7 @@
 package edu.jhu.nlp;
 
+import java.io.Serializable;
+
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 /**
@@ -7,7 +9,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  * 
  * @author mgormley
  */
-public interface Annotator {
+public interface Annotator extends Serializable {
 
     void annotate(AnnoSentenceCollection sents);
     

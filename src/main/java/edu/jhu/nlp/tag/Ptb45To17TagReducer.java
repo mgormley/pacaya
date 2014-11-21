@@ -3,7 +3,9 @@ package edu.jhu.nlp.tag;
 
 
 public class Ptb45To17TagReducer extends AbstractTagReducer implements TagReducer {
-        
+
+    private static final long serialVersionUID = 1L;
+
     /**
      * Ported to Java from Jason Smith's reduce-tags.pl.
      */

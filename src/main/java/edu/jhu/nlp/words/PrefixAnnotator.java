@@ -15,7 +15,9 @@ import edu.jhu.util.collections.Lists;
  * @author mgormley
  */
 public class PrefixAnnotator extends AbstractParallelAnnotator implements Annotator {
-    
+
+    private static final long serialVersionUID = 1L;
+
     public static void addPrefixes(AnnoSentenceCollection sents) {
         (new PrefixAnnotator()).annotate(sents);
     }

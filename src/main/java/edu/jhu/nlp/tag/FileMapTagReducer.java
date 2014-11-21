@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class FileMapTagReducer extends AbstractTagReducer {
 
+    private static final long serialVersionUID = 1L;
     Map<String, String> fileMap;
 
     public FileMapTagReducer(File file) {

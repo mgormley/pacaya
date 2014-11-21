@@ -17,6 +17,7 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarTensor;
+import edu.jhu.util.Prm;
 
 /**
  * Minimum Bayes Risk (MBR) decoder for a CRF model.
@@ -25,7 +26,8 @@ import edu.jhu.gm.model.VarTensor;
  */
 public class MbrDecoder implements Decoder<Object, VarConfig> {
 
-    public static class MbrDecoderPrm {
+    public static class MbrDecoderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public Loss loss = Loss.L1;
     }

@@ -12,6 +12,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  */
 public class AnnoPipeline implements Trainable, Annotator {
 
+    private static final long serialVersionUID = 1L;
     private List<Annotator> pipeline = new ArrayList<Annotator>();
     
     public void add(Annotator anno) {

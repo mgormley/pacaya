@@ -533,7 +533,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             comm_name = os.path.basename(comm)
             train.update(pruneByDist=False, trainMaxNumSentences=3, devMaxNumSentences=3,
                          trainMaxSentenceLength=7, devMaxSentenceLength=7,  
-                         featureHashMod=1000, sgdNumPasses=2) 
+                         featureHashMod=1000, sgdNumPasses=2)
+            train.update(pipeOut="pipe.binary.gz") 
             train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
             root.add_dependent(train)
             for comm in glob(p.concrete380 + "/*"):

@@ -3,7 +3,8 @@ package edu.jhu.nlp.tag;
 import edu.jhu.util.Alphabet;
 
 public class OovTagReducer extends AbstractTagReducer {
-
+    
+    private static final long serialVersionUID = 1L;
     private Alphabet<String> alphabet;
     private String unk;
     

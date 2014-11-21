@@ -9,14 +9,13 @@ import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.conll.SrlGraph;
 import edu.jhu.nlp.data.simple.AnnoSentence;
-import edu.jhu.nlp.depparse.DepEdgeMaskDecoder;
 import edu.jhu.nlp.depparse.DepEdgeMaskDecoder.DepEdgeMaskDecoderPrm;
 import edu.jhu.nlp.depparse.DepParseDecoder;
 import edu.jhu.nlp.relations.RelationsDecoder;
 import edu.jhu.nlp.srl.SrlDecoder;
+import edu.jhu.util.Prm;
 
 /**
  * Decodes from the marginals for a joint NLP factor graph to a new {@link AnnoSentence} with the
@@ -26,7 +25,8 @@ import edu.jhu.nlp.srl.SrlDecoder;
  */
 public class JointNlpDecoder implements Decoder<AnnoSentence, AnnoSentence> {
 
-    public static class JointNlpDecoderPrm {
+    public static class JointNlpDecoderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public MbrDecoderPrm mbrPrm = null;
         public DepEdgeMaskDecoderPrm maskPrm = new DepEdgeMaskDecoderPrm();
     }

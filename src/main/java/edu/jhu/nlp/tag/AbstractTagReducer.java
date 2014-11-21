@@ -17,6 +17,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 public abstract class AbstractTagReducer extends AbstractParallelAnnotator implements Annotator {
 
     private static final Logger log = Logger.getLogger(AbstractTagReducer.class);
+    private static final long serialVersionUID = 1L;
     private Set<String> unknownTags;
 
     public AbstractTagReducer() {

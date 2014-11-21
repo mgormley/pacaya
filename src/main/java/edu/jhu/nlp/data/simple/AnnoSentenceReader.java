@@ -106,9 +106,6 @@ public class AnnoSentenceReader {
         loadSents(reader);
         sents.setSourceSents(sourceSents);
         
-        // TODO: Move this.
-        PrefixAnnotator.addPrefixes(sents);
-        
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());
         log.info("Longest sentence: " + sents.getMaxLength());

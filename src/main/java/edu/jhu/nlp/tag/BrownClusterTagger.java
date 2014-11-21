@@ -34,6 +34,7 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
         public String language;
     }
     
+    private static final long serialVersionUID = 1L;
     private static final String OOV_CLUSTER = "UNK";
     private static final Pattern tab = Pattern.compile("\t");
     

@@ -49,12 +49,12 @@ import edu.jhu.util.files.Files;
 public class JointNlpAnnotator implements Trainable, Annotator {
 
     public static enum InitParams { UNIFORM, RANDOM };
-    
+    private static final long serialVersionUID = 1L;
+
     public static class JointNlpAnnotatorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         
         public JointNlpFgExampleBuilderPrm buPrm = new JointNlpFgExampleBuilderPrm();
-        public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public JointNlpDecoderPrm dePrm = new JointNlpDecoderPrm();
         // How to initialize the parameters of the model
         public InitParams initParams = InitParams.UNIFORM;
@@ -63,6 +63,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         // --------------------------------------------------------------------
         // These parameters are only used if a NEW model is created. If a model
         // is loaded from disk, these are ignored.
+        public transient CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm(); 
         public ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
         // We also ignore buPrm.fePrm, which is overwritten by the value in the model.

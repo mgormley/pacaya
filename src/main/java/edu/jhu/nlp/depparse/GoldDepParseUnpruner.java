@@ -11,6 +11,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 public class GoldDepParseUnpruner implements Trainable, Annotator {
 
     private static final Logger log = Logger.getLogger(GoldDepParseUnpruner.class);
+    private static final long serialVersionUID = 1L;
 
     @Override
     public void annotate(AnnoSentenceCollection sents) {

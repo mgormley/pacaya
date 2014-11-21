@@ -23,6 +23,7 @@ public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements An
         public double embScalar = 15.0;
     }
     
+    private static final long serialVersionUID = 1L;
     private EmbeddingsAnnotatorPrm prm;
     private Embeddings embeddings;
     // Internal counting for miss rate.

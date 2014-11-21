@@ -23,6 +23,7 @@ import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
+import edu.jhu.util.Prm;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -34,7 +35,8 @@ public class CrfTrainer {
 
     public static enum Trainer { CLL, ERMA };
 
-    public static class CrfTrainerPrm {
+    public static class CrfTrainerPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public BeliefsModuleFactory bFactory = null;
         public Optimizer<DifferentiableFunction> optimizer = new MalletLBFGS(new MalletLBFGSPrm());

@@ -89,6 +89,7 @@ import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.tag.FileMapTagReducer;
+import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Threads;
@@ -96,6 +97,7 @@ import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.files.Files;
 import edu.jhu.util.report.Reporter;
 import edu.jhu.util.report.ReporterManager;
 import edu.jhu.util.semiring.Algebra;
@@ -150,7 +152,9 @@ public class JointNlpRunner {
     public static File modelOut = null;
     @Opt(hasArg = true, description = "File to which to print a human readable version of the model.")
     public static File printModel = null;
-
+    @Opt(hasArg = true, description = "File to which to serialize the entire pipeline.")
+    public static File pipeOut = null;
+    
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
     public static InitParams initParams = InitParams.UNIFORM;
@@ -398,9 +402,11 @@ public class JointNlpRunner {
             jointAnno.loadModel(modelIn);
         }
         {
+            anno.add(new PrefixAnnotator());
             // Add Brown clusters.
             if (brownClusters != null) {      
-                anno.add(new Annotator() {                    
+                anno.add(new Annotator() {     
+                    private static final long serialVersionUID = 1L;
                     @Override
                     public void annotate(AnnoSentenceCollection sents) {
                         log.info("Adding Brown clusters.");
@@ -420,7 +426,8 @@ public class JointNlpRunner {
             }
             // Add word embeddings.
             if (embeddingsFile != null) {
-                anno.add(new Annotator() {                   
+                anno.add(new Annotator() {
+                    private static final long serialVersionUID = 1L;
                     @Override
                     public void annotate(AnnoSentenceCollection sents) {
                         log.info("Adding word embeddings.");
@@ -468,7 +475,6 @@ public class JointNlpRunner {
             }
             eval.add(new ProportionAnnotated());
         }
-        
 
         AnnoSentenceCollection devGold = null;
         AnnoSentenceCollection devInput = null;
@@ -493,6 +499,10 @@ public class JointNlpRunner {
             }
             if (printModel != null) {
                 jointAnno.printModel(printModel);
+            }
+            if (pipeOut != null) {
+                log.info("Serializing pipeline to file: " + pipeOut);
+                Files.serialize(anno, pipeOut);
             }
         }
         

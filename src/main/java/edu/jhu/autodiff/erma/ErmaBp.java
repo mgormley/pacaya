@@ -34,6 +34,7 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.util.Prm;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
@@ -49,8 +50,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     
     private static final Logger log = Logger.getLogger(ErmaBp.class);
     
-    public static class ErmaBpPrm implements FgInferencerFactory, BeliefsModuleFactory {
-        
+    public static class ErmaBpPrm extends Prm implements FgInferencerFactory, BeliefsModuleFactory {
+        private static final long serialVersionUID = 1L;        
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;

@@ -18,6 +18,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
+import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
 import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebra;
@@ -33,7 +34,8 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     
     private static final Logger log = Logger.getLogger(BeliefPropagation.class);
 
-    public static class BeliefPropagationPrm implements FgInferencerFactory {
+    public static class BeliefPropagationPrm extends Prm implements FgInferencerFactory {
+        private static final long serialVersionUID = 1L;
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
