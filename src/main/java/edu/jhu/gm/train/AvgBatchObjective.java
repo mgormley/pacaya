@@ -4,7 +4,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.hlt.optimize.function.AbstractDifferentiableBatchFunction;
@@ -47,7 +48,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         void report();
     }
     
-    private static final Logger log = Logger.getLogger(AvgBatchObjective.class);
+    private static final Logger log = LoggerFactory.getLogger(AvgBatchObjective.class);
     
     private int numThreads = 1;
     private int numParams;

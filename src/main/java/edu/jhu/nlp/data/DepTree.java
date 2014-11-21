@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.list.IntStack;
@@ -15,7 +16,7 @@ import edu.jhu.util.Alphabet;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
-    private static final Logger log = Logger.getLogger(DepTree.class);
+    private static final Logger log = LoggerFactory.getLogger(DepTree.class);
     public static final int EMPTY_POSITION = -2;
     
     protected List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();

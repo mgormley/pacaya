@@ -1,6 +1,7 @@
 package edu.jhu.gm.train;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.ErmaObjective;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
@@ -55,7 +56,7 @@ public class CrfTrainer {
         public boolean useMseForValue = false;
     }
     
-    private static final Logger log = Logger.getLogger(CrfTrainer.class);
+    private static final Logger log = LoggerFactory.getLogger(CrfTrainer.class);
     
     private CrfTrainerPrm prm; 
         

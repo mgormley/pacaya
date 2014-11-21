@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
@@ -36,7 +37,7 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
         L1, MSE
     }
 
-    private static final Logger log = Logger.getLogger(MbrDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(MbrDecoder.class);
 
     private MbrDecoderPrm prm;    
     private VarConfig mbrVarConfig;

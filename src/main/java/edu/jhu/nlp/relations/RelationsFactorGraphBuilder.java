@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -25,7 +26,7 @@ import edu.jhu.util.Prm;
 
 public class RelationsFactorGraphBuilder {
 
-    private static final Logger log = Logger.getLogger(RelationsFactorGraphBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(RelationsFactorGraphBuilder.class);
 
     public static class RelationsFactorGraphBuilderPrm extends Prm {
         private static final long serialVersionUID = 1L;

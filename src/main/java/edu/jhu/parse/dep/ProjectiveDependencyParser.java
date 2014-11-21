@@ -2,7 +2,8 @@ package edu.jhu.parse.dep;
 
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
 
@@ -17,7 +18,7 @@ import edu.jhu.parse.dep.ProjTreeChart.DepParseType;
  */
 public class ProjectiveDependencyParser {
 
-    private static final Logger log = Logger.getLogger(ProjectiveDependencyParser.class);
+    private static final Logger log = LoggerFactory.getLogger(ProjectiveDependencyParser.class);
 
     public static final int LEFT = 0;
     public static final int RIGHT = 1;

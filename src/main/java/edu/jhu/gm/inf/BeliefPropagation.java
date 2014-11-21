@@ -6,7 +6,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.AbstractFgInferencer;
@@ -32,7 +33,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class BeliefPropagation extends AbstractFgInferencer implements FgInferencer {
     
-    private static final Logger log = Logger.getLogger(BeliefPropagation.class);
+    private static final Logger log = LoggerFactory.getLogger(BeliefPropagation.class);
 
     public static class BeliefPropagationPrm extends Prm implements FgInferencerFactory {
         private static final long serialVersionUID = 1L;

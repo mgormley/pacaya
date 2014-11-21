@@ -1,6 +1,7 @@
 package edu.jhu.autodiff.erma;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
@@ -31,7 +32,7 @@ import edu.jhu.util.semiring.RealAlgebra;
  */
 public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tensor> {
 
-    private static final Logger log = Logger.getLogger(SoftmaxMbrDepParse.class);
+    private static final Logger log = LoggerFactory.getLogger(SoftmaxMbrDepParse.class);
     
     /**
      * Constructor with a default internal semiring.

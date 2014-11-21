@@ -3,7 +3,8 @@ package edu.jhu.nlp.depparse;
 import java.io.IOException;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.data.simple.AlphabetStore;
@@ -19,7 +20,7 @@ import edu.jhu.util.hash.MurmurHash;
 
 public class FastDepParseFeSpeedTest {
     
-    private static final Logger log = Logger.getLogger(FastDepParseFeSpeedTest.class);
+    private static final Logger log = LoggerFactory.getLogger(FastDepParseFeSpeedTest.class);
     private static final int featureHashMod = 1000000;
     
     /**

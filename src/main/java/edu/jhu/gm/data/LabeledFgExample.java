@@ -3,7 +3,8 @@ package edu.jhu.gm.data;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -25,7 +26,7 @@ import edu.jhu.gm.model.VarSet;
 // TODO: rename to CrfExample
 public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, Serializable {
     
-    private static final Logger log = Logger.getLogger(LabeledFgExample.class);
+    private static final Logger log = LoggerFactory.getLogger(LabeledFgExample.class);
     private static final long serialVersionUID = 1L;
     
     /** The factor graph with the OBSERVED and PREDICTED variables clamped to their values from the training example. */

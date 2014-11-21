@@ -5,7 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
@@ -47,7 +48,7 @@ import edu.jhu.util.FeatureNames;
  */
 public class LogLinearObsFeats {
 
-    private static final Logger log = Logger.getLogger(LogLinearObsFeats.class);
+    private static final Logger log = LoggerFactory.getLogger(LogLinearObsFeats.class);
 
     public static class LogLinearObsFeatsPrm {
         public boolean includeUnsupportedFeatures = true;

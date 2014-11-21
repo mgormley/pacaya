@@ -3,7 +3,8 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
@@ -39,7 +40,7 @@ import edu.jhu.util.Alphabet;
  */
 public class LogLinearXY {
 
-    private static final Logger log = Logger.getLogger(LogLinearXY.class);
+    private static final Logger log = LoggerFactory.getLogger(LogLinearXY.class);
 
     public static class LogLinearXYPrm {
         /** Variance of L2 regularizer. */

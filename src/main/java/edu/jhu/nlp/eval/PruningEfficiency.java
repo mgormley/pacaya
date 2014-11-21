@@ -1,6 +1,7 @@
 package edu.jhu.nlp.eval;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
@@ -12,7 +13,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  */
 public class PruningEfficiency implements Evaluator {
 
-    private static final Logger log = Logger.getLogger(PruningEfficiency.class);
+    private static final Logger log = LoggerFactory.getLogger(PruningEfficiency.class);
 
     private boolean skipPunctuation;
 

@@ -14,7 +14,8 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntSort;
@@ -22,7 +23,7 @@ import edu.jhu.prim.util.Lambda;
 
 public class Threads {
 
-    private static final Logger log = Logger.getLogger(Threads.class);
+    private static final Logger log = LoggerFactory.getLogger(Threads.class);
     private static final int DONE = -1;
 
     public static ExecutorService defaultPool = null;

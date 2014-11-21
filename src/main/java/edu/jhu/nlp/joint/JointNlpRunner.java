@@ -10,7 +10,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
@@ -134,7 +135,7 @@ public class JointNlpRunner {
         }
     }
 
-    private static final Logger log = Logger.getLogger(JointNlpRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpRunner.class);
     private static final Reporter rep = Reporter.getReporter(JointNlpRunner.class);
 
     // Options not specific to the model

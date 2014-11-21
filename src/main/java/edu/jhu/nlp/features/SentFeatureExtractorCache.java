@@ -2,7 +2,8 @@ package edu.jhu.nlp.features;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Cache for SentFeatureExtractor.
@@ -12,7 +13,7 @@ import org.apache.log4j.Logger;
  */
 public class SentFeatureExtractorCache {
 
-    private static final Logger log = Logger.getLogger(SentFeatureExtractorCache.class); 
+    private static final Logger log = LoggerFactory.getLogger(SentFeatureExtractorCache.class); 
 
     // Cache of observation features for each single positions in the sentence.
     private ArrayList[] obsFeatsSolo;

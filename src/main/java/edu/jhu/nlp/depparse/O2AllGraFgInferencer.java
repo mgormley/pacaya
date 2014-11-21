@@ -2,7 +2,8 @@ package edu.jhu.nlp.depparse;
 
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.AbstractFgInferencer;
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
@@ -52,7 +53,7 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         
     }
     
-    private static final Logger log = Logger.getLogger(O2AllGraFgInferencer.class);
+    private static final Logger log = LoggerFactory.getLogger(O2AllGraFgInferencer.class);
 
     private final Algebra s;
     private FactorGraph fg;

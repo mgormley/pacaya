@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
@@ -16,7 +17,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 public abstract class AbstractTagReducer extends AbstractParallelAnnotator implements Annotator {
 
-    private static final Logger log = Logger.getLogger(AbstractTagReducer.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractTagReducer.class);
     private static final long serialVersionUID = 1L;
     private Set<String> unknownTags;
 

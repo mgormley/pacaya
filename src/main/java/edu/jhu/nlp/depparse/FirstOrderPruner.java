@@ -4,7 +4,8 @@ import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.data.FgExampleList;
@@ -38,7 +39,7 @@ import edu.jhu.util.semiring.Algebras;
 public class FirstOrderPruner implements Annotator {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(FirstOrderPruner.class);
+    private static final Logger log = LoggerFactory.getLogger(FirstOrderPruner.class);
     private File pruneModel;
     private JointNlpFgExampleBuilderPrm exPrm;
     private JointNlpDecoderPrm dPrm;

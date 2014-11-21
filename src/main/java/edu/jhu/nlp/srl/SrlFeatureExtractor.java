@@ -2,7 +2,8 @@ package edu.jhu.nlp.srl;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -48,7 +49,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         public boolean humanReadable = true;
     }
     
-    private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
+    private static final Logger log = LoggerFactory.getLogger(SrlFeatureExtractor.class); 
     
     private SrlFeatureExtractorPrm prm;
     private FactorTemplateList fts;

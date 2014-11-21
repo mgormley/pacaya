@@ -10,7 +10,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
@@ -110,7 +111,7 @@ import edu.jhu.util.semiring.Algebras;
  */
 public class AnnoPipelineRunner {
 
-    private static final Logger log = Logger.getLogger(AnnoPipelineRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnoPipelineRunner.class);
     private static final Reporter rep = Reporter.getReporter(AnnoPipelineRunner.class);
 
     // Options not specific to the model

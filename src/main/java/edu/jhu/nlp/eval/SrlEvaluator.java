@@ -1,6 +1,7 @@
 package edu.jhu.nlp.eval;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.conll.SrlGraph;
@@ -16,7 +17,7 @@ import edu.jhu.util.report.Reporter;
  */
 public class SrlEvaluator implements Evaluator {
 
-    private static final Logger log = Logger.getLogger(SrlEvaluator.class);
+    private static final Logger log = LoggerFactory.getLogger(SrlEvaluator.class);
     private static final Reporter rep = Reporter.getReporter(SrlEvaluator.class);
     private static final String NO_LABEL = "NO_SRL_LABEL_ON_THIS_EDGE";
         

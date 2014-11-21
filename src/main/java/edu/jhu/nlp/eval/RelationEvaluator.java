@@ -2,7 +2,8 @@ package edu.jhu.nlp.eval;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -16,7 +17,7 @@ import edu.jhu.util.report.Reporter;
  */
 public class RelationEvaluator implements Evaluator {
 
-    private static final Logger log = Logger.getLogger(RelationEvaluator.class);
+    private static final Logger log = LoggerFactory.getLogger(RelationEvaluator.class);
     private static final Reporter rep = Reporter.getReporter(RelationEvaluator.class);
 
     private double precision;

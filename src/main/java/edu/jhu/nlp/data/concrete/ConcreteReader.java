@@ -16,7 +16,8 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Constituent;
@@ -62,7 +63,7 @@ import edu.jhu.prim.util.Lambda.FnO1ToVoid;
  */
 public class ConcreteReader {
 
-    private static final Logger log = Logger.getLogger(ConcreteReader.class);
+    private static final Logger log = LoggerFactory.getLogger(ConcreteReader.class);
 
     private ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
     private int numEntityMentions = 0;

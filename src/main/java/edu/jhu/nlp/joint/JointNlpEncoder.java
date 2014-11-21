@@ -1,6 +1,7 @@
 package edu.jhu.nlp.joint;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.app.Encoder;
 import edu.jhu.gm.data.LFgExample;
@@ -37,7 +38,7 @@ import edu.jhu.util.Prm;
  */
 public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
-    private static final Logger log = Logger.getLogger(JointNlpEncoder.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpEncoder.class);
 
     public static class JointNlpEncoderPrm extends Prm {
         private static final long serialVersionUID = 1L;

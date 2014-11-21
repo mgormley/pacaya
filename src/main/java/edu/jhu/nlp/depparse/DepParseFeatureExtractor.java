@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -51,7 +52,7 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
         public boolean onlyFast = false;
     }
     
-    private static final Logger log = Logger.getLogger(DepParseFeatureExtractor.class); 
+    private static final Logger log = LoggerFactory.getLogger(DepParseFeatureExtractor.class); 
     
     private DepParseFeatureExtractorPrm prm;
     private VarConfig obsConfig;

@@ -1,6 +1,7 @@
 package edu.jhu.gm.train;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
@@ -20,7 +21,7 @@ import edu.jhu.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
     
-    private static final Logger log = Logger.getLogger(CrfObjective.class);
+    private static final Logger log = LoggerFactory.getLogger(CrfObjective.class);
 
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     

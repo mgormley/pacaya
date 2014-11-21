@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.concrete.AnnotationMetadata;
 import edu.jhu.hlt.concrete.Communication;
@@ -41,7 +42,7 @@ import edu.jhu.nlp.features.TemplateLanguage.AT;
  */
 public class ConcreteWriter {
 
-    private static final Logger log = Logger.getLogger(ConcreteWriter.class);
+    private static final Logger log = LoggerFactory.getLogger(ConcreteWriter.class);
 
     public static final String DEP_PARSE_TOOL = "Pacaya Dependency Parser";
     public static final String SRL_TOOL = "Pacaya Semantic Role Labeler (SRL)";

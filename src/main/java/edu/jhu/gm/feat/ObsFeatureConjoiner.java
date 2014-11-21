@@ -7,7 +7,8 @@ import java.io.Serializable;
 import java.io.Writer;
 import java.util.Iterator;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 
@@ -53,7 +54,7 @@ public class ObsFeatureConjoiner implements Serializable {
         public int featCountCutoff = -1;
     }
     
-    private static final Logger log = Logger.getLogger(ObsFeatureConjoiner.class);
+    private static final Logger log = LoggerFactory.getLogger(ObsFeatureConjoiner.class);
     private static final long serialVersionUID = 1L;
     
     /**

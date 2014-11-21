@@ -9,7 +9,8 @@ import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
@@ -33,7 +34,7 @@ import edu.jhu.util.files.Files;
 
 public class RunCkyParser {
     
-    private static final Logger log = Logger.getLogger(RunCkyParser.class);
+    private static final Logger log = LoggerFactory.getLogger(RunCkyParser.class);
 
     // Input data.
     @Opt(hasArg = true, required = true, description = "Penn Treebank training data directory")

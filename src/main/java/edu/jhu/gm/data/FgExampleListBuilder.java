@@ -2,7 +2,8 @@ package edu.jhu.gm.data;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
@@ -46,7 +47,7 @@ public class FgExampleListBuilder {
         public File cacheDir = new File(".");
     }
 
-    private static final Logger log = Logger.getLogger(FgExampleListBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(FgExampleListBuilder.class);
 
     private FgExamplesBuilderPrm prm;
 

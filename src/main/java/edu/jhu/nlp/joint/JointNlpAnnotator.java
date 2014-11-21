@@ -10,7 +10,8 @@ import java.io.Writer;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.UFgExample;
@@ -72,7 +73,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         // --------------------------------------------------------------------
     }
     
-    private static final Logger log = Logger.getLogger(JointNlpAnnotator.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpAnnotator.class);
     private JointNlpAnnotatorPrm prm;   
     private JointNlpFgModel model = null;
 

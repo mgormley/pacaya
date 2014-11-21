@@ -1,7 +1,8 @@
 package edu.jhu.nlp.depparse;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -20,7 +21,7 @@ import edu.jhu.util.FeatureNames;
 
 public class FastDepParseFeatureExtractor implements FeatureExtractor {
 
-    private static final Logger log = Logger.getLogger(FastDepParseFeatureExtractor.class);     
+    private static final Logger log = LoggerFactory.getLogger(FastDepParseFeatureExtractor.class);     
     private static final FeatureVector emptyFv;
     static {
         emptyFv = new FeatureVector();

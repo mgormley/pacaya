@@ -2,7 +2,8 @@ package edu.jhu.nlp.depparse;
 
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.app.Decoder;
@@ -38,7 +39,7 @@ public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
         this.prm = prm;
     }
 
-    private static final Logger log = Logger.getLogger(DepEdgeMaskDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(DepEdgeMaskDecoder.class);
 
     /**
      * Prune to only the most likely K (e.g. 10) heads per token from the first-order model. Also

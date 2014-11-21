@@ -3,7 +3,8 @@ package edu.jhu.nlp.depparse;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.app.Decoder;
@@ -32,7 +33,7 @@ import edu.jhu.prim.tuple.Pair;
  */
 public class DepParseDecoder implements Decoder<AnnoSentence, int[]> {
 
-    private static final Logger log = Logger.getLogger(DepParseDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(DepParseDecoder.class);
 
     /**
      * Decodes by computing the MBR tree under an accuracy loss function.

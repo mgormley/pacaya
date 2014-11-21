@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.nlp.CorpusStatistics;
@@ -42,7 +43,7 @@ import edu.jhu.util.collections.Lists;
  */
 public class TemplateFeatureExtractor {
    
-    private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
+    private static final Logger log = LoggerFactory.getLogger(TemplateFeatureExtractor.class);
 
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;

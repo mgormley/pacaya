@@ -1,6 +1,7 @@
 package edu.jhu.nlp.joint;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.AbstractFgExampleList;
 import edu.jhu.gm.data.FgExampleList;
@@ -40,7 +41,7 @@ public class JointNlpFgExamplesBuilder {
         public JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
     }
     
-    private static final Logger log = Logger.getLogger(JointNlpFgExamplesBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpFgExamplesBuilder.class);
 
     private ObsFeatureConjoiner ofc;
     private JointNlpFgExampleBuilderPrm prm;

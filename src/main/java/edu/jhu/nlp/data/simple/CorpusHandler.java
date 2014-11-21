@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
@@ -18,7 +19,7 @@ import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
 
 public class CorpusHandler {
-    private static final Logger log = Logger.getLogger(CorpusHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(CorpusHandler.class);
 
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")

@@ -20,7 +20,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.util.SafeCast;
 
@@ -31,7 +32,7 @@ import edu.jhu.prim.util.SafeCast;
  */
 public class ArgParser {
 
-    private static final Logger log = Logger.getLogger(ArgParser.class);
+    private static final Logger log = LoggerFactory.getLogger(ArgParser.class);
     private static final Pattern capitals = Pattern.compile("[A-Z]");
     
     private Options options;

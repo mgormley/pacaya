@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
@@ -53,7 +54,7 @@ public class CrfRunner {
 
     public static enum InitParams { UNIFORM, RANDOM };
     
-    private static final Logger log = Logger.getLogger(CrfRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(CrfRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")

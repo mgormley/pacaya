@@ -5,7 +5,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.util.Alphabet;
 
@@ -13,7 +14,7 @@ public class DepTreebank implements Iterable<DepTree> {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(DepTreebank.class);
+    private static final Logger log = LoggerFactory.getLogger(DepTreebank.class);
 
     private SentenceCollection sentences = null;
     private Alphabet<String> alphabet;

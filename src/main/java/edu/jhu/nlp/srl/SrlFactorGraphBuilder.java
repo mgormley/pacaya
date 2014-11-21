@@ -4,7 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -30,7 +31,7 @@ public class SrlFactorGraphBuilder implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
-    private static final Logger log = Logger.getLogger(SrlFactorGraphBuilder.class); 
+    private static final Logger log = LoggerFactory.getLogger(SrlFactorGraphBuilder.class); 
 
     /**
      * Parameters for the SrlFactorGraph.

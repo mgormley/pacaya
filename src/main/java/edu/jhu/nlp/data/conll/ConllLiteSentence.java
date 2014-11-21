@@ -9,7 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.conll.SrlGraph.SrlArg;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
@@ -20,7 +21,7 @@ import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
  */
 public class ConllLiteSentence implements Iterable<ConllLiteToken> {
 
-    private static Logger log = Logger.getLogger(ConllLiteSentence.class);
+    private static Logger log = LoggerFactory.getLogger(ConllLiteSentence.class);
     
     private ArrayList<ConllLiteToken> tokens;
     

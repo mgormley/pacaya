@@ -5,7 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.concrete.ConcreteReader;
 import edu.jhu.nlp.data.concrete.ListCloseableIterable;
@@ -52,7 +53,7 @@ public class AnnoSentenceReader {
         public void close();        
     }
     
-    private static final Logger log = Logger.getLogger(AnnoSentenceReader.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnoSentenceReader.class);
 
     private AnnoSentenceReaderPrm prm;
     private AnnoSentenceCollection sents;

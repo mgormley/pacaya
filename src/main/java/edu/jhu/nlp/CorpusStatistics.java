@@ -12,7 +12,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
@@ -53,7 +54,7 @@ public class CorpusStatistics implements Serializable {
     }
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(CorpusStatistics.class);
+    private static final Logger log = LoggerFactory.getLogger(CorpusStatistics.class);
     
     public static final String UNKNOWN_ROLE = "argUNK";
     public static final String UNKNOWN_SENSE = "senseUNK";

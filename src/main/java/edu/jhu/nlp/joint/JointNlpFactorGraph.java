@@ -1,6 +1,7 @@
 package edu.jhu.nlp.joint;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -33,7 +34,7 @@ public class JointNlpFactorGraph extends FactorGraph {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(JointNlpFactorGraph.class); 
+    private static final Logger log = LoggerFactory.getLogger(JointNlpFactorGraph.class); 
 
     /**
      * Parameters for the SrlFactorGraph.

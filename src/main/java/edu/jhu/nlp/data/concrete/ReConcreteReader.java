@@ -3,7 +3,8 @@ package edu.jhu.nlp.data.concrete;
 import java.util.Collections;
 import java.util.Random;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.nlp.data.NerMention;
@@ -23,7 +24,7 @@ public class ReConcreteReader extends ConcreteReader {
         public boolean makeSingletons = true;
     }
     
-    private static final Logger log = Logger.getLogger(ReConcreteReader.class);
+    private static final Logger log = LoggerFactory.getLogger(ReConcreteReader.class);
     private ReConcreteReaderPrm prm;
     
     public ReConcreteReader(ReConcreteReaderPrm prm) {

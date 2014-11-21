@@ -11,7 +11,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.util.collections.Lists;
@@ -23,7 +24,7 @@ import edu.jhu.util.collections.Lists;
  */
 public class TemplateLanguage {
     
-    private static final Logger log = Logger.getLogger(TemplateLanguage.class);
+    private static final Logger log = LoggerFactory.getLogger(TemplateLanguage.class);
 
     private TemplateLanguage() {
         // Private constructor.

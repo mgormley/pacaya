@@ -2,7 +2,8 @@ package edu.jhu.nlp.eval;
 
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.app.Loss;
 import edu.jhu.nlp.Evaluator;
@@ -19,7 +20,7 @@ public class DepParseAccuracy implements Loss<AnnoSentence>, Evaluator {
 
     /** Regex for matching words consisting of entirely Unicode punctuation characters. */
     static final Pattern PUNCT_RE = Pattern.compile("^\\p{Punct}+$", Pattern.UNICODE_CHARACTER_CLASS);
-    private static final Logger log = Logger.getLogger(DepParseAccuracy.class);
+    private static final Logger log = LoggerFactory.getLogger(DepParseAccuracy.class);
 
     private double accuracy;
     private int correct;

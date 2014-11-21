@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
@@ -13,7 +14,7 @@ import edu.jhu.util.cli.Opt;
 
 public class CoNLL09BrownTagger {
 
-    private static final Logger log = Logger.getLogger(CoNLL09BrownTagger.class);
+    private static final Logger log = LoggerFactory.getLogger(CoNLL09BrownTagger.class);
 
     @Opt(name = "train", hasArg = true, required = true, description = "CoNLL 09 input file or directory.")
     public static String train = null;

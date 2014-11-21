@@ -1,7 +1,8 @@
 package edu.jhu.nlp;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -10,7 +11,7 @@ import edu.jhu.util.Threads;
 
 public abstract class AbstractParallelAnnotator implements Annotator {
 
-    private static final Logger log = Logger.getLogger(AbstractParallelAnnotator.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractParallelAnnotator.class);
     private static final long serialVersionUID = 1L;
 
     @Override

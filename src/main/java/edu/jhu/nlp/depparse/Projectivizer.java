@@ -2,7 +2,8 @@ package edu.jhu.nlp.depparse;
 
 import java.io.Serializable;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.nlp.data.simple.AnnoSentence;
@@ -19,7 +20,7 @@ import edu.jhu.parse.dep.ProjectiveDependencyParser;
 public class Projectivizer implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(Projectivizer.class);
+    private static final Logger log = LoggerFactory.getLogger(Projectivizer.class);
 
     private int total;
     private int correct;

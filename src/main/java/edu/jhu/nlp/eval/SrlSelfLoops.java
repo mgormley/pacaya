@@ -1,6 +1,7 @@
 package edu.jhu.nlp.eval;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
@@ -9,7 +10,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 public class SrlSelfLoops implements Evaluator {
     
-    private static final Logger log = Logger.getLogger(SrlSelfLoops.class);
+    private static final Logger log = LoggerFactory.getLogger(SrlSelfLoops.class);
 
     @Override
     public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {

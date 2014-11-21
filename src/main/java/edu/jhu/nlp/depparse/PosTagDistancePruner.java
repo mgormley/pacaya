@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.nlp.AbstractParallelAnnotator;
@@ -32,7 +33,7 @@ import edu.jhu.util.Threads;
 public class PosTagDistancePruner implements Trainable, Annotator, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
+    private static final Logger log = LoggerFactory.getLogger(PosTagDistancePruner.class);
     private static final String WALL_TAG = "__WALL_TAG__";
     private int wallTagIdx = -1;
     public static final int LEFT = 0;
