@@ -12,11 +12,15 @@ import edu.jhu.nlp.features.TemplateLanguage.AT;
 
 public class ProportionAnnotated implements Evaluator {
 
-    private static final Logger log = Logger.getLogger(ProportionAnnotated.class);
-
+    private static final Logger log = Logger.getLogger(ProportionAnnotated.class);    
+    private List<AT> ats;
+    
+    public ProportionAnnotated(List<AT> ats) {
+        this.ats = ats;
+    }    
+    
     @Override
-    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
-        List<AT> ats = CorpusHandler.getPredAts();
+    public double evaluate(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {        
         int[] counts = new int[AT.values().length];
         for (AnnoSentence sent : predSents) {
             for (AT at : ats) {

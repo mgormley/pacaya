@@ -402,6 +402,7 @@ public class JointNlpRunner {
             jointAnno.loadModel(modelIn);
         }
         {
+            anno.add(new EnsureStaticOptionsAreSet());
             anno.add(new PrefixAnnotator());
             // Add Brown clusters.
             if (brownClusters != null) {      
@@ -473,7 +474,7 @@ public class JointNlpRunner {
             if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
                 eval.add(new RelationEvaluator());
             }
-            eval.add(new ProportionAnnotated());
+            eval.add(new ProportionAnnotated(CorpusHandler.getPredAts()));
         }
 
         AnnoSentenceCollection devGold = null;
@@ -532,7 +533,7 @@ public class JointNlpRunner {
             if (evalTest) {
                 eval.evaluate(testInput, testGold, name);
             } else {
-                (new ProportionAnnotated()).evaluate(testInput, testGold, name);
+                (new ProportionAnnotated(CorpusHandler.getPredAts())).evaluate(testInput, testGold, name);
             }
             corpus.clearTestCache();
         }
@@ -540,6 +541,17 @@ public class JointNlpRunner {
         rep.report("elapsedSec", t.totSec());
     }
 
+    public static class EnsureStaticOptionsAreSet implements Annotator {        
+        private static final long serialVersionUID = 1L;
+        private final boolean singleRoot = InsideOutsideDepParse.singleRoot;
+        private final boolean useLogAddTable = JointNlpRunner.useLogAddTable;
+        @Override
+        public void annotate(AnnoSentenceCollection sents) {
+            InsideOutsideDepParse.singleRoot = singleRoot;
+            FastMath.useLogAddTable = useLogAddTable;
+        }
+    }
+    
     /**
      * Do feature selection and update fePrm with the chosen feature templates.
      */

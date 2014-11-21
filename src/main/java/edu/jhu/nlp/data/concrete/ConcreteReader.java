@@ -423,7 +423,7 @@ public class ConcreteReader {
             }
         }
         if (IntArrays.contains(parents, -2)) {
-            log.warn("Dependency tree contains token(s) with no head: " + dependencyParse.getUuid());
+            log.trace("Dependency tree contains token(s) with no head: " + dependencyParse.getUuid());
         }
         return parents;
     }

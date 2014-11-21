@@ -1,5 +1,6 @@
 package edu.jhu.nlp;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
 import edu.jhu.nlp.data.simple.AnnoSentence;
@@ -21,9 +22,7 @@ public abstract class AbstractParallelAnnotator implements Annotator {
                 try {
                     annotate(sents.get(i));
                 } catch (Throwable t) {
-                    // TODO: Maybe move this elsewhere.
-                    log.error("Caught throwable: " + t.getMessage());
-                    t.printStackTrace();
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });
@@ -31,4 +30,8 @@ public abstract class AbstractParallelAnnotator implements Annotator {
 
     public abstract void annotate(AnnoSentence sent);
     
+    public static void logThrowable(Logger log, Throwable t) {
+        log.error("Failed to annotate sentence. Caught throwable: class=" + t.getClass() + " message=" + t.getMessage());
+        log.trace("Stacktrace from previous ERROR:\n"+ExceptionUtils.getStackTrace(t));
+    }
 }

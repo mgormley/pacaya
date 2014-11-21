@@ -4,9 +4,11 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -131,9 +133,7 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
                         log.warn("All multi-root trees pruned");
                     }
                 } catch (Throwable t) {
-                    // TODO: Maybe move this elsewhere.
-                    log.error("Caught throwable: " + t.getMessage());
-                    t.printStackTrace();
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });

@@ -25,7 +25,7 @@ import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
-from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
+from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory, AnnoPipelineRunner
 
 # ---------------------------- Experiments Creator Class ----------------------------------
 
@@ -538,10 +538,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
             root.add_dependent(train)
             for comm in glob(p.concrete380 + "/*"):
-                exp = g.defaults + SrlExpParams(modelIn=StagePath(train, train.get("modelOut")))
-                exp.remove("testGoldOut")
+                exp = AnnoPipelineRunner(pipeIn=StagePath(train, train.get("pipeOut")))
                 comm_name = os.path.basename(comm)
-                exp.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name)
+                exp.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, predAts="DEP_TREE")
+                exp.set_incl_arg("group", False)
+                exp.set_incl_name("pipeIn", False)
+                exp.set_incl_name("test", False)
+                exp.set_incl_name("testPredOut", False)
                 train.add_dependent(exp)
             return root
             

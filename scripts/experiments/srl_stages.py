@@ -90,6 +90,21 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         script += 'grep --after-context 3 "Labeled   attachment score:" %s\n' % (eval_out)        
         return script
     
+    
+class AnnoPipelineRunner(experiment_runner.JavaExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.JavaExpParams.__init__(self,keywords)
+
+    def get_instance(self):
+        return AnnoPipelineRunner()
+    
+    def create_experiment_script(self, exp_dir):
+        script = "\n"
+        cmd = "java " + self.get_java_args() + " edu.jhu.nlp.joint.AnnoPipelineRunner %s \n" % (self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+        
 
 class ScrapeSrl(experiment_runner.PythonExpParams):
     
@@ -112,7 +127,6 @@ class ScrapeSrl(experiment_runner.PythonExpParams):
         cmd = "python %s/scripts/experiments/scrape_srl.py %s\n" % (self.root_dir, self.get_args())
         script += fancify_cmd(cmd)
         return script
-
 
 class GobbleMemory(experiment_runner.JavaExpParams):
     

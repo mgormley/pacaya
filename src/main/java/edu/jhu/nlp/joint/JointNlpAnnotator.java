@@ -9,6 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExampleList;
@@ -19,6 +20,7 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
@@ -179,9 +181,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
                     AnnoSentence predSent = decoder.decode(model, ex, inputSent);
                     sents.set(i, predSent);
                 } catch (Throwable t) {
-                    // TODO: Maybe move this elsewhere.
-                    log.error("Caught throwable: " + t.getMessage());
-                    t.printStackTrace();
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });

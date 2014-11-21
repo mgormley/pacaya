@@ -3,6 +3,7 @@ package edu.jhu.nlp.depparse;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
@@ -14,6 +15,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -115,9 +117,7 @@ public class FirstOrderPruner implements Annotator {
                     int n = inputSent.getWords().size();
                     numEdgesTot.addAndGet(n*n);
                 } catch (Throwable t) {
-                    // TODO: Maybe move this elsewhere.
-                    log.error("Caught throwable: " + t.getMessage());
-                    t.printStackTrace();
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });

@@ -81,16 +81,7 @@ public class ConcreteWriter {
             }
             Communication comm = comms.get(0);
             comm = comm.deepCopy();
-            int numSents = TokenizationUtils.getNumSents(comm);
-            if (numSents != sents.size()) {
-                log.error(String.format("# sents in Communication = %d # sents in AnnoSentenceCollection = %d", numSents, sents.size()));
-                log.error("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection." +
-                        "This can occur when the maximum sentence length or the total number of sentences is restricted.");
-                throw new RuntimeException("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection.");
-            }
-            addDependencyParse(sents, comm);
-            addSrlAnnotations(sents, comm);
-            addRelations(sents, comm);
+            addAnnotations(sents, comm);
             try {
                 ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
                 byte[] bytez =ser.toBytes(comm);
@@ -99,6 +90,20 @@ public class ConcreteWriter {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /** Adds the annotations from the {@link AnnoSentenceCollection} to the {@link Communication}. */
+    public void addAnnotations(AnnoSentenceCollection sents, Communication comm) {
+        int numSents = TokenizationUtils.getNumSents(comm);
+        if (numSents != sents.size()) {
+            log.error(String.format("# sents in Communication = %d # sents in AnnoSentenceCollection = %d", numSents, sents.size()));
+            log.error("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection." +
+                    "This can occur when the maximum sentence length or the total number of sentences is restricted.");
+            throw new RuntimeException("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection.");
+        }
+        addDependencyParse(sents, comm);
+        addSrlAnnotations(sents, comm);
+        addRelations(sents, comm);
     }
 
     /**
