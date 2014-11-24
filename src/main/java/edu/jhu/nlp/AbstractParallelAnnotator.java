@@ -33,6 +33,6 @@ public abstract class AbstractParallelAnnotator implements Annotator {
     
     public static void logThrowable(Logger log, Throwable t) {
         log.error("Failed to annotate sentence. Caught throwable: class=" + t.getClass() + " message=" + t.getMessage());
-        log.trace("Stacktrace from previous ERROR:\n"+ExceptionUtils.getStackTrace(t));
+        log.trace("Stacktrace from previous ERROR:\n", t);
     }
 }
