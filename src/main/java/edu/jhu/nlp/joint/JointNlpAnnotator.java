@@ -161,10 +161,10 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         }
         
         log.info("Running the decoder");
+        Timer timer = new Timer();
+        timer.start();
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, model.getOfc(), model.getCs(), false);
         FgExampleList data = builder.getData(sents, null);  
-        Timer timer = new Timer();
-        timer.start();      
         annotate(sents, data);
         timer.stop();
         log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));
