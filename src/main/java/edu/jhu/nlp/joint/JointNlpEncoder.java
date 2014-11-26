@@ -142,7 +142,8 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
                 TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
             }
         } catch (IllegalStateException e) {
-            log.error("", e);
+            log.error(e.getMessage());
+            log.trace("", e);
         }
     }
     

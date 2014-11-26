@@ -149,11 +149,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             #train.update(test=comm, testType="CONCRETE", group=comm_name, evalTest=False)
             train.add_prereqs(root.dependents)
             
-            if True: # Enable for quick local run.
+            if False: # Enable for quick local run.
                 for exp in self.get_stages_as_list(root):
                     if isinstance(exp, RootStage): continue
-                    exp.update(trainMaxNumSentences=300, devMaxNumSentences=3, testMaxNumSentences=300,
-                                 trainMaxSentenceLength=70, devMaxSentenceLength=7, testMaxSentenceLength=70)
+                    exp.update(trainMaxNumSentences=3, devMaxNumSentences=3, testMaxNumSentences=3,
+                                 trainMaxSentenceLength=7, devMaxSentenceLength=7, testMaxSentenceLength=7)
                                  #featureHashMod=1000, sgdNumPasses=2)
                                  
             # Test on a few Concrete files.
