@@ -128,6 +128,7 @@ class ParamDefinitions():
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
         g.defaults.set_incl_arg("language", False)
+        g.defaults.set_incl_arg("group", False)
         
         # Exclude parameters from the experiment name.
         g.defaults.set_incl_name("train", False)
@@ -285,8 +286,12 @@ class ParamDefinitions():
                                            predAts="SRL,DEP_TREE", removeAts="DEPREL")
         g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED",
                                            predAts="SRL")
-        g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, 
-                                                                         binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")
+        g.model_ap_obs_tree_predpos = g.model_ap_obs_tree + \
+                SrlExpParams(makeUnknownPredRolesLatent=False, predictSense=True, predictPredPos=True, 
+                             binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX")
+        g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + \
+                SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, 
+                             binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")
 
     def _define_lists_model(self, g, l):
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,

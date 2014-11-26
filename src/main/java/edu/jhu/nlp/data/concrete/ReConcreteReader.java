@@ -20,7 +20,8 @@ import edu.jhu.nlp.relations.RelationsOptions;
  */
 public class ReConcreteReader extends ConcreteReader {
 
-    public static class ReConcreteReaderPrm {
+    public static class ReConcreteReaderPrm extends ConcreteReaderPrm {
+        private static final long serialVersionUID = 1L;
         public boolean makeSingletons = true;
     }
     
@@ -28,6 +29,7 @@ public class ReConcreteReader extends ConcreteReader {
     private ReConcreteReaderPrm prm;
     
     public ReConcreteReader(ReConcreteReaderPrm prm) {
+        super(prm);
         this.prm = prm;
     }
 

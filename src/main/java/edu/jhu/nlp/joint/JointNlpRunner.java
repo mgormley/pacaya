@@ -51,9 +51,7 @@ import edu.jhu.nlp.AnnoPipeline;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.EvalPipeline;
-import edu.jhu.nlp.InformationGainFeatureTemplateSelector;
-import edu.jhu.nlp.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
-import edu.jhu.nlp.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
+import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
@@ -72,6 +70,7 @@ import edu.jhu.nlp.eval.ProportionAnnotated;
 import edu.jhu.nlp.eval.PruningEfficiency;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
+import edu.jhu.nlp.eval.SrlPredIdAccuracy;
 import edu.jhu.nlp.eval.SrlSelfLoops;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
@@ -79,6 +78,8 @@ import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.features.TemplateReader;
 import edu.jhu.nlp.features.TemplateSets;
 import edu.jhu.nlp.features.TemplateWriter;
+import edu.jhu.nlp.joint.IGFeatureTemplateSelector.IGFeatureTemplateSelectorPrm;
+import edu.jhu.nlp.joint.IGFeatureTemplateSelector.SrlFeatTemplates;
 import edu.jhu.nlp.joint.JointNlpAnnotator.InitParams;
 import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
@@ -389,22 +390,18 @@ public class JointNlpRunner {
         if (modelIn == null && !corpus.hasTrain()) {
         	throw new ParseException("Either --modelIn or --train must be specified.");
         }
-        JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
-        if (modelIn == null && corpus.hasTrain()) {
-            // Feature selection.
-            // TODO: Move feature selection into the pipeline.
-            featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
-        }
         
         AnnoPipeline anno = new AnnoPipeline();
         EvalPipeline eval = new EvalPipeline();
+        JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
         JointNlpAnnotator jointAnno = new JointNlpAnnotator(prm);
         if (modelIn != null) {
             jointAnno.loadModel(modelIn);
         }
         {
             anno.add(new EnsureStaticOptionsAreSet());
-            anno.add(new PrefixAnnotator());
+            anno.add(new PrefixAnnotator(true));
+            anno.add(new SrlFeatureSelection(prm.buPrm.fePrm));
             // Add Brown clusters.
             if (brownClusters != null) {      
                 anno.add(new Annotator() {     
@@ -471,6 +468,9 @@ public class JointNlpRunner {
             if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
                 eval.add(new SrlSelfLoops());
                 eval.add(new SrlEvaluator());
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL_PRED_IDX)) {
+                eval.add(new SrlPredIdAccuracy());
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
                 eval.add(new RelationEvaluator());
@@ -553,61 +553,87 @@ public class JointNlpRunner {
         }
     }
     
-    /**
-     * Do feature selection and update fePrm with the chosen feature templates.
-     */
-    private void featureSelection(AnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) throws IOException,
-            ParseException {
-        SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
-        // Remove annotation types from the features which are explicitly excluded.
-        removeAts(fePrm);
-        if (useTemplates && featureSelection) {
-            CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
-            
-            InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
-            prm.featureHashMod = featureHashMod;
-            prm.numThreads = threads;
-            prm.numToSelect = numFeatsToSelect;
-            prm.maxNumSentences = numSentsForFeatSelect;
-            prm.selectSense = predictSense;
-            SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
-            InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
-            sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
-            ig.shutdown();
-            srlFePrm.fePrm.soloTemplates = sft.srlSense;
-            srlFePrm.fePrm.pairTemplates = sft.srlArg;
-        }
-        if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
-            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
-        }
-        if (useTemplates) {
-            log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
-            log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
-            if (senseFeatTplsOut != null) {
-                TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
-            }
-            if (argFeatTplsOut != null) {
-                TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
-            }
-        }
-    }
+    public static class SrlFeatureSelection implements Annotator, Trainable {
 
-    private void removeAts(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
-        List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
-        if (brownClusters == null) {
-            // Filter out the Brown cluster features.
-            log.warn("Filtering out Brown cluster features.");
-            ats.add(AT.BROWN);
+        private static final long serialVersionUID = 1L;
+        private transient JointNlpFeatureExtractorPrm fePrm;
+
+        public SrlFeatureSelection(JointNlpFeatureExtractorPrm fePrm) {
+            this.fePrm = fePrm;
         }
-        for (AT at : ats) {
-            fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
-            fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
-            fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
-            fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
+
+        @Override
+        public void annotate(AnnoSentenceCollection sents) {
+            // Do nothing. This only runs at training time.
         }
+
+        @Override
+        public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
+                AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
+            featureSelection(trainGold, fePrm);
+        }
+
+        /**
+         * Do feature selection and update fePrm with the chosen feature templates.
+         */
+        private static void featureSelection(AnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm)  {
+            if (modelIn != null) { return; }
+            SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
+            // Remove annotation types from the features which are explicitly excluded.
+            removeAts(fePrm);
+            if (useTemplates && featureSelection) {
+                CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
+                
+                IGFeatureTemplateSelectorPrm prm = getInformationGainFeatureSelectorPrm();
+                SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
+                IGFeatureTemplateSelector ig = new IGFeatureTemplateSelector(prm);
+                sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
+                fePrm.srlFePrm.fePrm.soloTemplates = sft.srlSense;
+                fePrm.srlFePrm.fePrm.pairTemplates = sft.srlArg;
+            }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL) && acl14DepFeats) {
+                fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;
+            }
+            if (useTemplates) {
+                log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
+                log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
+                if (senseFeatTplsOut != null) {
+                    TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
+                }
+                if (argFeatTplsOut != null) {
+                    TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
+                }
+            }
+        }
+
+        private static void removeAts(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
+            List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
+            if (brownClusters == null) {
+                // Filter out the Brown cluster features.
+                log.warn("Filtering out Brown cluster features.");
+                ats.add(AT.BROWN);
+            }
+            for (AT at : ats) {
+                fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
+                fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
+                fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
+                fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
+            }
+        }
+        
     }
     
     /* --------- Factory Methods ---------- */
+
+    private static IGFeatureTemplateSelectorPrm getInformationGainFeatureSelectorPrm() {
+        IGFeatureTemplateSelectorPrm prm = new IGFeatureTemplateSelectorPrm();
+        prm.featureHashMod = featureHashMod;
+        prm.numThreads = threads;
+        prm.numToSelect = numFeatsToSelect;
+        prm.maxNumSentences = numSentsForFeatSelect;
+        prm.selectSense = predictSense;
+        return prm;
+    }
 
     private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() throws ParseException {
         JointNlpAnnotatorPrm prm = new JointNlpAnnotatorPrm();

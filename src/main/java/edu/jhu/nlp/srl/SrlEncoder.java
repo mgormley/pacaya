@@ -21,6 +21,7 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.prim.set.IntHashSet;
 
 /**
  * Encodes an {@link AnnoSentence} as a semantic role labeling factor graph and its training
@@ -77,6 +78,7 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         }
     }
     
+    // TODO: Consider passing in the knownPreds from AnnoSentence.
     public static void addSrlTrainAssignment(AnnoSentence sent, SrlGraph srlGraph, SrlFactorGraphBuilder sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {        
         // ROLE VARS
         // Add all the training data assignments to the role variables, if they are not latent.
@@ -108,11 +110,12 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         }
         
         // Add the training data assignments to the predicate senses.
+        IntHashSet knownPreds = srlGraph.getKnownPreds();
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
                 if (predictSense) {
-                    if (predictPredPos && !sent.isKnownPred(i)) {
+                    if (predictPredPos && !knownPreds.contains(i)) {
                         vc.put(senseVar, "_");
                     } else {
                         // Tries to map the sense variable to its label (e.g. argM-TMP).
@@ -128,7 +131,7 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
                         }
                     }
                 } else if (predictPredPos) {
-                    if (sent.isKnownPred(i)) {
+                    if (knownPreds.contains(i)) {
                         // We use CorpusStatistics.UNKNOWN_SENSE to indicate that
                         // there exists a predicate at this position.
                         vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);

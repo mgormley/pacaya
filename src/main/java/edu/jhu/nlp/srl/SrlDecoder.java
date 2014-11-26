@@ -68,12 +68,18 @@ public class SrlDecoder implements Decoder<AnnoSentence, SrlGraph> {
             } else if (v instanceof SenseVar && v.getType() == VarType.PREDICTED) {
                 // Decode the Sense var.
                 SenseVar sense = (SenseVar) v;
-                SrlPred pred = srlGraph.getPredAt(sense.getParent());
-                if (pred == null) {
-                    pred = new SrlPred(sense.getParent(), vc.getStateName(sense));
-                    srlGraph.addPred(pred);
+                String predLabel = vc.getStateName(sense);
+                if ("_".equals(predLabel)) {
+                    // Predicate ID said there's no predicate here.
                 } else {
-                    pred.setLabel(vc.getStateName(sense));
+                    // Adding the identified predicate.
+                    SrlPred pred = srlGraph.getPredAt(sense.getParent());
+                    if (pred == null) {
+                        pred = new SrlPred(sense.getParent(), predLabel);
+                        srlGraph.addPred(pred);
+                    } else {
+                        pred.setLabel(predLabel);
+                    }
                 }
                 srlVarCount++;
             }

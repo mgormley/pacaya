@@ -72,6 +72,8 @@ public class SrlFactorGraphBuilder implements Serializable {
         PREDS_GIVEN,
         /** The N**2 model. */
         ALL_PAIRS,
+        /** Do not predict roles. */
+        NO_ROLES,
     }
     
     public enum SrlFactorTemplate {
@@ -162,8 +164,11 @@ public class SrlFactorGraphBuilder implements Serializable {
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN && knownPreds == null) {
             throw new IllegalArgumentException("knownPreds must be non-null");
         }
-        if (prm.predictSense && (lemmas == null || psMap == null)) {
-            throw new IllegalArgumentException("lemmas and psMap must be non-null");
+        if (prm.predictSense && lemmas == null) {
+            throw new IllegalArgumentException("lemmas must be non-null");
+        }
+        if (prm.predictSense && psMap == null) {
+            throw new IllegalArgumentException("psMap must be non-null");
         }
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN && prm.predictPredPos) {
             throw new IllegalStateException("PREDS_GIVEN assumes that the predicate positions are always observed.");
@@ -195,6 +200,8 @@ public class SrlFactorGraphBuilder implements Serializable {
                     roleVars[i][j] = createRoleVar(i, j, knownPreds, roleStateNames);
                 }
             }
+        } else if (prm.roleStructure == RoleStructure.NO_ROLES) {
+            // No role variables.
         } else {
             throw new IllegalArgumentException("Unsupported model structure: " + prm.roleStructure);
         }
@@ -207,23 +214,27 @@ public class SrlFactorGraphBuilder implements Serializable {
                 // Skip non-predicate positions.
                 continue;
             }
-            if (prm.roleStructure == RoleStructure.ALL_PAIRS && prm.predictSense && prm.predictPredPos) {
+            if ((!prm.predictSense && !prm.predictPredPos) ||  
+                    (prm.roleStructure == RoleStructure.PREDS_GIVEN && !prm.predictSense)) {
+                // Do not add sense variables.
+            } else if (prm.predictSense && prm.predictPredPos) {
                 // Sense and position.
                 List<String> senseStateNames = psMap.get(lemmas.get(i));
                 if (senseStateNames == null) {
-                    senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
+                    senseStateNames = CorpusStatistics.PRED_POSITION_STATE_NAMES;
+                } else {
+                    // Include the state of "no predicate".
+                    senseStateNames = Lists.cons("_", senseStateNames);
                 }
-                // Include the state of "no predicate".
-                senseStateNames = Lists.cons("_", senseStateNames);
                 senseVars[i] = createSenseVar(i, senseStateNames);
-            } else if (prm.predictSense) {
+            } else if (prm.predictSense && !prm.predictPredPos) {
                 // Sense without positions.
                 List<String> senseStateNames = psMap.get(lemmas.get(i));
                 if (senseStateNames == null) {
                     senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
                 }
                 senseVars[i] = createSenseVar(i, senseStateNames);
-            } else if (prm.predictPredPos) {
+            } else if (!prm.predictSense && prm.predictPredPos) {
                 // Positions without sense.
                 senseVars[i] = createSenseVar(i, CorpusStatistics.PRED_POSITION_STATE_NAMES);
             }

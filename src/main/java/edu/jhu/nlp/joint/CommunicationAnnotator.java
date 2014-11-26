@@ -13,6 +13,7 @@ import concrete.tools.AnnotationException;
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.nlp.AnnoPipeline;
 import edu.jhu.nlp.data.concrete.ConcreteReader;
+import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.nlp.data.concrete.ConcreteWriter;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.util.Prng;
@@ -63,7 +64,7 @@ public class CommunicationAnnotator { // TODO: implements PostStanfordAnnotation
     public Communication annotate(Communication c) throws AnnotationException {
         // Return a copy.
         c = new Communication(c);
-        ConcreteReader cr = new ConcreteReader();
+        ConcreteReader cr = new ConcreteReader(new ConcreteReaderPrm());
         AnnoSentenceCollection sents = cr.toSentences(c);
         anno.annotate(sents);
         ConcreteWriter cw = new ConcreteWriter(concreteSrlIsSyntax);

@@ -20,11 +20,12 @@ from pypipeline import pipeline
 import re
 import random
 from pypipeline.pipeline import write_script, RootStage, Stage
+from pypipeline import StagePath
 import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
-from experiments.srl_stages import ScrapeSrl, SrlExpParams
+from experiments.srl_stages import ScrapeSrl, SrlExpParams, AnnoPipelineRunner
 
 # ---------------------------- Experiments Creator Class ----------------------------------
 
@@ -36,7 +37,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all",
                     "srl-all-nosup",
                     "srl-all-sup-lat",
-                    "srl-concrete",
+                    "srl-agiga2",
                     "srl-conll09",
                     "srl-conll09-bjork",
                     "srl-conll09-zhao",
@@ -106,26 +107,66 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
-        
-        elif self.expname == "srl-concrete":    
-            # Run SRL on Concrete files.
-            exps = []
-            g.defaults += g.feat_tpl_narad
-            g.defaults.update(predictSense=True, biasOnly=True, removeAts="BROWN,MORPHO", featureSelection=False)
-            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL,BROWN,MORPHO", 
-                                       tagger_parser="1st")
+                
+        elif self.expname == "srl-agiga2":    
+            '''Train SRL model for Annotated Gigaword 2.0. Test on some simple Concrete files.'''            
+            root = RootStage()
             lang_short = "en"
-            concrete_files = glob(os.path.join(self.root_dir, "data/thrift_anno/*.thrift"))
-            for concrete_file in concrete_files:
-                data = SrlExpParams(tagger_parser = 'srl-en', 
-                            #train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            train = p.langs[lang_short].cx_train, trainType = "CONLL_X",
-                            trainMaxNumSentences = 10,
-                            test = concrete_file, testType = "CONCRETE", language = lang_short)
-                exp = g.defaults + data + first_order #g.model_pg_obs_tree
-                exp.set("concrete_file", os.path.basename(concrete_file), incl_arg=False)
-                exps.append(exp)
-            return self._get_pipeline_from_exps(exps)
+            gl = g.langs[lang_short]
+            pl = p.langs[lang_short]      
+            
+            # Annotate CoNLL-2009 data with my dependency parser.
+            dp_pipe = get_first_that_exists("/home/hltcoe/mgormley/working/pacaya2/exp/dp-agiga2_000/1st_APW_ENG_19961005.0334_APW_ENG_19961005.0334/pipe.binary.gz",
+                                            os.path.abspath("./exp/dp-agiga2_021/1st_APW_ENG_19961005.0334_APW_ENG_19961005.0334_CONCRETE/pipe.binary.gz"))
+            apr_defaults = AnnoPipelineRunner(threads=g.defaults.get("threads"), testPredOut="./test-pred.txt",
+                                              concreteDepParseTool="Pacaya")
+            apr_defaults.set_incl_arg("group", False)
+            apr_defaults.set_incl_name("pipeIn", False)
+            apr_defaults.set_incl_name("test", False)
+            apr_defaults.set_incl_name("testPredOut", False)
+            g.defaults.update(concreteDepParseTool="Pacaya")
+            c09_stages = {}
+            for c09,name in [(pl.pos_gold_train, "train"),
+                        (pl.pos_gold_dev, "dev"),
+                        (pl.pos_gold_eval, "eval")]:
+                c09_name = os.path.basename(c09)
+                exp = apr_defaults + AnnoPipelineRunner(pipeIn=dp_pipe, predAts="DEP_TREE", 
+                                            test=c09, testType="CONLL_2009", group=c09_name)
+                c09_stages[name] = exp
+                root.add_dependent(exp)
+            
+            # Train on the annotated CoNLL-2009 data.
+            pos_sup = SrlExpParams(tagger_parser = 'pos-sup', 
+                            train = StagePath(c09_stages['train'], c09_stages['train'].get("testPredOut")), trainType = "CONLL_2009",
+                            dev =   StagePath(c09_stages['dev'],   c09_stages['dev'].get("testPredOut")),   devType = "CONLL_2009",
+                            useGoldSyntax = False, language = lang_short)
+            g.defaults += g.feat_tpl_coarse1 + pos_sup + g.model_ap_obs_tree_predpos
+            g.defaults.update(predictSense=True, featureSelection=True, removeAts="DEPREL,MORPHO")
+            train = g.defaults + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))            
+            comm = glob(p.concrete380 + "/*")[0]
+            comm_name = os.path.basename(comm)
+            train.update(pipeOut="pipe.binary.gz") 
+            #train.update(test=comm, testType="CONCRETE", group=comm_name, evalTest=False)
+            train.add_prereqs(root.dependents)
+            
+            if True: # Enable for quick local run.
+                for exp in self.get_stages_as_list(root):
+                    if isinstance(exp, RootStage): continue
+                    exp.update(trainMaxNumSentences=300, devMaxNumSentences=3, testMaxNumSentences=300,
+                                 trainMaxSentenceLength=70, devMaxSentenceLength=7, testMaxSentenceLength=70)
+                                 #featureHashMod=1000, sgdNumPasses=2)
+                                 
+            # Test on a few Concrete files.
+            for comm in glob(p.concrete380 + "/*"):
+                comm_name = os.path.basename(comm)
+                exp1 = apr_defaults + AnnoPipelineRunner(pipeIn=dp_pipe, predAts="DEP_TREE", 
+                                            test=comm, testType="CONCRETE", group=comm_name)
+                train.add_dependent(exp1)
+                exp2 = apr_defaults + AnnoPipelineRunner(pipeIn=StagePath(train, train.get("pipeOut")), predAts="SRL",
+                                            test=StagePath(exp1, exp1.get("testPredOut")), testType="CONCRETE", group=comm_name)
+                exp1.add_dependent(exp2)
+            return root
+            
 
         elif self.expname == "srl-conll09":    
             # Experiment on CoNLL'2009 Shared Task.

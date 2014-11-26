@@ -122,23 +122,27 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
     }
 
     public static void checkForRequiredAnnotations(JointNlpEncoderPrm prm, AnnoSentenceCollection sents) {
-        // Check that the first sentence has all the required annotation
-        // types for the specified feature templates.
-        AnnoSentence sent = sents.get(0);
-        if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
-            if (prm.fgPrm.includeSrl) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
+        try {
+            // Check that the first sentence has all the required annotation
+            // types for the specified feature templates.
+            AnnoSentence sent = sents.get(0);
+            if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
+                if (prm.fgPrm.includeSrl) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
+                }
             }
-        }
-        if (prm.fgPrm.includeDp && !prm.fePrm.dpFePrm.onlyFast) {
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
-            if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
+            if (prm.fgPrm.includeDp && !prm.fePrm.dpFePrm.onlyFast) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
+                if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
+                }
             }
-        }
-        if (prm.fgPrm.includeRel && prm.fgPrm.relPrm.templates != null) {
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
+            if (prm.fgPrm.includeRel && prm.fgPrm.relPrm.templates != null) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
+            }
+        } catch (IllegalStateException e) {
+            log.error("", e);
         }
     }
     

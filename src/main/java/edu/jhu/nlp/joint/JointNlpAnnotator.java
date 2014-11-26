@@ -175,9 +175,9 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         Threads.forEach(0, sents.size(), new FnIntToVoid() {            
             @Override
             public void call(int i) {
-                UFgExample ex = data.get(i);
-                AnnoSentence inputSent = sents.get(i);
                 try {
+                    UFgExample ex = data.get(i);
+                    AnnoSentence inputSent = sents.get(i);
                     JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
                     AnnoSentence predSent = decoder.decode(model, ex, inputSent);
                     sents.set(i, predSent);

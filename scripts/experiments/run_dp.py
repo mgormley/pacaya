@@ -531,21 +531,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
             train = g.defaults + g.langs['en'].cx_data
             comm = glob(p.concrete380 + "/*")[0]
             comm_name = os.path.basename(comm)
-            if False: # Enable for quick local run.
+            if True: # Enable for quick local run.
                 train.update(pruneByDist=False, trainMaxNumSentences=3, devMaxNumSentences=3,
                              trainMaxSentenceLength=7, devMaxSentenceLength=7,  
                              featureHashMod=1000, sgdNumPasses=2)
             train.update(pipeOut="pipe.binary.gz") 
             train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
             root.add_dependent(train)
+            apr_defaults = AnnoPipelineRunner(pipeIn=StagePath(train, train.get("pipeOut")), predAts="DEP_TREE")        
+            apr_defaults.set_incl_arg("group", False)
+            apr_defaults.set_incl_name("pipeIn", False)
+            apr_defaults.set_incl_name("test", False)
+            apr_defaults.set_incl_name("testPredOut", False)
             for comm in glob(p.concrete380 + "/*"):
-                exp = AnnoPipelineRunner(pipeIn=StagePath(train, train.get("pipeOut")))
                 comm_name = os.path.basename(comm)
-                exp.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, predAts="DEP_TREE")
-                exp.set_incl_arg("group", False)
-                exp.set_incl_name("pipeIn", False)
-                exp.set_incl_name("test", False)
-                exp.set_incl_name("testPredOut", False)
+                exp = apr_defaults + AnnoPipelineRunner(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name)
+                train.add_dependent(exp)
+            pl = p.langs['en']
+            for c09 in [pl.pos_gold_train, pl.pos_gold_dev, pl.pos_gold_eval]:
+                c09_name = os.path.basename(c09)
+                exp = apr_defaults + AnnoPipelineRunner(test=c09, testType="CONLL_2009", group=c09_name, testPredOut=c09_name)
                 train.add_dependent(exp)
             return root
             

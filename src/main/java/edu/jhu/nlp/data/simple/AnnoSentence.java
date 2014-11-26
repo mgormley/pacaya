@@ -538,11 +538,7 @@ public class AnnoSentence {
         if (srlGraph == null) {
             throw new IllegalStateException("This can only be called if srlGraph is non-null.");
         }
-        knownPreds = new IntHashSet();
-        // All the "Y"s
-        for (SrlPred pred : srlGraph.getPreds()) {
-            knownPreds.add(pred.getPosition());
-        }
+        knownPreds = srlGraph.getKnownPreds();
     }
     
     /* ----------- Getters/Setters for internal storage ------------ */

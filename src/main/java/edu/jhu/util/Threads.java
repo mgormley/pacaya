@@ -188,8 +188,7 @@ public class Threads {
         log.info("Attempting shutdown of ExecutorService.");
         List<Runnable> tasks = pool.shutdownNow();
         if (tasks.size() != 0) {
-            log.error("Tasks were still running when shutdown was called. Exiting now.");
-            System.exit(1);
+            log.error("Tasks were still running when shutdown was called.");
         }
         try {
             if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {

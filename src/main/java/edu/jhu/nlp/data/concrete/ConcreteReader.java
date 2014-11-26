@@ -55,6 +55,7 @@ import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.map.IntIntHashMap;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
+import edu.jhu.util.Prm;
 
 /**
  * Reader of Concrete protocol buffer files.
@@ -63,14 +64,22 @@ import edu.jhu.prim.util.Lambda.FnO1ToVoid;
  */
 public class ConcreteReader {
 
+    public static class ConcreteReaderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
+        public String depParseTool = "basic-deps"; 
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(ConcreteReader.class);
 
     private ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
     private int numEntityMentions = 0;
     private int numOverlapingMentions = 0;
     private int numSituationMentions = 0;
-
-    public ConcreteReader() { }
+    private ConcreteReaderPrm prm;
+    
+    public ConcreteReader(ConcreteReaderPrm prm) { 
+        this.prm = prm;
+    }
 
     public AnnoSentenceCollection toSentences(File inFile) throws IOException {
     	AnnoSentenceCollection sents;
@@ -329,7 +338,8 @@ public class ConcreteReader {
         // Dependency Parse
         if (tokenization.isSetDependencyParseList()) {
             int numWords = words.size();
-            DependencyParse depParse = TokenizationUtils.getFirstDependencyParseWithName(tokenization, "basic-deps");
+            log.trace("Reading dependency parse with name {}", prm.depParseTool);
+            DependencyParse depParse = TokenizationUtils.getFirstDependencyParseWithName(tokenization, prm.depParseTool);
             int[] parents = getParents(depParse, numWords);
             as.setParents(parents);
         }
@@ -453,7 +463,7 @@ public class ConcreteReader {
         }
 
         System.out.println("Reading file: " + inputFile);
-        ConcreteReader reader = new ConcreteReader();
+        ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
         for (AnnoSentence sent : reader.toSentences(inputFile)) {
             System.out.println(sent);
         }        
