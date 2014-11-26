@@ -70,12 +70,18 @@ public class VarConfig implements Serializable {
     
     /** Sets the state value to stateName for the given variable, adding it if necessary. */
     public void put(Var var, String stateName) {
-        put(var, var.getState(stateName));
+        int state = var.getState(stateName);
+        if (state == -1) {
+            throw new IllegalArgumentException("Unknown state name " + stateName + " for var " + var);
+        }
+        put(var, state);
     }
     
     /** Sets the state value to state for the given variable, adding it if necessary. */
     public void put(Var var, int state) {
-        assert (state >= 0 && state < var.getNumStates());
+        if (state < 0 || state >= var.getNumStates()) {
+            throw new IllegalArgumentException("Invalid state idx " + state + " for var " + var);
+        }
         config.put(var, state);
         vars.add(var);
     }
