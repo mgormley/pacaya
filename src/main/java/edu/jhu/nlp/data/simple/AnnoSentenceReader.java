@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.concrete.ConcreteReader;
+import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.nlp.data.concrete.ListCloseableIterable;
 import edu.jhu.nlp.data.concrete.ReConcreteReader;
 import edu.jhu.nlp.data.concrete.ReConcreteReader.ReConcreteReaderPrm;
@@ -20,7 +21,6 @@ import edu.jhu.nlp.data.conll.CoNLLXFileReader;
 import edu.jhu.nlp.data.conll.CoNLLXSentence;
 import edu.jhu.nlp.data.semeval.SemEval2010Reader;
 import edu.jhu.nlp.data.semeval.SemEval2010Sentence;
-import edu.jhu.nlp.words.PrefixAnnotator;
 
 /**
  * Generic reader of AnnoSentence objects from many different corpora. 
@@ -79,7 +79,7 @@ public class AnnoSentenceReader {
         CloseableIterable<AnnoSentence> reader = null;
         Object sourceSents = null;
         if (type == DatasetType.CONCRETE) {
-            ConcreteReader cr = new ConcreteReader();
+            ConcreteReader cr = new ConcreteReader(prm.rePrm);
             AnnoSentenceCollection csents = cr.toSentences(dataFile);
             sourceSents = csents.getSourceSents();
             reader = new ListCloseableIterable(csents);
