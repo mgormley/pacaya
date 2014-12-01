@@ -37,9 +37,9 @@ import edu.jhu.util.semiring.Semiring;
 public class ConstituencyTreeFactor extends AbstractGlobalFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
- 
-    private static final CnfGrammar grammar;
-    private static final int nt;
+
+    public static final CnfGrammar grammar;
+    public static final int nonTerminalSymbol, terminalSymbol;
     static {
         try {
             StringReader reader = new StringReader(
@@ -51,12 +51,13 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             CnfGrammarReader builder = new CnfGrammarReader();
             builder.loadFromReader(reader);
             grammar = builder.getGrammar(LoopOrder.LEFT_CHILD);
-            nt = grammar.getNtAlphabet().lookupIndex("X");
+            nonTerminalSymbol = grammar.getNtAlphabet().lookupIndex("X");
+            terminalSymbol = grammar.getLexAlphabet().lookupIndex("a");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
     /**
      * Span variable. When true it indicates that there is a span from start to end.
      * 
@@ -69,11 +70,11 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         // The variable states.
         public static final int TRUE = 1;
         public static final int FALSE = 0;
-        
+
         private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
         private int start;
-        private int end;     
-        
+        private int end;
+
         public SpanVar(VarType type, String name, int start, int end) {
             super(type, BOOLEANS.size(), name, BOOLEANS);
             this.start = start;
@@ -91,23 +92,22 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         public static String getDefaultName(int i, int j) {
             return String.format("Span_%d_%d", i, j);
         }
-        
     }
-    
+
     private static final Logger log = Logger.getLogger(ConstituencyTreeFactor.class);
-    
+
     private final VarSet vars;
     /** The sentence length. */
     private final int n;
     private SpanVar[][] spanVars;
     // Internal sentence used by parser.
     private Sentence sentence;
-        
+
     /**
      * Constructor.
      * @param n The length of the sentence.
      */
-    public ConstituencyTreeFactor(int n, VarType type) {    
+    public ConstituencyTreeFactor(int n, VarType type) {
         super();
         this.vars = createVarSet(n, type);
         this.n = n;
@@ -121,13 +121,13 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             SpanVar span = (SpanVar) var;
             spanVars[span.getStart()][span.getEnd()] = span;
         }
-         
+
         // Construct sentence.
         int[] sent = new int[n];
         Arrays.fill(sent, grammar.getLexAlphabet().lookupIndex("a"));
         sentence = new Sentence(grammar.getLexAlphabet(), sent);
     }
-    
+
     /**
      * Get the span var corresponding to the specified start and end positions.
      * 
@@ -152,7 +152,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         }
         return vars;
     }
-        
+
     @Override
     protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages) {
         // Note on logDomain: all internal computation is done in the logDomain
@@ -174,7 +174,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         };
         PcfgInsideOutside io = new PcfgInsideOutside(prm);
         PcfgIoChart chart = io.runInsideOutside(sentence, grammar);
-        
+
         // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
         // Here we store the log partition.
         double partition = pi + chart.getLogPartitionFunction();
@@ -182,11 +182,11 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         if (log.isTraceEnabled()) {
             log.trace(String.format("partition: %.2f", partition));
         }
-        
+
         // Create the messages and stage them in the Messages containers.
         for (FgEdge outEdge : parent.getOutEdges()) {
             SpanVar span = (SpanVar) outEdge.getVar();
-            
+
             // The beliefs are computed as follows.
             // beliefTrue = pi * FastMath.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
             // beliefFalse = partition - beliefTrue;
@@ -197,11 +197,11 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             // 
             // Here we compute the logs of these quantities.
 
-            double beliefTrue = pi + chart.getLogSumOfPotentials(nt, span.getStart(), span.getEnd());
+            double beliefTrue = pi + chart.getLogSumOfPotentials(nonTerminalSymbol, span.getStart(), span.getEnd());
             double beliefFalse = safeLogSubtract(partition, beliefTrue);
-            
+
             // TODO: Detect possible numerical precision error.
-            
+
             // Get the incoming messages.
             FgEdge inEdge = outEdge.getOpposing();
             DenseFactor inMsg = msgs[inEdge.getId()].message;
@@ -211,19 +211,19 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
                 inMsgFalse = inMsg.getValue(SpanVar.FALSE);
             } else {
                 inMsgTrue = FastMath.log(inMsg.getValue(SpanVar.TRUE));
-                inMsgFalse = FastMath.log(inMsg.getValue(SpanVar.FALSE));                
+                inMsgFalse = FastMath.log(inMsg.getValue(SpanVar.FALSE));
             }
-            
+
             double outMsgTrue = beliefTrue - inMsgTrue;
             double outMsgFalse = beliefFalse - inMsgFalse;
-            
+
             outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
             outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
-            
+
             setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, span, outMsgTrue, outMsgFalse);
         }
     }
-    
+
     private double safeLogSubtract(double partition, double beliefTrue) {
         double outMsgFalse;
         if (partition < beliefTrue) {
@@ -234,7 +234,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         }
         return outMsgFalse;
     }
-    
+
     private static int extremeOddsRatios = 0;
     private static int oddsRatioCount = 0;
 
@@ -244,7 +244,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         // possible numerical precision issues.
         double minOddsRatio = Double.POSITIVE_INFINITY;
         double maxOddsRatio = Double.NEGATIVE_INFINITY;
-        
+
         // Compute the odds ratios of the messages for each edge in the tree.
         DoubleArrays.fill(spanWeights, Double.NEGATIVE_INFINITY);
         for (FgEdge inEdge : parent.getInEdges()) {
@@ -259,9 +259,9 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
                 // We still need the log of this ratio since the parsing algorithm works in the log domain.
                 oddsRatio = FastMath.log(inMsg.getValue(SpanVar.TRUE)) - FastMath.log(inMsg.getValue(SpanVar.FALSE));
             }
-            
+
             spanWeights[span.getStart()][span.getEnd()] = oddsRatio;
-                        
+
             // Check min/max.
             if (oddsRatio < minOddsRatio) {
                 minOddsRatio = oddsRatio;
@@ -301,32 +301,32 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     /** Sets the outgoing messages. */
     private void setOutMsgs(Messages[] msgs, boolean logDomain, boolean normalizeMessages, FgEdge outEdge,
             SpanVar span, double outMsgTrue, double outMsgFalse) {
-        
+
         // Set the outgoing messages.
         DenseFactor outMsg = msgs[outEdge.getId()].newMessage;
         outMsg.setValue(SpanVar.FALSE, outMsgFalse);
         outMsg.setValue(SpanVar.TRUE, outMsgTrue);
-        
+
         if (log.isTraceEnabled()) {
             log.trace(String.format("outMsgTrue (prenorm): %s = %.2f", span.getName(), outMsg.getValue(LinkVar.TRUE)));
             log.trace(String.format("outMsgFalse (prenorm): %s = %.2f", span.getName(), outMsg.getValue(LinkVar.FALSE)));
         }
-        
+
         if (normalizeMessages) {
             outMsg.logNormalize();
             // TODO: Do we want this? boundToSafeValues(outMsg.getValues());
         }
-        
+
         if (log.isTraceEnabled()) {
             log.trace(String.format("outMsgTrue: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.TRUE)));
             log.trace(String.format("outMsgFalse: %s = %.2f", span.getName(), outMsg.getValue(LinkVar.FALSE)));
         }
-                
+
         // Convert log messages to messages for output.
         if (!logDomain) {
             outMsg.convertLogToReal();
         }
-        
+
         //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
         assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
     }
@@ -353,12 +353,12 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
     public SpanVar[][] getSpanVars() {
         return spanVars;
     }
-    
+
     @Override
     public VarSet getVars() {
         return vars;
     }
-    
+
     @Override
     public Factor getClamped(VarConfig clmpVarConfig) {
         if (clmpVarConfig.size() == 0) {

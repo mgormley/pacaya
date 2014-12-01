@@ -12,14 +12,14 @@ public class Rule {
 
     public static final int LEXICAL_RULE = -1;
     public static final int UNARY_RULE = -2;
-    
+
     private int parent;
     private int leftChild;
     private int rightChild;
     private double score;
     // TODO: Subclass: LogProb rule should have this: private double logProb;
     // TODO: Separate subclass should compute based on features of the sentence.
-    
+
     private Alphabet<String> lexAlphabet;
     private Alphabet<String> ntAlphabet;
 
@@ -44,11 +44,11 @@ public class Rule {
     public boolean isBinary() {
         return rightChild >= 0;
     }
-    
+
     public boolean isUnary() {
         return rightChild == UNARY_RULE;
     }
-    
+
     public boolean isLexical() {
         return rightChild == LEXICAL_RULE;
     }
@@ -60,7 +60,7 @@ public class Rule {
     public int getRightChild() {
         return rightChild;
     }
-    
+
     public String getParentLabel() {
         return ntAlphabet.lookupObject(parent);
     }
@@ -70,7 +70,7 @@ public class Rule {
             return lexAlphabet.lookupObject(leftChild);
         } else {
             return ntAlphabet.lookupObject(leftChild);
-        }        
+        }
     }
 
     public String getRightChildLabel() {
@@ -78,9 +78,9 @@ public class Rule {
             return null;
         } else {
             return ntAlphabet.lookupObject(rightChild);
-        }        
+        }
     }
-    
+
     private String getParentStr() {
         return getParentLabel();
     }
@@ -96,13 +96,13 @@ public class Rule {
             return getRightChildLabel();
         }
     }
-    
+
     @Override
     public String toString() {
         return "Rule [parent=" + getParentStr() + ", leftChild=" + getLeftChildStr()
                 + ", rightChild=" + getRightChildStr() + ", score=" + score + "]";
     }
-    
+
     public void setScore(double score) {
         this.score = score;
     }
