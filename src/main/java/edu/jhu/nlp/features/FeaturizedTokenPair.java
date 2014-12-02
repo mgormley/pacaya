@@ -188,7 +188,7 @@ public class FeaturizedTokenPair {
     public int getCountOfNonConsecutivesInPath() {
         List<Pair<Integer,Dir>> path = getDependencyPath();
         int count = 0;
-        if (path.size() > 0) {
+        if (path != null && path.size() > 0) {
             for (int i=1; i<path.size(); i++) {
                 int current = path.get(i).get1();
                 int previous = path.get(i-1).get1();

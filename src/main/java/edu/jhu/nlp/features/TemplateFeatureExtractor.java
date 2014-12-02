@@ -350,7 +350,9 @@ public class TemplateFeatureExtractor {
         case CONTINUITY:
             return Integer.toString(pair.getCountOfNonConsecutivesInPath());
         case PATH_LEN:            
-            return Integer.toString(binInt(pair.getDependencyPath().size(), 0, 2, 5, 10, 20, 30, 40));
+            List<Pair<Integer, Dir>> depPath = pair.getDependencyPath();
+            int pathLen = depPath == null ? 0 : depPath.size();
+            return Integer.toString(binInt(pathLen, 0, 2, 5, 10, 20, 30, 40));
         case SENT_LEN:            
             return Integer.toString(binInt(fSent.size(), 0, 2, 5, 10, 20, 30, 40));
         case RULE_IS_UNARY:
