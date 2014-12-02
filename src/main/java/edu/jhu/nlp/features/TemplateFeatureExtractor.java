@@ -243,8 +243,12 @@ public class TemplateFeatureExtractor {
             return;
         case PATH_P_C: case PATH_C_LCA: case PATH_P_LCA: case PATH_LCA_ROOT: 
             List<Pair<Integer, Dir>> path = getPath(pl, local);
-            vals = getTokPropsForPath(prop, eprop, path);
-            listAndPathHelper(vals, lmod, tpl, feats);
+            if (path != null) {
+                vals = getTokPropsForPath(prop, eprop, path);
+                listAndPathHelper(vals, lmod, tpl, feats);
+            } else {
+                feats.add(toFeat(tpl.getName(), "NO_PATH"));
+            }
             return;
         default:
             throw new IllegalStateException();
