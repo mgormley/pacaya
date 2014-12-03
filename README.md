@@ -13,6 +13,8 @@ locally.
 
 ### Using CLSP's internal maven repository
 
+If you are installing somewhere other than the CLSP grid:
+
 1. Copy the settings.xml from this repository to your .m2
    directory. Caution: this may overwrite your existing settings.
 
@@ -21,6 +23,17 @@ locally.
 
 2. Set up a tunnel to the maven repository.
     ssh -f -N -L 8081:checker:8081 -2 login.clsp.jhu.edu
+
+If you are installing on the CLSP grid:
+
+1. Copy the settings.xml from this repository to your .m2
+   directory. Caution: this may overwrite your existing settings.
+
+	cp ~/.m2/settings{,.bak}
+	cp ./scripts/maven/settings.xml ~/.m2/settings.xml
+        
+   Use your favorite text editor to find/replace all instances of
+   "localhost" with "checker" in your new ~/.m2/settings.xml file.
 
 ### Installing dependencies locally
 
