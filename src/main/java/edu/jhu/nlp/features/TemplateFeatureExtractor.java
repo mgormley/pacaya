@@ -301,7 +301,11 @@ public class TemplateFeatureExtractor {
         switch (template) {
         case PATH_GRAMS:
             List<Pair<Integer,Dir>> path = getPath(PositionList.PATH_P_C, local);  
-            addPathGrams(tpl, path, feats);
+            if (path != null) {
+                addPathGrams(tpl, path, feats);
+            } else {
+                feats.add(toFeat(tpl.getName(), "NO_PATH"));
+            }
             return;
         default:  
             String val = getOtherFeatSingleton(tpl.feat, local);
@@ -420,6 +424,7 @@ public class TemplateFeatureExtractor {
         }
     }
     
+    /** Gets the desired path or null if it doesn't exist. */
     private List<Pair<Integer, Dir>> getPath(PositionList pl, LocalObservations local) {        
         FeaturizedTokenPair pair = getFeatTokPair(local.getPidx(), local.getCidx());
         switch (pl) {
