@@ -123,7 +123,7 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
                             }
                         }
                     }
-                    // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
+                    // Check that there still exists some singly-rooted spanning tree that wasn't pruned.
                     if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
                         log.warn("All single-root trees pruned");
                         log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));

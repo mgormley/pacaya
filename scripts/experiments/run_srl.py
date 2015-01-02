@@ -38,6 +38,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-nosup",
                     "srl-all-sup-lat",
                     "srl-agiga2",
+                    "srl-predpos",
                     "srl-conll09",
                     "srl-conll09-bjork",
                     "srl-conll09-zhao",
@@ -168,6 +169,19 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return root
             
 
+        elif self.expname == "srl-predpos":    
+            '''Train SRL model which predicts the predicate position.'''            
+            root = RootStage()
+            lang_short = "en"
+            gl = g.langs[lang_short]
+            pl = p.langs[lang_short]                  
+            # Train on the English CoNLL-2009 data.
+            exp = g.defaults + g.feat_tpl_coarse1 + gl.pos_sup + g.model_ap_obs_tree_predpos
+            exp.update(predictSense=True, featureSelection=True, removeAts="DEPREL,MORPHO")
+            exp = exp + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+            root.add_dependent(exp)
+            return root
+            
         elif self.expname == "srl-conll09":    
             # Experiment on CoNLL'2009 Shared Task.
             # Evaluates gold, supervised, semi-supervised, and unsupervised syntax in a pipelined model,
