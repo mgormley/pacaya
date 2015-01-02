@@ -84,26 +84,33 @@ public class IGFeatureTemplateSelector {
             this.depParse = depParse;
         }
     }
-    
-    public SrlFeatTemplates getFeatTemplatesForSrl(AnnoSentenceCollection sents, 
+
+    public SrlFeatTemplates getFeatTemplatesForSrl(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents,
             CorpusStatisticsPrm csPrm, SrlFeatTemplates sft) {
-        List<FeatTemplate> srlSense = prm.selectSense ? getFeatTemplatesForSrl(sents, csPrm, sft.srlSense, new SrlSenseExtractor()) : sft.srlSense;
-        List<FeatTemplate> srlArg = getFeatTemplatesForSrl(sents, csPrm, sft.srlArg, new SrlArgExtractor());
-        // Note we do NOT do feature selection on the dependency parsing templates. 
+        List<FeatTemplate> srlSense = prm.selectSense ? getFeatTemplatesForSrl(inputSents, goldSents, csPrm,
+                sft.srlSense, new SrlSenseExtractor()) : sft.srlSense;
+        List<FeatTemplate> srlArg = getFeatTemplatesForSrl(inputSents, goldSents, csPrm, sft.srlArg,
+                new SrlArgExtractor());
+        // Note we do NOT do feature selection on the dependency parsing templates.
         return new SrlFeatTemplates(srlSense, srlArg, sft.depParse);
     }
-    
-    private List<FeatTemplate> getFeatTemplatesForSrl(AnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
-            List<FeatTemplate> unigrams, ValExtractor valExt) {
+
+    private List<FeatTemplate> getFeatTemplatesForSrl(AnnoSentenceCollection inputSents,
+            AnnoSentenceCollection goldSents, CorpusStatisticsPrm csPrm, List<FeatTemplate> unigrams,
+            ValExtractor valExt) {
         int numUni = 45;
-        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, numUni).get(0);
+        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), inputSents, goldSents,
+                csPrm, numUni).get(0);
         // Don't include PathGrams feature.
         boolean removedPathGrams = selUnigrams.remove(new FeatTemplate0(OtherFeat.PATH_GRAMS));
-        if (removedPathGrams) { log.debug("Not allowing PathGrams feature in feature bigrams."); }
+        if (removedPathGrams) {
+            log.debug("Not allowing PathGrams feature in feature bigrams.");
+        }
         assert selUnigrams.size() <= numUni : "selUnigrams.size(): " + selUnigrams.size();
         List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(selUnigrams);
-        assert bigrams.size() <= numUni*(numUni-1.0)/2.0;
-        bigrams = selectFeatureTemplates(bigrams, Lists.getList(valExt), sents, csPrm, prm.numToSelect).get(0);
+        assert bigrams.size() <= numUni * (numUni - 1.0) / 2.0;
+        bigrams = selectFeatureTemplates(bigrams, Lists.getList(valExt), inputSents, goldSents, csPrm, prm.numToSelect)
+                .get(0);
         // Add ALL unigrams and the selected bigrams.
         List<FeatTemplate> all = new ArrayList<FeatTemplate>();
         all.addAll(unigrams);
@@ -117,7 +124,8 @@ public class IGFeatureTemplateSelector {
 //        return selectFeatureTemplates(allTpls, valExts, sents, csPrm, prm.numToSelect);
 //    }
     
-    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, AnnoSentenceCollection sents, 
+    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, 
+            AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents, 
             CorpusStatisticsPrm csPrm, int numToSelect) {      
         if (allTpls.size() <= numToSelect) {
             List<List<FeatTemplate>> selected = new ArrayList<List<FeatTemplate>>();
@@ -128,24 +136,25 @@ public class IGFeatureTemplateSelector {
         }
 
         // Subselect the sentences.
-        if (prm.maxNumSentences < sents.size()) {
+        if (prm.maxNumSentences < goldSents.size()) {
             log.info("Using only the first "+prm.maxNumSentences+" sentences for information gain calculations.");
-            sents = sents.subList(0, prm.maxNumSentences);
+            inputSents = inputSents.subList(0, prm.maxNumSentences);
+            goldSents = goldSents.subList(0, prm.maxNumSentences);
         }
         
         // Initialize.
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);
+        cs.init(inputSents);
 
         for (int c = 0; c < valExts.size(); c++) {
             ValExtractor valExt = valExts.get(c);
-            valExt.init(sents, prm.valueHashMod);
+            valExt.init(goldSents, prm.valueHashMod);
             log.info(String.format("Value Extractor: c=%d name=%s numVals=%d", c, valExt.getName(), valExt.getNumVals()));
         }
                 
         // Compute information gain.
         log.info("Computing information gain for feature templates.");
-        Pair<double[][], int[]> pair = computeInformationGain(allTpls, valExts, sents, cs);
+        Pair<double[][], int[]> pair = computeInformationGain(allTpls, valExts, inputSents, goldSents, cs);
         double[][] ig = pair.get1();
         int[] featCount = pair.get2();
                 
@@ -173,19 +182,19 @@ public class IGFeatureTemplateSelector {
     }
 
     private Pair<double[][], int[]> computeInformationGain(List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-            AnnoSentenceCollection sents, CorpusStatistics cs) {
+            AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents, CorpusStatistics cs) {
         // Information gain, indexed by ValExtractor index, and template index.
         double[][] ig = new double[valExts.size()][allTpls.size()];
         // Feature count for each template.
         int[] featCount = new int[allTpls.size()];
         if (prm.numThreads == 1) { 
             for (int t=0; t<allTpls.size(); t++) {
-                computeInformationGain(t, allTpls, valExts, sents, cs, ig, featCount);
+                computeInformationGain(t, allTpls, valExts, inputSents, goldSents, cs, ig, featCount);
             }
         } else {
             List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
             for (int t=0; t<allTpls.size(); t++) {
-                tasks.add(new IGComputer(t, allTpls, valExts, sents, cs, ig, featCount));
+                tasks.add(new IGComputer(t, allTpls, valExts, inputSents, goldSents, cs, ig, featCount));
             }
             Threads.invokeAndAwaitAll(Threads.defaultPool, tasks);
         }
@@ -194,39 +203,42 @@ public class IGFeatureTemplateSelector {
     
     private class IGComputer implements Callable<Object> {
         int t; List<FeatTemplate> allTpls; List<ValExtractor> valExts;
-        AnnoSentenceCollection sents; CorpusStatistics cs; double[][] ig;
+        AnnoSentenceCollection inputSents; AnnoSentenceCollection goldSents; 
+        CorpusStatistics cs; double[][] ig;
         int[] featCount;
         public IGComputer(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-                AnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, 
+                AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents, CorpusStatistics cs, double[][] ig, 
                 int[] featCount) {
             super();
             this.t = t;
             this.allTpls = allTpls;
             this.valExts = valExts;
-            this.sents = sents;
+            this.inputSents = inputSents;
+            this.goldSents = goldSents;
             this.cs = cs;
             this.ig = ig;
             this.featCount = featCount;
         }
         @Override
         public Object call() throws Exception {
-            computeInformationGain(t, allTpls, valExts, sents, cs, ig, featCount);
+            computeInformationGain(t, allTpls, valExts, inputSents, goldSents, cs, ig, featCount);
             return null;
         }
     }
 
     private void computeInformationGain(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-            AnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, int[] featCount) {
+            AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents, CorpusStatistics cs, double[][] ig, int[] featCount) {
         FeatTemplate tpl = allTpls.get(t);
 
         final IntDoubleDenseVector[][] counts = getCountsArray(valExts);
         Alphabet<String> alphabet = new Alphabet<String>();
-        for (int i=0; i<sents.size(); i++) {                
-            AnnoSentence sent = sents.get(i);
-            TemplateFeatureExtractor featExt = new TemplateFeatureExtractor(sent, cs);
+        for (int i=0; i<goldSents.size(); i++) {                
+            AnnoSentence goldSent = goldSents.get(i);
+            AnnoSentence inputSent = inputSents.get(i);
+            TemplateFeatureExtractor featExt = new TemplateFeatureExtractor(inputSent, cs);
 
-            for (int pidx=-1; pidx<sent.size(); pidx++) {
-                for (int cidx=-1; cidx<sent.size(); cidx++) {
+            for (int pidx=-1; pidx<inputSent.size(); pidx++) {
+                for (int cidx=-1; cidx<inputSent.size(); cidx++) {
                     
                     // Feature Extraction.
                     List<String> feats = new ArrayList<String>();
@@ -255,7 +267,7 @@ public class IGFeatureTemplateSelector {
                     for (int c = 0; c < valExts.size(); c++) {
                         // Value Extraction.
                         ValExtractor valExt = valExts.get(c);
-                        final int valIdx = valExt.getValIdx(sent, pidx, cidx);
+                        final int valIdx = valExt.getValIdx(goldSent, pidx, cidx);
                         
                         if (valIdx != -1) {
                             // Increment counts of feature and value occurrences.

@@ -401,14 +401,13 @@ public class JointNlpRunner {
         {
             anno.add(new EnsureStaticOptionsAreSet());
             anno.add(new PrefixAnnotator(true));
-            anno.add(new SrlFeatureSelection(prm.buPrm.fePrm));
             // Add Brown clusters.
             if (brownClusters != null) {      
                 anno.add(new Annotator() {     
                     private static final long serialVersionUID = 1L;
                     @Override
                     public void annotate(AnnoSentenceCollection sents) {
-                        log.info("Adding Brown clusters.");
+                        log.info("Adding Brown clusters from file: " + brownClusters);
                         BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
                         bct.read(brownClusters);
                         bct.annotate(sents);
@@ -438,6 +437,9 @@ public class JointNlpRunner {
             } else {
                 log.info("No embeddings file specified.");
             }
+            
+            // Feature selection at train time only for SRL.
+            anno.add(new SrlFeatureSelection(prm.buPrm.fePrm));
             
             if (pruneByDist) {
                 // Prune via the distance-based pruner.
@@ -570,13 +572,13 @@ public class JointNlpRunner {
         @Override
         public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
                 AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
-            featureSelection(trainGold, fePrm);
+            featureSelection(trainInput, trainGold, fePrm);
         }
 
         /**
          * Do feature selection and update fePrm with the chosen feature templates.
          */
-        private static void featureSelection(AnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm)  {
+        private static void featureSelection(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents, JointNlpFeatureExtractorPrm fePrm)  {
             if (modelIn != null) { return; }
             SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
             // Remove annotation types from the features which are explicitly excluded.
@@ -587,7 +589,7 @@ public class JointNlpRunner {
                 IGFeatureTemplateSelectorPrm prm = getInformationGainFeatureSelectorPrm();
                 SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
                 IGFeatureTemplateSelector ig = new IGFeatureTemplateSelector(prm);
-                sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
+                sft = ig.getFeatTemplatesForSrl(inputSents, goldSents, csPrm, sft);
                 fePrm.srlFePrm.fePrm.soloTemplates = sft.srlSense;
                 fePrm.srlFePrm.fePrm.pairTemplates = sft.srlArg;
             }
