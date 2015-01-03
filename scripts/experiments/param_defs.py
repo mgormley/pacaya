@@ -288,10 +288,10 @@ class ParamDefinitions():
                                            predAts="SRL")
         g.model_ap_obs_tree_predpos = g.model_ap_obs_tree + \
                 SrlExpParams(makeUnknownPredRolesLatent=False, predictSense=True, predictPredPos=True, 
-                             binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX")
+                             binarySenseRoleFactors=True, predAts="SRL,SRL_PRED_IDX")
         g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + \
                 SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, 
-                             binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")
+                             binarySenseRoleFactors=True, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")
 
     def _define_lists_model(self, g, l):
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
