@@ -51,19 +51,22 @@ public class SrlDecoder implements Decoder<AnnoSentence, SrlGraph> {
             if (v instanceof RoleVar && v.getType() != VarType.LATENT) {
                 // Decode the Role var.
                 RoleVar role = (RoleVar) v;
-                SrlPred pred = srlGraph.getPredAt(role.getParent());
-                if (pred == null) {
-                    // We need some predicate variable here. If necessary, the
-                    // state will be updated below.
-                    String sense = "NO.SENSE.PREDICTED";
-                    pred = new SrlPred(role.getParent(), sense);
+                String stateName = vc.getStateName(role);
+                if (!"_".equals(stateName)) {
+                    SrlPred pred = srlGraph.getPredAt(role.getParent());
+                    if (pred == null) {
+                        // We need some predicate variable here. If necessary, the
+                        // state will be updated below.
+                        String sense = "NO.SENSE.PREDICTED";
+                        pred = new SrlPred(role.getParent(), sense);
+                    }
+                    SrlArg arg = srlGraph.getArgAt(role.getChild());
+                    if (arg == null) {
+                        arg = new SrlArg(role.getChild());
+                    }
+                    SrlEdge edge = new SrlEdge(pred, arg, stateName);
+                    srlGraph.addEdge(edge);
                 }
-                SrlArg arg = srlGraph.getArgAt(role.getChild());
-                if (arg == null) {
-                    arg = new SrlArg(role.getChild());
-                }
-                SrlEdge edge = new SrlEdge(pred, arg, vc.getStateName(role));
-                srlGraph.addEdge(edge);
                 srlVarCount++;
             } else if (v instanceof SenseVar && v.getType() == VarType.PREDICTED) {
                 // Decode the Sense var.

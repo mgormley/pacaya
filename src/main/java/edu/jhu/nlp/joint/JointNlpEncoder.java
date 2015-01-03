@@ -74,6 +74,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
     private LFgExample getExample(AnnoSentence sent, AnnoSentence gold, boolean labeledExample) {
         // Create a feature extractor for this example.
+        // TODO: We should only create the feature extractors for parts of the model we're going to instantiate.
         ObsFeatureExtractor srlFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
         srlFe = new ObsFeatureCache(srlFe);        
         FeatureExtractor dpFe = prm.fePrm.dpFePrm.onlyFast ?
