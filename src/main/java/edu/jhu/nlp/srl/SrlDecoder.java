@@ -24,8 +24,7 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 public class SrlDecoder implements Decoder<AnnoSentence, SrlGraph> {
 
     public static class SrlDecoderPrm {
-        // TODO: Set to non-null values.
-        public MbrDecoderPrm mbrPrm = null;
+        public MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
     }
     
     private SrlDecoderPrm prm;

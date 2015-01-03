@@ -33,9 +33,8 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
 
     // TODO: Use this in JointNlp
     public static class SrlEncoderPrm {
-        // TODO: Fill w/non-null values.
-        public SrlFactorGraphBuilderPrm srlPrm = null; //new SrlFactorGraphBuilderPrm();
-        public SrlFeatureExtractorPrm srlFePrm = null; //new SrlFeatureExtractorPrm();        
+        public SrlFactorGraphBuilderPrm srlPrm = new SrlFactorGraphBuilderPrm();
+        public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();        
     }
     
     private SrlEncoderPrm prm;
@@ -68,7 +67,9 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         srl.build(sent, cs, obsFe, ofc, fg);
         
         VarConfig goldConfig = new VarConfig();
-        addSrlTrainAssignment(sent, graph, srl, goldConfig, prm.srlPrm.predictSense, prm.srlPrm.predictPredPos);
+        if (labeledExample) {
+            addSrlTrainAssignment(sent, graph, srl, goldConfig, prm.srlPrm.predictSense, prm.srlPrm.predictPredPos);
+        }
 
         FactorTemplateList fts = ofc.getTemplates();
         if (labeledExample) {
@@ -79,7 +80,7 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
     }
     
     // TODO: Consider passing in the knownPreds from AnnoSentence.
-    public static void addSrlTrainAssignment(AnnoSentence sent, SrlGraph srlGraph, SrlFactorGraphBuilder sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {        
+    public static void addSrlTrainAssignment(AnnoSentence sent, SrlGraph srlGraph, SrlFactorGraphBuilder sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {
         // ROLE VARS
         // Add all the training data assignments to the role variables, if they are not latent.
         // First, just set all the role names to "_".
