@@ -29,15 +29,12 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
 
     public static int featureHashMod = -1;
     private IntAnnoSentence isent;
+    private FeatureNames alphabet;
     
     public FastDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FeatureNames alphabet) {
         this.isent = new IntAnnoSentence(sent, cs.store);
         this.featureHashMod = featureHashMod;
-        // TODO: Remove this, it's a huge waste of memory.
-        int i=0;
-        while (alphabet.size() < featureHashMod) {
-            alphabet.lookupIndex(i++);
-        }
+        this.alphabet = alphabet;
     }
 
     @Override
@@ -49,6 +46,13 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
     
     @Override
     public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
+        // Expand the alphabet to include every feature up to the hash mod.
+        // TODO: Remove this, it's a huge waste of memory.
+        int i=0;
+        while (alphabet.size() < featureHashMod) {
+            alphabet.lookupIndex(i++);
+        }
+        
         FeTypedFactor f = (FeTypedFactor) factor;
         Enum<?> ft = f.getFactorType();
         VarSet vars = f.getVars();
