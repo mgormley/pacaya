@@ -26,12 +26,15 @@ public class Threads {
     private static final Logger log = LoggerFactory.getLogger(Threads.class);
     private static final int DONE = -1;
 
+    // NOTE: These should never be set except with a call to initDefaultPool().
     public static ExecutorService defaultPool = null;
+    public static int numThreads = 0;
     
     private Threads() { }
     
     public static void initDefaultPool(int numThreads) {
-        defaultPool = Executors.newFixedThreadPool(numThreads);
+        Threads.defaultPool = Executors.newFixedThreadPool(numThreads);
+        Threads.numThreads = numThreads;
     }
     
     public static void shutdownDefaultPool() {

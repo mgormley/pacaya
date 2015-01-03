@@ -171,7 +171,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         FgExampleList data = builder.getData(sents, null);  
         annotate(sents, data);
         timer.stop();
-        log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));
+        log.info(String.format("Decoded at %.2f tokens/sec with %d threads", sents.getNumTokens() / timer.totSec(), Threads.numThreads));
     }
 
     private void annotate(final AnnoSentenceCollection sents, final FgExampleList data) {
