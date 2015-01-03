@@ -39,9 +39,10 @@ public class SrlEvaluatorTest {
         predSrl.set(1, 0, "agent");    // Arg
         predSrl.set(1, 1, "patient");  // Arg (incorrect position)
         predSrl.set(1, 3, "nonarg");   // Arg
-        predSrl.set(-1, 2, "eat.01");  // Pred
-        // Arg (incorrect: missing 2, 0, agent.)
+        predSrl.set(-1, 2, "drink.01");// Pred (incorrect label)
+                                       // Arg (incorrect: missing 2, 0, agent.)
         predSrl.set(2, 3, "theme");    // Arg (incorrect label)
+        predSrl.set(-1, 0, "run.02");  // Pred (extra)
         pred.setSrlGraph(predSrl.toSrlGraph());
         
         goldSrl.set(-1, 1, "like.01"); // Pred
@@ -59,30 +60,70 @@ public class SrlEvaluatorTest {
         predSents.add(pred);
         goldSents.add(gold);
     }
-    
+
     @Test
-    public void testLabeledF1() {        
+    public void testZeros() {
         SrlEvaluatorPrm prm = new SrlEvaluatorPrm();
         prm.labeled = true;
-        prm.predictSense = false;
+        prm.predictSense = true;
+        prm.predictPredicatePosition = true;
         SrlEvaluator eval = new SrlEvaluator(prm);
-        eval.evaluate(predSents, goldSents, "dataset name");
-        double ep = 2./4.;
-        double er = 2./5.;
-        assertEquals(ep, eval.getPrecision(), 1e-13);
-        assertEquals(er, eval.getRecall(), 1e-13);
-        assertEquals(2 * ep * er / (ep + er), eval.getF1(), 1e-13);
+        eval.evaluate(new AnnoSentenceCollection(), new AnnoSentenceCollection(), "empty dataset");
+        assertEquals(0.0, eval.getPrecision(), 1e-13);
+        assertEquals(0.0, eval.getRecall(), 1e-13);
+        assertEquals(0.0, eval.getF1(), 1e-13);
     }
     
     @Test
-    public void testUnlabeledF1() {        
+    public void testUnlabeled() {
+        checkSrlPrecRecallF1(3, 4, 5, false, false, false);
+    }
+    
+    @Test
+    public void testLabeled() {     
+        checkSrlPrecRecallF1(2, 4, 5, true, false, false);
+    }
+    
+    @Test
+    public void testUnlabeledSense() {
+        checkSrlPrecRecallF1(5, 6, 7, false, true, false);
+    }
+    
+    @Test
+    public void testLabeledSense() {     
+        checkSrlPrecRecallF1(3, 6, 7, true, true, false);
+    }
+
+    @Test
+    public void testUnlabeledPosition() {
+        checkSrlPrecRecallF1(5, 7, 7, false, false, true);
+    }
+    
+    @Test
+    public void testLabeledPosition() {     
+        checkSrlPrecRecallF1(4, 7, 7, true, false, true);
+    }
+
+    @Test
+    public void testUnlabeledSensePosition() {
+        checkSrlPrecRecallF1(5, 7, 7, false, true, true);
+    }
+    
+    @Test
+    public void testLabeledSensePosition() {     
+        checkSrlPrecRecallF1(3, 7, 7, true, true, true);
+    }
+
+    protected void checkSrlPrecRecallF1(int numCorrectPositives, int numPredictedPositives, int numTruePositives, 
+            boolean labeled, boolean predictSense, boolean predictPredicatePosition) {
+        double ep = (double) numCorrectPositives / numPredictedPositives;
+        double er = (double) numCorrectPositives / numTruePositives;
         SrlEvaluatorPrm prm = new SrlEvaluatorPrm();
-        prm.labeled = false;
-        prm.predictSense = false;
+        prm.labeled = labeled;
+        prm.predictSense = predictSense;
+        prm.predictPredicatePosition = predictPredicatePosition;
         SrlEvaluator eval = new SrlEvaluator(prm);
         eval.evaluate(predSents, goldSents, "dataset name");
-        double ep = 3./4.;
-        double er = 3./5.;
         assertEquals(ep, eval.getPrecision(), 1e-13);
         assertEquals(er, eval.getRecall(), 1e-13);
         assertEquals(2 * ep * er / (ep + er), eval.getF1(), 1e-13);

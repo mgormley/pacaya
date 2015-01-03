@@ -33,6 +33,7 @@ import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.eval.DepParseAccuracy;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
+import edu.jhu.nlp.eval.SrlEvaluator.SrlEvaluatorPrm;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
@@ -128,7 +129,10 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             eval = new DepParseAccuracy(prm.dpSkipPunctuation);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL))) {
-            eval = new SrlEvaluator();
+            SrlEvaluatorPrm evalPrm = new SrlEvaluatorPrm();
+            evalPrm.predictSense = prm.buPrm.fgPrm.srlPrm.predictSense;
+            evalPrm.predictPredicatePosition = prm.buPrm.fgPrm.srlPrm.predictPredPos;
+            eval = new SrlEvaluator(evalPrm);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {
             eval = new RelationEvaluator();
         } else {
