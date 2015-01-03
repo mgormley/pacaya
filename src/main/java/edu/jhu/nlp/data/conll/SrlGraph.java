@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.jhu.nlp.data.DepGraph;
 import edu.jhu.prim.set.IntHashSet;
 
 /**
@@ -292,7 +293,15 @@ public class SrlGraph {
     public SrlEdge getEdge(int pidx, int aidx) {
         return es[pidx][aidx];
     }
+    
+    public int getNumTokens() {
+        return n;
+    }
 
+    public DepGraph toDepGraph() {
+        return new DepGraph(this);
+    }
+    
     @Override
     public String toString() {
         return "SrlGraph [preds=" + preds + ", args=" + args + ", edges="
