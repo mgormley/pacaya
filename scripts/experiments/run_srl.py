@@ -175,16 +175,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl = g.langs[lang_short]
             pl = p.langs[lang_short]                  
             # Train on the English CoNLL-2009 data. We include a few other models for comparison.
-            exp = g.defaults + g.feat_tpl_coarse1 + gl.pos_sup + g.model_ap_obs_tree_predpos
             for model in [g.model_ap_obs_tree_predpos, g.model_pg_obs_tree]:
                 for predictSense in [True, False]:
-                    exp += model
+                    exp = g.defaults + g.feat_tpl_coarse1 + gl.pos_sup + model
                     exp.update(predictSense=predictSense, featureSelection=True, removeAts="DEPREL,MORPHO")
                                #trainMaxNumSentences=100, trainMaxSentenceLength=10,
                                #devMaxNumSentences=10, devMaxSentenceLength=10,
                                #testMaxNumSentences=10, testMaxSentenceLength=10)
-            exp = exp + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-            root.add_dependent(exp)
+                    exp = exp + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    root.add_dependent(exp)
             return root
                     
         elif self.expname == "srl-conll09":    
