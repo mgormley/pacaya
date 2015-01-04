@@ -142,7 +142,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             dev =   StagePath(c09_stages['dev'],   c09_stages['dev'].get("testPredOut")),   devType = "CONLL_2009",
                             useGoldSyntax = False, language = lang_short)
             g.defaults += g.feat_tpl_coarse1 + pos_sup + g.model_ap_obs_tree_predpos
-            g.defaults.update(predictSense=True, featureSelection=True, removeAts="DEPREL,MORPHO")
+            g.defaults.update(predictSense=True, featureSelection=True, removeAts="DEPREL,MORPHO", binarySenseRoleFactors=False)
             train = g.defaults + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))            
             comm = glob(p.concrete380 + "/*")[0]
             comm_name = os.path.basename(comm)
