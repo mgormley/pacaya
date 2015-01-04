@@ -6,6 +6,10 @@ import java.util.regex.Pattern;
 
 import edu.jhu.nlp.features.TemplateLanguage.Description;
 
+/** 
+ * Tree representing a feature template.
+ * @author mgormley
+ */
 public class TemplateStruct {
     
     public String name;

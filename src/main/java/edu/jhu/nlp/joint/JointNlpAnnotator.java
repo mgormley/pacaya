@@ -37,6 +37,7 @@ import edu.jhu.nlp.eval.SrlEvaluator.SrlEvaluatorPrm;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.prim.util.Lambda.FnIntToVoid;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prm;
@@ -130,8 +131,9 @@ public class JointNlpAnnotator implements Trainable, Annotator {
             eval = new DepParseAccuracy(prm.dpSkipPunctuation);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL))) {
             SrlEvaluatorPrm evalPrm = new SrlEvaluatorPrm();
-            evalPrm.predictSense = prm.buPrm.fgPrm.srlPrm.predictSense;
-            evalPrm.predictPredicatePosition = prm.buPrm.fgPrm.srlPrm.predictPredPos;
+            evalPrm.evalSense = prm.buPrm.fgPrm.srlPrm.predictSense;
+            evalPrm.evalPredicatePosition = prm.buPrm.fgPrm.srlPrm.predictPredPos;
+            evalPrm.evalRoles = (prm.buPrm.fgPrm.srlPrm.roleStructure != RoleStructure.NO_ROLES);
             eval = new SrlEvaluator(evalPrm);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {
             eval = new RelationEvaluator();

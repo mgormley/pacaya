@@ -59,6 +59,7 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
 
     private LFgExample getExample(AnnoSentence sent, SrlGraph graph, boolean labeledExample) {
         // Create a feature extractor for this example.
+        //ObsFeatureExtractor obsFe = new FastSrlFeatureExtractor(sent, cs, prm.srlFePrm.featureHashMod, ofc.getTemplates());
         ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
         obsFe = new ObsFeatureCache(obsFe);
         

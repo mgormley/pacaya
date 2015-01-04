@@ -178,10 +178,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for model in [g.model_ap_obs_tree_predpos, g.model_pg_obs_tree]:
                 for predictSense in [True, False]:
                     exp = g.defaults + g.feat_tpl_coarse1 + gl.pos_sup + model
-                    exp.update(predictSense=predictSense, featureSelection=True, removeAts="DEPREL,MORPHO")
+                    exp.update(predictSense=predictSense, featureSelection=True, removeAts="DEPREL,MORPHO", binarySenseRoleFactors=False,
                                #trainMaxNumSentences=100, trainMaxSentenceLength=10,
                                #devMaxNumSentences=10, devMaxSentenceLength=10,
-                               #testMaxNumSentences=10, testMaxSentenceLength=10)
+                               #testMaxNumSentences=100)#, testMaxSentenceLength=10,
+                               )
                     exp = exp + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     root.add_dependent(exp)
             return root

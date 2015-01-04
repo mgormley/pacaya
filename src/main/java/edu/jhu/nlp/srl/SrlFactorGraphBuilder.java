@@ -31,6 +31,7 @@ public class SrlFactorGraphBuilder implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
+    public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE_ROLE = SrlFactorTemplate.SENSE_ROLE_BINARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
     private static final Logger log = LoggerFactory.getLogger(SrlFactorGraphBuilder.class); 
 
     /**

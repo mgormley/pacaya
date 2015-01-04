@@ -68,7 +68,7 @@ public class FactorTemplateList implements Serializable {
         if (index >= fts.size()) {
             fts.add(ft);
         } else if (index == -1) {
-            throw new RuntimeException("Unable to update feature template list for factor: " + ft.getKey());
+            throw new RuntimeException("Unable to update factor template list for factor: " + ft.getKey());
         }
     }
 
@@ -110,7 +110,7 @@ public class FactorTemplateList implements Serializable {
             FeatureNames alphabet = useCountingAlphabets ? new CountingFeatureNames() : new FeatureNames();
             fts.add(new FactorTemplate(f.getVars(), alphabet, f.getTemplateKey()));
         } else if (index == -1) {
-            throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());
+            throw new RuntimeException("Unable to update factor template list for factor: " + f.getTemplateKey());
         } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
             // TODO: This is a bare-minimum check that the user defined the
             // template keys properly. Eventually we should probably define

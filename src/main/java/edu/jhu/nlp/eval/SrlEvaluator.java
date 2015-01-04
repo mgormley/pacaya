@@ -23,14 +23,16 @@ public class SrlEvaluator implements Evaluator {
     public static class SrlEvaluatorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         public boolean labeled = true;
-        public boolean predictSense = true;
-        public boolean predictPredicatePosition = false;
+        public boolean evalSense = true;
+        public boolean evalPredicatePosition = false;
+        public boolean evalRoles = true;
         public SrlEvaluatorPrm() { }
-        public SrlEvaluatorPrm(boolean labeled, boolean predictSense, boolean predictPredicatePosition) {
+        public SrlEvaluatorPrm(boolean labeled, boolean evalSense, boolean evalPredicatePosition, boolean evalRoles) {
             this.labeled = labeled;
-            this.predictSense = predictSense;
-            this.predictPredicatePosition = predictPredicatePosition;
-        }        
+            this.evalSense = evalSense;
+            this.evalPredicatePosition = evalPredicatePosition;
+            this.evalRoles = evalRoles;
+        }
     }
     
     private static final Logger log = LoggerFactory.getLogger(SrlEvaluator.class);
@@ -78,12 +80,16 @@ public class SrlEvaluator implements Evaluator {
             // For each gold edge.
             int n = goldSent.size();
             for (int p=-1; p < n; p++) {          
-                if (!prm.predictSense && !prm.predictPredicatePosition && p == -1) {
+                if (!prm.evalSense && !prm.evalPredicatePosition && p == -1) {
                     // Exclude arcs from the virtual root to predicates.
                     continue;
                 }
+                if (!prm.evalRoles && p != -1) {
+                    // Only consider arcs from the virtual root.
+                    continue;
+                }
                 for (int c=0; c < n; c++) {                      
-                    if (!prm.predictPredicatePosition && !hasPredicateForEdge(gold, p, c)) {
+                    if (!prm.evalPredicatePosition && !hasPredicateForEdge(gold, p, c)) {
                         // Only consider predicates which appear in the gold annotations.
                         continue;
                     }
@@ -110,8 +116,9 @@ public class SrlEvaluator implements Evaluator {
             }
         }
         String detail = prm.labeled ? "Labeled" : "Unlabeled";
-        detail += prm.predictSense ? "Sense" : "";
-        detail += prm.predictPredicatePosition ? "Position" : "";
+        detail += prm.evalSense ? "Sense" : "";
+        detail += prm.evalPredicatePosition ? "Position" : "";
+        detail += prm.evalRoles ? "Roles" : "";                
         log.debug(String.format("SRL %s # correct positives on %s: %d", detail, dataName, numCorrectPositive));
         log.debug(String.format("SRL %s # predicted positives on %s: %d", detail, dataName, numPredictPositive));
         log.debug(String.format("SRL %s # true positives on %s: %d", detail, dataName, numTruePositive));
@@ -120,7 +127,7 @@ public class SrlEvaluator implements Evaluator {
         f1 = (precision == 0.0 && recall == 0.0) ? 0.0 : (double) (2 * precision * recall) / (precision + recall);
         
         log.info(String.format("SRL Num sents not annotated on %s: %d", dataName, numMissing));
-        log.info(String.format("SRL Num relation instances on %s: %d", dataName, numInstances));
+        log.info(String.format("SRL Num instances on %s: %d", dataName, numInstances));
         log.info(String.format("SRL %s accuracy on %s: %.4f", detail, dataName, (double)(numCorrectPositive + numCorrectNegative)/numInstances));
         log.info(String.format("SRL %s Precision on %s: %.4f", detail, dataName, precision));
         log.info(String.format("SRL %s Recall on %s: %.4f", detail, dataName, recall));
@@ -150,7 +157,7 @@ public class SrlEvaluator implements Evaluator {
         String label = dg.get(p, c);
         if (label == null) {
             return NO_LABEL;
-        } else if (!prm.labeled || (p == -1 && !prm.predictSense)){
+        } else if (!prm.labeled || (p == -1 && !prm.evalSense)){
             return SOME_LABEL;
         } else {
             return label;

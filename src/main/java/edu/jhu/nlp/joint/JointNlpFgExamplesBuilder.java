@@ -93,6 +93,7 @@ public class JointNlpFgExamplesBuilder {
                     : CorpusStatistics.SENSES_FOR_UNK_PRED;
             Var v = new Var(VarType.PREDICTED, senses.size(), CorpusStatistics.UNKNOWN_SENSE, senses);
             fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE_ROLE));
         }
         
         if (!ofc.isInitialized()) {

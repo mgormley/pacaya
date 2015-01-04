@@ -88,12 +88,14 @@ import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.tag.FileMapTagReducer;
 import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.Prm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
@@ -455,6 +457,25 @@ public class JointNlpRunner {
             if ((pruneByDist || pruneByModel ) && trainer == Trainer.CLL) {
                 anno.add(new GoldDepParseUnpruner());
             }
+            if (modelIn == null && prm.buPrm.fgPrm.srlPrm.predictPredPos) {
+                // Predict SRL predicate positions as a separate step.
+                JointNlpAnnotatorPrm prm2 = Prm.clone(prm);
+                // Use the same features as the main jointAnno. These might be edited by feature selection.
+                prm2.buPrm.fePrm = prm.buPrm.fePrm;
+                // This is transient so we need to create another one.
+                prm2.crfPrm = getCrfTrainerPrm();
+                // Don't include anything except for SRL.
+                prm2.buPrm.fgPrm.includeDp = false;
+                prm2.buPrm.fgPrm.includeRel = false;
+                SrlFactorGraphBuilderPrm srlPrm = prm2.buPrm.fgPrm.srlPrm;
+                srlPrm.predictPredPos = true;
+                srlPrm.predictSense = false;
+                srlPrm.roleStructure = RoleStructure.NO_ROLES;
+                anno.add(new JointNlpAnnotator(prm2));
+                // Don't predict SRL predicate position in the main jointAnno below.
+                prm.buPrm.fgPrm.srlPrm.predictPredPos = false;
+                prm.buPrm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+            }
             // Various NLP annotations.
             anno.add(jointAnno);
         }
@@ -468,12 +489,14 @@ public class JointNlpRunner {
                 eval.add(new DepParseAccuracy(dpSkipPunctuation));
                 eval.add(new DepParseExactMatch(dpSkipPunctuation));
             }
+            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL_PRED_IDX)) {
+                // Evaluate F1 of unlabled predicate position identification.
+                eval.add(new SrlEvaluator(new SrlEvaluatorPrm(false, false, predictPredPos, false)));
+                eval.add(new SrlPredIdAccuracy());
+            }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL)) {
                 eval.add(new SrlSelfLoops());
-                eval.add(new SrlEvaluator(new SrlEvaluatorPrm(true, predictSense, predictPredPos)));
-            }
-            if (CorpusHandler.getGoldOnlyAts().contains(AT.SRL_PRED_IDX)) {
-                eval.add(new SrlPredIdAccuracy());
+                eval.add(new SrlEvaluator(new SrlEvaluatorPrm(true, predictSense, predictPredPos, (roleStructure != RoleStructure.NO_ROLES))));
             }
             if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
                 eval.add(new RelationEvaluator());

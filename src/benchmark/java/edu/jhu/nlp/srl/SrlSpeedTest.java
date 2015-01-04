@@ -1,17 +1,13 @@
 package edu.jhu.nlp.srl;
 
-import java.util.Iterator;
-import java.util.List;
+import java.io.File;
 
 import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.data.AbstractFgExampleList;
-import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -19,7 +15,6 @@ import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.conll.SrlGraph;
@@ -27,16 +22,12 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
-import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
-import edu.jhu.nlp.depparse.FastDepParseFeatureExtractor;
 import edu.jhu.nlp.features.TemplateSets;
-import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 import edu.jhu.nlp.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.nlp.srl.SrlEncoder.SrlEncoderPrm;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
-import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.nlp.tag.BrownClusterTagger;
+import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
@@ -58,6 +49,7 @@ public class SrlSpeedTest {
      * Feature hash = 100,000:
      *   s=101 n=2624 tot= 161.16 t0=9864.66 t1=2716.36 t2=Infinity t3= 218.87 t4= 914.60 t5=13738.22
      * Feature hash = 10,000:
+     *   (with Narad template feats)
      *   Number of model parameters: 743524
      *   s=1001 n=24334 tot= 105.76 t0=79006.49 t1=2299.78 t2=Infinity t3= 131.78 t4= 758.23 t5=10042.92
      *   
@@ -66,7 +58,12 @@ public class SrlSpeedTest {
      *   s=601 n=13956 tot=  38.40 t0=14583.07 t1=2459.64 t2=Infinity t3=  41.74 t4= 662.87 t5=10540.79
      *   
      *   (with McDonald template feats)
+     *   Number of model parameters: 804876
+     *   s=601 n=13956 tot=  28.35 t0=8998.07 t1=2298.42 t2=Infinity t3=  30.24 t4= 639.39 t5=9911.93
      *   
+     *   (with Coarse1+IG templates, only 100 sents)
+     *   Number of model parameters: 532769
+     *   s=101 n=2624 tot=  14.15 t0=1371.67 t1=2003.05 t2=Infinity t3=  14.82 t4= 538.81 t5=9304.96
      */
     //@Test
     public void testSpeed() {
@@ -84,9 +81,12 @@ public class SrlSpeedTest {
             t.start();
             
             t0.start();
-            final AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.read(AnnoSentenceReaderSpeedTest.c09Dev, DatasetType.CONLL_2009);
+            final AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.read(AnnoSentenceReaderSpeedTest.c09Dev, DatasetType.CONLL_2009).subList(0, 103);
             PrefixAnnotator pa = new PrefixAnnotator();
             pa.annotate(sents);
+            BrownClusterTagger tagger = new BrownClusterTagger(new BrownClusterTaggerPrm());
+            tagger.read(new File("/Users/mgormley/research/corpora/processed/brown_clusters/bc_out_1000/full.txt_en_1000/bc/paths"));
+            tagger.annotate(sents);
             t0.stop();
 
             // Don't time this stuff since it's "training".
@@ -169,8 +169,8 @@ public class SrlSpeedTest {
         SrlEncoderPrm prm = new SrlEncoderPrm();
         prm.srlFePrm.featureHashMod = numParams;
         prm.srlFePrm.fePrm.useTemplates = true;
-        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();;
-        //prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        //prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();;
+        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getFromResource("/edu/jhu/nlp/features/coarse1-arg-feats-igconll09en.txt");
         prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
         prm.srlPrm.allowPredArgSelfLoops = true;
         prm.srlPrm.binarySenseRoleFactors = true;
