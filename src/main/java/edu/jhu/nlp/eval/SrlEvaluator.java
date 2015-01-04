@@ -154,6 +154,9 @@ public class SrlEvaluator implements Evaluator {
     }
 
     private String getLabel(DepGraph dg, int p, int c) {
+        if (dg == null) {
+            return null;
+        }
         String label = dg.get(p, c);
         if (label == null) {
             return NO_LABEL;
