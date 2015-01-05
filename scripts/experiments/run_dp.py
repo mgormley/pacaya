@@ -81,7 +81,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=5, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
-                          logDomain=False,
                           algebra="LOG_SIGN",
                           includeUnsupportedFeatures=True,
                           singleRoot=False,

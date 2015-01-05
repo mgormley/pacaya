@@ -167,10 +167,8 @@ public class JointNlpRunner {
     // Options for inference.
     @Opt(hasArg = true, description = "Type of inference method.")
     public static Inference inference = Inference.BP;
-    @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
-    public static AlgebraType algebra = AlgebraType.REAL;
-    @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
-    public static boolean logDomain = true;
+    @Opt(hasArg = true, description = "The algebra or semiring in which to run inference.")
+    public static AlgebraType algebra = AlgebraType.LOG;
     @Opt(hasArg = true, description = "The BP schedule type.")
     public static BpScheduleType bpSchedule = BpScheduleType.TREE_LIKE;
     @Opt(hasArg = true, description = "The BP update order.")
@@ -937,7 +935,6 @@ public class JointNlpRunner {
             return prm;
         } else if (inference == Inference.BP) {
             ErmaBpPrm bpPrm = new ErmaBpPrm();
-            bpPrm.logDomain = logDomain;
             bpPrm.s = algebra.getAlgebra();
             bpPrm.schedule = bpSchedule;
             bpPrm.updateOrder = bpUpdateOrder;
