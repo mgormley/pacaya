@@ -173,7 +173,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             lang_short = "en"
             gl = g.langs[lang_short]
-            pl = p.langs[lang_short]                  
+            pl = p.langs[lang_short]            
             # Train on the English CoNLL-2009 data. We include a few other models for comparison.
             for model in [g.model_ap_obs_tree_predpos, g.model_pg_obs_tree]:
                 for predictSense in [True, False]:
@@ -181,7 +181,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp.update(predictSense=predictSense, featureSelection=True, removeAts="DEPREL,MORPHO", binarySenseRoleFactors=False,
                                #trainMaxNumSentences=100, trainMaxSentenceLength=10,
                                #devMaxNumSentences=10, devMaxSentenceLength=10,
-                               #testMaxNumSentences=100)#, testMaxSentenceLength=10,
+                               #testMaxNumSentences=10, testMaxSentenceLength=10,
+                               #sgdNumPasses=0,
                                )
                     exp = exp + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     root.add_dependent(exp)

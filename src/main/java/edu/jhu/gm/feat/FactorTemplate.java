@@ -74,5 +74,10 @@ public class FactorTemplate implements Serializable {
     public String toString() {
         return "FeatureTemplate [key=" + key + ", numConfigs=" + numConfigs + ", alphabet=" + alphabet + "]";
     }
+    
+    // Only for debugging.
+    VarSet getVars() {
+        return vars;
+    }
 
 }

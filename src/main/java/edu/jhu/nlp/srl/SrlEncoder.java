@@ -116,14 +116,15 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                if (predictSense) {
-                    if (predictPredPos && !knownPreds.contains(i)) {
-                        vc.put(senseVar, "_");
-                    } else {
+                if (!predictSense && !predictPredPos) {
+                    throw new IllegalStateException("Neither predictSense nor predictPredPos is set. So there shouldn't be any SenseVars.");
+                }
+                if (knownPreds.contains(i)) {
+                    if (predictSense) {
                         // Tries to map the sense variable to its label (e.g. argM-TMP).
                         // If the variable state space does not include that label, we
                         // fall back on the UNKNOWN_SENSE constant. If for some reason
-                        // the UNKNOWN_SENSE constant isn't present, we just predict the
+                        // the UNKNOWN_SENSE constant isn't present, we just set it to the
                         // first possible sense.
                         if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
                             if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
@@ -131,19 +132,15 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
                                 vc.put(senseVar, 0);
                             }
                         }
-                    }
-                } else if (predictPredPos) {
-                    if (knownPreds.contains(i)) {
+                    } else { // (predictPredPos && !predictPredSense)
                         // We use CorpusStatistics.UNKNOWN_SENSE to indicate that
                         // there exists a predicate at this position.
-                        vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);
-                    } else {
-                        // The "_" indicates that there is no predicate at this
-                        // position.
-                        vc.put(senseVar, "_");
+                        vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);   
                     }
                 } else {
-                    throw new IllegalStateException("Neither predictSense nor predictPredPos is set. So there shouldn't be any SenseVars.");
+                    // The "_" indicates that there is no predicate at this
+                    // position.
+                    vc.put(senseVar, "_");
                 }
             }
         }

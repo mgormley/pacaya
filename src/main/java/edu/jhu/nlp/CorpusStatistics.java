@@ -58,7 +58,6 @@ public class CorpusStatistics implements Serializable {
     
     public static final String UNKNOWN_ROLE = "argUNK";
     public static final String UNKNOWN_SENSE = "senseUNK";
-    public static List<String> SENSES_FOR_UNK_PRED = Lists.getList(UNKNOWN_SENSE);
     public static final List<String> PRED_POSITION_STATE_NAMES = Lists.getList("_", UNKNOWN_SENSE);
 
     public Set<String> knownWords = new HashSet<String>();

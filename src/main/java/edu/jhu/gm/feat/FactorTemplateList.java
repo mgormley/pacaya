@@ -4,9 +4,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.TemplateFactor;
+import edu.jhu.gm.model.Var;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingFeatureNames;
 import edu.jhu.util.FeatureNames;
@@ -14,6 +19,7 @@ import edu.jhu.util.FeatureNames;
 public class FactorTemplateList implements Serializable {
 
     private static final long serialVersionUID = 5880428795836008068L;
+    private static final Logger log = LoggerFactory.getLogger(FactorTemplateList.class); 
     private List<FactorTemplate> fts;
     private boolean isGrowing;  
     private Alphabet<Object> templateKeyAlphabet;
@@ -111,14 +117,31 @@ public class FactorTemplateList implements Serializable {
             fts.add(new FactorTemplate(f.getVars(), alphabet, f.getTemplateKey()));
         } else if (index == -1) {
             throw new RuntimeException("Unable to update factor template list for factor: " + f.getTemplateKey());
-        } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
-            // TODO: This is a bare-minimum check that the user defined the
-            // template keys properly. Eventually we should probably define
-            // some notion of variable type and check that a template has
-            // the correct variable types.
-            throw new IllegalStateException(String.format(
-                    "Expected %d variable assignments, but factor has %d. key = %s.", fts.get(index).getNumConfigs(), f
-                            .getVars().calcNumConfigs(), f.getTemplateKey()));
+        } else {
+            FactorTemplate ft = fts.get(index);
+            if (ft.getNumConfigs() != f.getVars().calcNumConfigs()) {
+                // TODO: This is a bare-minimum check that the user defined the
+                // template keys properly. Eventually we should probably define
+                // some notion of variable type and check that a template has
+                // the correct variable types.
+                String msg1 = String.format(
+                        "Expected %d variable assignments, but factor has %d. key = %s.", ft.getNumConfigs(), f
+                                .getVars().calcNumConfigs(), f.getTemplateKey());
+                log.error(msg1);
+                String msg2 = "Expected var names: ";
+                for (Var v : ft.getVars()) {
+                    msg2 += v.getStateNames();
+                    msg2 += ", ";
+                }
+                log.error(msg2);
+                String msg3 = "Actual var names: ";
+                for (Var v : f.getVars()) {
+                    msg3 += v.getStateNames();
+                    msg3 += ", ";
+                }
+                log.error(msg3);
+                throw new IllegalStateException(msg1);
+            }
         }
         f.setTemplateId(index);
         return index;

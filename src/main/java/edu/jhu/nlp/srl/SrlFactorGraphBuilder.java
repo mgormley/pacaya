@@ -218,8 +218,13 @@ public class SrlFactorGraphBuilder implements Serializable {
             if ((!prm.predictSense && !prm.predictPredPos) ||  
                     (prm.roleStructure == RoleStructure.PREDS_GIVEN && !prm.predictSense)) {
                 // Do not add sense variables.
-            } else if (prm.predictSense && prm.predictPredPos) {
-                // Sense and position.
+            } else if (!prm.predictSense && prm.predictPredPos) {
+                // Positions without sense.
+                senseVars[i] = createSenseVar(i, CorpusStatistics.PRED_POSITION_STATE_NAMES);
+            } else if (prm.predictSense || prm.predictPredPos) {
+                // Sense and position. Even if we aren't predicting the predicate position, the
+                // training data could contain non-gold known predicate positions so we need to
+                // include "_" as a possible value for the sense.
                 List<String> senseStateNames = psMap.get(lemmas.get(i));
                 if (senseStateNames == null) {
                     senseStateNames = CorpusStatistics.PRED_POSITION_STATE_NAMES;
@@ -228,16 +233,6 @@ public class SrlFactorGraphBuilder implements Serializable {
                     senseStateNames = Lists.cons("_", senseStateNames);
                 }
                 senseVars[i] = createSenseVar(i, senseStateNames);
-            } else if (prm.predictSense && !prm.predictPredPos) {
-                // Sense without positions.
-                List<String> senseStateNames = psMap.get(lemmas.get(i));
-                if (senseStateNames == null) {
-                    senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
-                }
-                senseVars[i] = createSenseVar(i, senseStateNames);
-            } else if (!prm.predictSense && prm.predictPredPos) {
-                // Positions without sense.
-                senseVars[i] = createSenseVar(i, CorpusStatistics.PRED_POSITION_STATE_NAMES);
             }
         }
 

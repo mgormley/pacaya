@@ -88,9 +88,7 @@ public class JointNlpFgExamplesBuilder {
         FactorTemplateList fts = ofc.getTemplates();
         if ((jePrm.fgPrm.srlPrm.predictSense || jePrm.fgPrm.srlPrm.predictPredPos) && fts.isGrowing()) {
             // TODO: This should have a bias feature.
-            List<String> senses = jePrm.fgPrm.srlPrm.predictPredPos 
-                    ? CorpusStatistics.PRED_POSITION_STATE_NAMES 
-                    : CorpusStatistics.SENSES_FOR_UNK_PRED;
+            List<String> senses = CorpusStatistics.PRED_POSITION_STATE_NAMES;
             Var v = new Var(VarType.PREDICTED, senses.size(), CorpusStatistics.UNKNOWN_SENSE, senses);
             fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
             fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE_ROLE));
