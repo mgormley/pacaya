@@ -27,7 +27,7 @@ import edu.jhu.util.report.ReporterManager;
  * 
  * @author mgormley
  */
-public class CommunicationAnnotator { // TODO: implements PostStanfordAnnotationTool {
+public class CommunicationAnnotator {
     private static final Logger log = LoggerFactory.getLogger(CommunicationAnnotator.class);
 
     // Parameters.
@@ -51,7 +51,6 @@ public class CommunicationAnnotator { // TODO: implements PostStanfordAnnotation
         this.reportOut = reportOut;
     }
     
-    // TODO: @Override
     public void init() {
         ReporterManager.init(reportOut, true);
         Prng.seed(seed);
@@ -60,7 +59,6 @@ public class CommunicationAnnotator { // TODO: implements PostStanfordAnnotation
         this.anno = (AnnoPipeline) Files.deserialize(pipeIn);
     }
 
-    // TODO: @Override
     public Communication annotate(Communication c) throws AnnotationException {
         // Return a copy.
         c = new Communication(c);

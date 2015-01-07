@@ -130,7 +130,9 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             eval = new DepParseAccuracy(prm.dpSkipPunctuation);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL)) || 
-                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL_PRED_IDX, AT.SRL))) {
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL_PRED_IDX, AT.SRL)) ||
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL, AT.SRL_PRED_IDX))
+                ) {
             SrlEvaluatorPrm evalPrm = new SrlEvaluatorPrm();
             evalPrm.evalSense = prm.buPrm.fgPrm.srlPrm.predictSense;
             evalPrm.evalPredicatePosition = prm.buPrm.fgPrm.srlPrm.predictPredPos;

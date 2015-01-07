@@ -141,7 +141,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             train = StagePath(c09_stages['train'], c09_stages['train'].get("testPredOut")), trainType = "CONLL_2009",
                             dev =   StagePath(c09_stages['dev'],   c09_stages['dev'].get("testPredOut")),   devType = "CONLL_2009",
                             useGoldSyntax = False, language = lang_short)
-            g.defaults += g.feat_tpl_coarse1 + pos_sup + g.model_ap_obs_tree_predpos
+            g.defaults += g.feat_tpl_coarse1 + pos_sup + g.model_ap_obs_tree_predpos + gl.brown_clusters
             g.defaults.update(predictSense=True, featureSelection=True, removeAts="DEPREL,MORPHO", binarySenseRoleFactors=False)
             train = g.defaults + SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))            
             comm = glob(p.concrete380 + "/*")[0]

@@ -313,11 +313,13 @@ class ParamDefinitions():
         
         # TODO: This sets the Brown clusters. MOVE THIS!!
         pl = p.langs[lang_short]
-        for x in [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]:
+        for x in [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]:            
             if self.fast:
-                x.update(brownClusters=p.bc_tiny)
+                bc = p.bc_tiny
             else:
-                x.update(brownClusters=pl.bc_1000)
+                bc = pl.bc_1000
+            x.update(brownClusters=bc)
+            gl.brown_clusters = SrlExpParams(brownClusters=bc)
             
     # ------------------------------ START Parser Outputs ------------------------------
     def _get_pos_gold(self, p, lang_short):
