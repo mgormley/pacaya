@@ -220,6 +220,26 @@ public class Files {
             if (stateFile.getName().endsWith(".gz")) {
                 is = new GZIPInputStream(is);
             }
+            return deserialize(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Object deserializeResource(String resource) {
+        try {
+            InputStream is = Files.class.getResourceAsStream(resource);
+            if (resource.endsWith(".gz")) {
+                is = new GZIPInputStream(is);
+            }
+            return deserialize(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private static Object deserialize(InputStream is) {
+        try {
             ObjectInputStream in = new ObjectInputStream(is);
             Object inObj = in.readObject();
             in.close();
