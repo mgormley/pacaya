@@ -6,15 +6,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
+import edu.jhu.util.Prm;
 
 public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements Annotator {
 
-    public static class EmbeddingsAnnotatorPrm {
+    public static class EmbeddingsAnnotatorPrm extends Prm {
         // Path to word embeddings text file.
         public File embeddingsFile = null;
         // Method for normalization of the embeddings.
@@ -24,6 +28,7 @@ public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements An
     }
     
     private static final long serialVersionUID = 1L;
+    private static final Logger log = LoggerFactory.getLogger(Embeddings.class);
     private EmbeddingsAnnotatorPrm prm;
     private Embeddings embeddings;
     // Internal counting for miss rate.
@@ -40,6 +45,12 @@ public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements An
         }
         embeddings.normPerWord(prm.embNorm);
         embeddings.scalePerWord(prm.embScalar);
+    }
+
+    @Override
+    public void annotate(AnnoSentenceCollection sents) {
+        super.annotate(sents);
+        log.info("Embeddings hit rate: " + getHitRate());                        
     }
     
     public void annotate(AnnoSentence sent) {

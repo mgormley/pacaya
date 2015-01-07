@@ -48,9 +48,10 @@ import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.AnnoPipeline;
-import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.EvalPipeline;
+import edu.jhu.nlp.TransientAnnotator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
@@ -86,6 +87,7 @@ import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.nlp.srl.SrlFeatureSelection;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.tag.FileMapTagReducer;
@@ -399,20 +401,10 @@ public class JointNlpRunner {
             anno.add(new EnsureStaticOptionsAreSet());
             anno.add(new PrefixAnnotator(true));
             // Add Brown clusters.
-            if (brownClusters != null) {      
-                anno.add(new Annotator() {     
-                    private static final long serialVersionUID = 1L;
-                    @Override
-                    public void annotate(AnnoSentenceCollection sents) {
-                        log.info("Adding Brown clusters from file: " + brownClusters);
-                        BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
-                        bct.read(brownClusters);
-                        bct.annotate(sents);
-                        log.info("Brown cluster hit rate: " + bct.getHitRate());                        
-                    }
-                });
+            if (brownClusters != null) {
+                anno.add(new BrownClusterTagger(getBrownCluterTaggerPrm(), brownClusters));
             } else {
-                log.info("No Brown clusters file specified.");
+                log.debug("No Brown clusters file specified.");
             }
             // Apply a tag map to reduce the POS tagset.
             if (reduceTags != null) {
@@ -421,22 +413,15 @@ public class JointNlpRunner {
             }
             // Add word embeddings.
             if (embeddingsFile != null) {
-                anno.add(new Annotator() {
-                    private static final long serialVersionUID = 1L;
-                    @Override
-                    public void annotate(AnnoSentenceCollection sents) {
-                        log.info("Adding word embeddings.");
-                        EmbeddingsAnnotator ea = new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm());
-                        ea.annotate(sents);
-                        log.info("Embeddings hit rate: " + ea.getHitRate());                        
-                    }
-                });
+                anno.add(new EmbeddingsAnnotator(getEmbeddingsAnnotatorPrm()));
             } else {
-                log.info("No embeddings file specified.");
+                log.debug("No embeddings file specified.");
             }
             
-            // Feature selection at train time only for SRL.
-            anno.add(new SrlFeatureSelection(prm.buPrm.fePrm));
+            if (JointNlpRunner.modelIn == null) {
+                // Feature selection at train time only for SRL.
+                anno.add(new TransientAnnotator(new SrlFeatureSelection(prm.buPrm.fePrm)));
+            }
             
             if (pruneByDist) {
                 // Prune via the distance-based pruner.
@@ -562,9 +547,28 @@ public class JointNlpRunner {
         rep.report("elapsedSec", t.totSec());
     }
     
+    /**
+     * TODO: Deprecate this class. This is only a hold over until we remove the dependence of
+     * CommunicationsAnnotator on these options being correctly set.
+     * 
+     * @author mgormley
+     */
+    public static class EnsureStaticOptionsAreSet implements Annotator {        
+        private static final long serialVersionUID = 1L;
+        private static final Logger log = LoggerFactory.getLogger(EnsureStaticOptionsAreSet.class);
+        private final boolean singleRoot = InsideOutsideDepParse.singleRoot;
+        private final boolean useLogAddTable = JointNlpRunner.useLogAddTable;
+        @Override
+        public void annotate(AnnoSentenceCollection sents) {
+            log.info("Ensuring that static options (singleRoot and useLogAddTable) are set to their train-time values.");
+            InsideOutsideDepParse.singleRoot = singleRoot;
+            FastMath.useLogAddTable = useLogAddTable;
+        }
+    }
+    
     /* --------- Factory Methods ---------- */
 
-    static IGFeatureTemplateSelectorPrm getInformationGainFeatureSelectorPrm() {
+    public static IGFeatureTemplateSelectorPrm getInformationGainFeatureSelectorPrm() {
         IGFeatureTemplateSelectorPrm prm = new IGFeatureTemplateSelectorPrm();
         prm.featureHashMod = featureHashMod;
         prm.numThreads = threads;
@@ -707,7 +711,7 @@ public class JointNlpRunner {
         return new ArrayList<FeatTemplate>(tpls);
     }
 
-    static CorpusStatisticsPrm getCorpusStatisticsPrm() {
+    public static CorpusStatisticsPrm getCorpusStatisticsPrm() {
         CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
         prm.cutoff = cutoff;
         prm.language = CorpusHandler.language;

@@ -531,6 +531,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             comm = glob(p.concrete380 + "/*")[0]
             comm_name = os.path.basename(comm)
             if True: # Enable for quick local run.
+                print "WARN: USING SETTINGS FOR A QUICK LOCAL RUN."
                 train.update(pruneByDist=False, trainMaxNumSentences=3, devMaxNumSentences=3,
                              trainMaxSentenceLength=7, devMaxSentenceLength=7,  
                              featureHashMod=1000, sgdNumPasses=2)

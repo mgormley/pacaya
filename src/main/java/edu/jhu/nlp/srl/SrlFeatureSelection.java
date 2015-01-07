@@ -1,4 +1,4 @@
-package edu.jhu.nlp.joint;
+package edu.jhu.nlp.srl;
 
 import java.util.List;
 
@@ -6,22 +6,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Annotator;
-import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.features.TemplateLanguage;
-import edu.jhu.nlp.features.TemplateWriter;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.features.TemplateWriter;
+import edu.jhu.nlp.joint.IGFeatureTemplateSelector;
 import edu.jhu.nlp.joint.IGFeatureTemplateSelector.IGFeatureTemplateSelectorPrm;
 import edu.jhu.nlp.joint.IGFeatureTemplateSelector.SrlFeatTemplates;
+import edu.jhu.nlp.joint.JointNlpEncoder;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
+import edu.jhu.nlp.joint.JointNlpRunner;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.collections.Lists;
 
 /**
  * Train-time only "annotator" for feature selection. This modifies the feature templates on the
  * given {@link JointNlpFeatureExtractorPrm} in place.
+ * 
+ * TODO: Deprecate this class as it has static dependencies on JointNlpRunner.
  * 
  * @author mgormley
  */
@@ -50,7 +55,6 @@ public class SrlFeatureSelection implements Annotator, Trainable {
      * Do feature selection and update fePrm with the chosen feature templates.
      */
     private static void featureSelection(AnnoSentenceCollection inputSents, AnnoSentenceCollection goldSents, JointNlpFeatureExtractorPrm fePrm)  {
-        if (JointNlpRunner.modelIn != null) { return; }
         SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
         // Remove annotation types from the features which are explicitly excluded.
         removeAts(fePrm);

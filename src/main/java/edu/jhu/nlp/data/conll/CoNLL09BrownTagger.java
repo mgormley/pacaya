@@ -36,7 +36,6 @@ public class CoNLL09BrownTagger {
             System.exit(1);
         }
 
-        log.info("Reading brown clusters from " + brownClusters);
         BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
         prm.maxTagLength = maxTagLength;
         BrownClusterTagger tagger = new BrownClusterTagger(prm);
