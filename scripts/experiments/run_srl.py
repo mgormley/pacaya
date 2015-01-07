@@ -150,7 +150,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             #train.update(test=comm, testType="CONCRETE", group=comm_name, evalTest=False)
             train.add_prereqs(root.dependents)
             
-            if False: # Enable for quick local run.
+            if self.fast: # Enable for quick local run.
                 print "WARN: USING SETTINGS FOR A QUICK LOCAL RUN."
                 for exp in self.get_stages_as_list(root):
                     if isinstance(exp, RootStage): continue

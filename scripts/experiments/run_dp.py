@@ -530,13 +530,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
             train = g.defaults + g.langs['en'].cx_data
             comm = glob(p.concrete380 + "/*")[0]
             comm_name = os.path.basename(comm)
-            if True: # Enable for quick local run.
+            if self.fast: # Enable for quick local run.
                 print "WARN: USING SETTINGS FOR A QUICK LOCAL RUN."
                 train.update(pruneByDist=False, trainMaxNumSentences=3, devMaxNumSentences=3,
                              trainMaxSentenceLength=7, devMaxSentenceLength=7,  
                              featureHashMod=1000, sgdNumPasses=2)
-            train.update(pipeOut="pipe.binary.gz") 
-            train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
+            train.update(pipeOut="pipe.binary.gz")
+            train.remove("test")
+            train.remove("testType")
+            train.remove("testPredOut") 
+            #train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
             root.add_dependent(train)
             apr_defaults = AnnoPipelineRunner(pipeIn=StagePath(train, train.get("pipeOut")), predAts="DEP_TREE")        
             apr_defaults.set_incl_arg("group", False)
@@ -551,7 +554,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for c09 in [pl.pos_gold_train, pl.pos_gold_dev, pl.pos_gold_eval]:
                 c09_name = os.path.basename(c09)
                 exp = apr_defaults + AnnoPipelineRunner(test=c09, testType="CONLL_2009", group=c09_name, testPredOut=c09_name)
-                train.add_dependent(exp)
+                if self.fast: exp.update(testMaxNumSentences=3, testMaxSentenceLength=7)
+                train.add_dependent(exp)                
             return root
             
         elif self.expname == "gobble-memory":
