@@ -10,6 +10,6 @@ package edu.jhu.gm.data;
 public interface FgExampleStore extends FgExampleList {
 
     /** Adds an example. */
-    public void add(FgExample example);
+    public void add(LFgExample example);
 
 }

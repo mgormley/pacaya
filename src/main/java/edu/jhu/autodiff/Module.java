@@ -1,33 +1,18 @@
 package edu.jhu.autodiff;
 
-public interface Module {
+import java.util.List;
 
-    /** 
-     * Computes the forward pass.
-     * 
-     * @param input The input variable values.
-     * @return The output variable values. 
-     */    
-    Tensor forward(Tensor input);
+import edu.jhu.util.semiring.Algebra;
+
+
+public interface Module<T extends MVec<T>> {
+
+    T forward();
+    void backward();
+    T getOutput();
+    T getOutputAdj();
+    void zeroOutputAdj();
+    List<? extends Module<? extends MVec<?>>> getInputs();
+    Algebra getAlgebra();
     
-    /** 
-     * Computes the backward pass.
-     * 
-     * @param input The input variable values (expects the same input as forward call).
-     * @param adjointIn The adjoints with respect to the output variables of this module.
-     * @return The adjoints with respect to the input variables of this module.
-     */
-    Tensor backward(Tensor input, Tensor adjointIn);
-    
-    /**
-     * Adds the given gradien to the internal accumulator.
-     * 
-     * @param gradient The gradient to accumulate.
-     */
-    void accumGradient(Tensor gradient);
-    
-    /**
-     * Zeroes the internal gradient accumulator.
-     */
-    void zeroGradient();
 }

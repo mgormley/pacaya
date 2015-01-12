@@ -2,8 +2,10 @@ package edu.jhu.gm.data;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
 
 /**
@@ -25,7 +27,9 @@ public class FgExampleListBuilder {
     }
 
     /** Parameters for FgExamplesBuilder. */
-    public static class FgExamplesBuilderPrm {
+    public static class FgExamplesBuilderPrm extends Prm {
+        
+        private static final long serialVersionUID = 1L;
 
         /** The type of FgExamples object to wrap the factory in. */
         public CacheType cacheType = CacheType.MEMORY_STORE;
@@ -43,7 +47,7 @@ public class FgExampleListBuilder {
         public File cacheDir = new File(".");
     }
 
-    private static final Logger log = Logger.getLogger(FgExampleListBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(FgExampleListBuilder.class);
 
     private FgExamplesBuilderPrm prm;
 
@@ -80,7 +84,7 @@ public class FgExampleListBuilder {
             }
             // Construct the example to update counter, and then discard it.
             fgTimer.start();
-            FgExample ex = examples.get(i);
+            LFgExample ex = examples.get(i);
             if (store != null) {
                 store.add(ex);
             }

@@ -8,10 +8,10 @@ package edu.jhu.gm.data;
  * @author mgormley
  *
  */
-public interface FgExampleList extends Iterable<FgExample> {
+public interface FgExampleList extends Iterable<LFgExample> {
 
     /** Gets the i'th example. */
-    public FgExample get(int i);
+    public LFgExample get(int i);
     
     /** Gets the number of examples. */
     public int size();

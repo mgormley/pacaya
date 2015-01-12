@@ -3,11 +3,12 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
@@ -18,7 +19,6 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
-import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -26,6 +26,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.functions.L2;
@@ -39,7 +40,7 @@ import edu.jhu.util.Alphabet;
  */
 public class LogLinearXY {
 
-    private static final Logger log = Logger.getLogger(LogLinearXY.class);
+    private static final Logger log = LoggerFactory.getLogger(LogLinearXY.class);
 
     public static class LogLinearXYPrm {
         /** Variance of L2 regularizer. */
@@ -90,20 +91,20 @@ public class LogLinearXY {
      * @return A pair containing the most likely label (i.e. value of y) and the
      *         distribution over y values.
      */
-    public Pair<String, DenseFactor> decode(FgModel model, LogLinearExample llex) {
-        FgExample ex = getFgExample(llex);
+    public Pair<String, VarTensor> decode(FgModel model, LogLinearExample llex) {
+        LFgExample ex = getFgExample(llex);
         
         MbrDecoderPrm prm = new MbrDecoderPrm();
         prm.infFactory = getBpPrm(); 
         MbrDecoder decoder = new MbrDecoder(prm);
         decoder.decode(model, ex);
-        List<DenseFactor> marginals = decoder.getVarMarginals();
+        List<VarTensor> marginals = decoder.getVarMarginals();
         VarConfig vc = decoder.getMbrVarConfig();
         String stateName = vc.getStateName(ex.getFgLatPred().getVar(0));
         if (marginals.size() != 1) {
             throw new IllegalStateException("Example is not from a LogLinearData factory");
         }
-        return new Pair<String,DenseFactor>(stateName, marginals.get(0));
+        return new Pair<String,VarTensor>(stateName, marginals.get(0));
     }
 
     /**
@@ -121,14 +122,14 @@ public class LogLinearXY {
         // we instead just add multiple examples.
         FgExampleMemoryStore store = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
-            FgExample ex = getFgExample(desc);
+            LFgExample ex = getFgExample(desc);
             store.add(ex);
         }
         
         return store;
     }
 
-    private FgExample getFgExample(final LogLinearExample desc) {
+    private LFgExample getFgExample(final LogLinearExample desc) {
         if (alphabet == null) {
             throw new IllegalStateException("decode can only be called after train");
         }

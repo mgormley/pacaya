@@ -2,6 +2,7 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -51,10 +52,12 @@ public class Lists {
         }
     }
 
+    @SafeVarargs
     public static <T> List<T> getList(T... args) {
         return Arrays.asList(args);
     }
 
+    @SafeVarargs
     public static <T> List<T> cons(T val, T... values) {
         List<T> list = new ArrayList<T>(Arrays.asList(values));
         list.add(val);
@@ -67,10 +70,18 @@ public class Lists {
         return list;
     }
 
-    public static <T> List<T> union(List<T> ats1, List<T> ats2) {
-        ArrayList<T> newList = new ArrayList<T>(ats1.size() + ats2.size());
-        newList.addAll(ats1);
-        newList.addAll(ats2);
+    public static <T> List<T> union(List<T> list1, List<T> list2) {
+        ArrayList<T> newList = new ArrayList<T>(list1.size() + list2.size());
+        newList.addAll(list1);
+        newList.addAll(list2);
+        return newList;
+    }
+    
+    public static <T> List<T> union(List<T> list1, List<T> list2, List<T> list3) {
+        ArrayList<T> newList = new ArrayList<T>(list1.size() + list2.size() + list3.size());
+        newList.addAll(list1);
+        newList.addAll(list2);
+        newList.addAll(list3);
         return newList;
     }
 
@@ -116,6 +127,23 @@ public class Lists {
             array[i++] = v;
         }
         return array;
+    }
+
+    public static <T> List<T> reverse(List<T> list) {
+        return com.google.common.collect.Lists.reverse(list);
+    }
+    
+    public static <T> ArrayList<T> getUniq(Collection<T> elements) {
+        // noDup, which removes all duplicated neighbored strings.
+        ArrayList<T> noDupElements = new ArrayList<T>();
+        T lastA = null;
+        for (T a : elements) {
+            if (!a.equals(lastA)) {
+                noDupElements.add(a);
+            }
+            lastA = a;
+        }
+        return noDupElements;
     }
     
 }

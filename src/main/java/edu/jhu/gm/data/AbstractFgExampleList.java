@@ -3,8 +3,6 @@ package edu.jhu.gm.data;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import edu.jhu.gm.feat.FactorTemplateList;
-
 /**
  * An abstract collection of instances for a graphical model represented as factor graphs.
  * 
@@ -16,7 +14,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     public AbstractFgExampleList() { }
 
     /** Gets the i'th example. */
-    public abstract FgExample get(int i);
+    public abstract LFgExample get(int i);
     
     /** Gets the number of examples. */
     public abstract int size();
@@ -27,7 +25,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     
     public int getNumFactors() {
         int numFactors = 0;
-        for (FgExample ex : this) {
+        for (LFgExample ex : this) {
             numFactors += ex.getOriginalFactorGraph().getNumFactors();
         }
         return numFactors;
@@ -35,7 +33,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
 
     public int getNumVars() {
         int numVars = 0;
-        for (FgExample ex : this) {
+        for (LFgExample ex : this) {
             numVars += ex.getOriginalFactorGraph().getNumVars();
         }
         return numVars;
@@ -43,11 +41,11 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     
     // ------------------------------------------------------------------------------
 
-    public Iterator<FgExample> iterator() {
+    public Iterator<LFgExample> iterator() {
         return new Itr();
     }
     
-    private class Itr implements Iterator<FgExample> {
+    private class Itr implements Iterator<LFgExample> {
         
         private int cur = 0;
 
@@ -57,7 +55,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
         }
 
         @Override
-        public FgExample next() {
+        public LFgExample next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }

@@ -1,6 +1,5 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.IndexForVc;
 import edu.jhu.gm.model.ObsFeatureCarrier;
@@ -8,6 +7,7 @@ import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 
 /**
@@ -41,7 +41,7 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         // setTemplateId(ofc.getTemplates().getTemplateId(this));
     }
     
-    public ObsCjExpFamFactor(DenseFactor other, Object templateKey, ObsFeatureConjoiner ofc) {
+    public ObsCjExpFamFactor(VarTensor other, Object templateKey, ObsFeatureConjoiner ofc) {
         super(other);
         this.ofc = ofc;
         this.templateKey = templateKey;
@@ -72,7 +72,7 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
 
     @Override
     public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-        DenseFactor df = super.getClamped(clmpVarConfig);
+        VarTensor df = super.getClamped(clmpVarConfig);
         return new ClampedObsCjExpFamFactor(df, templateKey, clmpVarConfig, this);
     }
     
@@ -83,7 +83,7 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         private ObsCjExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedObsCjExpFamFactor(DenseFactor clmpDf, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
+        public ClampedObsCjExpFamFactor(VarTensor clmpDf, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
             super(clmpDf, templateKey, unclmpFactor.ofc);
             this.unclmpFactor = unclmpFactor;  
             VarSet unclmpVarSet = unclmpFactor.getVars();

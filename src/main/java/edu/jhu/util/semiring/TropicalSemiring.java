@@ -22,4 +22,17 @@ public class TropicalSemiring implements Semiring {
         return 0;
     }
 
+    // Two Algebras / Semirings are equal if they are of the same class.
+    public boolean equals(Object other) {
+        if (this == other) { return true; }
+        if (other == null) { return false; }
+        if (this.getClass() == other.getClass()) { return true; }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
+    }
+    
 }

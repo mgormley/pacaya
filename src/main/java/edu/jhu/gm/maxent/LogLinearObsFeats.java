@@ -5,18 +5,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureCache;
@@ -27,7 +27,6 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
-import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -35,11 +34,12 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 
 /**
  * Log-linear model trainer and decoder.
@@ -48,7 +48,7 @@ import edu.jhu.util.Alphabet;
  */
 public class LogLinearObsFeats {
 
-    private static final Logger log = Logger.getLogger(LogLinearObsFeats.class);
+    private static final Logger log = LoggerFactory.getLogger(LogLinearObsFeats.class);
 
     public static class LogLinearObsFeatsPrm {
         public boolean includeUnsupportedFeatures = true;
@@ -62,7 +62,7 @@ public class LogLinearObsFeats {
     
     private static final Object TEMPLATE_KEY = "loglin";
 
-    private Alphabet<Feature> alphabet = null;
+    private FeatureNames alphabet = null;
     private FactorTemplateList fts = null;
     private List<String> stateNames = null;
     private ObsFeatureConjoiner ofc;
@@ -78,7 +78,7 @@ public class LogLinearObsFeats {
         return train(data.getAlphabet(), data.getData());
     }
     
-    public FgModel train(Alphabet<Feature> alphabet, List<LogLinearExample> exList) {
+    public FgModel train(FeatureNames alphabet, List<LogLinearExample> exList) {
         FgExampleList data = getData(alphabet, exList);
         log.info("Number of unweighted train instances: " + data.size());
         BeliefPropagationPrm bpPrm = getBpPrm();
@@ -101,27 +101,27 @@ public class LogLinearObsFeats {
      * @return A pair containing the most likely label (i.e. value of y) and the
      *         distribution over y values.
      */
-    public Pair<String, DenseFactor> decode(FgModel model, LogLinearExample llex) {
-        FgExample ex = getFgExample(llex);
+    public Pair<String, VarTensor> decode(FgModel model, LogLinearExample llex) {
+        LFgExample ex = getFgExample(llex);
         
         MbrDecoderPrm prm = new MbrDecoderPrm();
         prm.infFactory = getBpPrm(); 
         MbrDecoder decoder = new MbrDecoder(prm);
         decoder.decode(model, ex);
-        List<DenseFactor> marginals = decoder.getVarMarginals();
+        List<VarTensor> marginals = decoder.getVarMarginals();
         VarConfig vc = decoder.getMbrVarConfig();
         String stateName = vc.getStateName(ex.getFgLatPred().getVar(0));
         if (marginals.size() != 1) {
             throw new IllegalStateException("Example is not from a LogLinearData factory");
         }
-        return new Pair<String,DenseFactor>(stateName, marginals.get(0));
+        return new Pair<String,VarTensor>(stateName, marginals.get(0));
     }
 
     public FgExampleList getData(LogLinearObsFeatsData data) {
         return getData(data.getAlphabet(), data.getData());
     }
     
-    public FgExampleList getData(Alphabet<Feature> alphabet, List<LogLinearExample> exList) {    
+    public FgExampleList getData(FeatureNames alphabet, List<LogLinearExample> exList) {    
         if (fts == null) {
             this.alphabet = alphabet;  
             fts = new FactorTemplateList();
@@ -140,7 +140,7 @@ public class LogLinearObsFeats {
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
             for (int i=0; i<desc.getWeight(); i++) {
-                FgExample ex = getFgExample(desc);
+                LFgExample ex = getFgExample(desc);
                 data.add(ex);
             }
         }
@@ -151,7 +151,7 @@ public class LogLinearObsFeats {
         return data;
     }
 
-    private FgExample getFgExample(final LogLinearExample desc) {
+    private LFgExample getFgExample(final LogLinearExample desc) {
         if (fts == null) {
             throw new IllegalStateException("decode can only be called after train");
         }

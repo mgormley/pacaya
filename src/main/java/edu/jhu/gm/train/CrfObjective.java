@@ -1,32 +1,34 @@
 package edu.jhu.gm.train;
 
-import org.apache.commons.lang.mutable.MutableDouble;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
+import edu.jhu.gm.eval.MseMarginalEvaluator;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
     
-    private static final Logger log = Logger.getLogger(CrfObjective.class);
+    private static final Logger log = LoggerFactory.getLogger(CrfObjective.class);
 
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
     private FgExampleList data;
     private FgInferencerFactory infFactory;
-        
+    private boolean useMseForValue;
+    
     // Timer: update the model.
     private Timer updTimer = new Timer();
     // Timer: run inference.
@@ -35,31 +37,50 @@ public class CrfObjective implements ExampleObjective {
     private Timer valTimer = new Timer();
     // Timer: compute the gradient.
     private Timer gradTimer = new Timer();
+    // Timer: total time for an example.
+    private Timer tot = new Timer(); 
     
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
+        this(data, infFactory, false);
+    }
+
+    public CrfObjective(FgExampleList data, FgInferencerFactory infFactory, boolean useMseForValue) {
         this.data = data;
         this.infFactory = infFactory;
+        this.useMseForValue = useMseForValue;
     }
 
     /** @inheritDoc */
     // Assumed by caller to be threadsafe.
     @Override
-    public void addValueGradient(FgModel model, int i, MutableValueGradient vg) {
-        FgExample ex = data.get(i);
+    public void accum(FgModel model, int i, Accumulator ac) {
+        try {
+            accumWithException(model, i, ac);
+        } catch(Throwable t) {
+            log.error("Skipping example " + i + " due to throwable: " + t.getMessage());
+            t.printStackTrace();
+        }
+    }
+    
+    public void accumWithException(FgModel model, int i, Accumulator ac) {
+        Timer t0 = new Timer(); t0.start();        
+        LFgExample ex = data.get(i);
         Timer t = new Timer();
-        
-        // Get the inferencers.
-        t.reset(); t.start();
-        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
-        FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
-        t.stop(); infTimer.add(t);
-        
+
         // Update the inferences with the current model parameters.
         // (This is usually where feature extraction happens.)
         t.reset(); t.start();
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        t.stop(); updTimer.add(t);
+        FactorGraph fgLat = ex.getFgLat();
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        fgLat.updateFromModel(model);
+        fgLatPred.updateFromModel(model);
+        t.stop(); updTimer.add(t);        
+        
+        // Get the inferencers.
+        t.reset(); t.start();
+        FgInferencer infLat = infFactory.getInferencer(fgLat);
+        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
+        t.stop(); infTimer.add(t);
         
         t.reset(); t.start();
         // Run inference to compute Z(y,x) by summing over the latent variables w.
@@ -68,26 +89,39 @@ public class CrfObjective implements ExampleObjective {
         infLatPred.run();
         t.stop(); infTimer.add(t);
 
-        if (vg.hasValue()) {
-            // Compute the condition log-likelihood for this example.
+        if (ac.accumValue) {
+            // Compute the conditional log-likelihood for this example.
             t.reset(); t.start();
-            vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i));
+            if (useMseForValue) {
+                // Add the negative MSE
+                ac.value += -getMseLoss(ex, infLatPred);                
+            } else {
+                // Add the conditional log-likelihood
+                ac.value += getValue(ex, fgLat, infLat, fgLatPred, infLatPred, i);
+            }
             t.stop(); valTimer.add(t);
         }
-        if (vg.hasGradient()) {
+        if (ac.accumGradient) {
             // Compute the gradient for this example.
             t.reset(); t.start();
-            addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
+            addGradient(ex, ac.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
             t.stop(); gradTimer.add(t);
         }
-        
-        vg.addWeight(ex.getWeight());
-        
-        if (i == 0) {
-            report();
+        if (ac.accumWeight) {
+            ac.weight += ex.getWeight();
         }
+        if (ac.accumLoss) {
+            //if (loss != null) { ac.trainLoss += loss.getLoss(i, ex, infLatPred); }
+            //ac.trainLoss += getMseLoss(ex, infLatPred);
+        }
+        t0.stop(); tot.add(t0);
     }
-    
+
+    private double getMseLoss(LFgExample ex, FgInferencer infLatPred) {
+        MseMarginalEvaluator mse = new MseMarginalEvaluator();
+        return mse.evaluate(ex.getGoldConfig(), infLatPred);
+    }
+
     /**
      * Gets the marginal conditional log-likelihood of the i'th example for the given model parameters.
      * 
@@ -97,20 +131,18 @@ public class CrfObjective implements ExampleObjective {
      * </p>
      * 
      * where y are the predicted variables, x are the observed variables, and z are the latent variables.
-     * 
-     * @param model The current model parameters.
-     * @param i The data example.
      * @param fgLat The factor graph with the predicted and observed variables clamped. 
      * @param infLat The inferencer for fgLat.
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
+     * @param i The data example.
      */      
-    public double getValue(FgModel model, FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
+    public double getValue(LFgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
         // Inference computes Z(y,x) by summing over the latent variables w.
-        double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
+        double numerator = infLat.getLogPartition();
         
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
-        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());        
+        double denominator = infLatPred.getLogPartition();
 
         // "Multiply" in all the fully clamped factors to the numerator and denominator. 
         int numFullyClamped = 0;
@@ -123,30 +155,26 @@ public class CrfObjective implements ExampleObjective {
                 if (isNumeratorClamped) {
                     // These are the factors which do not include any latent variables. 
                     VarConfig goldConfig = ex.getGoldConfig().getIntersection(fgLatPred.getFactor(a).getVars());
-                    numerator += infLat.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
-                            : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                    numerator += gf.getLogUnormalizedScore(goldConfig);
                     numFullyClamped++;
                     
                     if (isDenominatorClamped) {
                         // These are the factors which do not include any latent or predicted variables.
                         // This is a bit of an edge case, but required for correctness.
-                        denominator += infLatPred.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
-                                : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                        denominator += gf.getLogUnormalizedScore(goldConfig);
                     }
                 }
             } else {
                 if (isNumeratorClamped) {
                     // These are the factors which do not include any latent variables. 
                     int goldConfig = ex.getGoldConfig().getConfigIndexOfSubset(f.getVars());
-                    numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
-                            : FastMath.log(f.getUnormalizedScore(goldConfig));
+                    numerator += f.getLogUnormalizedScore(goldConfig);
                     numFullyClamped++;
 
                     if (isDenominatorClamped) {
                         // These are the factors which do not include any latent or predicted variables.
                         // This is a bit of an edge case, but required for correctness.
-                        denominator += infLatPred.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
-                                : FastMath.log(f.getUnormalizedScore(goldConfig));
+                        denominator += f.getLogUnormalizedScore(goldConfig);
                     }
                 }
             }
@@ -167,17 +195,15 @@ public class CrfObjective implements ExampleObjective {
     
     /**
      * Adds the gradient of the marginal conditional log-likelihood for a particular example to the gradient vector.
-     * 
-     * @param model The current model parameters.
-     * @param i The data example.
      * @param gradient The gradient vector to which this example's contribution
      *            is added.
      * @param fgLat The factor graph with the predicted and observed variables clamped. 
      * @param infLat The inferencer for fgLat.
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
+     * @param i The data example.
      */
-    public void addGradient(FgModel model, FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
+    public void addGradient(LFgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
         addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), gradient);
         
@@ -194,12 +220,17 @@ public class CrfObjective implements ExampleObjective {
      * @param factorId The id of the factor.
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, double multiplier,
+    private void addExpectedFeatureCounts(FactorGraph fg, LFgExample ex, FgInferencer inferencer, double multiplier,
             IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
-            f.addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
+            if (f instanceof GlobalFactor) {
+                ((GlobalFactor) f).addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
+            } else {
+                VarTensor marg = inferencer.getMarginalsForFactorId(factorId);
+                f.addExpectedFeatureCounts(gradient, marg, multiplier);
+            }
         }
     }
 
@@ -209,9 +240,10 @@ public class CrfObjective implements ExampleObjective {
         FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
-            FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
-            FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
+            LFgExample ex = data.get(i);
+            FactorGraph fgLat = ex.getFgLat();
+            fgLat.updateFromModel(model);
+            FgInferencer infLat = infFactory.getInferencer(fgLat);
             infLat.run();
             addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), feats);
         }
@@ -226,9 +258,10 @@ public class CrfObjective implements ExampleObjective {
         FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
-            FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
-            FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+            LFgExample ex = data.get(i);
+            FactorGraph fgLatPred = ex.getFgLatPred();
+            fgLatPred.updateFromModel(model);
+            FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
             infLatPred.run();
             addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0 * ex.getWeight(), feats);
         }
@@ -243,12 +276,15 @@ public class CrfObjective implements ExampleObjective {
         return data.size();
     }
 
-    private void report() {
-        log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
-                updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+    public void report() {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                    updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+        }
         double sum = updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
         double mult = 100.0 / sum;
-        log.debug(String.format("Timers total%% (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
-                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult));
+        log.debug(String.format("Timers: model=%.1f%% inf=%.1f%% val=%.1f%% grad=%.1f%% avg(ms)=%.1f max(ms)=%.1f stddev(ms)=%.1f", 
+                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult,
+                tot.avgMs(), tot.maxSplitMs(), tot.stdDevMs()));
     }
 }

@@ -10,7 +10,6 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
-import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 

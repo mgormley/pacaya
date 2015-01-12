@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
+import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.util.math.FastMath;
@@ -15,125 +15,49 @@ import edu.jhu.util.Timer;
 
 public class ProjectiveDependencyParserTest {
     
-    /**
-     * Output:
-     * SEED=123456789101112
-     * Total time: 231.0
-     * Sentences per second: 432.90043290043286
-     * Total time: 183.0
-     * Sentences per second: 546.448087431694
-     * Total time: 195.0
-     * Sentences per second: 512.8205128205128
-     * 
-     * After adding Inside/Outside:
-     * Total time: 317.0
-     * Sentences per second: 315.45741324921136
-     * Tokens per second: 8955.223880597014
-     */
     @Test
-    public void testParseSpeed() {
-        int trials = 100;
-        int n = 30;
-
-        // Just create one tree.
-        double[] root = Multinomials.randomMultinomial(n);
-        double[][] child = new double[n][];
-        for (int i=0; i<n; i++) {
-            child[i] =  Multinomials.randomMultinomial(n);
-        }
-        
-        Timer timer = new Timer();
-        timer.start();
-        for (int t=0; t<trials; t++) {
-            int[] parents = new int[n];
-            ProjectiveDependencyParser.parse(root, child, parents);
-            //ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
-        }
-        timer.stop();
-        System.out.println("Total time: " + timer.totMs());
-        int numSents = trials;
-        int numTokens = n * numSents;
-        System.out.println("Sentences per second: " + numSents / timer.totSec());
-        System.out.println("Tokens per second: " + numTokens / timer.totSec());
-    }
-
-    /**
-     * Output:
-     * SEED=123456789101112
-     * 100 trials: Tokens per second: 5338.078291814946
-     * 1000 trials: Tokens per second: 11406.84410646388
-     */
-    @Test
-    public void testInsideOutsideSpeed() {
-        FastMath.useLogAddTable = true;
-
-        int trials = 1000;
-        int n = 30;
-
-        // Just create one tree.
-        double[] root = Multinomials.randomMultinomial(n);
-        double[][] child = new double[n][];
-        for (int i=0; i<n; i++) {
-            child[i] =  Multinomials.randomMultinomial(n);
-        }
-        
-        Timer timer = new Timer();
-        timer.start();
-        for (int t=0; t<trials; t++) {
-            ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
-        }
-        timer.stop();
-        System.out.println("Total time: " + timer.totMs());
-        int numSents = trials;
-        int numTokens = n * numSents;
-        System.out.println("Sentences per second: " + numSents / timer.totSec());
-        System.out.println("Tokens per second: " + numTokens / timer.totSec());
-        FastMath.useLogAddTable = false;
-    }
-        
-    @Test
-    public void testParse1() {
+    public void testParseSingleRoot1() {
         double[] root = new double[] {1, 2.2, 3}; 
         double[][] child = new double[][]{ {0, 5, 6}, {80, 0, 90}, {11, 12, 0} };
         int[] parents = new int[3];        
-        double score = ProjectiveDependencyParser.parse(root, child, parents);
+        double score = ProjectiveDependencyParser.parseSingleRoot(root, child, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(172.2, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
     @Test
-    public void testParse2() {
+    public void testParseSingleRoot2() {
         // [0.0, 0.75, 0.25]
         // [[0.0, 0.0, 0.75], [1.0, 0.0, 0.0], [0.0, 0.25, 0.0]]
         double[] root = new double[] {0.0, 0.75, 0.25};
         double[][] child = new double[][]{ {0.0, 0.0, 0.75}, {1.0, 0.0, 0.0}, {0.0, 0.25, 0.0} };
         int[] parents = new int[3];    
-        double score = ProjectiveDependencyParser.parse(root, child, parents);
+        double score = ProjectiveDependencyParser.parseSingleRoot(root, child, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(0.0 + 1.0 + 0.75, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
     @Test
-    public void testVineParse1() {
+    public void testParseMultiRoot1() {
         double[] root = new double[] {1, 20, 3}; 
         double[][] child = new double[][]{ {0, 5, 6}, {80, 0, 90}, {11, 12, 0} };
         int[] parents = new int[3];        
-        double score = ProjectiveDependencyParser.vineParse(root, child, parents);
+        double score = ProjectiveDependencyParser.parseMultiRoot(root, child, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(190, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
     @Test
-    public void testVineParse2() {
+    public void testParseMultiRoot2() {
         // [0.0, 0.75, 0.25]
         // [[0.0, 0.0, 0.75], [1.0, 0.0, 0.0], [0.0, 0.25, 0.0]]
         double[] root = new double[] {0.0, 0.75, 0.25};
         double[][] child = new double[][]{ {0.0, 0.0, 0.75}, {1.0, 0.0, 0.0}, {0.0, 0.25, 0.0} };
         int[] parents = new int[3];    
-        double score = ProjectiveDependencyParser.vineParse(root, child, parents);
+        double score = ProjectiveDependencyParser.parseMultiRoot(root, child, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(0.75 + 1.0 + 0.25, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{1, -1, -1}, parents);
@@ -194,14 +118,14 @@ public class ProjectiveDependencyParserTest {
     }
     
     @Test
-    public void testInsideOutside1() {
+    public void testInsideOutsideSingleRoot1() {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
         
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(root,  child);
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideSingleRoot(root,  child);
         
         // Check inside scores.
         assertEquals(7, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
@@ -235,6 +159,157 @@ public class ProjectiveDependencyParserTest {
         assertEquals((45+162+216)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
         assertEquals((28+20+96)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
         assertEquals((96+216)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+    }
+    
+    @Test
+    public void testInsideOutsideSingleRoot2() {
+        double[] root = new double[] {1, 1, 1}; 
+        double[][] child = new double[][]{ {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
+        
+        DoubleArrays.log(root);
+        DoubleArrays.log(child);
+        
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideSingleRoot(root,  child);
+
+        // Check partition function.
+        assertEquals(7, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
+        
+        // Check inside scores.
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(2, 1)), 1e-13);
+        assertEquals(1+1, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(1+1+1, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(1+1+1, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
+        
+        // Check outside scores.
+        assertEquals(1+1, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
+        assertEquals(1+1+1, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);
+        assertEquals(1+1, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
+
+        // Check sums.
+        assertEquals(1+1, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
+        assertEquals(1+1+1, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
+        assertEquals(1+1+1, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
+        assertEquals(1+1, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
+        
+        // Check expected counts.
+        double Z = 7;
+        assertEquals((1+1)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
+        assertEquals((1+1+1)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
+        assertEquals((1+1+1)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
+        assertEquals((1+1)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+    }
+
+    @Test
+    public void testInsideOutsideMultiRoot1() {
+        double[] root = new double[] {1, 2, 3}; 
+        double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
+        
+        DoubleArrays.log(root);
+        DoubleArrays.log(child);
+        
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideMultiRoot(root,  child);
+
+        // Check partition function.
+        double multiTrees = 6+14+12+36+27;
+        double Z = 45+28+20+84+162+216+96+multiTrees;
+        assertEquals(Z, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
+                        
+        // Check inside scores.
+        assertEquals(7, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
+        assertEquals(9, FastMath.exp(chart.getLogInsideScore(2, 1)), 1e-13);
+        assertEquals(45+20, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
+        assertEquals(14, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(8*9+8*4, FastMath.exp(chart.getLogInsideScore(2, 0)), 1e-10);
+        assertEquals(555, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
+
+        // Check outside scores.
+        assertEquals(18, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
+        assertEquals(50, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
+        assertEquals(152, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
+        assertEquals(10, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);
+        assertEquals(47, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
+
+        // Check sums.
+        assertEquals(6+14+12+27+28+45+20, FastMath.exp(chart.getLogSumOfPotentials(-1, 0)), 1e-10);
+        assertEquals(6+14+36+84, FastMath.exp(chart.getLogSumOfPotentials(-1, 1)), 1e-13);
+        assertEquals(6+12+36+27+54*3+32*3+72*3, FastMath.exp(chart.getLogSumOfPotentials(-1, 2)), 1e-3);
+        assertEquals(126, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
+        assertEquals(27+45+54*3+72*3, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
+        assertEquals(12+28+20+32*3, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
+        assertEquals(312, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
+        
+        // Check expected counts.
+        assertEquals((126)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
+        assertEquals((27+45+54*3+72*3)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
+        assertEquals((12+28+20+32*3)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
+        assertEquals((312)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+    }    
+
+    @Test
+    public void testInsideOutsideMultiRoot2() {
+        double[] root = new double[] {1, 1, 1}; 
+        double[][] child = new double[][]{ {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
+        
+        DoubleArrays.log(root);
+        DoubleArrays.log(child);
+        
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideMultiRoot(root,  child);
+
+        // Check partition function.
+        assertEquals(7+5, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
+                       
+        // Check inside scores.
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(2, 1)), 1e-13);
+        assertEquals(2, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-10);
+        assertEquals(2, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(7, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
+        
+        // Check outside scores.
+        assertEquals(3, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
+        assertEquals(4, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13);  // checked
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
+        assertEquals(7, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13); // checked
+        assertEquals(2, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13); // checked
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);  // checked
+        assertEquals(3, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);   // checked
+
+        // Check sums.
+        assertEquals(3, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
+        assertEquals(4, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3); // checked
+        assertEquals(4, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3); // checked
+        assertEquals(2, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3); // checked
+        
+        // Check expected counts.
+        double Z = 7+5;
+        assertEquals((3)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
+        assertEquals((4)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
+        assertEquals((4)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
+        assertEquals((2)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+    }
+    
+    @Test
+    public void testInsideOutsideMultiRoot3() {
+        double[] root = new double[] {1, 1}; 
+        double[][] child = new double[][]{ {0, 1}, {1, 0} };
+        
+        DoubleArrays.log(root);
+        DoubleArrays.log(child);
+        
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideMultiRoot(root,  child);
+
+        // Check partition function.
+        assertEquals(3, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);        
     }
     
 }

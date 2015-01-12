@@ -20,7 +20,7 @@ import edu.jhu.util.cache.GzipMap;
 public class FgExampleCache extends AbstractFgExampleList implements FgExampleList {
 
     private FgExampleList exampleFactory;
-    private Map<Integer, FgExample> cache;
+    private Map<Integer, LFgExample> cache;
 
     /**
      * Constructor with a cache that uses SoftReferences.
@@ -45,15 +45,15 @@ public class FgExampleCache extends AbstractFgExampleList implements FgExampleLi
             tmp = new LRUMap(maxEntriesInMemory);
         }
         if (gzipOnSerialize) {
-            cache = new GzipMap<Integer, FgExample>(tmp);
+            cache = new GzipMap<Integer, LFgExample>(tmp);
         } else {
             cache = tmp;
         }
     }
 
     /** Gets the i'th example. */
-    public FgExample get(int i) {
-        FgExample ex;
+    public LFgExample get(int i) {
+        LFgExample ex;
         synchronized (cache) {
             ex = cache.get(i);
         }

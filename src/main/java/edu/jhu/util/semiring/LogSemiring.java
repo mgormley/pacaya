@@ -2,7 +2,7 @@ package edu.jhu.util.semiring;
 
 import edu.jhu.prim.util.math.FastMath;
 
-public class LogSemiring implements SemiringExt {
+public class LogSemiring implements Algebra {
 
     @Override
     public double plus(double x, double y) {
@@ -46,19 +46,15 @@ public class LogSemiring implements SemiringExt {
     public double fromLogProb(double logProb) {
         return logProb;
     }
-
-    // These operations don't make sense here. The LogPosNegSemiring should be
-    // used if these are needed.   
+    
     @Override
     public double minus(double x, double y) {
-        // return FastMath.logSubtract(x, y);
-        throw new UnsupportedOperationException();
+        return FastMath.logSubtract(x, y);
     }
     
     @Override
     public double divide(double x, double y) {
-        // return x - y;
-        throw new UnsupportedOperationException();
+        return x - y;
     }
     
     @Override
@@ -72,6 +68,79 @@ public class LogSemiring implements SemiringExt {
             throw new IllegalStateException("Unable to take the log of a negative number.");
         }
         return FastMath.log(x);
+    }
+
+    @Override
+    public double abs(double x) {
+        // Log-probs are always positive.
+        return x;
+    }
+
+    @Override
+    public double negate(double x) {
+        throw new IllegalStateException("Unable to take the log of a negative number.");
+    }
+
+    @Override
+    public double posInf() {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    @Override
+    public double negInf() {
+        throw new IllegalStateException("Unable to take the log of a negative number.");
+    }
+
+    @Override
+    public boolean gt(double x, double y) {
+        return x > y;
+    }
+
+    @Override
+    public boolean lt(double x, double y) {
+        return x < y;
+    }
+
+    @Override
+    public boolean gte(double x, double y) {
+        return x >= y;
+    }
+
+    @Override
+    public boolean lte(double x, double y) {
+        return x <= y;
+    }
+
+    @Override
+    public boolean eq(double a, double b, double delta) {
+        if (a == b) {
+            // This case is needed for infinity equality.
+            return true;
+        }
+        return Math.abs(a - b) < delta;
+    }
+
+    @Override
+    public boolean isNaN(double x) {
+        return Double.isNaN(x);
+    }
+
+    @Override
+    public double minValue() {
+        return Double.NEGATIVE_INFINITY;
+    }
+    
+    // Two Algebras / Semirings are equal if they are of the same class.
+    public boolean equals(Object other) {
+        if (this == other) { return true; }
+        if (other == null) { return false; }
+        if (this.getClass() == other.getClass()) { return true; }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
     }
     
 }

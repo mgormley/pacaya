@@ -5,7 +5,6 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.iter.IntIncrIter;
 import edu.jhu.prim.iter.IntIter;
-import edu.jhu.prim.util.math.FastMath;
 
 
 /**
@@ -22,6 +21,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     // clamped factors which represent the numerator factor graph.
     protected IntIter iter;
     protected int clmpConfigId = -1;
+    protected boolean initialized = false;
 
     public ExpFamFactor(VarSet vars) {
         super(vars);
@@ -33,7 +33,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
     
-    public ExpFamFactor(DenseFactor other) {
+    public ExpFamFactor(VarTensor other) {
         super(other);
         this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
@@ -41,8 +41,11 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     public abstract FeatureVector getFeatures(int config);
         
     /** Gets the unnormalized numerator value contributed by this factor. */
-    public double getUnormalizedScore(int configId) {
-        return super.getUnormalizedScore(configId);
+    public double getLogUnormalizedScore(int configId) {
+        if (!initialized) {
+            throw new IllegalStateException("Factor cannot be queried until updateFromModel() has been called.");
+        }
+        return super.getLogUnormalizedScore(configId);
     }
 
     /**
@@ -50,10 +53,9 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      * factor's internal representation accordingly.
      * 
      * @param model The model.
-     * @param logDomain Whether to store values in the probability or
-     *            log-probability domain.
      */
-    public void updateFromModel(FgModel model, boolean logDomain) {
+    public void updateFromModel(FgModel model) {
+        initialized = true;
         if (iter != null) { iter.reset(); }
         
         ExpFamFactor f = this;
@@ -65,9 +67,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 // where the predicted variables (might) have been clamped.
                 int config = (iter != null) ? iter.next() : c;
                 
-                double dot = getDotProd(config, model, logDomain);
-                assert !Double.isNaN(dot);
-                assert !Double.isInfinite(dot);
+                double dot = getDotProd(config, model);                
+                assert !Double.isNaN(dot) && dot != Double.POSITIVE_INFINITY : "Invalid value for factor: " + dot;
                 f.setValue(c, dot);
             }
             assert(iter == null || !iter.hasNext());
@@ -79,25 +80,25 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      * (make sure to exp that value if !logDomain).
      * 
      * Note that this method can be overridden for an efficient product of an ExpFamFactor
-     * and a hard factor (that rules out some configurations). Just return 0/-infinity
+     * and a hard factor (that rules out some configurations). Just return -infinity
      * here before extracting features for configurations that are eliminated by the
      * hard factor. If you do this, the corresponding (by config) implementation of
      * getFeatures should return an empty vector. This is needed because addExpectedFeatureCounts
      * expects to be able to call getFeatures, regardless of whether or not getDotProd has
      * ruled it out as having any mass.
      */
-    public double getDotProd(int config, FgModel model, boolean logDomain) {
+    protected double getDotProd(int config, FgModel model) {
     	 FeatureVector fv = getFeatures(config);
-         double dot = model.dot(fv);
-         if (logDomain) { return dot; }
-         else { return FastMath.exp(dot); }
+         return model.dot(fv);
+    }
+
+    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+        VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);        
+        addExpectedFeatureCounts(counts, factorMarginal, multiplier);
     }
 
     @Override
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
-
-        DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
-        
+    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
         if (numConfigs == 0) {
             // If there are no variables in this factor, we still need to get the cached features.
@@ -110,9 +111,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
             for (int c=0; c<numConfigs; c++) {       
                 // Get the probability of the c'th configuration for this factor.
                 double prob = factorMarginal.getValue(c);
-                if (inferencer.isLogDomain()) {
-                    prob = FastMath.exp(prob);
-                }
+                
                 // The configuration of all the latent/predicted variables,
                 // where the predicted variables (might) have been clamped.
                 int config = (iter != null) ? iter.next() : c;
@@ -129,7 +128,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     }
 
     public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-        DenseFactor df = super.getClamped(clmpVarConfig);
+        VarTensor df = super.getClamped(clmpVarConfig);
         return new ClampedExpFamFactor(df, clmpVarConfig, this);
     }
     
@@ -141,7 +140,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         private ExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedExpFamFactor(DenseFactor clmpDf, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
+        public ClampedExpFamFactor(VarTensor clmpDf, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
             super(clmpDf);
             this.unclmpFactor = unclmpFactor;
             VarSet unclmpVarSet = unclmpFactor.getVars();
@@ -161,8 +160,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         }
         
         @Override
-        public double getDotProd(int config, FgModel model, boolean logDomain) {
-        	return unclmpFactor.getDotProd(config, model, logDomain);
+        public double getDotProd(int config, FgModel model) {
+        	return unclmpFactor.getDotProd(config, model);
         }
 
         @Override

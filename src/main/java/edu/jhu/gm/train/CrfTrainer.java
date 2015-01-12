@@ -1,22 +1,30 @@
 package edu.jhu.gm.train;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import edu.jhu.autodiff.erma.ErmaObjective;
+import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
+import edu.jhu.autodiff.erma.ErmaObjective.DlFactory;
+import edu.jhu.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.Optimizer;
+import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
+import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.prim.sort.IntSort;
+import edu.jhu.util.Prm;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -26,49 +34,91 @@ import edu.jhu.prim.sort.IntSort;
  */
 public class CrfTrainer {
 
-    private static final Logger log = Logger.getLogger(CrfTrainer.class);
+    public static enum Trainer { CLL, ERMA };
 
-    public static class CrfTrainerPrm {
+    public static class CrfTrainerPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
-        public Optimizer<DifferentiableFunction> maximizer = new MalletLBFGS(new MalletLBFGSPrm());
-        public Optimizer<DifferentiableBatchFunction> batchMaximizer = null;//new SGD(new SGDPrm());
+        public BeliefsModuleFactory bFactory = null;
+        public Optimizer<DifferentiableFunction> optimizer = new MalletLBFGS(new MalletLBFGSPrm());
+        public Optimizer<DifferentiableBatchFunction> batchOptimizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
         public int numThreads = 1;
+        /** The type of trainer. */
+        public Trainer trainer = Trainer.CLL;
+        /** The decoder and loss function used by ERMA training. */
+        public DlFactory dlFactory = new ExpectedRecallFactory();
+        /**
+         * Whether to use the mean squared error (MSE) in place of conditional
+         * log-likelihood in the CRF objective. This is useful for loopy graphs
+         * where the BP estimate of the partition function is unreliable.
+         */
+        public boolean useMseForValue = false;
     }
-        
+    
+    private static final Logger log = LoggerFactory.getLogger(CrfTrainer.class);
+    
     private CrfTrainerPrm prm; 
         
     public CrfTrainer(CrfTrainerPrm prm) {
         this.prm = prm;
-        if (prm.maximizer != null && prm.batchMaximizer != null) {
-            throw new IllegalStateException("Only one of maximizer and batchMaximizer may be set in CrfTrainerPrm.");
+        if (prm.optimizer != null && prm.batchOptimizer != null) {
+            throw new IllegalStateException("Only one of optimizer and batchOptimizer may be set in CrfTrainerPrm.");
         }
     }
     
+    @Deprecated
     public FgModel train(FgModel model, FgExampleList data) {
-
-        AvgBatchObjective objective = new AvgBatchObjective(new CrfObjective(data, prm.infFactory), model, prm.numThreads);
-        if (prm.maximizer != null) {
+        return train(model, data, null);
+    }
+    
+    public FgModel train(FgModel model, FgExampleList data, Function validation) {        
+        ExampleObjective exObj;
+        boolean isMinimize;
+        if (prm.trainer == Trainer.ERMA) {
+            exObj = new ErmaObjective(data, prm.bFactory, prm.dlFactory);
+            isMinimize = true;
+        } else {
+            exObj = new CrfObjective(data, prm.infFactory, prm.useMseForValue);
+            isMinimize = false;
+        }
+        AvgBatchObjective objective = new AvgBatchObjective(exObj, model, prm.numThreads);
+        
+        Regularizer reg = prm.regularizer;
+        if (prm.optimizer != null) {
             DifferentiableFunction fn = objective;
-            if (prm.regularizer != null) {
-                prm.regularizer.setNumDimensions(model.getNumParams());
-                fn = new DifferentiableFunctionOpts.AddFunctions(objective, prm.regularizer);
+            if (reg != null) {
+                reg.setNumDimensions(model.getNumParams());
+                DifferentiableFunction nbr = isMinimize ? DifferentiableFunctionOpts.negate(reg) : reg;
+                fn = new DifferentiableFunctionOpts.AddFunctions(objective, nbr);
             }
-            prm.maximizer.maximize(fn, model.getParams());
+            if (isMinimize == true) {
+                prm.optimizer.minimize(fn, model.getParams());
+            } else {
+                prm.optimizer.maximize(fn, model.getParams());
+            }
             log.info("Final objective value: " + fn.getValue(model.getParams()));
         } else {
             DifferentiableBatchFunction fn = objective;
-            if (prm.regularizer != null) {
+            if (reg != null) {
                 // We don't need to rescale the regularizer because the CRF
                 // objective is the average log-likelihood.
-                prm.regularizer.setNumDimensions(model.getNumParams());
-                DifferentiableBatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
-                fn = new BatchFunctionOpts.AddFunctions(objective, br);
+                reg.setNumDimensions(model.getNumParams());
+                DifferentiableBatchFunction br = new FunctionAsBatchFunction(reg, objective.getNumExamples());
+                DifferentiableBatchFunction nbr = isMinimize ? new BatchFunctionOpts.NegateFunction(br) : br;
+                fn = new BatchFunctionOpts.AddFunctions(objective, nbr);
             }
-            prm.batchMaximizer.maximize(fn, model.getParams());   
-            log.info("Final objective value: " + fn.getValue(model.getParams(), IntSort.getIndexArray(fn.getNumExamples())));
+            if (prm.batchOptimizer instanceof SGD && validation != null) {
+                SGD sgd = (SGD) prm.batchOptimizer;
+                sgd.optimize(fn, model.getParams(), !isMinimize, validation);
+            } else {
+                if (isMinimize == true) {
+                    prm.batchOptimizer.minimize(fn, model.getParams());   
+                } else {
+                    prm.batchOptimizer.maximize(fn, model.getParams());   
+                }
+            }
         }
-        objective.shutdown();
         return model;
     }
     

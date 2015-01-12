@@ -7,8 +7,6 @@ import java.io.InputStream;
 
 import org.junit.Test;
 
-import edu.jhu.gm.model.DenseFactor;
-import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 
 public class BayesNetReaderTest {
@@ -18,23 +16,18 @@ public class BayesNetReaderTest {
     
     @Test
     public void testReadSimple() throws IOException {
-        FactorGraph fg = readSimpleFg(false);
+        FactorGraph fg = readSimpleFg();
         
         assertEquals(2, fg.getNumFactors());
         assertEquals(3, fg.getNumVars());
     }
 
-    public static FactorGraph readSimpleFg(boolean logDomain) throws IOException {
+    public static FactorGraph readSimpleFg() throws IOException {
         InputStream cpdIs = BayesNetReaderTest.class.getResourceAsStream(cpdSimpleResource);
         InputStream networkIs = BayesNetReaderTest.class.getResourceAsStream(networkSimpleResource);
         
         BayesNetReader bnr = new BayesNetReader();
         FactorGraph fg = bnr.readBnAsFg(networkIs, cpdIs);
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
-            }
-        }
         return fg;
     }
 

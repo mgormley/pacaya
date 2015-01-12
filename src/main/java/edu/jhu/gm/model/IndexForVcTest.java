@@ -9,11 +9,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 
 public class IndexForVcTest {
 
-
+    private Algebra s = Algebras.REAL_ALGEBRA;
+    
     @Test
     public void testGetConfigArray1() {
         Var v0 = getVar(0, 2);
@@ -48,7 +51,7 @@ public class IndexForVcTest {
         VarConfig vc2 = new VarConfig();
         vc2.put(v1, 0);
         
-        System.out.println(new DenseFactor(vars1));
+        System.out.println(new VarTensor(s, vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = IndexForVc.getConfigArr(vars1, vc2);
@@ -71,7 +74,7 @@ public class IndexForVcTest {
         VarConfig vc2 = new VarConfig();
         vc2.put(v1, 1);
         
-        System.out.println(new DenseFactor(vars1));
+        System.out.println(new VarTensor(s, vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = IndexForVc.getConfigArr(vars1, vc2);
@@ -95,7 +98,7 @@ public class IndexForVcTest {
         vc2.put(v0, 1);
         vc2.put(v2, 4);
         
-        System.out.println(new DenseFactor(vars1));
+        System.out.println(new VarTensor(s, vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = IndexForVc.getConfigArr(vars1, vc2);

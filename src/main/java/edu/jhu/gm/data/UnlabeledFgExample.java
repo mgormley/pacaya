@@ -2,18 +2,16 @@ package edu.jhu.gm.data;
 
 import java.io.Serializable;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.Timer;
 
 /**
@@ -22,10 +20,10 @@ import edu.jhu.util.Timer;
  * 
  * @author mgormley
  */
-public class UnlabeledFgExample implements FgExample, Serializable {
+public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(UnlabeledFgExample.class);
+    private static final Logger log = LoggerFactory.getLogger(UnlabeledFgExample.class);
     
     /** The original factor graph. */
     protected FactorGraph fg;
@@ -78,7 +76,7 @@ public class UnlabeledFgExample implements FgExample, Serializable {
             }
         }
 
-        assert (fg.getNumFactors() == fgLatPred.getNumFactors());
+        assert (fg.getNumFactors() <= fgLatPred.getNumFactors());
         
         fgClampTimer.stop();
     }
@@ -113,26 +111,6 @@ public class UnlabeledFgExample implements FgExample, Serializable {
         return fgLatPred;
     }
 
-    /**
-     * Updates the factor graph with the OBSERVED variables clamped to their values
-     * from the training example.
-     * @param params The parameters with which to update.
-     * @param logDomain TODO
-     */
-    public FactorGraph updateFgLatPred(FgModel model, boolean logDomain) {
-        return getUpdatedFactorGraph(fgLatPred, model, logDomain);
-    }
-
-    /** Updates the factor graph with the latest parameter vector. 
-     * @param logDomain TODO*/
-    protected FactorGraph getUpdatedFactorGraph(FactorGraph fg, FgModel model, boolean logDomain) {
-        for (int a=0; a < fg.getNumFactors(); a++) {
-            Factor f = fg.getFactor(a);
-            f.updateFromModel(model, logDomain);
-        }
-        return fg;
-    }
-
     public boolean hasLatentVars() {
         return hasLatentVars;
     }
@@ -151,8 +129,6 @@ public class UnlabeledFgExample implements FgExample, Serializable {
     private static final String DO_NOT_CALL = "Cannot call a labeled factor graph method on an unlabeled factor graph.";
     @Override
     public FactorGraph getFgLat() { throw new RuntimeException(DO_NOT_CALL); }
-    @Override
-    public FactorGraph updateFgLat(FgModel model, boolean logDomain) { throw new RuntimeException(DO_NOT_CALL); }
     @Override
     public VarConfig getGoldConfig() { throw new RuntimeException(DO_NOT_CALL); }
     @Override

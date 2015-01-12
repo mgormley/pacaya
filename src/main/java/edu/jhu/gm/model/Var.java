@@ -33,6 +33,9 @@ public class Var implements Comparable<Var>, Serializable {
     private String name;
     /** State names, where the i'th entry gives the state names of the i'th state. */
     private List<String> stateNames;
+    /** ID of this variable within its factor graph. */
+    private int id = -1;
+    
     
     // TODO: Maybe remove
     /** Counter used to create a unique id for each instance of this class. */
@@ -51,10 +54,12 @@ public class Var implements Comparable<Var>, Serializable {
         if (numStates < 0) {
             throw new IllegalArgumentException("numStates must be >= 0: " + numStates);
         }
+        if (stateNames != null && numStates != stateNames.size()) {
+            throw new IllegalStateException(String.format("numStates %d doesn't match length of stateNames list %d", numStates, stateNames.size()));
+        }
         this.type = type;
         this.numStates = numStates;
-        // Intern the name, but not the state names.
-        this.name = name.intern();
+        this.name = name;
         this.stateNames = stateNames;
     }
 
@@ -91,6 +96,14 @@ public class Var implements Comparable<Var>, Serializable {
         return "Var [type=" + type + ", numStates=" + numStates
                 + ", name=" + name + ", stateNames=" + stateNames + "]";
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }    
     
     // TODO: Maybe remove
     /*

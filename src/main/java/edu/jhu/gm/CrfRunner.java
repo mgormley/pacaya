@@ -11,19 +11,18 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaWriter;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
-import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
-import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.eval.VarConfigPair;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -36,7 +35,7 @@ import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
@@ -55,7 +54,7 @@ public class CrfRunner {
 
     public static enum InitParams { UNIFORM, RANDOM };
     
-    private static final Logger log = Logger.getLogger(CrfRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(CrfRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
@@ -109,7 +108,7 @@ public class CrfRunner {
         
         // Get a model.
         FgModel model = null;
-        Alphabet<Feature> alphabet;
+        FeatureNames alphabet;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
@@ -117,7 +116,7 @@ public class CrfRunner {
             alphabet = null;// model.getTemplates();
             throw new RuntimeException("Alphabet was not serialized");
         } else {
-            alphabet = new Alphabet<Feature>();
+            alphabet = new FeatureNames();
         }
         
         if (trainType != null && train != null) {
@@ -174,7 +173,7 @@ public class CrfRunner {
         }
     }
 
-    private FgExampleList getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+    private FgExampleList getData(FeatureNames alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExampleList data;
         if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader();
@@ -204,7 +203,7 @@ public class CrfRunner {
 
         for (int i=0; i<data.size(); i++) {
             MbrDecoder decoder = getDecoder();
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             decoder.decode(model, ex);
             predVcs.add(decoder.getMbrVarConfig());
             varMargMap.putAll(decoder.getVarMargMap());
@@ -224,7 +223,7 @@ public class CrfRunner {
                 
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
-        prm.maximizer = getMaximizer();
+        prm.optimizer = getMaximizer();
         prm.regularizer = new L2(1.0);
         return prm;
     }
@@ -256,7 +255,7 @@ public class CrfRunner {
     private MbrDecoder getDecoder() {
         MbrDecoderPrm decoderPrm = new MbrDecoderPrm();
         decoderPrm.infFactory = getInfFactory();
-        decoderPrm.loss = Loss.ACCURACY;
+        decoderPrm.loss = Loss.L1;
         MbrDecoder decoder = new MbrDecoder(decoderPrm);
         return decoder;
     }

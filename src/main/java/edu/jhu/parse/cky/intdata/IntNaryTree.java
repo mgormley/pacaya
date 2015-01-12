@@ -5,9 +5,9 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import edu.jhu.data.Sentence;
+import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.GrammarConstants;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.files.Files;
 
@@ -221,7 +221,7 @@ public class IntNaryTree {
         return c == ' ' || c == '\n' || c == '\t';
     }
     
-    public void preOrderTraversal(LambdaOne<IntNaryTree> function) {
+    public void preOrderTraversal(FnO1ToVoid<IntNaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
@@ -232,7 +232,7 @@ public class IntNaryTree {
         }
     }
     
-    public void postOrderTraversal(LambdaOne<IntNaryTree> function) {
+    public void postOrderTraversal(FnO1ToVoid<IntNaryTree> function) {
         // Post-order traversal of each child.
         if (children != null) {
             for (IntNaryTree child : children) {
@@ -304,7 +304,7 @@ public class IntNaryTree {
      * Keep only those nodes which the filter accepts.
      */
     public void postOrderFilterNodes(final NaryTreeNodeFilter filter) {
-        postOrderTraversal(new LambdaOne<IntNaryTree>() {
+        postOrderTraversal(new FnO1ToVoid<IntNaryTree>() {
             @Override
             public void call(IntNaryTree node) {
                 if (!node.isLeaf()) {
@@ -398,7 +398,7 @@ public class IntNaryTree {
                 + end + "}, children=" + children + "]";
     }
 
-    private class LeafCollector implements LambdaOne<IntNaryTree> {
+    private class LeafCollector implements FnO1ToVoid<IntNaryTree> {
 
         public ArrayList<IntNaryTree> leaves = new ArrayList<IntNaryTree>();
         
@@ -411,7 +411,7 @@ public class IntNaryTree {
         
     }
     
-    private class UpdateStartEnd implements LambdaOne<IntNaryTree> {
+    private class UpdateStartEnd implements FnO1ToVoid<IntNaryTree> {
 
         @Override
         public void call(IntNaryTree node) {
@@ -464,7 +464,7 @@ public class IntNaryTree {
 
     public void resetAlphabets(final Alphabet<String> lexAlphabet,
             final Alphabet<String> ntAlphabet) {
-        preOrderTraversal(new LambdaOne<IntNaryTree>() {
+        preOrderTraversal(new FnO1ToVoid<IntNaryTree>() {
             public void call(IntNaryTree node) {
                 String label = node.getSymbolLabel();
                 node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;

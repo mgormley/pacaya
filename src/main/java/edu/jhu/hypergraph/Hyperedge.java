@@ -1,26 +1,18 @@
 package edu.jhu.hypergraph;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Arrays;
-import java.util.List;
-
-import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 
 /** A hyperedge in a hypergraph. */
-public class Hyperedge {
+// We implement serializable to allow for easy deep copies when unit testing.
+public class Hyperedge implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private Hypernode headNode;
     private Hypernode[] tailNodes;
     private String label;
     private int id;
-        
-    public Hyperedge(int id, String label, Hypernode headNode, List<Hypernode> tailNodes) {
-        this.headNode = headNode;
-        this.tailNodes = tailNodes.toArray(new Hypernode[]{});
-        this.label = label;
-        this.id = id;
-    }
-    
+       
     public Hyperedge(int id, String label, Hypernode headNode, Hypernode... tailNodes) {
         this.headNode = headNode;
         this.tailNodes = tailNodes;
@@ -70,7 +62,7 @@ public class Hyperedge {
     }
     
     public String toString() {
-        return label;
+        return getLabel();
     }
     
     /* ------------------- Modifiers ---------------- */
@@ -97,5 +89,42 @@ public class Hyperedge {
         this.id = -1;
         this.tailNodes = null;
     }
-    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((headNode == null) ? 0 : headNode.hashCode());
+        result = prime * result + id;
+        result = prime * result + ((label == null) ? 0 : label.hashCode());
+        result = prime * result + Arrays.hashCode(tailNodes);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Hyperedge other = (Hyperedge) obj;
+        if (headNode == null) {
+            if (other.headNode != null)
+                return false;
+        } else if (!headNode.equals(other.headNode))
+            return false;
+        if (id != other.id)
+            return false;
+        if (label == null) {
+            if (other.label != null)
+                return false;
+        } else if (!label.equals(other.label))
+            return false;
+        if (!Arrays.equals(tailNodes, other.tailNodes))
+            return false;
+        return true;
+    }
+        
 }

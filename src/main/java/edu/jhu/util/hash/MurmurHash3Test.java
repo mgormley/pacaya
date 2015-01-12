@@ -1,7 +1,5 @@
 package edu.jhu.util.hash;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 public class MurmurHash3Test {

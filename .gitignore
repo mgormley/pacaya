@@ -3,11 +3,12 @@
 .#*
 \#*\#
 ~$*
- 
+
 # Specific directories
 /target
 /exp
 /remote_exp
+/old_remote_exp
 /data
 
 # Specific files
@@ -18,5 +19,5 @@
 java.hprof.txt
 warn.log
 tmp
-/scripts/plot/.Rhistory
+.Rhistory
 .DS_Store

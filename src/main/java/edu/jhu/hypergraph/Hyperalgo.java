@@ -1,35 +1,36 @@
 package edu.jhu.hypergraph;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 
-import org.apache.commons.math3.util.FastMath;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.hypergraph.Hypergraph.HyperedgeFn;
+import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.SemiringExt;
 
 public class Hyperalgo {
 
-    private static final Logger log = Logger.getLogger(Hyperalgo.class);
+    private static final Logger log = LoggerFactory.getLogger(Hyperalgo.class);
     
     private Hyperalgo() {
         // Private constructor.
     }
     
-    public static void forward(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void forward(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         insideAlgorithm(graph, w, s, scores);
         outsideAlgorithm(graph, w, s, scores);
         marginals(graph, w, s, scores);
     }
     
-    public static void backward(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void backward(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         if (scores.marginalAdj == null) {
             throw new IllegalStateException("scores.marginalAdj must be non-null.");
         }
+        marginalsAdjoint(graph, w, s, scores);
         outsideAdjoint(graph, w, s, scores);
         insideAdjoint(graph, w, s, scores);
         weightAdjoint(graph, w, s, scores);
@@ -57,9 +58,9 @@ public class Hyperalgo {
                     prod = s.times(prod, beta[jNode.getId()]);
                 }
                 int i = e.getHeadNode().getId();
-                //if (log.isTraceEnabled()) { log.trace(String.format("old beta[%d] = %f",  i, s.toReal(beta[i]))); }
-                beta[i] = s.plus(beta[i], s.times(w.getScore(e, s), prod));
-                //if (log.isTraceEnabled()) { log.trace(String.format("%s w_e=%f beta[%d] = %f", e.getLabel(), s.toReal(w.getScore(e, s)), i, s.toReal(beta[i]))); }
+                prod = s.times(w.getScore(e, s), prod);
+                beta[i] = s.plus(beta[i], prod);
+                //if (log.isTraceEnabled()) { log.trace(String.format("inside: %s w_e=%f prod=%f beta[%d] = %f", e.getLabel(), ((Algebra)s).toReal(w.getScore(e, s)), prod, i, ((Algebra)s).toReal(beta[i]))); }
             }
             
         });
@@ -101,8 +102,8 @@ public class Hyperalgo {
                     }
                     prod = s.times(prod, alpha[i]);
                     prod = s.times(prod, w.getScore(e, s));
-                    //log.trace(String.format("i=%d j=%d prod=%f", i, j, prod));
                     alpha[j] = s.plus(alpha[j], prod);
+                    //if (log.isTraceEnabled()) { log.trace(String.format("outside: %s w_e=%f prod=%f alpha[%d]=%f", e.getLabel(), w.getScore(e,s), prod, j, alpha[j])); }
                 }
             }
             
@@ -118,7 +119,7 @@ public class Hyperalgo {
      *         score for the i'th node in the Hypergraph, graph.getNodes().get(i).
      */
     public static void insideAlgorithmFirstOrderExpect(final Hypergraph graph, final HyperpotentialFoe w,
-            final SemiringExt s, final Scores scores) {
+            final Algebra s, final Scores scores) {
         final int n = graph.getNodes().size();
         final double[] beta = new double[n];
         final double[] betaFoe = new double[n];
@@ -166,7 +167,7 @@ public class Hyperalgo {
     }
     
     /**
-     * Computes the marginal for each hypernode.
+     * Runs the inside algorithm on a hypergraph.
      * INPUT: 
      * OUTPUT: scores.beta.
      * 
@@ -181,7 +182,7 @@ public class Hyperalgo {
     }
     
     /**
-     * Computes the marginal for each hypernode.
+     * Runs the outside algorithm on a hypergraph.
      * INPUT: scores.beta.
      * OUTPUT: scores.alpha.
      * 
@@ -205,7 +206,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void marginals(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void marginals(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
         final int n = graph.getNodes().size();
         final double[] alpha = scores.alpha;
@@ -223,33 +224,49 @@ public class Hyperalgo {
     }
     
     public static class Scores {
-        public double[] alpha;
-        public double[] beta;
-        public double[] marginal;
-        public double[] alphaAdj;
-        public double[] betaAdj;
-        public double[] marginalAdj;
-        public double[] weightAdj;
-        // Inside scores for first-order expectation semiring.
-        public double[] betaFoe;
+        public double[] alpha;         // Outside scores.
+        public double[] beta;          // Inside scores.
+        public double[] marginal;      // Marginals of the hyperedges.
+        public double[] alphaAdj;      // Adjoints of the outside scores.
+        public double[] betaAdj;       // Adjoints of the inside scores.
+        public double[] marginalAdj;   // Adjoints of the marginals.
+        public double[] weightAdj;     // Weights of the hyperedges.
+        public double[] betaFoe;       // Inside scores for first-order expectation semiring.
+        
+        public void prettyPrint(Hypergraph graph) {
+            PrintStream w = System.out;
+            w.printf("|%20s|%10s|%10s|%10s|\n", "node-name", "alpha", "beta", "marginal");
+            w.printf("|%20s+%10s+%10s+%10s|\n", "-------------------", "----------", "----------", "----------");
+            for (Hypernode n : graph.getNodes()) {
+                int i = n.getId();
+                w.printf("|%20s|%10f|%10f|%10f|\n", n.getLabel(), alpha[i], beta[i], marginal[i]);
+            }
+            w.printf("|%20s+%10s+%10s+%10s|\n", "-------------------", "----------", "----------", "----------");
+        }
     }
 
     /**
-     * Computes the adjoints of the outside scores.
-     * INPUT: scores.beta, scores.marginalAdj.
-     * OUTPUT: scores.alphaAdj.
+     * Computes the adjoints of the inside and outside scores.
+     * INPUT: scores.beta, scores.alpha scores.marginalAdj.
+     * OUTPUT: scores.betaAdj, scores.alphaAdj.
      * 
      * @param graph The hypergraph
      * @param w The potential function.
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void outsideAdjoint(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
-            final Scores scores) {
+    public static void marginalsAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
+            final Scores scores) {        
         final int n = graph.getNodes().size();
         final double[] marginalAdj = scores.marginalAdj;
+        final double[] alpha = scores.alpha;
         final double[] beta = scores.beta;
-        final double[] alphaAdj = new double[n];
+        final double[] alphaAdj = new double[n];        
+        final double[] betaAdj = new double[n];
+        int root = graph.getRoot().getId();
+
+        // ----- Compute the adjoints of the outside scores -----
+        
         // \adj{alpha_i} = 0 \forall i
         Arrays.fill(alphaAdj, s.zero());
         for (Hypernode iNode : graph.getNodes()) {
@@ -259,6 +276,51 @@ public class Hyperalgo {
             prod = s.divide(prod, beta[graph.getRoot().getId()]);
             alphaAdj[i] = s.plus(alphaAdj[i], prod);            
         }
+
+        // ----- Compute the adjoints of the inside scores -----
+
+        // \adj{beta_j} = 0 \forall j
+        Arrays.fill(betaAdj, s.zero());
+        
+        for (Hypernode jNode : graph.getNodes()) {
+            // \adj{beta_{root}} = - \sum_{j \in G : j \neq root} \adj{p(j)} * \alpha_j * \beta_j / (\beta_{root}^2)
+            int j = jNode.getId();
+            if (j == root) { continue; }
+            double prod = s.times(marginalAdj[j], alpha[j]);
+            prod = s.times(prod, beta[j]);
+            prod = s.divide(prod, s.times(beta[root], beta[root]));
+            betaAdj[root] = s.minus(betaAdj[root], prod);
+        }
+        
+        for (Hypernode jNode : graph.getNodes()) {
+            // \adj{\beta_j} += \adj{p(j)} * \alpha_j / \beta_{root}, \forall j \neq root
+            int j = jNode.getId();
+            if (j == root) { continue; }
+            double prod = s.divide(s.times(marginalAdj[j], alpha[j]), beta[root]);
+            betaAdj[j] = s.plus(betaAdj[j], prod);
+        }
+
+        scores.alphaAdj = alphaAdj;        
+        scores.betaAdj = betaAdj;
+    }
+    
+    /**
+     * Computes the adjoints of the outside scores by doing a backward pass 
+     * through the outside algorithm.
+     * 
+     * INPUT: scores.beta, scores.alphaAdj.
+     * OUTPUT: scores.alphaAdj.
+     * 
+     * @param graph The hypergraph
+     * @param w The potential function.
+     * @param s The semiring.
+     * @param scores Input and output struct.
+     */
+    public static void outsideAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
+            final Scores scores) {
+        final double[] beta = scores.beta;
+        final double[] alphaAdj = scores.alphaAdj;
+
         graph.applyTopoSort(new HyperedgeFn() {
             
             @Override
@@ -281,8 +343,10 @@ public class Hyperalgo {
     }
     
     /**
-     * Computes the adjoints of the inside scores.
-     * INPUT: scores.alpha, scores.beta, scores.marginalAdj.
+     * Computes the adjoints of the inside scores by doing a backward pass 
+     * through the inside algorithm.
+     * 
+     * INPUT: scores.alpha, scores.beta, scores.betaAdj.
      * OUTPUT: scores.betaAdj.
      * 
      * @param graph The hypergraph
@@ -290,36 +354,12 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void insideAdjoint(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void insideAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
-        final int n = graph.getNodes().size();
         final double[] alpha = scores.alpha;
         final double[] beta = scores.beta;
-        final double[] marginalAdj = scores.marginalAdj;
         final double[] alphaAdj = scores.alphaAdj;
-        final double[] betaAdj = new double[n];
-        int root = graph.getRoot().getId();
-
-        // \adj{beta_j} = 0 \forall j
-        Arrays.fill(betaAdj, s.zero());
-        
-        for (Hypernode jNode : graph.getNodes()) {
-            // \adj{beta_{root}} = - \sum_{j \in G : j \neq root} \adj{p(j)} * \alpha_j * \beta_j / (\beta_{root}^2)
-            int j = jNode.getId();
-            if (j == root) { continue; }
-            double prod = s.times(marginalAdj[j], alpha[j]);
-            prod = s.times(prod, beta[j]);
-            prod = s.divide(prod, s.times(beta[root], beta[root]));
-            betaAdj[root] = s.minus(betaAdj[root], prod);
-        }
-        
-        for (Hypernode jNode : graph.getNodes()) {
-            // \adj{\beta_j} += \adj{p(j)} * \alpha_j / \beta_{root}, \forall j \neq root
-            int j = jNode.getId();
-            if (j == root) { continue; }
-            double prod = s.divide(s.times(marginalAdj[j], alpha[j]), beta[root]);
-            betaAdj[j] = s.plus(betaAdj[j], prod);
-        }
+        final double[] betaAdj = scores.betaAdj;
         
         graph.applyRevTopoSort(new HyperedgeFn() {
             
@@ -368,18 +408,44 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, final Algebra s,
             final Scores scores) {
+        final double[] weightAdj = new double[graph.getNumEdges()];
+        HyperedgeDoubleFn lambda = new HyperedgeDoubleFn() {
+            public void apply(Hyperedge e, double val) {
+                weightAdj[e.getId()] = val;
+            }
+        };
+        weightAdjoint(graph, w, s, scores, lambda);
+        scores.weightAdj = weightAdj;
+    }
+    
+    public interface HyperedgeDoubleFn {
+        void apply(Hyperedge e, double val);
+    }
+    
+    /**
+     * Computes the adjoints of the hyperedge weights.
+     * INPUT: scores.alpha, scores.beta, scores.alphaAdj, scores.betaAdj.
+     * OUTPUT: The adjoints of the weights.
+     * 
+     * @param graph The hypergraph
+     * @param w The potential function.
+     * @param s The semiring.
+     * @param scores Input struct.
+     * @param lambda Function to call with the edge and the edge adjoint.
+     */
+    public static void weightAdjoint(final Hypergraph graph, final Hyperpotential w, 
+            final Algebra s, final Scores scores, final HyperedgeDoubleFn lambda) {
         final double[] alpha = scores.alpha;
         final double[] beta = scores.beta;
         final double[] alphaAdj = scores.alphaAdj;
         final double[] betaAdj = scores.betaAdj;
-        final double[] weightAdj = new double[graph.getNumEdges()];
         
         graph.applyTopoSort(new HyperedgeFn() {
             
             @Override
-            public void apply(Hyperedge e) {                
+            public void apply(Hyperedge e) {
                 // \adj{w_e} += \adj{\beta_{H(e)} * \prod_{j \in T(e)} \beta_j
                 int i = e.getHeadNode().getId();
                 double prod = betaAdj[i];
@@ -401,12 +467,10 @@ public class Hyperalgo {
                     w_e = s.plus(w_e, prod);
                 }
                 
-                weightAdj[e.getId()] = w_e;
+                lambda.apply(e, w_e);
             }
             
-        });
-        
-        scores.weightAdj = weightAdj;
+        });        
     }
     
 }

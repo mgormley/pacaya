@@ -1,8 +1,6 @@
 package edu.jhu.util.cli;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.commons.cli.ParseException;

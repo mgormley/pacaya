@@ -7,15 +7,14 @@ import java.io.Serializable;
 import java.io.Writer;
 import java.util.Iterator;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.IFgModel;
@@ -24,15 +23,16 @@ import edu.jhu.gm.model.ObsFeatureCarrier;
 import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.util.ArrayIter3D;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.IntIntDenseVector;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
+import edu.jhu.util.semiring.Algebras;
 
 /**
  * Wrapper of ObsFeatureExtractor which returns feature vectors which conjoin
@@ -54,7 +54,7 @@ public class ObsFeatureConjoiner implements Serializable {
         public int featCountCutoff = -1;
     }
     
-    private static final Logger log = Logger.getLogger(ObsFeatureConjoiner.class);
+    private static final Logger log = LoggerFactory.getLogger(ObsFeatureConjoiner.class);
     private static final long serialVersionUID = 1L;
     
     /**
@@ -76,7 +76,7 @@ public class ObsFeatureConjoiner implements Serializable {
     /** Whether this object is initialized. */
     private boolean initialized;
     /** Alphabet for standard (non-observation function) features. */
-    private Alphabet<Object> feAlphabet;
+    private FeatureNames feAlphabet;
     
     private ObsFeatureConjoinerPrm prm;
     
@@ -84,10 +84,10 @@ public class ObsFeatureConjoiner implements Serializable {
         this.prm = prm;
         initialized = false;
         this.templates = fts;
-        this.feAlphabet = new Alphabet<Object>();
+        this.feAlphabet = new FeatureNames();
     }
         
-    public Alphabet<Object> getFeAlphabet() {
+    public FeatureNames getFeAlphabet() {
         return feAlphabet;
     }
     
@@ -135,9 +135,9 @@ public class ObsFeatureConjoiner implements Serializable {
         // Always include the bias features.
         for (int t=0; t<included.length; t++) {
             FactorTemplate template = templates.get(t);
-            Alphabet<Feature> alphabet = template.getAlphabet();            
+            FeatureNames alphabet = template.getAlphabet();            
             for (int k = 0; k < alphabet.size(); k++) {
-                if (alphabet.lookupObject(k).isBiasFeature()) {
+                if (alphabet.isBiasFeature(k)) {
                     for (int c = 0; c < included[t].length; c++) {
                         included[t][c][k] = true;
                     }
@@ -174,12 +174,9 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         
         @Override
-        public DenseFactor getMarginalsForFactorId(int factorId) { 
-            return new DenseFactor(fg.getFactor(factorId).getVars()); 
+        public VarTensor getMarginalsForFactorId(int factorId) { 
+            return new VarTensor(Algebras.REAL_ALGEBRA, fg.getFactor(factorId).getVars()); 
         }
-
-        @Override
-        public boolean isLogDomain() { return true; }
         
         @Override
         public void run() { throw new RuntimeException("This method should never be called."); }
@@ -188,16 +185,28 @@ public class ObsFeatureConjoiner implements Serializable {
         public double getPartition() { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginals(VarSet varSet) { throw new RuntimeException("This method should never be called."); }
+        public VarTensor getMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
         
         @Override
-        public DenseFactor getMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
+        public double getLogPartition() { throw new RuntimeException("This method should never be called."); }
+        
+        @Override
+        public VarTensor getLogMarginalsForVarId(int varId) { throw new RuntimeException("This method should never be called."); }
+        
+        @Override
+        public VarTensor getLogMarginals(Factor factor) { throw new RuntimeException("This method should never be called."); }
+        
+        @Override
+        public VarTensor getLogMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
+
+        @Override
+        public VarTensor getLogMarginalsForFactorId(int factorId) { throw new RuntimeException("This method should never be called."); }
             
     }
     
@@ -215,9 +224,9 @@ public class ObsFeatureConjoiner implements Serializable {
         
         // Loop over all factors in the dataset. 
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             // Create a "no-op" inferencer, which returns arbitrary marginals.
-            FgInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
+            NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
@@ -229,7 +238,13 @@ public class ObsFeatureConjoiner implements Serializable {
                 } else {
                     // For each standard factor.  
                     f = ex.getFgLatPred().getFactor(a);
-                    f.addExpectedFeatureCounts(counts, 0, inferencer, a);
+                    if (f instanceof GlobalFactor) {
+                        ((GlobalFactor) f).addExpectedFeatureCounts(counts, 0, inferencer, a);
+                    } else {
+                        VarTensor marg = inferencer.getMarginalsForFactorId(a);
+                        f.addExpectedFeatureCounts(counts, marg, 0);
+                    }
+                    
                 }
             }
         }
@@ -250,7 +265,7 @@ public class ObsFeatureConjoiner implements Serializable {
             }
         }
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
@@ -331,7 +346,7 @@ public class ObsFeatureConjoiner implements Serializable {
         for (int t=0; t<numTemplates; t++) {
             FactorTemplate template = templates.get(t);
             int numConfigs = template.getNumConfigs();
-            Alphabet<Feature> alphabet = template.getAlphabet();
+            FeatureNames alphabet = template.getAlphabet();
             for (int c = 0; c < numConfigs; c++) {
                 for (int k = 0; k < indices[t][c].length; k++) {
                     writer.write(template.getKey().toString());
@@ -383,7 +398,7 @@ public class ObsFeatureConjoiner implements Serializable {
             int k = iter.k;
             
             FactorTemplate template = templates.get(t);
-            Alphabet<Feature> alphabet = template.getAlphabet();
+            FeatureNames alphabet = template.getAlphabet();
             
             StringBuilder name = new StringBuilder();
             name.append(template.getKey().toString());

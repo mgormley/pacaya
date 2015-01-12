@@ -9,20 +9,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import data.DataSample;
 import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleStore;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UFgExample;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.model.ExpFamFactor;
@@ -32,7 +32,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import featParser.FeatureFileParser;
 
 /**
@@ -43,7 +43,7 @@ import featParser.FeatureFileParser;
  */
 public class ErmaReader {
 
-    private static final Logger log = Logger.getLogger(ErmaReader.class);
+    private static final Logger log = LoggerFactory.getLogger(ErmaReader.class);
     private boolean includeUnsupportedFeatures;
 
     /**
@@ -61,7 +61,7 @@ public class ErmaReader {
         this.includeUnsupportedFeatures = includeUnsupportedFeatures;
     }
     
-    public FgExampleList read(File featureTemplate, File dataFile, Alphabet<Feature> alphabet) {
+    public FgExampleList read(File featureTemplate, File dataFile, FeatureNames alphabet) {
         return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), alphabet);
     }
     
@@ -75,7 +75,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExampleList read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
+    public FgExampleList read(String featureTemplate, String dataFile, FeatureNames alphabet) {
         log.info("Feature template file: " + featureTemplate);
         log.info("Data file: " + dataFile);  
         try {
@@ -85,7 +85,7 @@ public class ErmaReader {
         }
     }
     
-    public FgExampleList read(InputStream featureTemplate, InputStream dataFile, Alphabet<Feature> alphabet) {
+    public FgExampleList read(InputStream featureTemplate, InputStream dataFile, FeatureNames alphabet) {
         FeatureFile ff;
         log.info("Reading features");
         try {
@@ -108,7 +108,7 @@ public class ErmaReader {
         if (includeUnsupportedFeatures) {
             log.info("Including unsupported features in the model.");
             for (data.Feature feat : ff.getFeatures()) {
-                alphabet.lookupIndex(new Feature(feat.getName()));
+                alphabet.lookupIndex(feat.getName());
             }
         } else {
             log.info("Excluding unsupported features from the model.");
@@ -127,9 +127,9 @@ public class ErmaReader {
     private static class ConvertingDataParser extends DataParser {
         
         private FgExampleStore data;
-        private Alphabet<Feature> alphabet;
+        private FeatureNames alphabet;
         
-        public ConvertingDataParser(InputStream is, FeatureFile ff, FgExampleStore data, Alphabet<Feature> alphabet) throws FileNotFoundException {
+        public ConvertingDataParser(InputStream is, FeatureFile ff, FgExampleStore data, FeatureNames alphabet) throws FileNotFoundException {
             super(is, ff);
             this.data = data;
             this.alphabet = alphabet;
@@ -186,7 +186,7 @@ public class ErmaReader {
     
     
     /**
-     * Creates our {@link FgExample} from an ERMA {@link DataSample} and
+     * Creates our {@link LFgExample} from an ERMA {@link DataSample} and
      * {@link FeatureFile}.
      * 
      * The feature vector reuse is (currently) consistent with ERMA. That is,
@@ -200,7 +200,7 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static FgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
+    private static LFgExample toFgExample(DataSample s, FeatureFile ff, FeatureNames alphabet){
         //Saves the variable set to factor HashMappings
         HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
@@ -308,7 +308,7 @@ public class ErmaReader {
                 // MRG: ERMA WAY: featRef.get(state).put(feat,featRef.get(state).containsKey(feat)?featRef.get(state).get(feat)+fi.getWeight():fi.getWeight());
                 
                 // MRG: Convert the ERMA feature to our feature and lookup its index.                               
-                int featIdx = alphabet.lookupIndex(new Feature(feat.getName()));           
+                int featIdx = alphabet.lookupIndex(feat.getName());           
                 FeatureVector featureVector = featRef.get(state);
                 // Add the feature weight for this feature to the feature vector.
                 featureVector.add(featIdx, fi.getWeight());                
@@ -343,7 +343,7 @@ public class ErmaReader {
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
         featExtractor.setFeatureRefVec(feature_ref_vec);
         
-        FgExample fgEx = new LabeledFgExample(fg, trainConfig, featExtractor);
+        LFgExample fgEx = new LabeledFgExample(fg, trainConfig, featExtractor);
         return fgEx;
         // MRG: ERMA WAY: FeatureFactorGraph ffg = new FeatureFactorGraph(facs_vec,feature_ref_vec); return ffg;
         //cout << "--de "<<endl;

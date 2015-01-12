@@ -13,7 +13,7 @@ import edu.jhu.util.cache.CachedFastDiskStore;
  */
 public class FgExampleDiskStore extends AbstractFgExampleList implements FgExampleStore {
 
-    private CachedFastDiskStore<Integer, FgExample> examples;
+    private CachedFastDiskStore<Integer, LFgExample> examples;
 
     public FgExampleDiskStore() {
         this(new File("."), true, -1);
@@ -22,7 +22,7 @@ public class FgExampleDiskStore extends AbstractFgExampleList implements FgExamp
     public FgExampleDiskStore(File cacheDir, boolean gzipped, int maxEntriesInMemory) {
         try {
             File cachePath = File.createTempFile("cache", ".binary.gz", cacheDir);
-            this.examples = new CachedFastDiskStore<Integer, FgExample>(cachePath, gzipped, maxEntriesInMemory);
+            this.examples = new CachedFastDiskStore<Integer, LFgExample>(cachePath, gzipped, maxEntriesInMemory);
             // TODO: cachePath.deleteOnExit();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -30,12 +30,12 @@ public class FgExampleDiskStore extends AbstractFgExampleList implements FgExamp
     }
 
     /** Adds an example. */
-    public synchronized void add(FgExample example) {
+    public synchronized void add(LFgExample example) {
         examples.put(examples.size(), example);
     }
 
     /** Gets the i'th example. */
-    public synchronized FgExample get(int i) {
+    public synchronized LFgExample get(int i) {
         return examples.get(i);
     }
 

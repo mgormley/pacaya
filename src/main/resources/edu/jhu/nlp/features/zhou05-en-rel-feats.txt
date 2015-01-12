@@ -1,0 +1,182 @@
+# Zhou et al. (2005) relation extraction feature templates. This
+# feature set was designed for the ACE 2004 dataset.
+#
+# Below, the feature templates are organized as in the original paper.
+#
+
+# =============================
+# 4.1 Words
+# =============================
+# • WM1: bag-of-words in M1
+# • HM1: head word of M1
+# • WM2: bag-of-words in M2
+# • HM2: head word of M2
+# • HM12: combination of HM1 and HM2
+
+#TODO: bag(word(...
+word(bag(line(m1s,m1e)))
+word(m1h)
+word(bag(line(m2s,m2e)))
+word(m2h)
+word(m1h) + word(m2h)
+
+# • WBNULL: when no word in between
+# • WBFL: the only word in between when only
+# one word in between
+# • WBF: first word in between when at least two
+# words in between
+# • WBL: last word in between when at least two
+# words in between
+# • WBO: other words in between except first and
+# last words when at least three words in between 
+
+# TODO: An alternate approach would be something like the following
+# two templates. This would be a superset of the features indicated.
+#
+# word(first(btwnSpans(m1,m2))) + len(bwtnSpans(m1,m2))
+# word(last(btwnSpans(m1,m2))) + len(bwtnSpans(m1,m2))
+
+word(firstIfLen=1(btwnSpans(m1,m2)))
+word(firstIfLen>1(btwnSpans(m1,m2)))
+word(lastIfLen>1(btwnSpans(m1,m2)))
+word(hem(btwnSpans(m1,m2)))
+
+# • BM1F: first word before M1
+# • BM1L: second word before M1
+# • AM2F: first word after M2
+# • AM2L: second word after M2
+
+word(-1(m1s))
+word(-2(m1s))
+word(+1(m2e))
+word(+2(m2e))
+
+# =============================
+# 4.2 Entity Type
+# =============================
+# • ET12: combination of mention entity types
+
+entityType(m1) + entityType(m2)
+
+# =============================
+# 4.3 Mention Level 
+# =============================
+# • ML12: combination of mention levels
+
+mentionType(m1) + mentionType(m2)
+
+# =============================
+# 4.4 Overlap
+# =============================
+# This category of features includes:
+# • #MB: number of other mentions in between
+# • #WB: number of words in between
+# • M1>M2 or M1<M2: flag indicating whether
+# M2/M1is included in M1/M2.
+#
+# 1) ET12+M1>M2; 
+# 2) ET12+M1<M2; 
+# 3) HM12+M1>M2; 
+# 4) HM12+M1<M2.
+
+len(mentions(btwnSpans(m1,m2)))
+len(btwnSpans(m1,m2))
+includes(m1,m2)
+includes(m2,m1)
+entityType(m1) + entityType(m2) + includes(m1,m2)
+entityType(m1) + entityType(m2) + includes(m2,m1)
+word(m1h) + word(m2h) + includes(m1,m2)
+word(m1h) + word(m2h) + includes(m2,m1)
+
+# =============================
+# 4.5 Base Phrase Chunking
+# =============================
+# • CPHBNULL when no phrase in between
+# • CPHBFL: the only phrase head when only one
+# phrase in between
+# • CPHBF: first phrase head in between when at
+# least two phrases in between
+# • CPHBL: last phrase head in between when at
+# least two phrase heads in between
+# • CPHBO: other phrase heads in between except
+# first and last phrase heads when at least three
+# phrases in between
+
+# TODO.
+
+# • CPHBM1F: first phrase head before M1
+# • CPHBM1L: second phrase head before M1
+# • CPHAM2F: first phrase head after M2
+# • CPHAM2F: second phrase head after M2
+# • CPP: path of phrase labels connecting the two
+# mentions in the chunking
+
+chunkHead(chunk1Before(m1s))
+chunkHead (chunk2Before(m1s)) 
+chunkHead(chunk1After(m2e))
+chunkHead(chunk1After(m2e))
+label(chunkPath(m1h, m2h))
+
+# • CPPH: path of phrase labels connecting the two
+# mentions in the chunking augmented with head words,
+# if at most two phrases in between
+
+chunkHead.label(chunkPath(m1h, m2h)) if len(chunkPath(m1h, m2h) <= 2
+
+# =============================
+# 4.6 Dependency Tree
+# =============================
+# • ET1DW1: combination of the entity type and
+# the dependent word for M1
+# • H1DW1: combination of the head word and the
+# dependent word for M1
+# • ET2DW2: combination of the entity type and
+# the dependent word for M2
+# • H2DW2: combination of the head word and the
+# dependent word for M2
+# • ET12SameNP: combination of ET12 and
+# whether M1 and M2 included in the same NP
+# • ET12SamePP: combination of ET12 and
+# whether M1 and M2 exist in the same PP
+# • ET12SameVP: combination of ET12 and
+# whether M1 and M2 included in the same VP
+
+# TODO dep(m1) doesn't make sense. What does this mean?
+entityType(m1) + dep(m1)
+word(m1h) + dep(m1)
+entityType(m2) + dep(m2)
+word(m2h) + dep(m2)
+haveParentNp(m1h,m2h)
+haveParentPp(m1h,m2h)
+haveParentVp(m1h,m2h)
+
+# =============================
+# 4.7 Parse Tree
+# =============================
+# • PTP: path of phrase labels (removing dupli-
+# cates) connecting M1 and M2 in the parse tree
+# • PTPH: path of phrase labels (removing dupli- cates) 
+# connecting M1 and M2 in the parse tree augmented 
+# with the head word of the top phrase in the path.
+
+bag(label(constitPath(m1h, m2h)))
+bag(label(constitPath(m1h, m2h))) + word(lca(m1h, m2h))
+
+# =============================
+# 4.8 Semantic Resources
+# =============================
+# >>> Country Name List
+# • ET1Country: the entity type of M1 when M2 is a country name
+# • CountryET2: the entity type of M2 when M1 is a country name
+
+isCountry(m2) + entityType(m1)
+isCountry(m2) + entityType(m2)
+
+# >>> Personal Relative Trigger Word List
+# • ET1SC2: combination of the entity type of M1 and the semantic
+# class of M2 when M2 triggers a personal social subtype.
+# • SC1ET2: combination of the entity type of M2 and the semantic
+# class of M1 when the first mention triggers a personal social
+# subtype.
+
+# TODO.

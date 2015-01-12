@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import codecs
 import copy
 from optparse import OptionParser

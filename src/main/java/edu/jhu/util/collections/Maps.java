@@ -158,4 +158,16 @@ public class Maps {
         return maxTickets;
     }
 
+    /** Like Python's zip, this creates a map by zipping together the key and values lists. */
+    public static <X,Y> Map<X,Y> zip(List<X> keys, List<Y> values) {
+        if (keys.size() != values.size()) {
+            throw new IllegalArgumentException("Lengths are not equal");
+        }
+        Map<X,Y> map = new HashMap<>(keys.size());
+        for (int i=0; i<keys.size(); i++) {
+            map.put(keys.get(i), values.get(i));
+        }
+        return map;
+    }
+    
 }

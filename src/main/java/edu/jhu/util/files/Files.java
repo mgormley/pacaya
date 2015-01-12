@@ -1,6 +1,7 @@
 package edu.jhu.util.files;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -13,6 +14,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,6 +76,16 @@ public class Files {
             throw new RuntimeException("Could not mkdir as expected: " + tempDir);
         }
         return tempDir;
+    }
+    
+    public static BufferedWriter createTempFileBufferedWriter(String prefix, File parentDir) {
+        try {
+            File tempDir = Files.getTempPath(prefix, parentDir);
+            tempDir.getParentFile().mkdirs();
+            return java.nio.file.Files.newBufferedWriter(Paths.get(tempDir.getAbsolutePath()), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -207,6 +220,26 @@ public class Files {
             if (stateFile.getName().endsWith(".gz")) {
                 is = new GZIPInputStream(is);
             }
+            return deserialize(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Object deserializeResource(String resource) {
+        try {
+            InputStream is = Files.class.getResourceAsStream(resource);
+            if (resource.endsWith(".gz")) {
+                is = new GZIPInputStream(is);
+            }
+            return deserialize(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private static Object deserialize(InputStream is) {
+        try {
             ObjectInputStream in = new ObjectInputStream(is);
             Object inObj = in.readObject();
             in.close();

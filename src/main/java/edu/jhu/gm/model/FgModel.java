@@ -8,15 +8,17 @@ import java.io.Writer;
 import java.util.Iterator;
 
 import org.apache.commons.lang.mutable.MutableDouble;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.map.IntDoubleMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
-import edu.jhu.prim.vector.IntDoubleUnsortedVector;
+import edu.jhu.prim.vector.IntDoubleHashVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
 
@@ -32,7 +34,7 @@ import edu.jhu.util.dist.Gaussian;
 // (particularly when serialized) is smaller.
 public class FgModel implements Serializable, IFgModel {
 
-    private static final Logger log = Logger.getLogger(FgModel.class);
+    private static final Logger log = LoggerFactory.getLogger(FgModel.class);
 
     private static final long serialVersionUID = 4477788767217412525L;
     /** The model parameters. */
@@ -68,7 +70,7 @@ public class FgModel implements Serializable, IFgModel {
     
     /** Copy constructor, which initializes the parameter vector to all zeros. */
     public FgModel getSparseZeroedCopy() {
-        return new FgModel(this, new IntDoubleUnsortedVector());
+        return new FgModel(this, new IntDoubleHashVector());
     }
 
     public void updateModelFromDoubles(double[] inParams) {
@@ -87,7 +89,7 @@ public class FgModel implements Serializable, IFgModel {
     
     public void add(int feat, double addend) {
       if (feat < 0 || numParams <= feat) {
-          throw new IllegalArgumentException("The specified parameter is not included in this model");
+          throw new IllegalArgumentException("The specified parameter is not included in this model: " + feat);
       }
       params.add(feat, addend);
     }
@@ -101,7 +103,7 @@ public class FgModel implements Serializable, IFgModel {
         }
     }
     
-    private boolean shouldLogNumExplicitParams = true;
+    private static boolean shouldLogNumExplicitParams = true;
     
     public void add(FgModel other) {
         if (other.numParams != this.numParams) {
@@ -116,7 +118,12 @@ public class FgModel implements Serializable, IFgModel {
         this.params.add(other.params);
     }
     
-    public double dot(FeatureVector fv) {     
+    public double dot(FeatureVector fv) {
+        // Check for features which don't have a corresponding model parameter
+        int maxIdx = fv.getMaxIdx();
+        if (maxIdx >= this.numParams) {
+            throw new IllegalArgumentException("Invalid feature: " + maxIdx);
+        }
         return params.dot(fv);
     }
     
@@ -193,12 +200,7 @@ public class FgModel implements Serializable, IFgModel {
     }
 
     public void scale(final double multiplier) {
-        apply(new FnIntDoubleToDouble() {
-            @Override
-            public double call(int idx, double val) {
-                return multiplier * val;
-            }
-        });
+        params.scale(multiplier);
     }
 
     public double l2Norm() {
@@ -222,5 +224,5 @@ public class FgModel implements Serializable, IFgModel {
     public IntDoubleVector getParams() {
         return params;
     }
-        
+    
 }

@@ -3,6 +3,7 @@ package edu.jhu.util.collections;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Sets {
 
@@ -102,6 +103,11 @@ public class Sets {
             hs.add(set[i]);
         }
         return hs;
+    }
+
+    @SafeVarargs
+    public static <T> Set<T> getSet(T... values) {
+        return new HashSet<T>(Lists.getList(values));
     }
     
 }

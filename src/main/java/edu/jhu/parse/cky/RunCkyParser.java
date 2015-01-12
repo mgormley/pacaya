@@ -9,9 +9,10 @@ import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.jhu.data.Sentence;
+import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.chart.Chart;
@@ -23,7 +24,7 @@ import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.parse.cky.data.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.parse.cky.data.NaryTreebank;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
@@ -33,7 +34,7 @@ import edu.jhu.util.files.Files;
 
 public class RunCkyParser {
     
-    private static final Logger log = Logger.getLogger(RunCkyParser.class);
+    private static final Logger log = LoggerFactory.getLogger(RunCkyParser.class);
 
     // Input data.
     @Opt(hasArg = true, required = true, description = "Penn Treebank training data directory")
@@ -145,7 +146,7 @@ public class RunCkyParser {
     }
 
     private void removeRefinements(BinaryTreebank binaryParses) {
-        LambdaOne<BinaryTree> refineRemover = new LambdaOne<BinaryTree>() {
+        FnO1ToVoid<BinaryTree> refineRemover = new FnO1ToVoid<BinaryTree>() {
             @Override
             public void call(BinaryTree node) {
                 if (!node.isLexical()) {
@@ -165,7 +166,7 @@ public class RunCkyParser {
 
     private void useSignaturesForUnknownWords(NaryTreebank naryTrees,
             final CnfGrammar grammar) {
-        LambdaOne<NaryTree> ftRemover = new LambdaOne<NaryTree>() {
+        FnO1ToVoid<NaryTree> ftRemover = new FnO1ToVoid<NaryTree>() {
             private final Alphabet<String> emptySet = Alphabet.getEmptyStoppedAlphabet();
             @Override
             public void call(NaryTree node) {
@@ -187,7 +188,7 @@ public class RunCkyParser {
     }
     
     private void removeFunctionTagsAndTraces(NaryTreebank naryTrees) {
-        LambdaOne<NaryTree> ftRemover = new LambdaOne<NaryTree>() {
+        FnO1ToVoid<NaryTree> ftRemover = new FnO1ToVoid<NaryTree>() {
             @Override
             public void call(NaryTree node) {
                 if (!node.isLexical()) {

@@ -1,0 +1,17 @@
+# Features selected as in Bjorkelund et al. (2009) for 'sense' language 'en'
+
+deprel(bag(children(p)))
+pos(bag(children(p)))
+pos(bag(children(p))) + deprel(bag(children(p)))
+word(bag(children(p)))
+word(bag(children(p))) + deprel(bag(children(p)))
+word(bag(children(p))) + pos(p)
+word(bag(children(p))) + pos(head(p))
+word(bag(children(p))) + word(head(p))
+deprel(seq(children(p)))
+deprel(seq(children(p))) + word(head(p))
+deprel(p)
+pos(p)
+pos(p) + word(head(p))
+pos(head(p))
+word(head(p))

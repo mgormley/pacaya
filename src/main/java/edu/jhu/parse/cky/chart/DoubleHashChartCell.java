@@ -1,6 +1,6 @@
 package edu.jhu.parse.cky.chart;
 
-import edu.jhu.data.Sentence;
+import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
@@ -21,7 +21,7 @@ public class DoubleHashChartCell implements ChartCell {
     private boolean isClosed;
 
     public DoubleHashChartCell(CnfGrammar grammar) {
-        scores = new IntDoubleHashMap(Double.NEGATIVE_INFINITY);
+        scores = new IntDoubleHashMap(16, Double.NEGATIVE_INFINITY);
         bps = new IntObjectHashMap<BackPointer>();
 
         isClosed = false;

@@ -2,9 +2,7 @@ package edu.jhu.gm.feat;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 
 /**
  * For testing only.

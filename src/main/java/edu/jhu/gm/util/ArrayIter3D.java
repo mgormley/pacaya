@@ -1,7 +1,6 @@
 package edu.jhu.gm.util;
 
 import java.io.Serializable;
-import java.util.Iterator;
 
 public class ArrayIter3D implements Serializable {
 

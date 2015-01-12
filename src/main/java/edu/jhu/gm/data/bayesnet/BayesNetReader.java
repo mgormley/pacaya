@@ -18,6 +18,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.math.FastMath;
 
 public class BayesNetReader {
 
@@ -84,7 +85,9 @@ public class BayesNetReader {
             
             // The double is the last value on the line.
             double value = Double.parseDouble(assns[assns.length-1]);
-                        
+            // Factor graphs store the log value.
+            value = FastMath.log(value);
+            
             // Get the factor for this configuration, creating a new one if necessary.
             VarSet vars = config.getVars();
             ExplicitFactor f = factorMap.get(vars);

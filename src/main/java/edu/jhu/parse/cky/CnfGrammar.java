@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.util.Alphabet;
@@ -17,7 +18,7 @@ import edu.jhu.util.Alphabet;
  */
 public class CnfGrammar {
 
-    public static final Logger log = Logger.getLogger(CnfGrammar.class);
+    public static final Logger log = LoggerFactory.getLogger(CnfGrammar.class);
     
     private int rootSymbol;
     private ArrayList<Rule> allRules;

@@ -18,7 +18,7 @@ public class ExplicitExpFamFactor extends ExpFamFactor {
         features = new FeatureVector[other.getVars().calcNumConfigs()];
     }
     
-    public ExplicitExpFamFactor(DenseFactor other) {
+    public ExplicitExpFamFactor(VarTensor other) {
         super(other);
         features = new FeatureVector[other.getVars().calcNumConfigs()];
     }

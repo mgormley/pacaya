@@ -14,18 +14,17 @@ ROOT_DIR=`pwd`
 # DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 
-echo "Setting CLASSPATH by running mvn-classpath."
-export CLASSPATH=$ROOT_DIR/target/classes:$ROOT_DIR/lib/*
-export CLASSPATH=$CLASSPATH:`$ROOT_DIR/scripts/experiments/mvn-classpath`
+echo "Setting CLASSPATH from maven."
+export CLASSPATH=$ROOT_DIR/target/classes
+export CLASSPATH=$CLASSPATH:$ROOT_DIR/target/pacaya-3.0.0-SNAPSHOT.jar
+export CLASSPATH=$CLASSPATH:`mvn exec:exec -q -Dexec.executable="echo" -Dexec.args="%classpath"`
 # The old way of setting the class path is below, we simply used the
 # output classes and the lib directory. Yet, we now have maven dependencies
 # that are not included in the lib directory.
 
 
 echo "Setting PYTHONPATH."
-export PYTHONPATH=$ROOT_DIR/scripts:$ROOT_DIR/lib/experiments_core-0.1-py2.7.egg:$PYTHONPATH:/Library/Python/2.6/site-packages/
-export PYTHONPATH=$PYTHONPATH:/home/hltcoe/mgormley/installed/gdata-2.0.14/src
+export PYTHONPATH=$ROOT_DIR/scripts
 
 echo "Adding to PATH."
-export PATH=$ROOT_DIR/bin:$ROOT_DIR/dip_parse:$PATH
-export PATH=$ROOT_DIR/scripts/experiments:$ROOT_DIR/scripts/experiments/core:$PATH
+export PATH=$ROOT_DIR/scripts/experiments:$PATH

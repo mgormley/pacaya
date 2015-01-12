@@ -1,16 +1,16 @@
 package edu.jhu.hlt.optimize;
 
-import java.util.Arrays;
-
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
+import cc.mallet.optimize.InvalidOptimizableException;
 import cc.mallet.optimize.Optimizable;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
-import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
+import edu.jhu.util.Timer;
 
 /**
  * Wrapper of Mallet's L-BFGS implementation.
@@ -121,7 +121,7 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
         
     }
 
-    private static final Logger log = Logger.getLogger(MalletLBFGS.class);
+    private static final Logger log = LoggerFactory.getLogger(MalletLBFGS.class);
 
     private MalletLBFGSPrm prm;
     private boolean converged;
@@ -143,7 +143,17 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
         btls.setRelTolx(prm.lsRelTolx);
         lbfgs.setLineOptimizer(btls);
         
-        converged = lbfgs.optimize(prm.maxIterations);
+        Timer t = new Timer();
+        t.start();
+        try {
+            converged = lbfgs.optimize(prm.maxIterations);
+        } catch (InvalidOptimizableException e) {
+            log.warn("Error during optimization: " + e.getMessage());
+            log.warn("Continuing as if there were no error.");
+            converged = false;
+        }
+        t.stop();        
+        log.debug(String.format("Average time per iteration (min): %.2g ", t.totMin() / lbfgs.getIteration()));
         
         return converged;
     }

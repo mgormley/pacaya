@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.jhu.data.Sentence;
+import edu.jhu.nlp.data.Sentence;
 import edu.jhu.parse.cky.GrammarConstants;
-import edu.jhu.prim.util.Lambda.LambdaOne;
+import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.files.Files;
 
@@ -20,13 +20,17 @@ import edu.jhu.util.files.Files;
  */
 public class NaryTree {
 
-    private static final int NOT_INITIALIZED = -1;
+    public static final int NOT_INITIALIZED = -1;
     private String symbol;
+    // Start token of this span (inclusive)
     private int start;
+    // End token of this span (exclusive)
     private int end;
-    /** Children of this node, ordered left-to-right */
+    // Children of this node, ordered left-to-right
     private ArrayList<NaryTree> children;
     private boolean isLexical;
+    // Parent of this node.
+    private NaryTree parent;
     
     public NaryTree(String symbol, int start, int end, ArrayList<NaryTree> children,
             boolean isLexical) {
@@ -35,6 +39,10 @@ public class NaryTree {
         this.end = end;
         this.children = children;
         this.isLexical = isLexical;
+        this.parent = null;
+        for (NaryTree child : children) {
+            child.parent = this;
+        }
     }
 
 //    public Span getSpan() {
@@ -107,21 +115,6 @@ public class NaryTree {
         START, LEXICAL, NONTERMINAL, CHILDREN, DONE,
     }
 
-    public static ArrayList<NaryTree> readTreesInPtbFormat(Reader reader) throws IOException {
-        ArrayList<NaryTree> trees = new ArrayList<NaryTree>();
-        while (true) {
-            NaryTree tree = readSubtreeInPtbFormat(reader);
-            if (tree != null) {
-                trees.add(tree);
-            }            
-            if (tree == null || tree.isLexical) {
-                break;
-            }            
-        }
-        return trees;
-    }
-
-
     /**
      * Reads a full tree in Penn Treebank format. Such a tree should include an
      * outer set of parentheses. The returned tree will have initialized the
@@ -137,7 +130,7 @@ public class NaryTree {
         root.updateStartEnd();
         return root;
     }
-    
+
     /**
      * Reads an NaryTreeNode from a string.
      * 
@@ -206,11 +199,25 @@ public class NaryTree {
         return root;
     }
 
+    private static ArrayList<NaryTree> readTreesInPtbFormat(Reader reader) throws IOException {
+        ArrayList<NaryTree> trees = new ArrayList<NaryTree>();
+        while (true) {
+            NaryTree tree = readSubtreeInPtbFormat(reader);
+            if (tree != null) {
+                trees.add(tree);
+            }            
+            if (tree == null || tree.isLexical) {
+                break;
+            }            
+        }
+        return trees;
+    }
+
     private static boolean isWhitespace(char c) {
         return c == ' ' || c == '\n' || c == '\t';
     }
     
-    public void preOrderTraversal(LambdaOne<NaryTree> function) {
+    public void preOrderTraversal(FnO1ToVoid<NaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
@@ -221,7 +228,7 @@ public class NaryTree {
         }
     }
     
-    public void postOrderTraversal(LambdaOne<NaryTree> function) {
+    public void postOrderTraversal(FnO1ToVoid<NaryTree> function) {
         // Post-order traversal of each child.
         if (children != null) {
             for (NaryTree child : children) {
@@ -247,7 +254,11 @@ public class NaryTree {
     public boolean isLeaf() {
         return children == null || children.size() == 0;
     }
-    
+
+    public NaryTree getParent() {
+        return parent;
+    }
+        
     /**
      * Updates all the start end fields, treating the current node as the root.
      */
@@ -284,7 +295,7 @@ public class NaryTree {
      * Keep only those nodes which the filter accepts.
      */
     public void postOrderFilterNodes(final NaryTreeNodeFilter filter) {
-        postOrderTraversal(new LambdaOne<NaryTree>() {
+        postOrderTraversal(new FnO1ToVoid<NaryTree>() {
             @Override
             public void call(NaryTree node) {
                 if (!node.isLeaf()) {
@@ -318,6 +329,17 @@ public class NaryTree {
         postOrderTraversal(leafCollector);
         return leafCollector.leaves;
     }
+
+    /** Gets the leaf containing the specified token index. */
+    public NaryTree getLeafAt(int idx) {
+        NaryTree leaf = null;
+        for (NaryTree l : this.getLeaves()) {
+            if (l.start <= idx && idx < l.end) {
+                leaf = l;
+            }
+        }
+        return leaf;
+    }
     
     /**
      * Gets the lexical item ids comprising the sentence.
@@ -349,7 +371,7 @@ public class NaryTree {
         return words;
     }
 
-    private class LeafCollector implements LambdaOne<NaryTree> {
+    private class LeafCollector implements FnO1ToVoid<NaryTree> {
 
         public ArrayList<NaryTree> leaves = new ArrayList<NaryTree>();
         
@@ -362,7 +384,7 @@ public class NaryTree {
         
     }
     
-    private class LexicalLeafCollector implements LambdaOne<NaryTree> {
+    private class LexicalLeafCollector implements FnO1ToVoid<NaryTree> {
 
         public ArrayList<NaryTree> leaves = new ArrayList<NaryTree>();
         
@@ -417,7 +439,7 @@ public class NaryTree {
         return new BinaryTree(symbol, start, end, leftChild, rightChild , isLexical);                
     }
     
-    private class UpdateStartEnd implements LambdaOne<NaryTree> {
+    private class UpdateStartEnd implements FnO1ToVoid<NaryTree> {
 
         @Override
         public void call(NaryTree node) {
@@ -453,8 +475,12 @@ public class NaryTree {
     
     @Override
     public String toString() {
-        return "NaryTreeNode [symbol=" + getSymbol() + "_{" + start + ", "
-                + end + "}, children=" + children + "]";
+        return "NaryTree [symbol=" + symbol + ", start=" + start + ", end=" + end + ", isLexical=" + isLexical + "]";
+    }
+
+    public void addChild(NaryTree child) {
+        children.add(child);
+        child.parent = this;
     }
 
 }

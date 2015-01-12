@@ -5,44 +5,55 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.util.Prm;
 
 /**
  * Minimum Bayes Risk (MBR) decoder for a CRF model.
  * 
  * @author mgormley
  */
-public class MbrDecoder {
+public class MbrDecoder implements Decoder<Object, VarConfig> {
 
-    public static class MbrDecoderPrm {
+    public static class MbrDecoderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
-        public Loss loss = Loss.ACCURACY;
+        public Loss loss = Loss.L1;
     }
 
     public enum Loss {
-        // TODO: support other loss functions.
-        ACCURACY
+        L1, MSE
     }
+
+    private static final Logger log = LoggerFactory.getLogger(MbrDecoder.class);
 
     private MbrDecoderPrm prm;    
     private VarConfig mbrVarConfig;
     private Map<Var,Double> varMargMap;
-    private ArrayList<DenseFactor> margs;
+    private ArrayList<VarTensor> margs;
 
     public MbrDecoder(MbrDecoderPrm prm) {
         this.prm = prm;
     }
 
+    @Override
+    public VarConfig decode(FgInferencer inf, UFgExample ex, Object x) {
+        decode(inf, ex);
+        return mbrVarConfig;
+    }
+    
     /**
      * Runs inference and computes the MBR variable configuration. The outputs
      * are stored on the class, and can be queried after this call to decode.
@@ -52,34 +63,48 @@ public class MbrDecoder {
      * @return the FgInferencer that was used.
      */
     public FgInferencer decode(FgModel model, UFgExample ex) {
+        // Run inference.
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        fgLatPred.updateFromModel(model);
+        FgInferencer infLatPred = prm.infFactory.getInferencer(fgLatPred);
+        infLatPred.run();        
+        decode(infLatPred, ex);
+        return infLatPred;
+    }
+
+    /**
+     * Computes the MBR variable configuration from the marginals cached in the
+     * inferencer, which is assumed to have already been run. The outputs are
+     * stored on the class, and can be queried after this call to decode.
+     */
+    public void decode(FgInferencer infLatPred, UFgExample ex) {
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        
         mbrVarConfig = new VarConfig();
-        margs = new ArrayList<DenseFactor>();
+        margs = new ArrayList<VarTensor>();
         varMargMap = new HashMap<Var,Double>();
 
         // Add in the observed variables.
         mbrVarConfig.put(ex.getObsConfig());
 
-        // Run inference.
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
-        FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
-        inf.run();
-        
         // Get the MBR configuration of all the latent and predicted
-        // variables.
-        if (prm.loss == Loss.ACCURACY) {
+        // variables.        
+        if (prm.loss == Loss.L1 || prm.loss == Loss.MSE) {
             for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
                 Var var = fgLatPred.getVar(varId);
-                DenseFactor marg = inf.getMarginalsForVarId(varId);
+                VarTensor marg = infLatPred.getMarginalsForVarId(varId);
                 margs.add(marg);
                 int argmaxState = marg.getArgmaxConfigId();
                 mbrVarConfig.put(var, argmaxState);
 
                 varMargMap.put(var, marg.getValue(argmaxState));
+                if (log.isTraceEnabled()) {
+                    log.trace("Variable marginal: " + marg);
+                }
             }
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
         }
-        return inf;
     }
     
     /** Gets the MBR variable configuration for the example that was decoded. */
@@ -97,7 +122,7 @@ public class MbrDecoder {
      * The i'th DenseFactor in the list corresponds to the i'th variable in the
      * factor graph.
      */
-    public List<DenseFactor> getVarMarginals() {
+    public List<VarTensor> getVarMarginals() {
         return margs;
     }
 
@@ -105,12 +130,13 @@ public class MbrDecoder {
      * Convenience wrapper around getVarMarginals().
      * Does not memoize, so use sparingly.
      */
-    public Map<Var, DenseFactor> getVarMarginalsIndexed() {
-    	Map<Var, DenseFactor> m = new HashMap<Var, DenseFactor>();
-    	for(DenseFactor df : margs) {
+    public Map<Var, VarTensor> getVarMarginalsIndexed() {
+    	Map<Var, VarTensor> m = new HashMap<Var, VarTensor>();
+    	for(VarTensor df : margs) {
     		assert df.getVars().size() == 1;
     		m.put(df.getVars().get(0), df);
     	}
     	return m;
     }
+    
 }

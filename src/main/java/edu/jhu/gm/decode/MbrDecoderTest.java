@@ -8,12 +8,10 @@ import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -21,7 +19,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
+import edu.jhu.gm.model.VarTensor;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
 import edu.jhu.util.collections.Lists;
 
 public class MbrDecoderTest {
@@ -38,12 +37,12 @@ public class MbrDecoderTest {
     
     public void testAccuracy(boolean useLogDomain) {
         FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
-        FactorGraph fg = getThreeConnectedComponentsFactorGraph(useLogDomain, ofc, obsFe);
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph(ofc, obsFe);
         MbrDecoder decoder = new MbrDecoder(new MbrDecoderPrm());
         
         // Make a dummy train config.
@@ -61,11 +60,11 @@ public class MbrDecoderTest {
         
         // Set the param for "N" to 0.5.
         int feat;
-        feat = ofc.getFeatIndex(0, 0, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE", true)));
+        feat = ofc.getFeatIndex(0, 0, fts.get(0).getAlphabet().lookupIndex("BIAS_FEATURE"));
         model.add(feat, 0.5);
         //model.getParams()[0] = 0.5;
         // Set the param for "V" to 1.0.
-        feat = ofc.getFeatIndex(0, 1, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE", true)));
+        feat = ofc.getFeatIndex(0, 1, fts.get(0).getAlphabet().lookupIndex("BIAS_FEATURE"));
         model.add(feat, 1.0);
         //model.getParams()[1] = 1.0;
         System.out.println(model);
@@ -78,7 +77,7 @@ public class MbrDecoderTest {
         System.out.println(mbrVc);
     }
 
-    public static FactorGraph getThreeConnectedComponentsFactorGraph(boolean logDomain, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
+    public static FactorGraph getThreeConnectedComponentsFactorGraph(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
@@ -102,11 +101,10 @@ public class MbrDecoderTest {
         fg.addFactor(emit1);
         fg.addFactor(emit2);
 
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                ((DenseFactor)f).convertRealToLog();
-            }
+        for (Factor f : fg.getFactors()) {
+            ((VarTensor)f).convertRealToLog();
         }
+
         return fg;
     }
 

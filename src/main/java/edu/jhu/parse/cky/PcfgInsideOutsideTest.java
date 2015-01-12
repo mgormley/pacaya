@@ -6,8 +6,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.jhu.data.Sentence;
-import edu.jhu.data.SentenceCollection;
+import edu.jhu.nlp.data.Sentence;
+import edu.jhu.nlp.data.SentenceCollection;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;

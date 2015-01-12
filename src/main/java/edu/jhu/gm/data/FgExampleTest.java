@@ -1,6 +1,6 @@
 package edu.jhu.gm.data;
 
-import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
+import static edu.jhu.nlp.data.simple.AnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -8,19 +8,19 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.JointNlpFgExamplesBuilder;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.srl.SrlFactorGraphBuilder.RoleStructure;
+import edu.jhu.nlp.CorpusStatistics;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.nlp.data.conll.CoNLL09Sentence;
+import edu.jhu.nlp.data.conll.CoNLL09Token;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
+import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.util.collections.Lists;
 
 public class FgExampleTest {
@@ -39,7 +39,7 @@ public class FgExampleTest {
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentenceCollection sents = getSingleton(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+        AnnoSentenceCollection sents = getSingleton(sent.toAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
         System.out.println("Done reading.");
@@ -55,13 +55,13 @@ public class FgExampleTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
-        ofc.init(data);
         
-        FgExample ex = data.get(0);
+        LFgExample ex = data.get(0);
         
         // Global factor should still be there.
         assertEquals(1 + 3 + 3*2 + 2 + 2, ex.getFgLatPred().getFactors().size());
-        assertEquals(1 + 3 + 3*2 + 2 + 2, ex.getFgLat().getFactors().size());
+        // Includes an extra 2 ClampFactors
+        assertEquals(1 + 3 + 3*2 + 2 + 2 + 2, ex.getFgLat().getFactors().size());
 
         assertEquals(0, getEmpty(ex.getFgLatPred().getFactors()).size());
         // Just the two Role unary factors. The link/role binary factors shouldn't be empty.

@@ -12,7 +12,7 @@ import edu.jhu.gm.feat.FactorTemplateList;
 public interface FgExampleFactory {
 
     /** Gets the i'th example. */
-    public FgExample get(int i, FactorTemplateList fts);
+    public LFgExample get(int i, FactorTemplateList fts);
 
     /** Gets the number of examples. */
     public int size();

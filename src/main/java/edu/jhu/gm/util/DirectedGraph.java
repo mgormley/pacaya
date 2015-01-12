@@ -1,8 +1,13 @@
 package edu.jhu.gm.util;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Undirected bipartite graph.
@@ -12,6 +17,7 @@ import java.util.List;
  */
 public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends DirectedGraph<N,E>.Edge> implements Serializable {
     
+    private static final Logger log = LoggerFactory.getLogger(DirectedGraph.class);
     private static final long serialVersionUID = 1L;
 
     // Due to a compiler error in Java 1.7, the fields in Node/Edge are package
@@ -207,28 +213,53 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
         }
     }
     
-    /**
-     * Gets a pre-order traversal over the nodes reachable from this one.
-     * @param root
-     */
-    public List<N> preOrderTraversal(N root) {
-        setMarkedAllNodes(false);
-        ArrayList<N> nodes = new ArrayList<N>();
-        preOrderTraversal(root, nodes);
-        return nodes;
+    /** Runs a breadth-first-search starting at the root node. */
+    public List<N> bfs(N root) {
+        List<N> order = new ArrayList<>();
+        Queue<N> queue = new ArrayDeque<>();
+        queue.add(root);
+
+        // Unmark all the nodes.
+        this.setMarkedAllNodes(false);
+    
+        while (!queue.isEmpty()) {
+            // Process the next node in the queue.
+            N node = queue.remove();
+            if (!node.isMarked()) {
+                // Add node only if not marked.
+                order.add(node);
+                node.setMarked(true);
+            }
+            
+            // For each neighbor...
+            for (E edge : node.getOutEdges()) {
+                N neighbor = edge.getChild();
+                if (!neighbor.isMarked()) {
+                    // Queue if not marked.
+                    queue.add(neighbor);
+                }
+            }
+        }
+        return order;
     }
-        
-    private void preOrderTraversal(N root, List<N> nodes) {
+    
+    /** Visits the nodes in a pre-order traversal. */
+    public void preOrderTraversal(N root, Visitor<N> v) {
+        setMarkedAllNodes(false);
+        preOrderTraveralRecursive(root, v);
+    }
+    
+    private void preOrderTraveralRecursive(N root, Visitor<N> v) {
+        v.visit(root);
         root.setMarked(true);
-        nodes.add(root);
         for (Edge e : root.getOutEdges()) {
             N n = e.getChild();
             if (!n.isMarked()) {
-                preOrderTraversal(n, nodes);
+                preOrderTraveralRecursive(n, v);
             }
         }
     }
-
+    
     /**
      * Calls setMarked(marked) on all the nodes.
      */

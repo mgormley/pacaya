@@ -10,7 +10,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import data.DataSample;
@@ -18,14 +19,13 @@ import data.FeatureFile;
 import data.RV;
 import data.VariableSet;
 import dataParser.DataParser;
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.FeatureNames;
 import featParser.FeatureFileParser;
 
 public class ErmaReaderTest {
@@ -49,7 +49,7 @@ public class ErmaReaderTest {
         
         // Read the ERMA files to get our objects.
         ErmaReader er = new ErmaReader();
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FeatureNames alphabet = new FeatureNames();
         FgExampleList data = er.read(SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_FEATURE_FILE), 
                                      SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_TRAIN_DATA_FILE), alphabet);
 
@@ -61,7 +61,7 @@ public class ErmaReaderTest {
             //System.out.println(s);
             //System.out.println(fg);
 
-            FgExample ex = data.get(i);            
+            LFgExample ex = data.get(i);            
             FactorGraph ourFg = ex.getOriginalFactorGraph();
             
             assertEquals(ermaFg.getFactors().size(), ourFg.getNumFactors());
@@ -123,7 +123,7 @@ public class ErmaReaderTest {
      */
     public static class SimpleErmaReader {
 
-        private static final Logger log = Logger.getLogger(SimpleErmaReader.class);
+        private static final Logger log = LoggerFactory.getLogger(SimpleErmaReader.class);
         private ArrayList<DataSample> samples;
         private FeatureFile ff;
 

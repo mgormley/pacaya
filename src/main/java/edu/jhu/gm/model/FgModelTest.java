@@ -9,22 +9,12 @@ import java.io.ObjectOutputStream;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExampleMemoryStore;
-import edu.jhu.gm.feat.FactorTemplate;
-import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.SlowObsFeatureExtractor;
-import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.nlp.MutableInt;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.sort.DoubleSort;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
-import edu.jhu.srl.MutableInt;
-import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
-import edu.jhu.util.collections.Lists;
 
 public class FgModelTest {
 
@@ -137,9 +127,7 @@ public class FgModelTest {
     }
 
     public static double[] getParams(FgModel model) {
-        double[] params = new double[model.getNumParams()];
-        model.updateDoublesFromModel(params);
-        return params;
+        return model.getParams().toNativeArray();
     }
     
 }

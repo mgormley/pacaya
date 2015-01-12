@@ -3,12 +3,13 @@ package edu.jhu.gm.data;
 import java.io.Serializable;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -23,8 +24,9 @@ import edu.jhu.gm.model.VarSet;
  * 
  */
 // TODO: rename to CrfExample
-public class LabeledFgExample extends UnlabeledFgExample implements FgExample, Serializable {
-
+public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, Serializable {
+    
+    private static final Logger log = LoggerFactory.getLogger(LabeledFgExample.class);
     private static final long serialVersionUID = 1L;
     
     /** The factor graph with the OBSERVED and PREDICTED variables clamped to their values from the training example. */
@@ -69,7 +71,7 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
         VarConfig predConfig = goldConfig.getIntersection(predictedVars);
         fgLat = fgLatPred.getClamped(predConfig);
 
-        assert (fg.getNumFactors() == fgLat.getNumFactors());
+        assert (fg.getNumFactors() <= fgLat.getNumFactors());
         
         fgClampTimer.stop();
     }
@@ -78,6 +80,9 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
         for (Var var : fg.getVars()) {
             // Latent variables don't need to be specified in the gold variable assignment.
             if (var.getType() != VarType.LATENT && goldConfig.getState(var, -1) == -1) {
+                int numNonLat = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED).size()
+                        + VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED).size();
+                log.error(String.format("Missing vars. #non-latent=%d #assign=%d", numNonLat, goldConfig.size()));
                 throw new IllegalStateException("Vars missing from train configuration: " + var);
             }
         }
@@ -91,16 +96,6 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
         return fgLat;
     }
     
-    /**
-     * Updates the factor graph with the OBSERVED and PREDICTED variables clamped
-     * to their values from the training example.
-     * @param params The parameters with which to update.
-     * @param logDomain TODO
-     */
-    public FactorGraph updateFgLat(FgModel model, boolean logDomain) {
-        return getUpdatedFactorGraph(fgLat, model, logDomain);
-    }
-
     /** Gets the gold configuration of the variables. */
     public VarConfig getGoldConfig() {
         return goldConfig;
