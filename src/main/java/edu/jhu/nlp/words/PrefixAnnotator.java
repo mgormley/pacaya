@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
+import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.util.collections.Lists;
@@ -14,7 +15,18 @@ import edu.jhu.util.collections.Lists;
  * 
  * @author mgormley
  */
-public class PrefixAnnotator extends AbstractParallelAnnotator implements Annotator {
+public class PrefixAnnotator extends AbstractParallelAnnotator implements Annotator, Trainable {
+
+    private static final long serialVersionUID = 1L;
+    private boolean annoTrainGold;
+    
+    public PrefixAnnotator() {
+        this(false);
+    }
+    
+    public PrefixAnnotator(boolean annoTrainGold) {
+        this.annoTrainGold = annoTrainGold;
+    }
     
     public static void addPrefixes(AnnoSentenceCollection sents) {
         (new PrefixAnnotator()).annotate(sents);
@@ -35,6 +47,14 @@ public class PrefixAnnotator extends AbstractParallelAnnotator implements Annota
         }
         Lists.intern(prefixes);
         sent.setPrefixes(prefixes);
+    }
+
+    @Override
+    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
+            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
+        if (annoTrainGold) {
+            addPrefixes(trainGold);
+        }
     }
 
 }

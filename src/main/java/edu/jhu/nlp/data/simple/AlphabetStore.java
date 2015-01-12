@@ -4,7 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
@@ -14,7 +15,7 @@ public class AlphabetStore implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(AlphabetStore.class);
+    private static final Logger log = LoggerFactory.getLogger(AlphabetStore.class);
     
     // Special Tokens.
     public static final int NUM_SPECIAL_TOKS = 4;

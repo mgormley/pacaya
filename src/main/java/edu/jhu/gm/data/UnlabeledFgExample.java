@@ -2,7 +2,8 @@ package edu.jhu.gm.data;
 
 import java.io.Serializable;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -22,7 +23,7 @@ import edu.jhu.util.Timer;
 public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(UnlabeledFgExample.class);
+    private static final Logger log = LoggerFactory.getLogger(UnlabeledFgExample.class);
     
     /** The original factor graph. */
     protected FactorGraph fg;

@@ -24,8 +24,7 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 public class SrlDecoder implements Decoder<AnnoSentence, SrlGraph> {
 
     public static class SrlDecoderPrm {
-        // TODO: Set to non-null values.
-        public MbrDecoderPrm mbrPrm = null;
+        public MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
     }
     
     private SrlDecoderPrm prm;
@@ -51,29 +50,38 @@ public class SrlDecoder implements Decoder<AnnoSentence, SrlGraph> {
             if (v instanceof RoleVar && v.getType() != VarType.LATENT) {
                 // Decode the Role var.
                 RoleVar role = (RoleVar) v;
-                SrlPred pred = srlGraph.getPredAt(role.getParent());
-                if (pred == null) {
-                    // We need some predicate variable here. If necessary, the
-                    // state will be updated below.
-                    String sense = "NO.SENSE.PREDICTED";
-                    pred = new SrlPred(role.getParent(), sense);
+                String stateName = vc.getStateName(role);
+                if (!"_".equals(stateName)) {
+                    SrlPred pred = srlGraph.getPredAt(role.getParent());
+                    if (pred == null) {
+                        // We need some predicate variable here. If necessary, the
+                        // state will be updated below.
+                        String sense = "NO.SENSE.PREDICTED";
+                        pred = new SrlPred(role.getParent(), sense);
+                    }
+                    SrlArg arg = srlGraph.getArgAt(role.getChild());
+                    if (arg == null) {
+                        arg = new SrlArg(role.getChild());
+                    }
+                    SrlEdge edge = new SrlEdge(pred, arg, stateName);
+                    srlGraph.addEdge(edge);
                 }
-                SrlArg arg = srlGraph.getArgAt(role.getChild());
-                if (arg == null) {
-                    arg = new SrlArg(role.getChild());
-                }
-                SrlEdge edge = new SrlEdge(pred, arg, vc.getStateName(role));
-                srlGraph.addEdge(edge);
                 srlVarCount++;
             } else if (v instanceof SenseVar && v.getType() == VarType.PREDICTED) {
                 // Decode the Sense var.
                 SenseVar sense = (SenseVar) v;
-                SrlPred pred = srlGraph.getPredAt(sense.getParent());
-                if (pred == null) {
-                    pred = new SrlPred(sense.getParent(), vc.getStateName(sense));
-                    srlGraph.addPred(pred);
+                String predLabel = vc.getStateName(sense);
+                if ("_".equals(predLabel)) {
+                    // Predicate ID said there's no predicate here.
                 } else {
-                    pred.setLabel(vc.getStateName(sense));
+                    // Adding the identified predicate.
+                    SrlPred pred = srlGraph.getPredAt(sense.getParent());
+                    if (pred == null) {
+                        pred = new SrlPred(sense.getParent(), predLabel);
+                        srlGraph.addPred(pred);
+                    } else {
+                        pred.setLabel(predLabel);
+                    }
                 }
                 srlVarCount++;
             }

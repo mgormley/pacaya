@@ -1,6 +1,7 @@
 package edu.jhu.nlp.joint;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.app.Encoder;
 import edu.jhu.gm.data.LFgExample;
@@ -37,7 +38,7 @@ import edu.jhu.util.Prm;
  */
 public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
-    private static final Logger log = Logger.getLogger(JointNlpEncoder.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpEncoder.class);
 
     public static class JointNlpEncoderPrm extends Prm {
         private static final long serialVersionUID = 1L;
@@ -73,6 +74,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
     private LFgExample getExample(AnnoSentence sent, AnnoSentence gold, boolean labeledExample) {
         // Create a feature extractor for this example.
+        // TODO: We should only create the feature extractors for parts of the model we're going to instantiate.
         ObsFeatureExtractor srlFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
         srlFe = new ObsFeatureCache(srlFe);        
         FeatureExtractor dpFe = prm.fePrm.dpFePrm.onlyFast ?
@@ -121,23 +123,28 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
     }
 
     public static void checkForRequiredAnnotations(JointNlpEncoderPrm prm, AnnoSentenceCollection sents) {
-        // Check that the first sentence has all the required annotation
-        // types for the specified feature templates.
-        AnnoSentence sent = sents.get(0);
-        if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
-            if (prm.fgPrm.includeSrl) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
+        try {
+            // Check that the first sentence has all the required annotation
+            // types for the specified feature templates.
+            AnnoSentence sent = sents.get(0);
+            if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
+                if (prm.fgPrm.includeSrl) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
+                }
             }
-        }
-        if (prm.fgPrm.includeDp) {
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
-            if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
+            if (prm.fgPrm.includeDp && !prm.fePrm.dpFePrm.onlyFast) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
+                if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
+                }
             }
-        }
-        if (prm.fgPrm.includeRel && prm.fgPrm.relPrm.templates != null) {
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
+            if (prm.fgPrm.includeRel && prm.fgPrm.relPrm.templates != null) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
+            }
+        } catch (IllegalStateException e) {
+            log.error(e.getMessage());
+            log.trace("", e);
         }
     }
     

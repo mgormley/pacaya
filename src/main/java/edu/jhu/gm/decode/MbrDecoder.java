@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
@@ -17,6 +18,7 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarTensor;
+import edu.jhu.util.Prm;
 
 /**
  * Minimum Bayes Risk (MBR) decoder for a CRF model.
@@ -25,7 +27,8 @@ import edu.jhu.gm.model.VarTensor;
  */
 public class MbrDecoder implements Decoder<Object, VarConfig> {
 
-    public static class MbrDecoderPrm {
+    public static class MbrDecoderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public Loss loss = Loss.L1;
     }
@@ -34,7 +37,7 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
         L1, MSE
     }
 
-    private static final Logger log = Logger.getLogger(MbrDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(MbrDecoder.class);
 
     private MbrDecoderPrm prm;    
     private VarConfig mbrVarConfig;

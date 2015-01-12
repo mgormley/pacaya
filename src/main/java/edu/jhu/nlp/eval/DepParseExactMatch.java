@@ -1,6 +1,7 @@
 package edu.jhu.nlp.eval;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
@@ -12,7 +13,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
  */
 public class DepParseExactMatch implements Evaluator {
 
-    private static final Logger log = Logger.getLogger(DepParseExactMatch.class);
+    private static final Logger log = LoggerFactory.getLogger(DepParseExactMatch.class);
 
     private boolean skipPunctuation;
 

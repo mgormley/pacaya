@@ -11,12 +11,17 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.Sentence;
 import edu.jhu.nlp.data.SentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Prm;
 
 /**
  * Reads a brown clusters file and tags a sentence, by replacing each word with
@@ -24,7 +29,7 @@ import edu.jhu.util.Alphabet;
  */
 public class BrownClusterTagger extends AbstractParallelAnnotator implements Annotator {
 
-    public static class BrownClusterTaggerPrm {
+    public static class BrownClusterTaggerPrm extends Prm {
         /** Maximum length for Brown cluster tag. */
         public int maxTagLength = Integer.MAX_VALUE;
         /**
@@ -34,6 +39,8 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
         public String language;
     }
     
+    private static final long serialVersionUID = 1L;
+    private static final Logger log = LoggerFactory.getLogger(BrownClusterTagger.class);
     private static final String OOV_CLUSTER = "UNK";
     private static final Pattern tab = Pattern.compile("\t");
     
@@ -49,7 +56,15 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
         map = new HashMap<String,String>();
     }
     
+    /** Constructor which also reads the brown clusters from the file. */
+    public BrownClusterTagger(BrownClusterTaggerPrm prm, File brownClusters) {
+        this(prm);
+        read(brownClusters);
+    }
+    
+    /** Read the Brown clusters from a file. */
     public void read(File brownClusters) {
+        log.info("Reading Brown clusters from file: " + brownClusters);
         FileInputStream is;
         try {
             is = new FileInputStream(brownClusters);
@@ -59,6 +74,7 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
         }
     }
     
+    /** Read the Brown clusters from an input stream. */
     public void read(InputStream input) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
         String line;
@@ -116,6 +132,12 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
     
     public double getHitRate() {
         return (double) (numLookups.get() - numMisses.get()) / numLookups.get();
+    }
+    
+    @Override
+    public void annotate(AnnoSentenceCollection sents) {
+        super.annotate(sents);
+        log.info("Brown cluster hit rate: " + getHitRate());                        
     }
     
     public void annotate(AnnoSentence sent) {

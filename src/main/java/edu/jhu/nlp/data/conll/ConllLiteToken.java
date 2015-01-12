@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * One token from a CoNLL Lite formatted file.
@@ -22,7 +23,7 @@ import org.apache.log4j.Logger;
  */
 public class ConllLiteToken {
 
-    private static Logger log = Logger.getLogger(ConllLiteToken.class);
+    private static Logger log = LoggerFactory.getLogger(ConllLiteToken.class);
 
     private static final Pattern tab = Pattern.compile("\"?\t\"?");
     private static final Pattern comma = Pattern.compile("\\s*,\\s*");

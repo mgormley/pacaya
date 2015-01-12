@@ -152,10 +152,14 @@ class PathDefinitions():
             pl = p.langs[lang_short]
             pl.bc_256 = os.path.join(bc_256_dir, "full.txt_%s_256" % (lang_short), "paths.cutoff")
             pl.bc_1000 = os.path.join(bc_1000_dir, "full.txt_%s_1000" % (lang_short), "bc", "paths")
-            
+        
         # Tag Maps
         univ_pos_tags = os.path.join(corpora_dir, "universal_pos_tags.1.02")
         p.tag_map_en_ptb = os.path.join(univ_pos_tags, "en-ptb.map")
+        
+        # Concrete 3.8.0 samples
+        p.concrete380 = get_first_that_exists("/export/common/data/processed/concrete/concrete-3.8.0-post-stanford",
+                                              os.path.join(corpora_dir, "processed", "concrete-3.8.0-post-stanford"))
         
         return p
     

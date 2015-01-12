@@ -1,6 +1,9 @@
 package edu.jhu.nlp.joint;
 
-import org.apache.log4j.Logger;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.AbstractFgExampleList;
 import edu.jhu.gm.data.FgExampleList;
@@ -40,7 +43,7 @@ public class JointNlpFgExamplesBuilder {
         public JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
     }
     
-    private static final Logger log = Logger.getLogger(JointNlpFgExamplesBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpFgExamplesBuilder.class);
 
     private ObsFeatureConjoiner ofc;
     private JointNlpFgExampleBuilderPrm prm;
@@ -83,10 +86,12 @@ public class JointNlpFgExamplesBuilder {
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
         FactorTemplateList fts = ofc.getTemplates();
-        if (jePrm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
+        if ((jePrm.fgPrm.srlPrm.predictSense || jePrm.fgPrm.srlPrm.predictPredPos) && fts.isGrowing()) {
             // TODO: This should have a bias feature.
-            Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
+            List<String> senses = CorpusStatistics.PRED_POSITION_STATE_NAMES;
+            Var v = new Var(VarType.PREDICTED, senses.size(), CorpusStatistics.UNKNOWN_SENSE, senses);
             fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new FeatureNames(), SrlFactorGraphBuilder.TEMPLATE_KEY_FOR_UNKNOWN_SENSE_ROLE));
         }
         
         if (!ofc.isInitialized()) {

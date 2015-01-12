@@ -2,7 +2,8 @@ package edu.jhu.autodiff.erma;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.Module;
@@ -39,7 +40,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
     // For internal use only.
     private Algebra tmpS;
 
-    private static final Logger log = Logger.getLogger(ProjDepTreeModule.class);
+    private static final Logger log = LoggerFactory.getLogger(ProjDepTreeModule.class);
     
     /** The sentence length. */
     private int n;

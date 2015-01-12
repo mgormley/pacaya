@@ -8,7 +8,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Writes a single CoNLL-X format file.
@@ -18,7 +19,7 @@ import org.apache.log4j.Logger;
  */
 public class CoNLLXWriter implements Closeable {
 
-    private static final Logger log = Logger.getLogger(CoNLLXWriter.class);
+    private static final Logger log = LoggerFactory.getLogger(CoNLLXWriter.class);
     private Writer writer;
     private int count;
     

@@ -112,6 +112,26 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
         }
         return newSents;
     }
+    
+    /** Returns true if some of the sentences have a particular annotation type. */
+    public boolean someHaveAt(AT at) {
+        for (AnnoSentence sent : this) {
+            if (sent.hasAt(at)) { 
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /** Returns true if all of the sentences have a particular annotation type. */
+    public boolean allHaveAt(AT at) {
+        for (AnnoSentence sent : this) {
+            if (!sent.hasAt(at)) { 
+                return false;
+            }
+        }
+        return true;
+    }
 
     /** Gets the length of the longest sentence in this collection. */
     public int getMaxLength() {

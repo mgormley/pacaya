@@ -1,6 +1,7 @@
 package edu.jhu.hlt.optimize;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
@@ -13,7 +14,7 @@ import edu.stanford.nlp.optimization.QNMinimizer;
 
 public class StanfordQNMinimizer implements Optimizer<DifferentiableFunction> {
 
-    private static final Logger log = Logger.getLogger(StanfordQNMinimizer.class);
+    private static final Logger log = LoggerFactory.getLogger(StanfordQNMinimizer.class);
     private int maxLbfgsIterations = 1000;
 
     public StanfordQNMinimizer(int maxLbfgsIterations) {

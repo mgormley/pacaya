@@ -1,7 +1,8 @@
 package edu.jhu.nlp.depparse;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -20,7 +21,7 @@ import edu.jhu.util.FeatureNames;
 
 public class FastDepParseFeatureExtractor implements FeatureExtractor {
 
-    private static final Logger log = Logger.getLogger(FastDepParseFeatureExtractor.class);     
+    private static final Logger log = LoggerFactory.getLogger(FastDepParseFeatureExtractor.class);     
     private static final FeatureVector emptyFv;
     static {
         emptyFv = new FeatureVector();
@@ -28,15 +29,12 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
 
     public static int featureHashMod = -1;
     private IntAnnoSentence isent;
+    private FeatureNames alphabet;
     
     public FastDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FeatureNames alphabet) {
         this.isent = new IntAnnoSentence(sent, cs.store);
         this.featureHashMod = featureHashMod;
-        // TODO: Remove this, it's a huge waste of memory.
-        int i=0;
-        while (alphabet.size() < featureHashMod) {
-            alphabet.lookupIndex(i++);
-        }
+        this.alphabet = alphabet;
     }
 
     @Override
@@ -48,6 +46,13 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
     
     @Override
     public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
+        // Expand the alphabet to include every feature up to the hash mod.
+        // TODO: Remove this, it's a huge waste of memory.
+        int i=0;
+        while (alphabet.size() < featureHashMod) {
+            alphabet.lookupIndex(i++);
+        }
+        
         FeTypedFactor f = (FeTypedFactor) factor;
         Enum<?> ft = f.getFactorType();
         VarSet vars = f.getVars();

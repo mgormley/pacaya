@@ -1,6 +1,7 @@
 package edu.jhu.nlp.depparse;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.Trainable;
@@ -10,7 +11,8 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
 public class GoldDepParseUnpruner implements Trainable, Annotator {
 
-    private static final Logger log = Logger.getLogger(GoldDepParseUnpruner.class);
+    private static final Logger log = LoggerFactory.getLogger(GoldDepParseUnpruner.class);
+    private static final long serialVersionUID = 1L;
 
     @Override
     public void annotate(AnnoSentenceCollection sents) {

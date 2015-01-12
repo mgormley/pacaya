@@ -5,7 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
@@ -22,7 +23,7 @@ import edu.jhu.gm.util.Visitor;
  */
 public class BfsMpSchedule implements MpSchedule {
 
-    private static final Logger log = Logger.getLogger(BfsMpSchedule.class);
+    private static final Logger log = LoggerFactory.getLogger(BfsMpSchedule.class);
 
     private ArrayList<Object> order;
     

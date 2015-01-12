@@ -9,7 +9,9 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.UFgExample;
@@ -19,6 +21,7 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
@@ -30,9 +33,11 @@ import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.eval.DepParseAccuracy;
 import edu.jhu.nlp.eval.RelationEvaluator;
 import edu.jhu.nlp.eval.SrlEvaluator;
+import edu.jhu.nlp.eval.SrlEvaluator.SrlEvaluatorPrm;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.prim.util.Lambda.FnIntToVoid;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Prm;
@@ -49,12 +54,12 @@ import edu.jhu.util.files.Files;
 public class JointNlpAnnotator implements Trainable, Annotator {
 
     public static enum InitParams { UNIFORM, RANDOM };
-    
+    private static final long serialVersionUID = 1L;
+
     public static class JointNlpAnnotatorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         
         public JointNlpFgExampleBuilderPrm buPrm = new JointNlpFgExampleBuilderPrm();
-        public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public JointNlpDecoderPrm dePrm = new JointNlpDecoderPrm();
         // How to initialize the parameters of the model
         public InitParams initParams = InitParams.UNIFORM;
@@ -63,13 +68,14 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         // --------------------------------------------------------------------
         // These parameters are only used if a NEW model is created. If a model
         // is loaded from disk, these are ignored.
+        public transient CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm(); 
         public ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
         // We also ignore buPrm.fePrm, which is overwritten by the value in the model.
         // --------------------------------------------------------------------
     }
     
-    private static final Logger log = Logger.getLogger(JointNlpAnnotator.class);
+    private static final Logger log = LoggerFactory.getLogger(JointNlpAnnotator.class);
     private JointNlpAnnotatorPrm prm;   
     private JointNlpFgModel model = null;
 
@@ -123,8 +129,15 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         final Evaluator eval;
         if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
             eval = new DepParseAccuracy(prm.dpSkipPunctuation);
-        } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL))) {
-            eval = new SrlEvaluator();
+        } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL)) || 
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL_PRED_IDX, AT.SRL)) ||
+                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL, AT.SRL_PRED_IDX))
+                ) {
+            SrlEvaluatorPrm evalPrm = new SrlEvaluatorPrm();
+            evalPrm.evalSense = prm.buPrm.fgPrm.srlPrm.predictSense;
+            evalPrm.evalPredicatePosition = prm.buPrm.fgPrm.srlPrm.predictPredPos;
+            evalPrm.evalRoles = (prm.buPrm.fgPrm.srlPrm.roleStructure != RoleStructure.NO_ROLES);
+            eval = new SrlEvaluator(evalPrm);
         } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {
             eval = new RelationEvaluator();
         } else {
@@ -157,13 +170,13 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         }
         
         log.info("Running the decoder");
+        Timer timer = new Timer();
+        timer.start();
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm.buPrm, model.getOfc(), model.getCs(), false);
         FgExampleList data = builder.getData(sents, null);  
-        Timer timer = new Timer();
-        timer.start();      
         annotate(sents, data);
         timer.stop();
-        log.info(String.format("Decoded at %.2f tokens/sec", sents.getNumTokens() / timer.totSec()));
+        log.info(String.format("Decoded at %.2f tokens/sec with %d threads", sents.getNumTokens() / timer.totSec(), Threads.numThreads));
     }
 
     private void annotate(final AnnoSentenceCollection sents, final FgExampleList data) {
@@ -171,16 +184,14 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         Threads.forEach(0, sents.size(), new FnIntToVoid() {            
             @Override
             public void call(int i) {
-                UFgExample ex = data.get(i);
-                AnnoSentence inputSent = sents.get(i);
                 try {
+                    UFgExample ex = data.get(i);
+                    AnnoSentence inputSent = sents.get(i);
                     JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
                     AnnoSentence predSent = decoder.decode(model, ex, inputSent);
                     sents.set(i, predSent);
                 } catch (Throwable t) {
-                    // TODO: Maybe move this elsewhere.
-                    log.error("Caught throwable: " + t.getMessage());
-                    t.printStackTrace();
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });

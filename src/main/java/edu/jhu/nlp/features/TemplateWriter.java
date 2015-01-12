@@ -12,13 +12,17 @@ import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
 
 public class TemplateWriter {
 
-    public static void write(File outFile, List<FeatTemplate> tpls) throws IOException {
-        Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8"));
-        for (FeatTemplate tpl : tpls) {
-            writer.write(tpl.getName());
-            writer.write("\n");
+    public static void write(File outFile, List<FeatTemplate> tpls) {
+        try {
+            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8"));
+            for (FeatTemplate tpl : tpls) {
+                writer.write(tpl.getName());
+                writer.write("\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        writer.close();
     }
 
 }

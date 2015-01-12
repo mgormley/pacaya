@@ -15,12 +15,13 @@ import edu.jhu.util.Timer;
 public class AnnoSentenceReaderSpeedTest {
 
     private static String conllxDir = "/Users/mgormley/research/pacaya/data/conllx/CoNLL-X";
-    //private static String conllxDir = "c:/cygwin64/home/mgormley/corpora/CoNLL-X";
+    private static String conll09Dir = "/Users/mgormley/research/corpora/LDC/LDC2012T04/data/CoNLL2009-ST-English";
     
     public static String ptbYmTest = conllxDir + "/test/data/english/ptb_ym/test/english_ptb_ym_test.conll";
     public static String ptbYmTrain = conllxDir + "/train/data/english/ptb_ym/train/english_ptb_ym_train.conll";
     public static String czTrain = AnnoSentenceReaderSpeedTest.conllxDir + "/train/data/czech/pdt/train/czech_pdt_train.conll";
-
+    public static String c09Dev = conll09Dir + "/CoNLL2009-ST-English-development.txt";
+    
     public static AnnoSentenceCollection readPtbYmConllx() {
         return read(ptbYmTest, DatasetType.CONLL_X);
     }

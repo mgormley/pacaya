@@ -1,6 +1,7 @@
 package edu.jhu.gm.train;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.ErmaObjective;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
@@ -23,6 +24,7 @@ import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
+import edu.jhu.util.Prm;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -34,7 +36,8 @@ public class CrfTrainer {
 
     public static enum Trainer { CLL, ERMA };
 
-    public static class CrfTrainerPrm {
+    public static class CrfTrainerPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public BeliefsModuleFactory bFactory = null;
         public Optimizer<DifferentiableFunction> optimizer = new MalletLBFGS(new MalletLBFGSPrm());
@@ -53,7 +56,7 @@ public class CrfTrainer {
         public boolean useMseForValue = false;
     }
     
-    private static final Logger log = Logger.getLogger(CrfTrainer.class);
+    private static final Logger log = LoggerFactory.getLogger(CrfTrainer.class);
     
     private CrfTrainerPrm prm; 
         

@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.data.simple.AnnoSentence;
@@ -19,7 +20,7 @@ import edu.jhu.util.Timer;
 
 public class TemplateFeatureExtractorSpeedTest {
     
-    private static final Logger log = Logger.getLogger(TemplateFeatureExtractorSpeedTest.class);
+    private static final Logger log = LoggerFactory.getLogger(TemplateFeatureExtractorSpeedTest.class);
     private static final int featureHashMod = 1000000;
     
     /**

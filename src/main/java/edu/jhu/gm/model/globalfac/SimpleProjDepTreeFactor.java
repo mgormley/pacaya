@@ -3,7 +3,8 @@ package edu.jhu.gm.model.globalfac;
 import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.model.Factor;
@@ -38,7 +39,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
 
     private static final long serialVersionUID = 1L;
      
-    private static final Logger log = Logger.getLogger(SimpleProjDepTreeFactor.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleProjDepTreeFactor.class);
     
     private final VarSet vars;
     /** The sentence length. */

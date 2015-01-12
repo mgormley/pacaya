@@ -13,14 +13,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.log4j.Logger;
-import org.apache.thrift.TDeserializer;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Constituent;
@@ -31,9 +28,7 @@ import edu.jhu.hlt.concrete.EntityMentionSet;
 import edu.jhu.hlt.concrete.MentionArgument;
 import edu.jhu.hlt.concrete.Parse;
 import edu.jhu.hlt.concrete.Section;
-import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
-import edu.jhu.hlt.concrete.SentenceSegmentation;
 import edu.jhu.hlt.concrete.SituationMention;
 import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TaggedToken;
@@ -44,6 +39,9 @@ import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
 import edu.jhu.hlt.concrete.UUID;
+import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.util.ConcreteException;
+import edu.jhu.hlt.concrete.util.TokenizationUtils.TagTypes;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.RelationMention;
@@ -51,13 +49,13 @@ import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
-import edu.jhu.nlp.relations.RelationsEncoder;
-import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.Primitives.MutableInt;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.map.IntIntHashMap;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
+import edu.jhu.util.Prm;
 
 /**
  * Reader of Concrete protocol buffer files.
@@ -66,32 +64,20 @@ import edu.jhu.prim.util.Lambda.FnO1ToVoid;
  */
 public class ConcreteReader {
 
-    private static final Logger log = Logger.getLogger(ConcreteReader.class);
-
-    public static class ConcreteReaderPrm {
-        public int tokenizationTheory = 0;
-        public int posTagTheory = 0;
-        public int lemmaTheory = 0;
-        public int depParseTheory = 0;
-        
-        public ConcreteReaderPrm() { }
-        
-        public void setAll(int theory) {
-            tokenizationTheory = theory;
-            posTagTheory = theory;
-            lemmaTheory = theory;
-            depParseTheory = theory;
-        }
+    public static class ConcreteReaderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
+        public String depParseTool = "basic-deps"; 
     }
+    
+    private static final Logger log = LoggerFactory.getLogger(ConcreteReader.class);
 
-    private static final int SKIP = -1;
-
-    private ConcreteReaderPrm prm;
+    private ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
     private int numEntityMentions = 0;
     private int numOverlapingMentions = 0;
     private int numSituationMentions = 0;
+    private ConcreteReaderPrm prm;
     
-    public ConcreteReader(ConcreteReaderPrm prm) {
+    public ConcreteReader(ConcreteReaderPrm prm) { 
         this.prm = prm;
     }
 
@@ -117,14 +103,12 @@ public class ConcreteReader {
                     ZipEntry ze = e.nextElement();
                     log.trace("Reading communication: " + ze.getName());
                     byte[] bytez = toBytes(zf.getInputStream(ze));
-                    TDeserializer deser = new TDeserializer(new TBinaryProtocol.Factory());
-                    Communication comm = new Communication();
-                    deser.deserialize(comm, bytez);
+                    Communication comm = ser.fromBytes(bytez);
                     addSentences(comm, annoSents);
                 }
             }
             return annoSents;
-        } catch (TException e) {
+        } catch (ConcreteException e) {
             throw new RuntimeException(e);
         }
     }
@@ -143,12 +127,10 @@ public class ConcreteReader {
     public AnnoSentenceCollection sentsFromCommFile(File concreteFile) throws IOException {
         try {
             byte[] bytez = Files.readAllBytes(Paths.get(concreteFile.getAbsolutePath()));
-            TDeserializer deser = new TDeserializer(new TBinaryProtocol.Factory());        
-            Communication communication = new Communication();            
-            deser.deserialize(communication, bytez);
+            Communication communication = ser.fromBytes(bytez);
             AnnoSentenceCollection sents = toSentences(communication);
             return sents;
-        } catch (TException e) {
+        } catch (ConcreteException e) {
             throw new RuntimeException(e);
         }
     }
@@ -156,7 +138,6 @@ public class ConcreteReader {
     public AnnoSentenceCollection toSentences(Communication comm) {
         AnnoSentenceCollection annoSents = new AnnoSentenceCollection();
         addSentences(comm, annoSents);
-        annoSents.setSourceSents(comm);
         return annoSents;
     }
 
@@ -164,37 +145,35 @@ public class ConcreteReader {
      * Converts each sentence in communication to a {@link AnnoSentence}
      * and adds it to annoSents.
      */
-    public void addSentences(Communication comm, AnnoSentenceCollection aSents) {
+    protected void addSentences(Communication comm, AnnoSentenceCollection aSents) {
         List<AnnoSentence> tmpSents = new ArrayList<>();
         
-        // Assume first theory.
-        assert comm.getSectionSegmentationsSize() == 1;
-        SectionSegmentation cSs = comm.getSectionSegmentations().get(0);
-        for (Section cSection : cSs.getSectionList()) {
-            // Assume first theory.
-            assert cSection.getSentenceSegmentationSize() == 1;
-            SentenceSegmentation sentSegmentation = cSection.getSentenceSegmentation().get(0);
-            for (Sentence cSent : sentSegmentation.getSentenceList()) { 
-                // Assume first theory.
-                assert cSent.getTokenizationListSize() == 1;
-                Tokenization cToks = cSent.getTokenizationList().get(0);
+        for (Section cSection : comm.getSectionList()) {
+            for (Sentence cSent : cSection.getSentenceList()) { 
+                Tokenization cToks = cSent.getTokenization();
                 tmpSents.add(getAnnoSentence(cToks));
             }
         }
 
-        if (comm.getEntityMentionSetsSize() > 0) {
+        if (comm.getEntityMentionSetListSize() > 0) {
             addEntityMentions(comm, tmpSents);
 
-            if (comm.getSituationMentionSetsSize() > 0) {
+            if (comm.getSituationMentionSetListSize() > 0) {
                 addSituationMentions(comm, tmpSents);
             }
         }
         
         aSents.addAll(tmpSents);
+        // Update source sentences.
+        if (aSents.getSourceSents() == null) {
+            aSents.setSourceSents(new ArrayList<Communication>());
+        }
+        log.debug("Adding Communication in sourceSents");
+        ((ArrayList<Communication>)aSents.getSourceSents()).add(comm);
     }
 
     private void addEntityMentions(Communication comm, List<AnnoSentence> tmpSents) {
-        if (comm.getEntityMentionSetsSize() == 0) {
+        if (comm.getEntityMentionSetListSize() == 0) {
             return;
         }
         
@@ -205,16 +184,16 @@ public class ConcreteReader {
         
         Map<String, Integer> toksUuid2SentIdx = generateTokUuid2SentIdxMap(comm);
         
-        assert comm.getEntityMentionSetsSize() == 1;
-        EntityMentionSet cEms = comm.getEntityMentionSets().get(0);
-        for (EntityMention cEm : cEms.getMentionSet()) {
+        assert comm.getEntityMentionSetListSize() == 1;
+        EntityMentionSet cEms = comm.getEntityMentionSetList().get(0);
+        for (EntityMention cEm : cEms.getMentionList()) {
             TokenRefSequence cEmToks = cEm.getTokens();
             Span span = getSpan(cEmToks);
 
             int sentIdx = toksUuid2SentIdx.get(cEmToks.getTokenizationId().getUuidString());
             String entityType = cEm.getEntityType();
             String entitySubtype = null;
-            if (entityType.contains(":")) {
+            if (entityType != null && entityType.contains(":")) {
                 String[] splits = entityType.split(":");
                 entityType = splits[0];
                 entitySubtype = splits[1];
@@ -236,19 +215,12 @@ public class ConcreteReader {
             aSent.setNamedEntities(ner);
         }
         
-        numEntityMentions += cEms.getMentionSet().size();
-    }
-
-    private Span getSpan(TokenRefSequence toks) {
-        int start = Collections.min(toks.getTokenIndexList());
-        int end = Collections.max(toks.getTokenIndexList()) + 1;
-        Span span = new Span(start, end);
-        return span;
+        numEntityMentions += cEms.getMentionList().size();
     }
 
     private void addSituationMentions(Communication comm, List<AnnoSentence> tmpSents) {
 
-        if (comm.getSituationMentionSetsSize() == 0) {
+        if (comm.getSituationMentionSetListSize() == 0) {
             return;
         }
         
@@ -259,20 +231,20 @@ public class ConcreteReader {
         Map<String, NerMention> emId2em = getUuid2ArgsMap(tmpSents);
         Map<String, Integer> emId2SentIdx = getUuid2SentIdxMap(tmpSents);
                 
-        assert comm.getSituationMentionSetsSize() == 1;
-        SituationMentionSet cSms = comm.getSituationMentionSets().get(0);
+        assert comm.getSituationMentionSetListSize() == 1;
+        SituationMentionSet cSms = comm.getSituationMentionSetList().get(0);
         for (SituationMention cSm : cSms.getMentionList()) {
             if (!"STATE".equals(cSm.getSituationType())) {
                 throw new IllegalStateException("Expecting situations of type STATE. " + cSm.getSituationType());
             }
             
             // Type / subtype.
-            String stateType = cSm.getStateType();
-            String stateSubtype = null;
-            if (stateType.contains(":")) {
-                String[] splits = stateType.split(":");
-                stateType = splits[0];
-                stateSubtype = splits[1];
+            String type = cSm.getSituationKind();
+            String subtype = null;
+            if (type.contains(":")) {
+                String[] splits = type.split(":");
+                type = splits[0];
+                subtype = splits[1];
             }
             
             // Arguments and sentence index.
@@ -297,7 +269,7 @@ public class ConcreteReader {
                 trigger = getSpan(cSm.getTokens());
             }
             
-            RelationMention aSm = new RelationMention(stateType, stateSubtype, aArgs, trigger);
+            RelationMention aSm = new RelationMention(type, subtype, aArgs, trigger);
             AnnoSentence aSent = tmpSents.get(sentIdx);
             RelationMentions aRels = aSent.getRelations();
             aRels.add(aSm);
@@ -331,11 +303,9 @@ public class ConcreteReader {
     private Map<String, Integer> generateTokUuid2SentIdxMap(Communication comm) {
         Map<String,Integer> toksUuid2SentIdx = new HashMap<>();
         int i=0;
-        SectionSegmentation cSs = comm.getSectionSegmentations().get(0);
-        for (Section cSection : cSs.getSectionList()) {
-            SentenceSegmentation sentSegmentation = cSection.getSentenceSegmentation().get(0);
-            for (Sentence cSent : sentSegmentation.getSentenceList()) {
-                Tokenization cToks = cSent.getTokenizationList().get(0);
+        for (Section cSection : comm.getSectionList()) {
+            for (Sentence cSent : cSection.getSentenceList()) {
+                Tokenization cToks = cSent.getTokenization();
                 toksUuid2SentIdx.put(cToks.getUuid().getUuidString(), i++);
             }
         }
@@ -353,44 +323,30 @@ public class ConcreteReader {
         // Words
         List<String> words = new ArrayList<String>();
         TokenList tl = tokenization.getTokenList();
-        for (Token tok : tl.getTokens()) {
+        for (Token tok : tl.getTokenList()) {
             words.add(tok.getText());
         }
         as.setWords(words);
 
-        // POS Tags
-        if (tokenization.isSetPosTagList() && prm.posTagTheory != SKIP) {
-            List<String> posTags = getTagging(tokenization.getPosTagList());
-            as.setPosTags(posTags);
-        }
-
-        // Lemmas
-        if (tokenization.isSetLemmaList() && prm.lemmaTheory != SKIP) {
-            List<String> lemmas = getTagging(tokenization.getLemmaList());
-            as.setLemmas(lemmas);
-        }
-
-        // Chunks
-        if (tokenization.isSetLangIdList()) {
-            // TODO: For Concrete 3.4+, this will be taken from the list of token taggings.
-            List<String> chunks = getTagging(tokenization.getLangIdList());
-            as.setChunks(chunks);
-        }
-
+        TokenTagging posTags = TokenizationUtils.getFirstXTags(tokenization, TagTypes.POS.name());
+        TokenTagging lemmas = TokenizationUtils.getFirstXTags(tokenization, TagTypes.LEMMA.name());
+        TokenTagging chunks = TokenizationUtils.getFirstXTags(tokenization, "CHUNK");
+        as.setPosTags(getTagging(posTags));
+        as.setLemmas(getTagging(lemmas));
+        as.setChunks(getTagging(chunks));
+        
         // Dependency Parse
-        if (tokenization.isSetDependencyParseList() && prm.depParseTheory != SKIP) {
-            if (prm.depParseTheory >= tokenization.getDependencyParseListSize()) {
-                throw new IllegalArgumentException("Sentence does not contain dependency parse theory: "
-                        + prm.depParseTheory);
-            }
+        if (tokenization.isSetDependencyParseList()) {
             int numWords = words.size();
-            int[] parents = getParents(tokenization.getDependencyParseList().get(prm.depParseTheory), numWords);
+            log.trace("Reading dependency parse with name {}", prm.depParseTool);
+            DependencyParse depParse = TokenizationUtils.getFirstDependencyParseWithName(tokenization, prm.depParseTool);
+            int[] parents = getParents(depParse, numWords);
             as.setParents(parents);
         }
         
         // Constituency Parse
-        if (tokenization.isSetParse()) {
-            NaryTree tree = getParse(tokenization.getParse());
+        if (tokenization.isSetParseList()) {
+            NaryTree tree = getParse(TokenizationUtils.getFirstParse(tokenization));
             as.setNaryTree(tree);
         }
         
@@ -399,7 +355,7 @@ public class ConcreteReader {
         return as;
     }
 
-    private NaryTree getParse(Parse parse) {
+    private static NaryTree getParse(Parse parse) {
         IntIntHashMap id2idx = new IntIntHashMap();
         
         List<Constituent> cs = parse.getConstituentList();
@@ -446,7 +402,10 @@ public class ConcreteReader {
         return root;
     }
 
-    private List<String> getTagging(TokenTagging tagging) {
+    private static List<String> getTagging(TokenTagging tagging) {
+        if (tagging == null) {
+            return null;
+        }
         List<String> tags = new ArrayList<String>();
         for (TaggedToken tok : tagging.getTaggedTokenList()) {
             tags.add(tok.getTag());
@@ -454,22 +413,39 @@ public class ConcreteReader {
         return tags;
     }
 
-    private int[] getParents(DependencyParse dependencyParse, int numWords) {
+    private static int[] getParents(DependencyParse dependencyParse, int numWords) {
+        if (dependencyParse == null) {
+            return null;
+        }
         int[] parents = new int[numWords];
         Arrays.fill(parents, -2);
         for (Dependency arc : dependencyParse.getDependencyList()) {
-            if (parents[arc.getDep()] != -2) {
+            int c = arc.getDep();
+            if (c < 0) {
+                throw new IllegalStateException(String.format("Invalid dep value %d for dependendency tree %s", arc.getDep(), dependencyParse.getUuid()));
+            }
+            if (parents[c] != -2) {
                 throw new IllegalStateException("Multiple parents for token: " + dependencyParse);
             }
             if (!arc.isSetGov()) {
-                parents[arc.getDep()] = -1;
+                parents[c] = -1;
             } else {
-                parents[arc.getDep()] = arc.getGov();
+                parents[c] = arc.getGov();
             }
+        }
+        if (IntArrays.contains(parents, -2)) {
+            log.trace("Dependency tree contains token(s) with no head: " + dependencyParse.getUuid());
         }
         return parents;
     }
 
+    private static Span getSpan(TokenRefSequence toks) {
+        int start = Collections.min(toks.getTokenIndexList());
+        int end = Collections.max(toks.getTokenIndexList()) + 1;
+        Span span = new Span(start, end);
+        return span;
+    }
+    
     /**
      * Reads a file containing a single Commmunication concrete object as bytes,
      * converts it to a AnnoSentence and prints it out in human readable

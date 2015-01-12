@@ -25,7 +25,7 @@ import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
-from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
+from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory, AnnoPipelineRunner
 
 # ---------------------------- Experiments Creator Class ----------------------------------
 
@@ -53,6 +53,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-conll07",                
                     "dp-en",
                     "dp-logadd",
+                    "dp-agiga2",
                     )
     
     def __init__(self, options):
@@ -80,7 +81,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=5, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
-                          logDomain=False,
                           algebra="LOG_SIGN",
                           includeUnsupportedFeatures=True,
                           singleRoot=False,
@@ -521,6 +521,42 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
             return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "dp-agiga2":
+            '''Trains an English-only model for making predictions on for Annotated Gigaword 2.0'''
+            root = RootStage()
+            g.defaults += g.cll + g.first_order
+            g.defaults.update(pruneByDist=True, work_mem_megs=self.prm_defs.get_srl_work_mem_megs(g.defaults))
+            train = g.defaults + g.langs['en'].cx_data
+            comm = glob(p.concrete380 + "/*")[0]
+            comm_name = os.path.basename(comm)
+            if self.fast: # Enable for quick local run.
+                print "WARN: USING SETTINGS FOR A QUICK LOCAL RUN."
+                train.update(pruneByDist=False, trainMaxNumSentences=3, devMaxNumSentences=3,
+                             trainMaxSentenceLength=7, devMaxSentenceLength=7,  
+                             featureHashMod=1000, sgdNumPasses=2)
+            train.update(pipeOut="pipe.binary.gz")
+            train.remove("test")
+            train.remove("testType")
+            train.remove("testPredOut") 
+            #train.update(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name, evalTest=False)
+            root.add_dependent(train)
+            apr_defaults = AnnoPipelineRunner(pipeIn=StagePath(train, train.get("pipeOut")), predAts="DEP_TREE")        
+            apr_defaults.set_incl_arg("group", False)
+            apr_defaults.set_incl_name("pipeIn", False)
+            apr_defaults.set_incl_name("test", False)
+            apr_defaults.set_incl_name("testPredOut", False)
+            for comm in glob(p.concrete380 + "/*"):
+                comm_name = os.path.basename(comm)
+                exp = apr_defaults + AnnoPipelineRunner(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name)
+                train.add_dependent(exp)
+            pl = p.langs['en']
+            for c09 in [pl.pos_gold_train, pl.pos_gold_dev, pl.pos_gold_eval]:
+                c09_name = os.path.basename(c09)
+                exp = apr_defaults + AnnoPipelineRunner(test=c09, testType="CONLL_2009", group=c09_name, testPredOut=c09_name)
+                if self.fast: exp.update(testMaxNumSentences=3, testMaxSentenceLength=7)
+                train.add_dependent(exp)                
+            return root
             
         elif self.expname == "gobble-memory":
             exps = []

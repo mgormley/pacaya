@@ -15,7 +15,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.nlp.data.conll.CoNLL09FileReader;
@@ -37,7 +38,7 @@ import edu.jhu.util.cli.Opt;
  */
 public class GetFeatures {
     
-    private static final Logger log = Logger.getLogger(GetFeatures.class);
+    private static final Logger log = LoggerFactory.getLogger(GetFeatures.class);
     
     @Opt(name="train", hasArg=true, required=true, description="Training file.")
     public static String trainingFile="/home/hltcoe/mgormley/working/parsing/exp/vem-conll_001/dmv_conll09-sp-dev_20_28800_True/train-parses.txt";

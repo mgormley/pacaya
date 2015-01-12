@@ -35,7 +35,7 @@ public class SentFeatureExtractor {
     */
     
     
-    //private static final Logger log = Logger.getLogger(SentFeatureExtractor.class);
+    //private static final Logger log = LoggerFactory.getLogger(SentFeatureExtractor.class);
     public static class SentFeatureExtractorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         /** For testing only: this will ensure that the only feature returned is the bias feature. */

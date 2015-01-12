@@ -10,7 +10,8 @@ import java.util.Map;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.conll.CoNLL09FileReader;
 import edu.jhu.nlp.data.conll.CoNLL09Sentence;
@@ -30,7 +31,7 @@ import edu.jhu.util.cli.Opt;
  */
 public class Conll09ToConllLiteV2 {
 
-    private static final Logger log = Logger.getLogger(Conll09ToConllLiteV2.class);
+    private static final Logger log = LoggerFactory.getLogger(Conll09ToConllLiteV2.class);
 
     @Opt(hasArg = true, required = true, description = "CoNLL 09 input file")
     public static File input;

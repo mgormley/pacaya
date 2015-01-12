@@ -5,12 +5,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.concrete.ConcreteReader;
 import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.nlp.data.concrete.ListCloseableIterable;
 import edu.jhu.nlp.data.concrete.ReConcreteReader;
+import edu.jhu.nlp.data.concrete.ReConcreteReader.ReConcreteReaderPrm;
 import edu.jhu.nlp.data.conll.CoNLL08FileReader;
 import edu.jhu.nlp.data.conll.CoNLL08Sentence;
 import edu.jhu.nlp.data.conll.CoNLL09FileReader;
@@ -19,7 +21,6 @@ import edu.jhu.nlp.data.conll.CoNLLXFileReader;
 import edu.jhu.nlp.data.conll.CoNLLXSentence;
 import edu.jhu.nlp.data.semeval.SemEval2010Reader;
 import edu.jhu.nlp.data.semeval.SemEval2010Sentence;
-import edu.jhu.nlp.words.PrefixAnnotator;
 
 /**
  * Generic reader of AnnoSentence objects from many different corpora. 
@@ -42,8 +43,8 @@ public class AnnoSentenceReader {
         public boolean useSplitForms = true;
         /** CoNLL-X: whether to use the P(rojective)HEAD column for parents. */
         public boolean useCoNLLXPhead = false;
-        /** Concrete options. */
-        public ConcreteReaderPrm conPrm = new ConcreteReaderPrm();        
+        /** RE Concrete options. */
+        public ReConcreteReaderPrm rePrm = new ReConcreteReaderPrm();        
     }
     
     public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE, SEMEVAL_2010, RE_CONCRETE };
@@ -52,7 +53,7 @@ public class AnnoSentenceReader {
         public void close();        
     }
     
-    private static final Logger log = Logger.getLogger(AnnoSentenceReader.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnoSentenceReader.class);
 
     private AnnoSentenceReaderPrm prm;
     private AnnoSentenceCollection sents;
@@ -76,11 +77,14 @@ public class AnnoSentenceReader {
         }
         
         CloseableIterable<AnnoSentence> reader = null;
+        Object sourceSents = null;
         if (type == DatasetType.CONCRETE) {
-            ConcreteReader cr = new ConcreteReader(new ConcreteReaderPrm());
-            reader = new ListCloseableIterable(cr.toSentences(dataFile));
+            ConcreteReader cr = new ConcreteReader(prm.rePrm);
+            AnnoSentenceCollection csents = cr.toSentences(dataFile);
+            sourceSents = csents.getSourceSents();
+            reader = new ListCloseableIterable(csents);
         } else if (type == DatasetType.RE_CONCRETE) {
-            ReConcreteReader cr = new ReConcreteReader(new ConcreteReaderPrm());
+            ReConcreteReader cr = new ReConcreteReader(prm.rePrm);
                 reader = new ListCloseableIterable(cr.toSentences(dataFile));
         } else {
             InputStream fis = new FileInputStream(dataFile);
@@ -101,9 +105,7 @@ public class AnnoSentenceReader {
         }
         
         loadSents(reader);
-        
-        // TODO: Move this.
-        PrefixAnnotator.addPrefixes(sents);
+        sents.setSourceSents(sourceSents);
         
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());

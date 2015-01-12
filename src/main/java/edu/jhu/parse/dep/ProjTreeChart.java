@@ -1,6 +1,7 @@
 package edu.jhu.parse.dep;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
@@ -12,7 +13,7 @@ import edu.jhu.prim.util.math.FastMath;
  */
 public class ProjTreeChart {
 
-    private static final Logger log = Logger.getLogger(ProjTreeChart.class);
+    private static final Logger log = LoggerFactory.getLogger(ProjTreeChart.class);
 
     public enum DepParseType { VITERBI, INSIDE }
     

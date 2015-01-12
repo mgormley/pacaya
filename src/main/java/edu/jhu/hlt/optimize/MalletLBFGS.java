@@ -1,6 +1,7 @@
 package edu.jhu.hlt.optimize;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
@@ -120,7 +121,7 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
         
     }
 
-    private static final Logger log = Logger.getLogger(MalletLBFGS.class);
+    private static final Logger log = LoggerFactory.getLogger(MalletLBFGS.class);
 
     private MalletLBFGSPrm prm;
     private boolean converged;

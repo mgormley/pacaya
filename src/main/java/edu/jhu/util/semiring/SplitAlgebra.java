@@ -2,7 +2,8 @@ package edu.jhu.util.semiring;
 
 import java.nio.ByteBuffer;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.Primitives;
 
@@ -19,7 +20,7 @@ import edu.jhu.prim.Primitives;
  */
 public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
 
-    private static final Logger log = Logger.getLogger(SplitAlgebra.class);
+    private static final Logger log = LoggerFactory.getLogger(SplitAlgebra.class);
 
     private static final int SHIFTER = 32;
     private static final long MASK_1 = 0xFFFFFFFFl;

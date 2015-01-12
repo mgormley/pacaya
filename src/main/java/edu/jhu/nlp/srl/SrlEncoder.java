@@ -21,6 +21,7 @@ import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.prim.set.IntHashSet;
 
 /**
  * Encodes an {@link AnnoSentence} as a semantic role labeling factor graph and its training
@@ -32,9 +33,8 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
 
     // TODO: Use this in JointNlp
     public static class SrlEncoderPrm {
-        // TODO: Fill w/non-null values.
-        public SrlFactorGraphBuilderPrm srlPrm = null; //new SrlFactorGraphBuilderPrm();
-        public SrlFeatureExtractorPrm srlFePrm = null; //new SrlFeatureExtractorPrm();        
+        public SrlFactorGraphBuilderPrm srlPrm = new SrlFactorGraphBuilderPrm();
+        public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();        
     }
     
     private SrlEncoderPrm prm;
@@ -59,6 +59,7 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
 
     private LFgExample getExample(AnnoSentence sent, SrlGraph graph, boolean labeledExample) {
         // Create a feature extractor for this example.
+        //ObsFeatureExtractor obsFe = new FastSrlFeatureExtractor(sent, cs, prm.srlFePrm.featureHashMod, ofc.getTemplates());
         ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
         obsFe = new ObsFeatureCache(obsFe);
         
@@ -67,7 +68,9 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         srl.build(sent, cs, obsFe, ofc, fg);
         
         VarConfig goldConfig = new VarConfig();
-        addSrlTrainAssignment(sent, graph, srl, goldConfig, prm.srlPrm.predictSense, prm.srlPrm.predictPredPos);
+        if (labeledExample) {
+            addSrlTrainAssignment(sent, graph, srl, goldConfig, prm.srlPrm.predictSense, prm.srlPrm.predictPredPos);
+        }
 
         FactorTemplateList fts = ofc.getTemplates();
         if (labeledExample) {
@@ -77,7 +80,8 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         }
     }
     
-    public static void addSrlTrainAssignment(AnnoSentence sent, SrlGraph srlGraph, SrlFactorGraphBuilder sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {        
+    // TODO: Consider passing in the knownPreds from AnnoSentence.
+    public static void addSrlTrainAssignment(AnnoSentence sent, SrlGraph srlGraph, SrlFactorGraphBuilder sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {
         // ROLE VARS
         // Add all the training data assignments to the role variables, if they are not latent.
         // First, just set all the role names to "_".
@@ -108,17 +112,19 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
         }
         
         // Add the training data assignments to the predicate senses.
+        IntHashSet knownPreds = srlGraph.getKnownPreds();
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                if (predictSense) {
-                    if (predictPredPos && !sent.isKnownPred(i)) {
-                        vc.put(senseVar, "_");
-                    } else {
+                if (!predictSense && !predictPredPos) {
+                    throw new IllegalStateException("Neither predictSense nor predictPredPos is set. So there shouldn't be any SenseVars.");
+                }
+                if (knownPreds.contains(i)) {
+                    if (predictSense) {
                         // Tries to map the sense variable to its label (e.g. argM-TMP).
                         // If the variable state space does not include that label, we
                         // fall back on the UNKNOWN_SENSE constant. If for some reason
-                        // the UNKNOWN_SENSE constant isn't present, we just predict the
+                        // the UNKNOWN_SENSE constant isn't present, we just set it to the
                         // first possible sense.
                         if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
                             if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
@@ -126,19 +132,15 @@ public class SrlEncoder implements Encoder<AnnoSentence, SrlGraph> {
                                 vc.put(senseVar, 0);
                             }
                         }
-                    }
-                } else if (predictPredPos) {
-                    if (sent.isKnownPred(i)) {
+                    } else { // (predictPredPos && !predictPredSense)
                         // We use CorpusStatistics.UNKNOWN_SENSE to indicate that
                         // there exists a predicate at this position.
-                        vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);
-                    } else {
-                        // The "_" indicates that there is no predicate at this
-                        // position.
-                        vc.put(senseVar, "_");
+                        vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);   
                     }
                 } else {
-                    throw new IllegalStateException("Neither predictSense nor predictPredPos is set. So there shouldn't be any SenseVars.");
+                    // The "_" indicates that there is no predicate at this
+                    // position.
+                    vc.put(senseVar, "_");
                 }
             }
         }

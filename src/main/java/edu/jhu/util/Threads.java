@@ -14,7 +14,8 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntSort;
@@ -22,15 +23,18 @@ import edu.jhu.prim.util.Lambda;
 
 public class Threads {
 
-    private static final Logger log = Logger.getLogger(Threads.class);
+    private static final Logger log = LoggerFactory.getLogger(Threads.class);
     private static final int DONE = -1;
 
+    // NOTE: These should never be set except with a call to initDefaultPool().
     public static ExecutorService defaultPool = null;
+    public static int numThreads = 0;
     
     private Threads() { }
     
     public static void initDefaultPool(int numThreads) {
-        defaultPool = Executors.newFixedThreadPool(numThreads);
+        Threads.defaultPool = Executors.newFixedThreadPool(numThreads);
+        Threads.numThreads = numThreads;
     }
     
     public static void shutdownDefaultPool() {
@@ -187,8 +191,7 @@ public class Threads {
         log.info("Attempting shutdown of ExecutorService.");
         List<Runnable> tasks = pool.shutdownNow();
         if (tasks.size() != 0) {
-            log.error("Tasks were still running when shutdown was called. Exiting now.");
-            System.exit(1);
+            log.error("Tasks were still running when shutdown was called.");
         }
         try {
             if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {

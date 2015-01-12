@@ -1,13 +1,14 @@
 package edu.jhu.util.report;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Log4jReporter extends Reporter {
 
     private Logger log;
     
     protected Log4jReporter(Class<?> clazz) {
-        log = Logger.getLogger(clazz);
+        log = LoggerFactory.getLogger(clazz);
     }
     
     @Override

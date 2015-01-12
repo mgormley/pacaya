@@ -3,7 +3,8 @@ package edu.jhu.nlp.depparse;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.model.ClampFactor;
@@ -26,7 +27,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(DepParseFactorGraphBuilder.class); 
+    private static final Logger log = LoggerFactory.getLogger(DepParseFactorGraphBuilder.class); 
 
     /**
      * Parameters for the DepParseFactorGraph.

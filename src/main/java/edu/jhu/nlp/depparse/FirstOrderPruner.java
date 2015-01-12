@@ -3,7 +3,9 @@ package edu.jhu.nlp.depparse;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.gm.data.FgExampleList;
@@ -14,6 +16,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -35,7 +38,8 @@ import edu.jhu.util.semiring.Algebras;
 
 public class FirstOrderPruner implements Annotator {
 
-    private static final Logger log = Logger.getLogger(FirstOrderPruner.class);
+    private static final long serialVersionUID = 1L;
+    private static final Logger log = LoggerFactory.getLogger(FirstOrderPruner.class);
     private File pruneModel;
     private JointNlpFgExampleBuilderPrm exPrm;
     private JointNlpDecoderPrm dPrm;
@@ -114,9 +118,7 @@ public class FirstOrderPruner implements Annotator {
                     int n = inputSent.getWords().size();
                     numEdgesTot.addAndGet(n*n);
                 } catch (Throwable t) {
-                    // TODO: Maybe move this elsewhere.
-                    log.error("Caught throwable: " + t.getMessage());
-                    t.printStackTrace();
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });

@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.nlp.CorpusStatistics;
@@ -42,7 +43,7 @@ import edu.jhu.util.collections.Lists;
  */
 public class TemplateFeatureExtractor {
    
-    private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
+    private static final Logger log = LoggerFactory.getLogger(TemplateFeatureExtractor.class);
 
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
@@ -242,8 +243,12 @@ public class TemplateFeatureExtractor {
             return;
         case PATH_P_C: case PATH_C_LCA: case PATH_P_LCA: case PATH_LCA_ROOT: 
             List<Pair<Integer, Dir>> path = getPath(pl, local);
-            vals = getTokPropsForPath(prop, eprop, path);
-            listAndPathHelper(vals, lmod, tpl, feats);
+            if (path != null) {
+                vals = getTokPropsForPath(prop, eprop, path);
+                listAndPathHelper(vals, lmod, tpl, feats);
+            } else {
+                feats.add(toFeat(tpl.getName(), "NO_PATH"));
+            }
             return;
         default:
             throw new IllegalStateException();
@@ -296,7 +301,11 @@ public class TemplateFeatureExtractor {
         switch (template) {
         case PATH_GRAMS:
             List<Pair<Integer,Dir>> path = getPath(PositionList.PATH_P_C, local);  
-            addPathGrams(tpl, path, feats);
+            if (path != null) {
+                addPathGrams(tpl, path, feats);
+            } else {
+                feats.add(toFeat(tpl.getName(), "NO_PATH"));
+            }
             return;
         default:  
             String val = getOtherFeatSingleton(tpl.feat, local);
@@ -345,7 +354,9 @@ public class TemplateFeatureExtractor {
         case CONTINUITY:
             return Integer.toString(pair.getCountOfNonConsecutivesInPath());
         case PATH_LEN:            
-            return Integer.toString(binInt(pair.getDependencyPath().size(), 0, 2, 5, 10, 20, 30, 40));
+            List<Pair<Integer, Dir>> depPath = pair.getDependencyPath();
+            int pathLen = depPath == null ? 0 : depPath.size();
+            return Integer.toString(binInt(pathLen, 0, 2, 5, 10, 20, 30, 40));
         case SENT_LEN:            
             return Integer.toString(binInt(fSent.size(), 0, 2, 5, 10, 20, 30, 40));
         case RULE_IS_UNARY:
@@ -413,6 +424,7 @@ public class TemplateFeatureExtractor {
         }
     }
     
+    /** Gets the desired path or null if it doesn't exist. */
     private List<Pair<Integer, Dir>> getPath(PositionList pl, LocalObservations local) {        
         FeaturizedTokenPair pair = getFeatTokPair(local.getPidx(), local.getCidx());
         switch (pl) {

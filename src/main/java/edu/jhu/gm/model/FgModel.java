@@ -8,7 +8,8 @@ import java.io.Writer;
 import java.util.Iterator;
 
 import org.apache.commons.lang.mutable.MutableDouble;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.Primitives.MutableInt;
@@ -33,7 +34,7 @@ import edu.jhu.util.dist.Gaussian;
 // (particularly when serialized) is smaller.
 public class FgModel implements Serializable, IFgModel {
 
-    private static final Logger log = Logger.getLogger(FgModel.class);
+    private static final Logger log = LoggerFactory.getLogger(FgModel.class);
 
     private static final long serialVersionUID = 4477788767217412525L;
     /** The model parameters. */

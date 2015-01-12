@@ -1,6 +1,7 @@
 package edu.jhu.autodiff.erma;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
@@ -26,7 +27,7 @@ public class ErmaObjective implements ExampleObjective {
         Algebra getAlgebra();
     }
     
-    private static final Logger log = Logger.getLogger(ErmaObjective.class);
+    private static final Logger log = LoggerFactory.getLogger(ErmaObjective.class);
 
     private FgExampleList data;
     private BeliefsModuleFactory bFactory;

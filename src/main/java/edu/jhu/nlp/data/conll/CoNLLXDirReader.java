@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.util.files.FileListIterator;
 import edu.jhu.util.files.Files;
@@ -18,7 +19,7 @@ import edu.jhu.util.files.Files;
  */
 public class CoNLLXDirReader implements Iterable<CoNLLXSentence> {
 
-    private static final Logger log = Logger.getLogger(CoNLLXDirReader.class);
+    private static final Logger log = LoggerFactory.getLogger(CoNLLXDirReader.class);
 
     private List<File> files;
     

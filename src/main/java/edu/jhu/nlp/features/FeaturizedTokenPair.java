@@ -95,19 +95,21 @@ public class FeaturizedTokenPair {
          * the common part of these two paths will be dpPathShare. */
         List<Pair<Integer, Dir>> argRootPath = aTok.getRootPath();
         List<Pair<Integer, Dir>> predRootPath = pTok.getRootPath();
-        int i = argRootPath.size() - 1;
-        int j = predRootPath.size() - 1;
-        Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
-        Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
-        while (argP.equals(predP)) {
-            this.dpPathShare.add(argP);
-            if (i == 0 || j == 0) {
-                break;
+        if (argRootPath != null && predRootPath != null) {
+            int i = argRootPath.size() - 1;
+            int j = predRootPath.size() - 1;
+            Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
+            Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
+            while (argP.equals(predP)) {
+                this.dpPathShare.add(argP);
+                if (i == 0 || j == 0) {
+                    break;
+                }
+                i--;
+                j--;
+                argP = argRootPath.get(i);
+                predP = predRootPath.get(j);
             }
-            i--;
-            j--;
-            argP = argRootPath.get(i);
-            predP = predRootPath.get(j);
         }
         /* ZHAO:  Assume that dpPathShare starts from a node r', 
          * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
@@ -122,6 +124,8 @@ public class FeaturizedTokenPair {
             r = this.dpPathShare.get(0).get1();
             this.dpPathPred = DepTree.getDependencyPath(pidx, r, parents);
             this.dpPathArg = DepTree.getDependencyPath(aidx, r, parents);
+            assert this.dpPathPred != null;
+            assert this.dpPathArg != null;
         }
     }
     
@@ -184,7 +188,7 @@ public class FeaturizedTokenPair {
     public int getCountOfNonConsecutivesInPath() {
         List<Pair<Integer,Dir>> path = getDependencyPath();
         int count = 0;
-        if (path.size() > 0) {
+        if (path != null && path.size() > 0) {
             for (int i=1; i<path.size(); i++) {
                 int current = path.get(i).get1();
                 int previous = path.get(i-1).get1();

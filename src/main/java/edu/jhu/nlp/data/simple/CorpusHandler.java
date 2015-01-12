@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
@@ -18,7 +19,7 @@ import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
 
 public class CorpusHandler {
-    private static final Logger log = Logger.getLogger(CorpusHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(CorpusHandler.class);
 
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
@@ -37,12 +38,7 @@ public class CorpusHandler {
     public static int trainMinSentenceLength = 0;
     @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
     public static int trainMaxNumSentences = Integer.MAX_VALUE; 
-    @Opt(hasArg = true, description = "CoNLL-X: whether to use the P(rojective)HEAD column for parents.")
-    public static boolean trainUseCoNLLXPhead = false;
-    // Options for dependency parse pre-processing.
-    @Opt(hasArg = true, description = "Whether to projectivize the training depedendency parses")
-    public static boolean trainProjectivize = false;
-        
+            
     // Options for dev data
     @Opt(hasArg = true, description = "Testing data input file or directory.")
     public static File dev = null;
@@ -82,6 +78,10 @@ public class CorpusHandler {
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
     public static String language = "es";
+
+    // Options for dependency parse pre-processing.
+    @Opt(hasArg = true, description = "Whether to projectivize the training depedendency parses")
+    public static boolean trainProjectivize = false;
     
     // Options for data munging.
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
@@ -94,6 +94,12 @@ public class CorpusHandler {
     public static String predAts = null;
     @Opt(hasArg = true, description = "Comma separated list of annotation types for latent annotations.")
     public static String latAts = null;
+    
+    // Reader-Specific Options
+    @Opt(hasArg = true, description = "CoNLL-X: whether to use the P(rojective)HEAD column for parents.")
+    public static boolean trainUseCoNLLXPhead = false;
+    @Opt(hasArg = true, description = "Tool name of dependency parse for ConcreteReader.")
+    public static String concreteDepParseTool = "basic-deps";
     
     ////// TODO: use these options... /////
     // @Opt(hasArg=true, description="Whether to normalize and clean words.")
@@ -365,6 +371,7 @@ public class CorpusHandler {
         AnnoSentenceReaderPrm prm = new AnnoSentenceReaderPrm();
         prm.normalizeRoleNames = normalizeRoleNames;
         prm.useGoldSyntax = useGoldSyntax;
+        prm.rePrm.depParseTool = concreteDepParseTool;
         return prm;
     }
     

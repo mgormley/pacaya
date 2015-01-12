@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.jhu.nlp.data.DepGraph;
+import edu.jhu.prim.set.IntHashSet;
+
 /**
  * A graph representing SRL annotations on a sentence.
  * 
@@ -290,7 +293,15 @@ public class SrlGraph {
     public SrlEdge getEdge(int pidx, int aidx) {
         return es[pidx][aidx];
     }
+    
+    public int getNumTokens() {
+        return n;
+    }
 
+    public DepGraph toDepGraph() {
+        return new DepGraph(this);
+    }
+    
     @Override
     public String toString() {
         return "SrlGraph [preds=" + preds + ", args=" + args + ", edges="
@@ -314,6 +325,15 @@ public class SrlGraph {
 
     public int getNumArgs() {
         return args.size();
+    }
+
+    public IntHashSet getKnownPreds() {
+        IntHashSet knownPreds = new IntHashSet();
+        // All the "Y"s
+        for (SrlPred pred : this.getPreds()) {
+            knownPreds.add(pred.getPosition());
+        }
+        return knownPreds;
     }
 
 }

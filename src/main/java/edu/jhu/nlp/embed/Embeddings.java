@@ -6,9 +6,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Alphabet;
@@ -17,10 +21,12 @@ import edu.jhu.util.Alphabet;
  * Storage for a set of word embeddings. Also contains a method to load embeddings from a text file. 
  * @author mgormley
  */
-public class Embeddings {
+public class Embeddings implements Serializable {
     
     public enum Scaling { NONE, L1_NORM, L2_NORM, STD_NORMAL }
     
+    private static final long serialVersionUID = 1L;
+    private static final Logger log = LoggerFactory.getLogger(Embeddings.class);
     private static final Pattern DIGITS = Pattern.compile("[0-9]");
     private Map<String,double[]> word2embed;
     private Alphabet<String> alphabet;
@@ -39,6 +45,7 @@ public class Embeddings {
      * @throws IOException
      */
     public void loadFromFile(File txtFile) throws IOException {
+        log.info("Reading word embeddings from file: " + txtFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(txtFile), "UTF-8"));
         String line;
         Pattern tab = Pattern.compile("\t");

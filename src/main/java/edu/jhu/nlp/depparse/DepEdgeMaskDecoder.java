@@ -2,7 +2,8 @@ package edu.jhu.nlp.depparse;
 
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.gm.app.Decoder;
@@ -15,6 +16,7 @@ import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.Prm;
 
 /**
  * Decodes from the marginals of a factor graph for dependency parsing to a {@link DepEdgeMask}
@@ -24,7 +26,8 @@ import edu.jhu.prim.tuple.Pair;
  */
 public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
 
-    public static class DepEdgeMaskDecoderPrm {
+    public static class DepEdgeMaskDecoderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public double pruneMargProp = 0.0001;
         public int maxPrunedHeads = 10;
         public boolean includeMbrParse = true;
@@ -36,7 +39,7 @@ public class DepEdgeMaskDecoder implements Decoder<AnnoSentence, DepEdgeMask> {
         this.prm = prm;
     }
 
-    private static final Logger log = Logger.getLogger(DepEdgeMaskDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(DepEdgeMaskDecoder.class);
 
     /**
      * Prune to only the most likely K (e.g. 10) heads per token from the first-order model. Also

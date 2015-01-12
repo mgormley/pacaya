@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -43,7 +44,7 @@ import edu.jhu.util.FeatureNames;
  */
 public class RelObsFe implements ObsFeatureExtractor {
 
-    private static final Logger log = Logger.getLogger(RelObsFe.class);
+    private static final Logger log = LoggerFactory.getLogger(RelObsFe.class);
 
     private RelationsFactorGraphBuilderPrm prm;
     private AnnoSentence sent;

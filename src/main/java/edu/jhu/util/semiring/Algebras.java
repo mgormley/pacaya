@@ -1,10 +1,11 @@
 package edu.jhu.util.semiring;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Algebras {
     
-    private static final Logger log = Logger.getLogger(Algebras.class);
+    private static final Logger log = LoggerFactory.getLogger(Algebras.class);
 
     private Algebras() {
         // private constructor.

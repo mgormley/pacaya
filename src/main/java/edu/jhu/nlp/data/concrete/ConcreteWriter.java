@@ -1,8 +1,15 @@
 package edu.jhu.nlp.data.concrete;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.concrete.AnnotationMetadata;
 import edu.jhu.hlt.concrete.Communication;
@@ -12,31 +19,37 @@ import edu.jhu.hlt.concrete.EntityMention;
 import edu.jhu.hlt.concrete.EntityMentionSet;
 import edu.jhu.hlt.concrete.MentionArgument;
 import edu.jhu.hlt.concrete.Section;
-import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
-import edu.jhu.hlt.concrete.SentenceSegmentation;
 import edu.jhu.hlt.concrete.SituationMention;
 import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.Tokenization;
+import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
 import edu.jhu.nlp.data.conll.SrlGraph;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 
 /**
  * Writer of Concrete files from {@link AnnoSentence}s.
  * 
  * @author Travis Wolfe
+ * @author mgormley
  */
 public class ConcreteWriter {
 
+    private static final Logger log = LoggerFactory.getLogger(ConcreteWriter.class);
+
+    public static final String DEP_PARSE_TOOL = "Pacaya Dependency Parser";
+    public static final String SRL_TOOL = "Pacaya Semantic Role Labeler (SRL)";
+    
     private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
     
     private final long timestamp;     // time that every annotation that is processed will get
-    private boolean careful;    // throw exceptions when things aren't unambiguously correct
     private final boolean srlIsSyntax;
 
     /**
@@ -53,45 +66,87 @@ public class ConcreteWriter {
      * by this tool in a document are unioned before making an EntityMentionSet).
      */
     public ConcreteWriter(boolean srlIsSyntax) {
-        timestamp = System.currentTimeMillis();
-        careful = true;
+        this.timestamp = System.currentTimeMillis();
         this.srlIsSyntax = srlIsSyntax;
     }
-    
-    /**
-     * Adds a dependency parse to the first concrete.Tokenization.
-     */
-    public void addDependencyParse(
-            AnnoSentenceCollection containsDepParses,
-            Communication addTo) {        
 
-        List<Tokenization> ts = getTokenizationsCorrespondingTo(containsDepParses, addTo);
-        for(int i=0; i<ts.size(); i++) {
-            Tokenization t = ts.get(i);
-            AnnoSentence s = containsDepParses.get(i);
-            List<String> depTypes = s.getDeprels();
-            int[] parents = s.getParents();
-            t.addToDependencyParseList(makeDepParse(parents, depTypes));
+    public void write(AnnoSentenceCollection sents, File out) throws IOException {
+        List<Communication> comms = (List<Communication>) sents.getSourceSents();
+        if (out.getName().endsWith(".zip")) {
+            throw new RuntimeException("Zip file output not yet supported for Concrete");
+        } else {
+            if (comms.size() > 1) {
+                throw new RuntimeException("Multiple Communications in input cannot be written to a single Communication as output.");
+            } else if (comms.size() == 0) {
+                throw new RuntimeException("No Communication in sourceSents field.");
+            }
+            Communication comm = comms.get(0);
+            comm = comm.deepCopy();
+            addAnnotations(sents, comm);
+            try {
+                ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
+                byte[] bytez =ser.toBytes(comm);
+                Files.write(Paths.get(out.getAbsolutePath()), bytez);
+            } catch (ConcreteException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
+    /** Adds the annotations from the {@link AnnoSentenceCollection} to the {@link Communication}. */
+    public void addAnnotations(AnnoSentenceCollection sents, Communication comm) {
+        int numSents = TokenizationUtils.getNumSents(comm);
+        if (numSents != sents.size()) {
+            log.error(String.format("# sents in Communication = %d # sents in AnnoSentenceCollection = %d", numSents, sents.size()));
+            log.error("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection." +
+                    "This can occur when the maximum sentence length or the total number of sentences is restricted.");
+            throw new RuntimeException("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection.");
+        }
+        addDependencyParse(sents, comm);
+        addSrlAnnotations(sents, comm);
+        addRelations(sents, comm);
+    }
+
+    /**
+     * Adds a dependency parse from each sentence in the {@link AnnoSentenceCollection} to each
+     * sentence's concrete.Tokenization.
+     */
+    public void addDependencyParse(
+            AnnoSentenceCollection sents,
+            Communication comm) {
+        if (!sents.someHaveAt(AT.DEP_TREE)) { return; } 
+        List<Tokenization> ts = getTokenizationsCorrespondingTo(sents, comm);
+        for(int i=0; i<ts.size(); i++) {
+            Tokenization t = ts.get(i);
+            AnnoSentence s = sents.get(i);
+            List<String> depTypes = s.getDeprels();
+            int[] parents = s.getParents();
+            if (parents != null) {
+                t.addToDependencyParseList(makeDepParse(parents, depTypes));
+            }
+       }
+    }
+
     private DependencyParse makeDepParse(int[] parents, List<String> depRels) {
-        if(depRels != null && parents.length != depRels.size())
-            throw new IllegalArgumentException();
-        
+        if(depRels != null && parents.length != depRels.size()) {
+            throw new IllegalArgumentException("Parents length doesn't match depRels length");
+        }
         DependencyParse p = new DependencyParse();
-        p.uuid = uuidFactory.getConcreteUUID();
-        p.metadata = new AnnotationMetadata();
-        p.metadata.confidence = 1d;
-        p.metadata.tool = "Pacaya dependency parser";
-        p.metadata.timestamp = timestamp;
-        p.dependencyList = new ArrayList<Dependency>();
+        p.setUuid(uuidFactory.getConcreteUUID());
+        AnnotationMetadata metadata = new AnnotationMetadata();
+        metadata.setTool(DEP_PARSE_TOOL);
+        metadata.setTimestamp(timestamp);
+        p.setMetadata(metadata);
+        p.setDependencyList(new ArrayList<Dependency>());        
         for(int i=0; i<parents.length; i++) {
+            if (parents[i] == -2) { continue; }
             Dependency d = new Dependency();
-            d.dep = i;
-            d.gov = parents[i];
-            d.edgeType = (depRels == null) ? "NO_LABEL" : depRels.get(i);
-            p.dependencyList.add(d);
+            d.setDep(i);
+            d.setGov(parents[i]);
+            if (depRels != null && depRels.get(i) != null) {
+                d.setEdgeType(depRels.get(i));
+            }
+            p.addToDependencyList(d);
         }
         return p;
     }
@@ -100,119 +155,124 @@ public class ConcreteWriter {
      * behavior depends on {@code this.srlIsSyntax}
      */
     public void addSrlAnnotations(
-            AnnoSentenceCollection containsSrl,
-            edu.jhu.hlt.concrete.Communication addTo) {
+            AnnoSentenceCollection sents,
+            Communication comm) {    
+        if (!sents.someHaveAt(AT.SRL)) { return; }
         
         AnnotationMetadata meta = new AnnotationMetadata();
         meta = new AnnotationMetadata();
-        meta.tool = "pacaya SRL";
-        meta.confidence = 1d;
-        meta.timestamp = timestamp;
+        meta.setTool(SRL_TOOL);
+        meta.setTimestamp(timestamp);
         
-        List<Tokenization> tokenizations = getTokenizationsCorrespondingTo(containsSrl, addTo);
+        List<Tokenization> tokenizations = getTokenizationsCorrespondingTo(sents, comm);
         
         if(srlIsSyntax) {
             // make a dependency parse for every sentence / SRL
             for(int i=0; i<tokenizations.size(); i++) {
-                AnnoSentence sent = containsSrl.get(i);
+                AnnoSentence sent = sents.get(i);
                 Tokenization at = tokenizations.get(i);
-                DependencyParse p = makeDependencyParse(sent.getSrlGraph(), sent, meta);
-                at.dependencyParseList.add(p);
+                if (sent.getSrlGraph() != null) {
+                    DependencyParse p = makeDependencyParse(sent.getSrlGraph(), sent, meta);
+                    at.addToDependencyParseList(p);
+                }
             }
-        }
-        else {
+        } else {
             // make a SituationMention for every sentence / SRL
             EntityMentionSet ems = new EntityMentionSet();
-            ems.uuid = uuidFactory.getConcreteUUID();
-            ems.metadata = meta;
+            ems.setUuid(uuidFactory.getConcreteUUID());
+            ems.setMetadata(meta);
             SituationMentionSet sms = new SituationMentionSet();
-            sms.uuid = uuidFactory.getConcreteUUID();
-            sms.metadata = meta;
-            sms.mentionList = new ArrayList<SituationMention>();
-            for(int i=0; i<containsSrl.size(); i++) {
-                AnnoSentence sent = containsSrl.get(i);
-                Tokenization t = tokenizations.get(i);
-                sms.mentionList.addAll(makeSitutationMention(sent.getSrlGraph(), sent, t, ems));
+            sms.setUuid(uuidFactory.getConcreteUUID());
+            sms.setMetadata(meta);
+            sms.setMentionList(new ArrayList<SituationMention>());
+            for(int i=0; i<sents.size(); i++) {
+                AnnoSentence sent = sents.get(i);
+                Tokenization t = tokenizations.get(i); 
+                if (sent.getSrlGraph() != null) {
+                    for(SituationMention sm : makeSitutationMentions(sent.getSrlGraph(), sent, t, ems)) {
+                        sms.addToMentionList(sm);
+                    }
+                }
             }
-            addTo.entityMentionSets.add(ems);
-            addTo.situationMentionSets.add(sms);
+            comm.addToEntityMentionSetList(ems);
+            comm.addToSituationMentionSetList(sms);
         }
     }
     
     private DependencyParse makeDependencyParse(SrlGraph srl, AnnoSentence from, AnnotationMetadata meta) {
         DependencyParse p = new DependencyParse();
-        p.uuid = uuidFactory.getConcreteUUID();
-        p.metadata = meta;
-        p.dependencyList = new ArrayList<Dependency>();
+        p.setUuid(uuidFactory.getConcreteUUID());
+        p.setMetadata(meta);
+        p.setDependencyList(new ArrayList<Dependency>());
         for(SrlPred pred : srl.getPreds()) {
-            Dependency d = new Dependency();
-            d.gov = -1;
-            d.dep = pred.getPosition();
-            d.edgeType = pred.getLabel();
-            p.dependencyList.add(d);
+            {
+                Dependency d = new Dependency();
+                d.setGov(-1);
+                d.setDep(pred.getPosition());
+                d.setEdgeType(pred.getLabel());
+                p.addToDependencyList(d);
+            }
             for(SrlEdge e : pred.getEdges()) {
                 Dependency ed = new Dependency();
-                ed.gov = pred.getPosition();
-                ed.dep = e.getArg().getPosition();
-                ed.edgeType = e.getLabel();
-                p.dependencyList.add(ed);
+                ed.setGov(pred.getPosition());
+                ed.setDep(e.getArg().getPosition());
+                ed.setEdgeType(e.getLabel());
+                p.addToDependencyList(ed);
             }
         }
         return p;
     }
     
-    private List<SituationMention> makeSitutationMention(SrlGraph srl, AnnoSentence from, Tokenization useUUID, EntityMentionSet addEntityMentionsTo) {
+    private List<SituationMention> makeSitutationMentions(SrlGraph srl, AnnoSentence from, Tokenization useUUID, EntityMentionSet addEntityMentionsTo) {
         List<SituationMention> mentions = new ArrayList<SituationMention>();
         for(SrlPred p : srl.getPreds()) {
             SituationMention sm = new SituationMention();
-            sm.text = from.getWord(p.getPosition());
-            sm.confidence = 1d;
-            sm.argumentList = new ArrayList<>();
+            sm.setText(from.getWord(p.getPosition()));
+            sm.setArgumentList(new ArrayList<MentionArgument>());
             for(SrlEdge child : p.getEdges()) {
                 int ai = child.getArg().getPosition();
                 MentionArgument a = new MentionArgument();
-                a.roleLabel = child.getLabel();
+                a.setRole(child.getLabel());
                 
                 // make an EntityMention
                 EntityMention em = new EntityMention();
-                em.uuid = uuidFactory.getConcreteUUID();
-                em.confidence = 1d;
-                em.entityType = "UNKNOWN";
-                em.phraseType = "OTHER";
-                em.text = from.getWord(ai);
-                em.tokens = new TokenRefSequence();
-                em.tokens.anchorTokenIndex = ai;
-                em.tokens.tokenIndexList = Arrays.asList(ai);
-                em.tokens.tokenizationId = useUUID.uuid;
+                em.setUuid(uuidFactory.getConcreteUUID());
+                em.setEntityType("UNKNOWN");
+                em.setPhraseType("OTHER");
+                em.setText(from.getWord(ai));
+                TokenRefSequence seq = new TokenRefSequence();
+                em.setTokens(seq);
+                seq.setAnchorTokenIndex(ai);
+                seq.setTokenIndexList(Arrays.asList(ai));
+                seq.setTokenizationId(useUUID.getUuid());
                 
-                a.entityMentionId = em.uuid;
-                addEntityMentionsTo.mentionSet.add(em);
+                a.setEntityMentionId(em.getUuid());
+                addEntityMentionsTo.addToMentionList(em);
             }
         }
         return mentions;
     }
+
+    private void addRelations(AnnoSentenceCollection sents, Communication comm) {
+        //if (!sents.someHaveAt(AT.REL_LABELS)) { return; } 
+        // TODO Auto-generated method stub
+        //throw new RuntimeException();
+    }
     
     private List<Tokenization> getTokenizationsCorrespondingTo(AnnoSentenceCollection sentences, Communication from) {
         List<Tokenization> ts = new ArrayList<Tokenization>();
-        if(careful && from.getSectionSegmentationsSize() != 1)
-            throw new RuntimeException();
-        SectionSegmentation ss = from.getSectionSegmentations().get(0);
-        for(Section s : ss.getSectionList()) {
-            if(careful && s.getSentenceSegmentationSize() != 1)
-                throw new RuntimeException();
-            SentenceSegmentation sentseg = s.getSentenceSegmentation().get(0);
-            for(Sentence sent : sentseg.getSentenceList()) {
-                if(careful && sent.getTokenizationListSize() != 1)
-                    throw new RuntimeException();
-                ts.add(sent.getTokenizationList().get(0));
+        for(Section s : from.getSectionList()) {
+            for(Sentence sent : s.getSentenceList()) {
+                ts.add(sent.getTokenization());
             }
         }
-        if(careful) {   // make sure that the sentences line up
-            if(ts.size() != sentences.size())
-                throw new RuntimeException();
-            for(int i=0; i<ts.size(); i++) {
-                if(ts.get(i).getTokenList().getTokensSize() != sentences.get(i).size())
-                    throw new RuntimeException();
+        // make sure that the sentences line up
+        if(ts.size() != sentences.size()) {
+            throw new RuntimeException("Number of sentences don't match");
+        }
+        for(int i=0; i<ts.size(); i++) {
+            if(ts.get(i).getTokenList().getTokenListSize() != sentences.get(i).size()) {
+                throw new RuntimeException("Sentence lengths don't match");
             }
         }
         return ts;

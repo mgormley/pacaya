@@ -3,7 +3,8 @@ package edu.jhu.nlp.depparse;
 import java.io.IOException;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -26,7 +27,7 @@ import edu.jhu.util.cli.ArgParser;
  */
 public class TreeStatsPrinter {
 
-    private static final Logger log = Logger.getLogger(TreeStatsPrinter.class);
+    private static final Logger log = LoggerFactory.getLogger(TreeStatsPrinter.class);
 
     public void run() throws IOException {
         CorpusHandler copora = new CorpusHandler();

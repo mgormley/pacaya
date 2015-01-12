@@ -390,27 +390,29 @@ public class FeaturizedToken {
         this.highSupportNoun = -1;
         this.lowSupportVerb = -1;
         this.highSupportVerb = -1;
-        for (Pair<Integer,Dir> a : rootPath) {
-            i = a.get1();
-            if (i == -1) {
-                break;
-            }
-            parentPos = sent.getPosTag(i);
-            if (LanguageConstants.isNoun(parentPos, cs.getLanguage())) {
-                if (!haveArgLow) {
-                    haveArgLow = true;
-                    this.lowSupportNoun = i;
-                    this.highSupportNoun = i;
-                } else {
-                    this.highSupportNoun = i;
+        if (rootPath != null) {
+            for (Pair<Integer,Dir> a : rootPath) {
+                i = a.get1();
+                if (i == -1) {
+                    break;
                 }
-            } else if (LanguageConstants.isVerb(parentPos, cs.getLanguage())) {
-                if (!havePredLow) {
-                    havePredLow = true;
-                    this.lowSupportVerb = i;
-                    this.highSupportVerb = i;
-                } else {
-                    this.highSupportVerb = i;
+                parentPos = sent.getPosTag(i);
+                if (LanguageConstants.isNoun(parentPos, cs.getLanguage())) {
+                    if (!haveArgLow) {
+                        haveArgLow = true;
+                        this.lowSupportNoun = i;
+                        this.highSupportNoun = i;
+                    } else {
+                        this.highSupportNoun = i;
+                    }
+                } else if (LanguageConstants.isVerb(parentPos, cs.getLanguage())) {
+                    if (!havePredLow) {
+                        havePredLow = true;
+                        this.lowSupportVerb = i;
+                        this.highSupportVerb = i;
+                    } else {
+                        this.highSupportVerb = i;
+                    }
                 }
             }
         }

@@ -9,7 +9,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.util.collections.Lists;
@@ -22,7 +23,7 @@ import edu.jhu.util.collections.Lists;
  */
 public class SemEval2010Writer implements Closeable {
 
-    private static final Logger log = Logger.getLogger(SemEval2010Writer.class);
+    private static final Logger log = LoggerFactory.getLogger(SemEval2010Writer.class);
     private Writer writer;
     private int count;
     

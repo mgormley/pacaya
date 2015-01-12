@@ -4,9 +4,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -30,7 +33,7 @@ import edu.jhu.util.Threads;
 public class PosTagDistancePruner implements Trainable, Annotator, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
+    private static final Logger log = LoggerFactory.getLogger(PosTagDistancePruner.class);
     private static final String WALL_TAG = "__WALL_TAG__";
     private int wallTagIdx = -1;
     public static final int LEFT = 0;
@@ -83,51 +86,55 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
         Threads.forEach(0, sents.size(), new FnIntToVoid() {            
             @Override
             public void call(int i) {
-                AnnoSentence sent = sents.get(i);
-                // Get existing DepEdgeMask or create a new one.
-                DepEdgeMask mask = sent.getDepEdgeMask();
-                if (mask == null) {
-                    mask = new DepEdgeMask(sent.size(), true);
-                    sent.setDepEdgeMask(mask);
-                }
-                
-                LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
-                int[] tags = tagSeq.getLabelIds();
-    
-                // For each possible dependency edge (including edges to the wall)
-                for (int p = -1; p < tags.length; p++) {
-                    int pTag = (p == -1) ? wallTagIdx : tags[p];
-                    for (int c = 0; c < tags.length; c++) {
-                        numEdgesTot.incrementAndGet();
-                        if (pTag >= mat.length || tags[c] >= mat.length) {
-                            // Don't prune unknown tags.
-                            continue;
-                        }
-                        int dist = (p == -1) ? 1 : Math.abs(p - c);
-                        int dir = (p < c) ? RIGHT : LEFT;
-                        if (dist > mat[pTag][tags[c]][dir]) {
-                            // Prune any edge for which the distance is longer than
-                            // the longest observed distance for the parent / child
-                            // tag types.
-                            mask.setIsPruned(p, c, true);
-                            if (log.isTraceEnabled()) {
-                                log.trace(String.format("Pruned edge: parent=%s child=%s dist=%d",
-                                        alphabet.lookupObject(pTag), alphabet.lookupObject(tags[c]), dist));
+                try {
+                    AnnoSentence sent = sents.get(i);
+                    // Get existing DepEdgeMask or create a new one.
+                    DepEdgeMask mask = sent.getDepEdgeMask();
+                    if (mask == null) {
+                        mask = new DepEdgeMask(sent.size(), true);
+                        sent.setDepEdgeMask(mask);
+                    }
+                    
+                    LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
+                    int[] tags = tagSeq.getLabelIds();
+        
+                    // For each possible dependency edge (including edges to the wall)
+                    for (int p = -1; p < tags.length; p++) {
+                        int pTag = (p == -1) ? wallTagIdx : tags[p];
+                        for (int c = 0; c < tags.length; c++) {
+                            numEdgesTot.incrementAndGet();
+                            if (pTag >= mat.length || tags[c] >= mat.length) {
+                                // Don't prune unknown tags.
+                                continue;
                             }
-                        } else {
-                            numEdgesKept.incrementAndGet();
+                            int dist = (p == -1) ? 1 : Math.abs(p - c);
+                            int dir = (p < c) ? RIGHT : LEFT;
+                            if (dist > mat[pTag][tags[c]][dir]) {
+                                // Prune any edge for which the distance is longer than
+                                // the longest observed distance for the parent / child
+                                // tag types.
+                                mask.setIsPruned(p, c, true);
+                                if (log.isTraceEnabled()) {
+                                    log.trace(String.format("Pruned edge: parent=%s child=%s dist=%d",
+                                            alphabet.lookupObject(pTag), alphabet.lookupObject(tags[c]), dist));
+                                }
+                            } else {
+                                numEdgesKept.incrementAndGet();
+                            }
                         }
                     }
-                }
-                // Check that there still exists some singly-rooted spanning tree that wasn't pruned.n            
-                if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
-                    log.warn("All single-root trees pruned");
-                    log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));
-                    if (sent.getParents() != null) {
-                        log.trace("Pruned parents: " + Arrays.toString(sent.getParents()));
+                    // Check that there still exists some singly-rooted spanning tree that wasn't pruned.
+                    if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
+                        log.warn("All single-root trees pruned");
+                        log.trace(String.format("Pruned sentence: \n%s\n%s", sent.getWords().toString(), mask.toString()));
+                        if (sent.getParents() != null) {
+                            log.trace("Pruned parents: " + Arrays.toString(sent.getParents()));
+                        }
+                    } else if (!InsideOutsideDepParse.singleRoot && !mask.allowsMultiRootTrees()) {
+                        log.warn("All multi-root trees pruned");
                     }
-                } else if (!InsideOutsideDepParse.singleRoot && !mask.allowsMultiRootTrees()) {
-                    log.warn("All multi-root trees pruned");
+                } catch (Throwable t) {
+                    AbstractParallelAnnotator.logThrowable(log, t);
                 }
             }
         });

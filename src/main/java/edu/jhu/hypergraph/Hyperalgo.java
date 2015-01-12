@@ -3,7 +3,8 @@ package edu.jhu.hypergraph;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hypergraph.Hypergraph.HyperedgeFn;
 import edu.jhu.util.semiring.Algebra;
@@ -11,7 +12,7 @@ import edu.jhu.util.semiring.Semiring;
 
 public class Hyperalgo {
 
-    private static final Logger log = Logger.getLogger(Hyperalgo.class);
+    private static final Logger log = LoggerFactory.getLogger(Hyperalgo.class);
     
     private Hyperalgo() {
         // Private constructor.

@@ -5,7 +5,8 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
@@ -95,7 +96,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         
     }
     
-    private static final Logger log = Logger.getLogger(ConstituencyTreeFactor.class);
+    private static final Logger log = LoggerFactory.getLogger(ConstituencyTreeFactor.class);
     
     private final VarSet vars;
     /** The sentence length. */
