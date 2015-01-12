@@ -8,10 +8,18 @@ from CLSP's internal maven repository, or they can be installed
 locally.
 * Prim: a Java primitives library
 * Optimize: a Java optimization library
-* Erma: used only for the ERMA file format
 * [optional] PyPipeline: for running experiments
 
 ### Using CLSP's internal maven repository
+
+You can use the CLSP maven repository if you are installing a tagged 
+release of Pacaya. If you are simply trying to build the master branch,
+you should install the dependencies locally.
+
+To checkout a new branch starting named 'rel-3.0.1' pointing at the
+ tagged release 'pacaya-3.0.1':
+
+	git checkout -b rel-3.0.1 pacaya-3.0.1
 
 If you are installing somewhere other than the CLSP grid:
 
@@ -49,11 +57,7 @@ Bitbucket usernames.
 	git clone https://gitlab.hltcoe.jhu.edu/mgormley/optimize.git
 	cd optimize
 	mvn install -DskipTests
-3. Checkout and install Erma locally
-	git clone git@github.com:jeisner/erma.git
-	cd erma
-	mvn install -DskipTests
-4. Checkout and install PyPipeline locally
+3. Checkout and install PyPipeline locally
 	git clone https://gitlab.hltcoe.jhu.edu/mgormley/pypipeline.git
 	cd pypipeline
 	python setup.py develop --user
@@ -88,6 +92,26 @@ Bitbucket usernames.
   pypipeline project directory can be explicitly added to the
   PYTHONPATH within the Eclipse project.
 
+# Experiments 
+
+## Running ACL '14 Experiments
+
+Ensure that you have properly installed PyPipeline by running "python"
+followed by "import pypipeline.pipeline".
+
+The following experiment scripts should work fine on the COE grid
+where the corpus files can be found in the appropriate places.
+
+Run a "fast" version of the experiments (should complete in about a
+minute) with output printed to stdout:
+    
+    source setupenv.sh
+    run_srl.py -e srl-conll09 -f
+
+Run the full set of experiments on the grid:
+    
+    source setupenv.sh
+    run_srl.py -e srl-conll09 -q mem
 
 ## Running ACE Relation Extraction Experiments
 
@@ -150,22 +174,3 @@ with a different named experiment "ace-pm13".
 
     source setupenv.sh
     run_ace2.py -e ace-pm13 -q clsp
-
-## Running ACL '14 Experiments
-
-Ensure that you have properly installed PyPipeline by running "python"
-followed by "import pypipeline.pipeline".
-
-The following experiment scripts should work fine on the COE grid
-where the corpus files can be found in the appropriate places.
-
-Run a "fast" version of the experiments (should complete in about a
-minute) with output printed to stdout:
-    
-    source setupenv.sh
-    run_srl.py -e srl-conll09 -f
-
-Run the full set of experiments on the grid:
-    
-    source setupenv.sh
-    run_srl.py -e srl-conll09 -q mem
