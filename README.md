@@ -174,3 +174,93 @@ with a different named experiment "ace-pm13".
 
     source setupenv.sh
     run_ace2.py -e ace-pm13 -q clsp
+    
+# Maven Releases
+
+The workflow for releasing pacaya and its dependencies involves both maven and git.
+
+## Private Releases
+
+For private releases, we do NOT use the release branch.
+
+1. Perform a private release of Prim and Optimize.
+2. Cache the version numbers we'll be using.
+		
+		# Below, replace X.Y.Z with the release number.
+		# This is the current version in the pom.xml without the -SNAPSHOT suffix.
+		RELEASE_VERSION=X.Y.Z
+		
+		# This is the next version after this release. Don't include the -SNAPSHOT suffix.
+		NEXT_VERSION=X.Y.Z+1		
+
+3. Ensure that you're on the master branch. Then change the Pacaya version number from X.Y.Z-SNAPSHOT to X.Y.Z. 
+
+		git checkout master	
+		mvn version:set -DoldVersion=${RELEASE_VERSION}-SNAPSHOT -DnewVersion=${RELEASE_VERSION}
+		
+4. Open pom.xml and update the version numbers for Prim and Optimize to their non-SNAPSHOT versions from the release you just did.
+5. Setup a tunnel to checker, the CLSP maven repository. Then deploy to the CLSP maven repository.
+
+		ssh -f -N -L 8081:checker:8081 -2 login.clsp.jhu.edu			
+		mvn deploy -DskipTests -Pclsp 
+  	
+6. Setup a tunnel to the COE maven repository. Then deploy to the COE maven repository. (Important Note: this requires that you have correctly configured you ~/.m2/settings.xml to include proper authentication in order to deploy.)
+
+		ssh -f -N -L 8081:10.162.95.47:8081 -2 external.hltcoe.jhu.edu
+		mvn deploy -DskipTests -Pcoe
+
+7. Commit the non-SNAPSHOT release and tag it.
+	
+		git commit -m "Release ${RELEASE_VERSION}"
+		git tag pacaya-${RELEASE_VERSION}
+
+8. Open pom.xml, increment the version number to X.Y.Z+1, commit the change, and merge back to master.
+		
+		mvn version:set -DoldVersion=${RELEASE_VERSION} -DnewVersion=${NEXT_VERSION}-SNAPSHOT
+		git commit -m "Updating version to ${NEXT_VERSION}-SNAPSHOT"
+
+
+## Public (GitHub) Releases
+
+1. Perform a private release of Prim and Optimize.
+
+2. Merge the latest changes from master to the release branch.
+		
+		git checkout release
+		git merge master
+		
+3. Cache the version numbers we'll be using.
+		
+		# Below, replace X.Y.Z with the release number.
+		# This is the current version in the pom.xml without the -SNAPSHOT suffix.
+		RELEASE_VERSION=X.Y.Z
+		
+		# This is the next version after this release. Don't include the -SNAPSHOT suffix.
+		NEXT_VERSION=X.Y.Z+1		
+
+4. Change the Pacaya version number from X.Y.Z-SNAPSHOT to X.Y.Z. 
+		
+		mvn version:set -DoldVersion=${RELEASE_VERSION}-SNAPSHOT -DnewVersion=${RELEASE_VERSION}
+		
+5. Open pom.xml and update the version numbers for Prim and Optimize to their non-SNAPSHOT versions from the release you just did.
+6. Deploy to Maven Central. (First, ensure that the password is correctly set in ~/.m2/settings.xml.) 
+
+		mvn deploy -DskipTests -Prelease 
+
+7. Commit the non-SNAPSHOT release and tag it.
+	
+		git commit -m "Release ${RELEASE_VERSION}"
+		git tag pacaya-${RELEASE_VERSION}
+
+8. Open pom.xml, increment the version number to X.Y.Z+1, commit the change, and merge back to master.
+		
+		mvn version:set -DoldVersion=${RELEASE_VERSION} -DnewVersion=${NEXT_VERSION}-SNAPSHOT
+		git commit -m "Updating version to ${NEXT_VERSION}-SNAPSHOT"
+		git checkout master
+		
+		# Only if it is safe, should we merge the changes back to the master branch.
+		# Otherwise, we may just need to cherry-pick the appropriate commits.
+		# git merge release
+
+
+
