@@ -204,7 +204,7 @@ For private releases, we do NOT use the release branch.
 		ssh -f -N -L 8081:checker:8081 -2 login.clsp.jhu.edu			
 		mvn deploy -DskipTests -Pclsp 
   	
-6. Setup a tunnel to the COE maven repository. Then deploy to the COE maven repository. (Important Note: this requires that you have correctly configured you ~/.m2/settings.xml to include proper authentication in order to deploy.)
+6. Setup a tunnel to the COE maven repository. Then deploy to the COE maven repository. (Important Note: this requires that you have correctly configured you ~/.m2/settings.xml to include proper authentication in order to deploy. You must copy the <servers/> section from /export/common/tools/maven/conf/settings.xml.)
 
 		ssh -f -N -L 8081:10.162.95.47:8081 -2 external.hltcoe.jhu.edu
 		mvn deploy -DskipTests -Pcoe
