@@ -218,7 +218,8 @@ For private releases, we do NOT use the release branch.
 		
 		mvn version:set -DoldVersion=${RELEASE_VERSION} -DnewVersion=${NEXT_VERSION}-SNAPSHOT
 		git commit -m "Updating version to ${NEXT_VERSION}-SNAPSHOT"
-
+		git push --tags
+		git push
 
 ## Public (GitHub) Releases
 
