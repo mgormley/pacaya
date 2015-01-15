@@ -293,7 +293,7 @@ public class Tensor implements MVec<Tensor> {
             this.values[c] = fn.call(c, this.values[c]);
         }
     }
-    
+
     public void elemOp(Tensor other, Lambda.LambdaBinOpDouble fn) {
         checkEqualSize(this, other);
         for (int c=0; c<this.values.length; c++) {
@@ -307,14 +307,39 @@ public class Tensor implements MVec<Tensor> {
             this.values[c] = s.exp(this.values[c]);
         }
     }
-    
+
     /** Take the log of each entry. */
     public void log() {
         for (int c=0; c<this.values.length; c++) {
             this.values[c] = s.log(this.values[c]);
         }
     }
-    
+
+    /** Normalizes the values so that they sum to 1 */
+    public double normalize() {
+        double propSum = this.getSum();
+        if (propSum == s.zero()) {
+            this.fill(s.divide(s.one(), s.fromReal(values.length)));
+        } else if (propSum == s.posInf()) {
+            int count = DoubleArrays.count(values, s.posInf());
+            if (count == 0) {
+                throw new RuntimeException("Unable to normalize since sum is infinite but contains no infinities: " + Arrays.toString(values));
+            }
+            double constant = s.divide(s.one(), s.fromReal(count));
+            for (int d=0; d<values.length; d++) {
+                if (values[d] == s.posInf()) {
+                    values[d] = constant;
+                } else {
+                    values[d] = s.zero();
+                }
+            }
+        } else {
+            this.divide(propSum);
+            assert !this.containsNaN();
+        }
+        return propSum;
+    }
+
     /* --------------------- Summary Statistics --------------------- */
 
     /** Gets the number of entries in the Tensor. */

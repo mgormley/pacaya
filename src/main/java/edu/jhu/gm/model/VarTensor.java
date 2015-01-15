@@ -1,10 +1,8 @@
 package edu.jhu.gm.model;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import edu.jhu.autodiff.Tensor;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.AlgebraLambda;
@@ -21,16 +19,16 @@ public class VarTensor extends Tensor implements Serializable {
 
     /** All variables without an id are given this value. */
     public static final int UNINITIALIZED_NODE_ID = -1;
-  
+
     /** The set of variables in this factor. */
     private VarSet vars;
-    
+
     /** Constructs a factor initializing the values to 0.0. 
      * @param s TODO*/
     public VarTensor(Algebra s, VarSet vars) {
         this(s, vars, s.zero());
     }
-    
+
     /**
      * Constructs a factor where each value is set to some initial value.
      * @param s TODO
@@ -115,32 +113,7 @@ public class VarTensor extends Tensor implements Serializable {
     public VarSet getVars() {
         return vars;
     }
-        
-    /** Normalizes the values. */
-    public double normalize() {
-        double propSum = this.getSum();
-        if (propSum == s.zero()) {
-            this.fill(s.divide(s.one(), s.fromReal(values.length)));
-        } else if (propSum == s.posInf()) {
-            int count = DoubleArrays.count(values, s.posInf());
-            if (count == 0) {
-                throw new RuntimeException("Unable to normalize since sum is infinite but contains no infinities: " + Arrays.toString(values));
-            }
-            double constant = s.divide(s.one(), s.fromReal(count));
-            for (int d=0; d<values.length; d++) {
-                if (values[d] == s.posInf()) {
-                    values[d] = constant;
-                } else {
-                    values[d] = s.zero();
-                }
-            }
-        } else {
-            this.divide(propSum);
-            assert !this.containsNaN();
-        }
-        return propSum;
-    }
-    
+
     /**
      * Adds a factor to this one.
      * 

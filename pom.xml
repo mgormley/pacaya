@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.0.2-SNAPSHOT</version>
+  <version>3.0.3</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -181,16 +181,16 @@
       <id>coe</id>
       <!-- For deploying to COE. -->
       <distributionManagement>
-	<repository>
-	  <id>coe-mvn</id>
-	  <name>coe-mvn-releases</name>
-	  <url>http://localhost:8081/artifactory/libs-release-local</url>
-	</repository>
-	<snapshotRepository>
-	  <id>coe-mvn-snapshots</id>
-	  <name>coe-mvn-snapshots</name>
-	  <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
-	</snapshotRepository>
+        <repository>
+          <id>coe-mvn</id>
+          <name>coe-mvn-releases</name>
+          <url>http://localhost:8081/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+          <id>coe-mvn-snapshots</id>
+          <name>coe-mvn-snapshots</name>
+          <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
       </distributionManagement>
     </profile>
   </profiles>
@@ -205,12 +205,12 @@
     <dependency>
       <groupId>edu.jhu.prim</groupId>
       <artifactId>prim</artifactId>
-      <version>3.0.2-SNAPSHOT</version>
+      <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
       <artifactId>optimize</artifactId>
-      <version>3.0.2-SNAPSHOT</version>
+      <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -287,7 +287,7 @@
     <dependency>
       <groupId>edu.stanford.nlp</groupId>
       <artifactId>stanford-corenlp</artifactId>
-      <version>1.3.4</version>
+      <version>3.4</version>
     </dependency>
   </dependencies>
 

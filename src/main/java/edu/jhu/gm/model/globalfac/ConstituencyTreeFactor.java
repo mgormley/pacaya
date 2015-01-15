@@ -39,9 +39,9 @@ import edu.jhu.util.semiring.LogSemiring;
 public class ConstituencyTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
 
     private static final long serialVersionUID = 1L;
- 
-    private static final CnfGrammar grammar;
-    private static final int nt;
+
+    public static final CnfGrammar grammar;
+    public static final int nonTerminalSymbol, terminalSymbol;
     static {
         try {
             StringReader reader = new StringReader(
@@ -53,12 +53,13 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
             CnfGrammarReader builder = new CnfGrammarReader();
             builder.loadFromReader(reader);
             grammar = builder.getGrammar(LoopOrder.LEFT_CHILD);
-            nt = grammar.getNtAlphabet().lookupIndex("X");
+            nonTerminalSymbol = grammar.getNtAlphabet().lookupIndex("X");
+            terminalSymbol = grammar.getLexAlphabet().lookupIndex("a");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
     /**
      * Span variable. When true it indicates that there is a span from start to end.
      * 
@@ -71,11 +72,11 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         // The variable states.
         public static final int TRUE = 1;
         public static final int FALSE = 0;
-        
+
         private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
         private int start;
-        private int end;     
-        
+        private int end;
+
         public SpanVar(VarType type, String name, int start, int end) {
             super(type, BOOLEANS.size(), name, BOOLEANS);
             this.start = start;
@@ -93,7 +94,6 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         public static String getDefaultName(int i, int j) {
             return String.format("Span_%d_%d", i, j);
         }
-        
     }
     
     private static final Logger log = LoggerFactory.getLogger(ConstituencyTreeFactor.class);
@@ -104,12 +104,12 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     private SpanVar[][] spanVars;
     // Internal sentence used by parser.
     private Sentence sentence;
-        
+
     /**
      * Constructor.
      * @param n The length of the sentence.
      */
-    public ConstituencyTreeFactor(int n, VarType type) {    
+    public ConstituencyTreeFactor(int n, VarType type) {
         super();
         this.vars = createVarSet(n, type);
         this.n = n;
@@ -123,13 +123,13 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
             SpanVar span = (SpanVar) var;
             spanVars[span.getStart()][span.getEnd()] = span;
         }
-         
+
         // Construct sentence.
         int[] sent = new int[n];
         Arrays.fill(sent, grammar.getLexAlphabet().lookupIndex("a"));
         sentence = new Sentence(grammar.getLexAlphabet(), sent);
     }
-    
+
     /**
      * Get the span var corresponding to the specified start and end positions.
      * 
@@ -154,7 +154,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         }
         return vars;
     }
-        
+
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
@@ -180,7 +180,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         };
         PcfgInsideOutside io = new PcfgInsideOutside(prm);
         PcfgIoChart chart = io.runInsideOutside(sentence, grammar);
-        
+
         // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
         // Here we store the log partition.
         double partition = pi + chart.getLogPartitionFunction();
@@ -188,7 +188,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         if (log.isTraceEnabled()) {
             log.trace(String.format("partition: %.2f", partition));
         }
-        
+
         // Create the messages and stage them in the Messages containers.
         for (int i=0; i<inMsgs.length; i++) {
             VarTensor inMsg = inMsgs[i];
@@ -205,25 +205,25 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
             // 
             // Here we compute the logs of these quantities.
 
-            double beliefTrue = pi + chart.getLogSumOfPotentials(nt, span.getStart(), span.getEnd());
+            double beliefTrue = pi + chart.getLogSumOfPotentials(nonTerminalSymbol, span.getStart(), span.getEnd());
             double beliefFalse = safeLogSubtract(partition, beliefTrue);
-            
+
             // TODO: Detect possible numerical precision error.
-            
+
             // Get the incoming messages.
             double inMsgTrue = s.toLogProb(inMsg.getValue(SpanVar.TRUE));
             double inMsgFalse = s.toLogProb(inMsg.getValue(SpanVar.FALSE));
             
             double outMsgTrue = beliefTrue - inMsgTrue;
             double outMsgFalse = beliefFalse - inMsgFalse;
-            
+
             outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
             outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
             
             setOutMsgs(outMsg, span, outMsgTrue, outMsgFalse);
         }
     }
-    
+
     private double safeLogSubtract(double partition, double beliefTrue) {
         double outMsgFalse;
         if (partition < beliefTrue) {
@@ -337,12 +337,12 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     public SpanVar[][] getSpanVars() {
         return spanVars;
     }
-    
+
     @Override
     public VarSet getVars() {
         return vars;
     }
-    
+
     @Override
     public Factor getClamped(VarConfig clmpVarConfig) {
         if (clmpVarConfig.size() == 0) {
