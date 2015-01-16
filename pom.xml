@@ -179,7 +179,7 @@
     </profile>
     <profile>
       <id>coe</id>
-      <!-- For deploying to COE. -->
+      <!-- For deploying to COE when you have an SSH tunnel setup on your machine. -->
       <distributionManagement>
         <repository>
           <id>coe-mvn</id>
@@ -190,6 +190,22 @@
           <id>coe-mvn-snapshots</id>
           <name>coe-mvn-snapshots</name>
           <url>http://localhost:8082/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+    <profile>
+      <id>coe-local</id>
+      <!-- For deploying to COE when you're on the COE network. -->
+      <distributionManagement>
+        <repository>
+          <id>coe-mvn</id>
+          <name>coe-mvn-releases</name>
+		  <url>http://10.162.95.47:8081/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+          <id>coe-mvn-snapshots</id>
+          <name>coe-mvn-snapshots</name>
+		  <url>http://10.162.95.47:8081/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
