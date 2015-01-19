@@ -8,6 +8,7 @@ def remote_command(argv):
     prep_project_mvn("prim", "install", True)
     #prep_project_mvn("erma", "install", True)
     prep_project_mvn("optimize", "install", True)
+    #prep_project_mvn("optimize-wrappers", "install", True)
     prep_project_py("pypipeline", True)
     prep_project_mvn("pacaya2", "compile jar:jar", False)
     run_command("pacaya2", argv)

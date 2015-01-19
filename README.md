@@ -8,6 +8,8 @@ from CLSP's internal maven repository, or they can be installed
 locally.
 * Prim: a Java primitives library
 * Optimize: a Java optimization library
+* Optimize Wrappers: wrappers for various optimizers that are 
+  not included in the standard Optimize library.
 * [optional] PyPipeline: for running experiments
 
 ### Using CLSP's internal maven repository
@@ -57,7 +59,11 @@ Bitbucket usernames.
 	git clone https://gitlab.hltcoe.jhu.edu/mgormley/optimize.git
 	cd optimize
 	mvn install -DskipTests
-3. Checkout and install PyPipeline locally
+3. Checkout and install Optimize Wrappers locally
+	git clone https://gitlab.hltcoe.jhu.edu/mgormley/optimize-wrappers.git
+	cd optimize-wrappers
+	mvn install -DskipTests
+4. Checkout and install PyPipeline locally
 	git clone https://gitlab.hltcoe.jhu.edu/mgormley/pypipeline.git
 	cd pypipeline
 	python setup.py develop --user
