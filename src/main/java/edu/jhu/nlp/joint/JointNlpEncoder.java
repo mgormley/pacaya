@@ -22,7 +22,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.depparse.DepParseEncoder;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
-import edu.jhu.nlp.depparse.FastDepParseFeatureExtractor;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.nlp.relations.RelObsFe;
@@ -78,7 +78,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
         ObsFeatureExtractor srlFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
         srlFe = new ObsFeatureCache(srlFe);        
         FeatureExtractor dpFe = prm.fePrm.dpFePrm.onlyFast ?
-                new FastDepParseFeatureExtractor(sent, cs, prm.fePrm.dpFePrm.featureHashMod, ofc.getFeAlphabet()) :
+                new BitshiftDepParseFeatureExtractor(sent, cs, prm.fePrm.dpFePrm.featureHashMod, ofc.getFeAlphabet()) :
                 new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
         dpFe = new FeatureCache(dpFe);
         ObsFeatureExtractor relFe = new RelObsFe(prm.fgPrm.relPrm, sent, ofc.getTemplates());

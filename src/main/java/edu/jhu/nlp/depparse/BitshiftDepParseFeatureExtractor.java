@@ -19,19 +19,19 @@ import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.SibFeTypedFactor;
 import edu.jhu.util.FeatureNames;
 
-public class FastDepParseFeatureExtractor implements FeatureExtractor {
+public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
 
-    private static final Logger log = LoggerFactory.getLogger(FastDepParseFeatureExtractor.class);     
+    private static final Logger log = LoggerFactory.getLogger(BitshiftDepParseFeatureExtractor.class);     
     private static final FeatureVector emptyFv;
     static {
         emptyFv = new FeatureVector();
     }
 
-    public static int featureHashMod = -1;
+    private int featureHashMod = -1;
     private IntAnnoSentence isent;
     private FeatureNames alphabet;
     
-    public FastDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FeatureNames alphabet) {
+    public BitshiftDepParseFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FeatureNames alphabet) {
         this.isent = new IntAnnoSentence(sent, cs.store);
         this.featureHashMod = featureHashMod;
         this.alphabet = alphabet;
@@ -71,13 +71,13 @@ public class FastDepParseFeatureExtractor implements FeatureExtractor {
             LinkVar var = (LinkVar) vars.get(0);
             int p = var.getParent();
             int c = var.getChild();
-            FastDepParseFe.addArcFactoredMSTFeats(isent, p, c, feats, false, true);            
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, p, c, feats, false, true, featureHashMod);            
         } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
             SibFeTypedFactor f2 = (SibFeTypedFactor)f;
-            FastDepParseFe.add2ndOrderSiblingFeats(isent, f2.p, f2.c, f2.s, feats);
+            BitshiftDepParseFeatures.add2ndOrderSiblingFeats(isent, f2.p, f2.c, f2.s, featureHashMod, feats);
         } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT) {
             GraFeTypedFactor f2 = (GraFeTypedFactor)f;
-            FastDepParseFe.add2ndOrderGrandparentFeats(isent, f2.g, f2.p, f2.c, feats);
+            BitshiftDepParseFeatures.add2ndOrderGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, featureHashMod);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }
