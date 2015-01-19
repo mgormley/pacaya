@@ -228,12 +228,12 @@
     <dependency>
       <groupId>edu.jhu.prim</groupId>
       <artifactId>prim</artifactId>
-      <version>3.0.4-SNAPSHOT</version>
+      <version>3.0.3</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
       <artifactId>optimize</artifactId>
-      <version>3.0.4-SNAPSHOT</version>
+      <version>3.0.3</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
