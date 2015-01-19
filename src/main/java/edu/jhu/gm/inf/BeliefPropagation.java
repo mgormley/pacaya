@@ -41,6 +41,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         public int maxIterations = 100;
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
+        @Deprecated
         public boolean logDomain = true;
         public Algebra s = null;
         /** Whether to normalize the messages after sending. */
