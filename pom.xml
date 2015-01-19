@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.0.4</version>
+  <version>3.0.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -228,12 +228,12 @@
     <dependency>
       <groupId>edu.jhu.prim</groupId>
       <artifactId>prim</artifactId>
-      <version>3.0.3</version>
+      <version>3.0.4-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
       <artifactId>optimize</artifactId>
-      <version>3.0.3</version>
+      <version>3.0.4-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
