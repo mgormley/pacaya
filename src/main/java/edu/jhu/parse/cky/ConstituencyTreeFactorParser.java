@@ -19,6 +19,7 @@ import edu.jhu.util.Alphabet;
  * 
  * @author travis
  */
+// TODO: Consider moving this to edu.jhu.gm.decode package.
 public class ConstituencyTreeFactorParser {
 
     // TODO this can be faster if reset doesn't always allocate
