@@ -143,8 +143,117 @@ public class BitshiftDepParseFeatures {
         return bins.length;
     }
     
-    /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." 
-     * @param featureHashMod TODO*/
+
+    /** Word pair features from Martins et al. (2013) "Turning on the Turbo...". This feature set draws from EGSTRA */
+    public static void addTurboWordPairFeats(IntAnnoSentence sent, int p, int c, byte pairType, 
+            FeatureVector feats, int featureHashMod) {
+        int sentLen = sent.size();
+
+        // Distance codes.
+        int distance = (p < c) ? c - p : p - c;
+        byte exactDistCode = SafeCast.safeIntToUnsignedByte((distance > 0xff) ? 0xff : distance);
+        byte binDistCode; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
+        if (distance > 40) {
+            binDistCode = 0;
+        } else if (distance > 30) {
+            binDistCode = 1;
+        } else if (distance > 20) {
+            binDistCode = 2;
+        } else if (distance > 10) {
+            binDistCode = 3;
+        } else if (distance > 5) {
+            binDistCode = 4;
+        } else if (distance > 2) {
+            binDistCode = 5;
+        } else {
+            binDistCode = 6;
+        }
+
+        // Direction code and indices.
+        byte direction = (p < c) ? (byte) 0 : (byte) 1;        
+        int leftIdx = (p < c) ? p : c;
+        int rightIdx = (p < c) ? c : p;
+        
+        // Number of certain POS tags in between.
+        int numVerbsBetween = sent.getNumVerbsInBetween(p, c);
+        int numPuncsBetween = sent.getNumPuncsInBetween(p, c);
+        int numConjsBetween = sent.getNumConjsInBetween(p, c);
+        // Use at most 4-bits to denote the number in between. 
+        int maxOccurrences = 0xf; // 15
+        if (numVerbsBetween > maxOccurrences) { numVerbsBetween = maxOccurrences; }
+        if (numPuncsBetween > maxOccurrences) { numPuncsBetween = maxOccurrences; }
+        if (numConjsBetween > maxOccurrences) { numConjsBetween = maxOccurrences; }
+        // Use 4-bits to denote the type of tag between (e.g. verb, punc, conj)
+        byte verbsBetweenCode = SafeCast.safeIntToUnsignedByte(0x0 | (numVerbsBetween << 4));
+        byte puncsBetweenCode = SafeCast.safeIntToUnsignedByte(0x1 | (numPuncsBetween << 4));
+        byte conjsBetweenCode = SafeCast.safeIntToUnsignedByte(0x2 | (numConjsBetween << 4));
+        
+        // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
+        // by c (for child).
+        short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
+        short cWord = (c < 0) ? TOK_WALL_INT : sent.getWord(c);
+        byte pPos = (p < 0) ? TOK_WALL_INT : sent.getPosTag(p);
+        byte cPos = (c < 0) ? TOK_WALL_INT : sent.getPosTag(c);
+        short pLemma = (p < 0) ? TOK_WALL_INT : sent.getLemma(p);
+        short cLemma = (c < 0) ? TOK_WALL_INT : sent.getLemma(c);
+        byte pCpos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
+        byte cCpos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
+
+        // Surrounding words / POS tags. 
+        // One token to the left (l) and right (r).
+        short lpWord = (p-1 < 0) ? TOK_START_INT : sent.getWord(p-1);
+        short lcWord = (c-1 < 0) ? TOK_START_INT : sent.getWord(c-1);
+        short rpWord = (p+1 >= sentLen) ? TOK_END_INT : sent.getWord(p+1);
+        short rcWord = (c+1 >= sentLen) ? TOK_END_INT : sent.getWord(c+1);
+        //
+        byte lpPos = (p-1 < 0) ? TOK_START_INT : sent.getPosTag(p-1);
+        byte lcPos = (c-1 < 0) ? TOK_START_INT : sent.getPosTag(c-1);
+        byte rpPos = (p+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+1);
+        byte rcPos = (c+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+1);
+        //
+        short lpLemma = (p-1 < 0) ? TOK_START_INT : sent.getLemma(p-1);
+        short lcLemma = (c-1 < 0) ? TOK_START_INT : sent.getLemma(c-1);
+        short rpLemma = (p+1 >= sentLen) ? TOK_END_INT : sent.getLemma(p+1);
+        short rcLemma = (c+1 >= sentLen) ? TOK_END_INT : sent.getLemma(c+1);
+        //
+        byte lpCpos = (p-1 < 0) ? TOK_START_INT : sent.getCposTag(p-1);
+        byte lcCpos = (c-1 < 0) ? TOK_START_INT : sent.getCposTag(c-1);
+        byte rpCpos = (p+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(p+1);
+        byte rcCpos = (c+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(c+1);
+        
+        // Two tokens to the left (ll) and right (rr).
+        short llpWord = (p-2 < 0) ? TOK_START_INT : sent.getWord(p-2);
+        short llcWord = (c-2 < 0) ? TOK_START_INT : sent.getWord(c-2);
+        short rrpWord = (p+2 >= sentLen) ? TOK_END_INT : sent.getWord(p+2);
+        short rrcWord = (c+2 >= sentLen) ? TOK_END_INT : sent.getWord(c+2);
+        //
+        byte llpPos = (p-2 < 0) ? TOK_START_INT : sent.getPosTag(p-2);
+        byte llcPos = (c-2 < 0) ? TOK_START_INT : sent.getPosTag(c-2);
+        byte rrpPos = (p+2 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+2);
+        byte rrcPos = (c+2 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+2);
+        //
+        short llpLemma = (p-2 < 0) ? TOK_START_INT : sent.getLemma(p-2);
+        short llcLemma = (c-2 < 0) ? TOK_START_INT : sent.getLemma(c-2);
+        short rrpLemma = (p+2 >= sentLen) ? TOK_END_INT : sent.getLemma(p+2);
+        short rrcLemma = (c+2 >= sentLen) ? TOK_END_INT : sent.getLemma(c+2);
+        //
+        byte llpCpos = (p-2 < 0) ? TOK_START_INT : sent.getCposTag(p-2);
+        byte llcCpos = (c-2 < 0) ? TOK_START_INT : sent.getCposTag(c-2);
+        byte rrpCpos = (p+2 >= sentLen) ? TOK_END_INT : sent.getCposTag(p+2);
+        byte rrcCpos = (c+2 >= sentLen) ? TOK_END_INT : sent.getCposTag(c+2); 
+        
+
+        // Flags for the type of feature.
+        byte flags = pairType; // 4 bits.
+        flags |= (direction << 4); // 1 more bit.
+
+        addFeat(feats, encodeFeatureB___(ArcTs.BIAS, flags, (byte)0), featureHashMod);
+
+        throw new RuntimeException("Not yet implemented");
+        // TODO: Add all the features.
+    }
+    
+    /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." */
     public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, FeatureVector feats, 
             boolean basicOnly, boolean coarseTagFeats, int featureHashMod) {
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
@@ -169,21 +278,21 @@ public class BitshiftDepParseFeatures {
         byte rcPos = (c+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+1);
         
         int distance = (p < c) ? c - p : p - c;        
-        byte binnedDist; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
+        byte binDistCode; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
         if (distance >= 40) {
-            binnedDist = 0;
+            binDistCode = 0;
         } else if (distance >= 30) {
-            binnedDist = 1;
+            binDistCode = 1;
         } else if (distance >= 20) {
-            binnedDist = 2;
+            binDistCode = 2;
         } else if (distance >= 10) {
-            binnedDist = 3;
+            binDistCode = 3;
         } else if (distance >= 5) {
-            binnedDist = 4;
+            binDistCode = 4;
         } else if (distance >= 2) {
-            binnedDist = 5;
+            binDistCode = 5;
         } else {
-            binnedDist = 6;
+            binDistCode = 6;
         }
 
         byte direction = (p < c) ? (byte) 0 : (byte) 1;        
@@ -195,22 +304,21 @@ public class BitshiftDepParseFeatures {
             if (mode == 1) {
                 //    # All features in Table 1 were conjoined with *direction* of attachment and *distance*.
                 flags |= direction << 4; // 1 bit.
-                flags |= binnedDist << 5; // 3 bits. (8 total)
+                flags |= binDistCode << 5; // 3 bits. (8 total)
             }
             
             extractMstFeaturesWithPos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
-                    pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binnedDist, direction, mode,
+                    pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binDistCode, direction, mode,
                     flags, featureHashMod);
             if (coarseTagFeats) {
                 extractMstFeaturesWithCpos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
-                        pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binnedDist, direction, mode,
+                        pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binDistCode, direction, mode,
                         flags, featureHashMod);
             }
         }
     }
 
-    /** Regular POS tag versions of the MST features. 
-     * @param featureHashMod TODO*/
+    /** Regular POS tag versions of the MST features. */
     private static void extractMstFeaturesWithPos(IntAnnoSentence sent, int p, int c, FeatureVector feats,
             boolean basicOnly, short pWord, short cWord, byte pPos, byte cPos, short pPrefix, short cPrefix,
             boolean pPrefixFeats, boolean cPrefixFeats, byte lpPos, byte lcPos, byte rpPos, byte rcPos, int distance,
@@ -291,8 +399,7 @@ public class BitshiftDepParseFeatures {
         }
     }
     
-    /** Coarse POS tag versions of the MST features. 
-     * @param featureHashMod TODO*/
+    /** Coarse POS tag versions of the MST features. */
     private static void extractMstFeaturesWithCpos(IntAnnoSentence sent, int p, int c, FeatureVector feats,
             boolean basicOnly, short pWord, short cWord, byte pPos_NOTUSED, byte cPos_NOTUSED, short pPrefix,
             short cPrefix, boolean pPrefixFeats, boolean cPrefixFeats, byte lpPos_NOTUSED, byte lcPos_NOTUSED, 
@@ -378,7 +485,6 @@ public class BitshiftDepParseFeatures {
     /**
      * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
-     * @param featureHashMod TODO
      */
     public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int p, int c, int s, int featureHashMod, FeatureVector feats) {
         // Direction flags.
@@ -398,7 +504,6 @@ public class BitshiftDepParseFeatures {
     /**
      * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
-     * @param featureHashMod TODO
      */
     public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int g, int p, int c, FeatureVector feats, int featureHashMod) {
         // Direction flags.
@@ -432,8 +537,7 @@ public class BitshiftDepParseFeatures {
     // Extra triplets are from TurboParser and can be beneficial because of the flags with which they are conjoined.
     public static final boolean extraTriplets = false;
     
-    /** Can be used for either sibling or grandparent features. 
-     * @param featureHashMod TODO*/
+    /** Can be used for either sibling or grandparent features. */
     private static void addTripletFeatures(IntAnnoSentence sent, int p, int c, int s, FeatureVector feats, byte flags, int featureHashMod) {
         // Head, modifier, and sibling words / POS tags. We denote the head by p (for parent), the modifier
         // by c (for child), and the sibling by s.
