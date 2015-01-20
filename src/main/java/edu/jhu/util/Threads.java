@@ -30,6 +30,11 @@ public class Threads {
     public static ExecutorService defaultPool = null;
     public static int numThreads = 0;
     
+    static {
+        // Initialize to just one thread.
+        initDefaultPool(1);
+    }
+    
     private Threads() { }
     
     public static void initDefaultPool(int numThreads) {

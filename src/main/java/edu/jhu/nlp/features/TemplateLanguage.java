@@ -131,7 +131,7 @@ public class TemplateLanguage {
      * be present in order to utilize each structure.
      */
     public enum AT {
-        WORD, PREFIX, LEMMA, POS, CPOS, BROWN, EMBED, MORPHO, CHUNKS, DEP_TREE, DEPREL, 
+        WORD, PREFIX, LEMMA, POS, CPOS, STRICT_POS, BROWN, EMBED, MORPHO, CHUNKS, DEP_TREE, DEPREL, 
         DEP_EDGE_MASK, SRL_PRED_IDX, SRL, NARY_TREE, NER, NE_PAIRS, RELATIONS, REL_LABELS;
     }
         

@@ -48,8 +48,8 @@ import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.AnnoPipeline;
-import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.Annotator;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.TransientAnnotator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -91,6 +91,7 @@ import edu.jhu.nlp.srl.SrlFeatureSelection;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.tag.FileMapTagReducer;
+import edu.jhu.nlp.tag.StrictPosTagAnnotator;
 import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prm;
@@ -400,6 +401,7 @@ public class JointNlpRunner {
         {
             anno.add(new EnsureStaticOptionsAreSet());
             anno.add(new PrefixAnnotator(true));
+            anno.add(new StrictPosTagAnnotator(true));
             // Add Brown clusters.
             if (brownClusters != null) {
                 anno.add(new BrownClusterTagger(getBrownCluterTaggerPrm(), brownClusters));
