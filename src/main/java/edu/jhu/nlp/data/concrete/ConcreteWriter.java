@@ -24,7 +24,7 @@ import edu.jhu.hlt.concrete.SituationMention;
 import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.Tokenization;
-import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
 import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
 import edu.jhu.nlp.data.conll.SrlGraph;
@@ -84,7 +84,7 @@ public class ConcreteWriter {
             comm = comm.deepCopy();
             addAnnotations(sents, comm);
             try {
-                ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
+                CompactCommunicationSerializer ser = new CompactCommunicationSerializer();
                 byte[] bytez =ser.toBytes(comm);
                 Files.write(Paths.get(out.getAbsolutePath()), bytez);
             } catch (ConcreteException e) {
