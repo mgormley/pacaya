@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -227,4 +229,19 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         writer.close();
     }
 
+    @Override
+    public Set<AT> getAnnoTypes() {
+        HashSet<AT> ats = new HashSet<>();
+        if (prm.buPrm.fgPrm.includeDp) {
+            ats.add(AT.DEP_TREE);
+        }
+        if (prm.buPrm.fgPrm.includeSrl) {
+            ats.add(AT.SRL);
+        }
+        if (prm.buPrm.fgPrm.includeRel) {
+            ats.add(AT.REL_LABELS);
+        }
+        return ats;
+    }
+    
 }

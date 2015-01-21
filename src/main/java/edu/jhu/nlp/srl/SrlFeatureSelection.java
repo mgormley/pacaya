@@ -1,6 +1,8 @@
 package edu.jhu.nlp.srl;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +98,11 @@ public class SrlFeatureSelection implements Annotator, Trainable {
             fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
             fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
         }
+    }
+    
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Collections.emptySet();
     }
     
 }

@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -42,6 +44,34 @@ import edu.jhu.nlp.features.TemplateLanguage.AT;
  */
 public class ConcreteWriter {
 
+    public static class ConcreteWriterPrm {   
+        private static final Logger log = LoggerFactory.getLogger(ConcreteWriterPrm.class);
+        /* ----- Whether to include each annotation layer ----- */
+        /** Whether to add the dependency parses. */
+        public boolean addDepParse = true;
+        /** Whether to add SRL. */
+        public boolean addSrl = true;
+        /** Whether to add NER mentions. */
+        public boolean addNerMentions = true;
+        /** Whether to add relations. */
+        public boolean addRelations = true;
+        /* ---------------------------------------------------- */
+        /** Whether to write out SRL as a labeled dependency tree (i.e. syntax) or as SituationMentions. */
+        public boolean srlIsSyntax = false;
+        /** Sets the include flag for each annotation type to true, or warns if it's not supported. */
+        public void addAnnoTypes(Collection<AT> ats) {
+            for (AT at : ats) {
+                switch (at) {
+                case DEP_TREE: this.addDepParse = true; break;
+                case SRL: this.addSrl = true; break;
+                case NER: this.addNerMentions = true; break;
+                case RELATIONS: this.addRelations = true; break;
+                default: log.warn("Annotations of type {} are not supported by ConcreteWriter and will not be added to Concrete Communications.", at);
+                }
+            }
+        }
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(ConcreteWriter.class);
 
     public static final String DEP_PARSE_TOOL = "Pacaya Dependency Parser";
@@ -50,7 +80,7 @@ public class ConcreteWriter {
     private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
     
     private final long timestamp;     // time that every annotation that is processed will get
-    private final boolean srlIsSyntax;
+    private final ConcreteWriterPrm prm;
 
     /**
      * @param srlIsSyntax
@@ -65,9 +95,9 @@ public class ConcreteWriter {
      * that is added to its own EntityMentionSet (all EntityMentions created
      * by this tool in a document are unioned before making an EntityMentionSet).
      */
-    public ConcreteWriter(boolean srlIsSyntax) {
+    public ConcreteWriter(ConcreteWriterPrm prm) {
         this.timestamp = System.currentTimeMillis();
-        this.srlIsSyntax = srlIsSyntax;
+        this.prm = prm;
     }
 
     public void write(AnnoSentenceCollection sents, File out) throws IOException {
@@ -102,9 +132,15 @@ public class ConcreteWriter {
                     "This can occur when the maximum sentence length or the total number of sentences is restricted.");
             throw new RuntimeException("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection.");
         }
-        addDependencyParse(sents, comm);
-        addSrlAnnotations(sents, comm);
-        addRelations(sents, comm);
+        if (prm.addDepParse) {
+            addDependencyParse(sents, comm);
+        }
+        if (prm.addSrl) {
+            addSrlAnnotations(sents, comm);
+        }
+        if (prm.addNerMentions || prm.addRelations) {
+            addNerMentionsAndRelations(sents, comm);
+        }
     }
 
     /**
@@ -166,7 +202,7 @@ public class ConcreteWriter {
         
         List<Tokenization> tokenizations = getTokenizationsCorrespondingTo(sents, comm);
         
-        if(srlIsSyntax) {
+        if(prm.srlIsSyntax) {
             // make a dependency parse for every sentence / SRL
             for(int i=0; i<tokenizations.size(); i++) {
                 AnnoSentence sent = sents.get(i);
@@ -253,7 +289,7 @@ public class ConcreteWriter {
         return mentions;
     }
 
-    private void addRelations(AnnoSentenceCollection sents, Communication comm) {
+    private void addNerMentionsAndRelations(AnnoSentenceCollection sents, Communication comm) {
         //if (!sents.someHaveAt(AT.REL_LABELS)) { return; } 
         // TODO Auto-generated method stub
         //throw new RuntimeException();

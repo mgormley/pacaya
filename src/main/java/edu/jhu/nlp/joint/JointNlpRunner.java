@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
@@ -48,8 +50,8 @@ import edu.jhu.hlt.optimize.StanfordQNMinimizer;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.nlp.AnnoPipeline;
-import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.Annotator;
+import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.TransientAnnotator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -563,6 +565,10 @@ public class JointNlpRunner {
             log.info("Ensuring that static options (singleRoot and useLogAddTable) are set to their train-time values.");
             InsideOutsideDepParse.singleRoot = singleRoot;
             FastMath.useLogAddTable = useLogAddTable;
+        }
+        @Override
+        public Set<AT> getAnnoTypes() {
+            return Collections.emptySet();
         }
     }
     
