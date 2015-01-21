@@ -39,7 +39,7 @@ import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
 import edu.jhu.hlt.concrete.UUID;
-import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
 import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.hlt.concrete.util.TokenizationUtils.TagTypes;
 import edu.jhu.nlp.data.NerMention;
@@ -71,7 +71,7 @@ public class ConcreteReader {
     
     private static final Logger log = LoggerFactory.getLogger(ConcreteReader.class);
 
-    private ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
+    private CompactCommunicationSerializer ser = new CompactCommunicationSerializer();
     private int numEntityMentions = 0;
     private int numOverlapingMentions = 0;
     private int numSituationMentions = 0;
@@ -365,8 +365,8 @@ public class ConcreteReader {
             Constituent c = cs.get(i);
             id2idx.put(c.getId(), i);
             Span span = new Span(NaryTree.NOT_INITIALIZED, NaryTree.NOT_INITIALIZED);
-            if (c.isSetTokenSequence()) {
-                span = getSpan(c.getTokenSequence());
+            if (c.isSetStart() && c.isSetEnding()) {
+                span = new Span(c.getStart(), c.getEnding());
             }
             boolean isLexical = (c.getChildList().size() == 0);
             trees[i] = new NaryTree(c.getTag(), span.start(), span.end(), new ArrayList<NaryTree>(), isLexical);

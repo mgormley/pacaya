@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.concrete.Communication;
-import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
 import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.nlp.data.concrete.ConcreteWriter;
 import edu.jhu.nlp.data.concrete.TokenizationUtils;
