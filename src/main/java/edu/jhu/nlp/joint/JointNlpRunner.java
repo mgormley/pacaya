@@ -912,12 +912,14 @@ public class JointNlpRunner {
         ArgParser parser = null;
         try {
             parser = new ArgParser(JointNlpRunner.class);
-            parser.addClass(JointNlpRunner.class);
-            parser.addClass(CorpusHandler.class);
-            parser.addClass(RelationsOptions.class);
-            parser.addClass(InsideOutsideDepParse.class);      
-            parser.addClass(ReporterManager.class);
+            parser.registerClass(JointNlpRunner.class);
+            parser.registerClass(CorpusHandler.class);
+            parser.registerClass(RelationsEncoder.class);
+            parser.registerClass(RelObsFe.class);
+            parser.registerClass(InsideOutsideDepParse.class);      
+            parser.registerClass(ReporterManager.class);
             parser.parseArgs(args);
+            JointNlpRunner.parser = parser;
             
             ReporterManager.init(ReporterManager.reportOut, true);
             Prng.seed(seed);

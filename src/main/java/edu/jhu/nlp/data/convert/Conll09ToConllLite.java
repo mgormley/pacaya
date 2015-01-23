@@ -58,7 +58,7 @@ public class Conll09ToConllLite {
     
     public static void main(String[] args) throws IOException {
         ArgParser parser = new ArgParser(Conll09ToConllLite.class);
-        parser.addClass(Conll09ToConllLite.class);
+        parser.registerClass(Conll09ToConllLite.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {

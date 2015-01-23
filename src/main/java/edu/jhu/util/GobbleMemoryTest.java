@@ -23,7 +23,7 @@ public class GobbleMemoryTest {
     public static void main(String[] args) {     
         try {
             ArgParser parser = new ArgParser(GobbleMemoryTest.class);
-            parser.addClass(GobbleMemoryTest.class);
+            parser.registerClass(GobbleMemoryTest.class);
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {
