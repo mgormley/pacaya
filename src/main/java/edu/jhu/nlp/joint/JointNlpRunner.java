@@ -401,7 +401,7 @@ public class JointNlpRunner {
         }
         {
             RelationMunger relMunger = new RelationMunger(parser.getInstanceFromParsedArgs(RelationMungerPrm.class));
-            if (CorpusHandler.getPredAts().contains("REL_LABELS")) {
+            if (CorpusHandler.getPredAts().contains(AT.REL_LABELS)) {
                 anno.add(relMunger.getDataPreproc());
             }
             anno.add(new EnsureStaticOptionsAreSet());
@@ -463,7 +463,7 @@ public class JointNlpRunner {
             }
             // Various NLP annotations.
             anno.add(jointAnno);
-            if (CorpusHandler.getPredAts().contains("REL_LABELS")) {
+            if (CorpusHandler.getPredAts().contains(AT.REL_LABELS) && !relMunger.getPrm().makeRelSingletons) {
                 anno.add(relMunger.getDataPostproc());
             }
         }
@@ -920,8 +920,8 @@ public class JointNlpRunner {
             parser = new ArgParser(JointNlpRunner.class);
             parser.registerClass(JointNlpRunner.class);
             parser.registerClass(CorpusHandler.class);
-            parser.registerClass(RelationsEncoder.class);
-            parser.registerClass(RelObsFe.class);
+            parser.registerClass(RelationMungerPrm.class);
+            parser.registerClass(RelObsFePrm.class);
             parser.registerClass(InsideOutsideDepParse.class);      
             parser.registerClass(ReporterManager.class);
             parser.parseArgs(args);

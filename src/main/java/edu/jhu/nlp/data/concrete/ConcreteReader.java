@@ -167,7 +167,7 @@ public class ConcreteReader {
         if (aSents.getSourceSents() == null) {
             aSents.setSourceSents(new ArrayList<Communication>());
         }
-        log.debug("Adding Communication in sourceSents");
+        log.trace("Adding Communication in sourceSents");
         ((ArrayList<Communication>)aSents.getSourceSents()).add(comm);
     }
 

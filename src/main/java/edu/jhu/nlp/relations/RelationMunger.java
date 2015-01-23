@@ -343,6 +343,10 @@ public class RelationMunger implements Serializable {
             sent.setRelations(relations);
         }
         
+    }
+
+    public RelationMungerPrm getPrm() {
+        return prm;
     }   
 
 }

@@ -90,20 +90,20 @@ class HyperparamArgmax(experiment_runner.PythonExpParams):
 # ---------------------------- Experiments Creator Class ----------------------------------
 
 def get_ace05_data(concrete_dir, prefix):
-    return os.path.join(concrete_dir, prefix+"-comms.zip")
+    return os.path.join(concrete_dir, prefix)
 
 def get_annotation_as_train(comm):
-    exp = ReExpParams(train=comm, trainType="RE_CONCRETE")
+    exp = ReExpParams(train=comm, trainType="CONCRETE")
     exp.set('trainName', os.path.basename(comm), incl_arg=False)
     return exp
 
 def get_annotation_as_dev(comm):
-    exp = ReExpParams(dev=comm, devType="RE_CONCRETE")
+    exp = ReExpParams(dev=comm, devType="CONCRETE")
     exp.set('devName', os.path.basename(comm), incl_arg=False)
     return exp
 
 def get_annotation_as_test(comm):
-    exp = ReExpParams(test=comm, testType="RE_CONCRETE")
+    exp = ReExpParams(test=comm, testType="CONCRETE")
     exp.set('testName', os.path.basename(comm), incl_arg=False)
     return exp
 
@@ -111,6 +111,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "ace-pm13",
+                    "ace-zh",
                     "ace-subtypes",
                     "ace-params",
                     "ace-lc",
@@ -200,21 +201,25 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         # ACE 2005
         ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete"))
+        ace05_zh_concrete_dir = os.path.join(ace05_concrete_dir, "zh")
         
         # ACE 2005 full domains:  bc bn cts nw un wl
-        ace05_bc = get_ace05_data(ace05_concrete_dir, "bc")
-        ace05_bn = get_ace05_data(ace05_concrete_dir, "bn")
-        ace05_cts = get_ace05_data(ace05_concrete_dir, "cts")
-        ace05_nw = get_ace05_data(ace05_concrete_dir, "nw")
-        ace05_un = get_ace05_data(ace05_concrete_dir, "un")
-        ace05_wl = get_ace05_data(ace05_concrete_dir, "wl")
+        ace05_bc = get_ace05_data(ace05_concrete_dir, "bc-comms.zip")
+        ace05_bn = get_ace05_data(ace05_concrete_dir, "bn-comms.zip")
+        ace05_cts = get_ace05_data(ace05_concrete_dir, "cts-comms.zip")
+        ace05_nw = get_ace05_data(ace05_concrete_dir, "nw-comms.zip")
+        ace05_un = get_ace05_data(ace05_concrete_dir, "un-comms.zip")
+        ace05_wl = get_ace05_data(ace05_concrete_dir, "wl-comms.zip")
         
         # ACE 2005 other sets: bn_nw, bc_dev, bc_test
         # TODO: We need to make sure bc_dev and bc_test exactly match
         # the settings in Plank & Moschitti (2013). 
-        ace05_bn_nw = get_ace05_data(ace05_concrete_dir, "bn+nw")
-        ace05_bc_dev = get_ace05_data(ace05_concrete_dir, "bc_dev")
-        ace05_bc_test = get_ace05_data(ace05_concrete_dir, "bc_test")
+        ace05_bn_nw = get_ace05_data(ace05_concrete_dir, "bn+nw-comms.zip")
+        ace05_bc_dev = get_ace05_data(ace05_concrete_dir, "bc_dev-comms.zip")
+        ace05_bc_test = get_ace05_data(ace05_concrete_dir, "bc_test-comms.zip")
+        
+        # ACE 2005 Chinese
+        ace05_zh_all = get_ace05_data(ace05_zh_concrete_dir, "ace2005_cn_withPOS.zip")
         
         # Collections
         ace05_domains = [ace05_bc, ace05_bn, ace05_cts, ace05_nw, ace05_un, ace05_wl]
@@ -247,13 +252,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
         feats_head_only = ReExpParams(modelName="head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY", useZhou05Features=False)
         feats_head_type = ReExpParams(modelName="head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE", useZhou05Features=False)
         
-        feats_zhou  = ReExpParams(modelName="zhou",           useEmbeddingFeatures=False)
+        feats_zhou  = ReExpParams(modelName="zhou",                    useEmbeddingFeatures=False)
         feats_zhou_head_only = ReExpParams(modelName="zhou+head",      useEmbeddingFeatures=True, embFeatType="HEAD_ONLY")
         feats_zhou_head_type = ReExpParams(modelName="zhou+head-type", useEmbeddingFeatures=True, embFeatType="HEAD_TYPE")
         feats_zhou_full_noch = ReExpParams(modelName="zhou+full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS")
         feats_zhou_full      = ReExpParams(modelName="zhou+full",      useEmbeddingFeatures=True, embFeatType="FULL")
-        feats_emb_only_noch  = ReExpParams(modelName="full-noch", useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS", useZhou05Features=False)
-        feats_emb_only  = ReExpParams(modelName="full",           useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+        feats_emb_only_noch  = ReExpParams(modelName="full-noch",      useEmbeddingFeatures=True, embFeatType="FULL_NO_CHUNKS", useZhou05Features=False)
+        feats_emb_only  = ReExpParams(modelName="full",                useEmbeddingFeatures=True, embFeatType="FULL", useZhou05Features=False)
+        feats_head_type  = ReExpParams(modelName="head-type",          useEmbeddingFeatures=True, embFeatType="HEAD_TYPE", useZhou05Features=False)
         defaults.set_incl_arg("modelName", False)
         
         # Evaluation settings
@@ -378,6 +384,37 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             dev = ReExpParams(propTrainAsDev=0.2)
                             exp_bnnw = defaults + evl + train + dev + embed + feats + hyperparam
                             root.add_dependent(exp_bnnw)
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            hypmax = HyperparamArgmax(tsv_file="results.data", csv_file="results.csv",
+                                      hyperparam_keys=",".join(list(experiment_runner.get_all_keys(hyperparams))+['modelIn']),
+                                      argmax_key='devRelF1')
+            hypmax.add_prereqs(root.dependents)
+            return root
+        
+        elif self.expname == "ace-zh":
+            '''ACE 2005 Chinese experiments.
+            '''
+            root = RootStage()
+            evls = [eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                    eval_types13,
+                    eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
+                    eval_types36,
+                    ] # eval_ng14, eval_types7]:
+            for evl in evls:
+                for embed in [cbow_nyt11_en]: #, polyglot_en]:
+                    for feats in [feats_head_type, feats_zhou, feats_zhou_head_only, feats_zhou_full_noch, feats_emb_only_noch]: 
+                        # SKIPPING: feats_zhou_head_type, feats_zhou_full, feats_emb_only 
+                        #for hyperparam in hyperparams:
+                        # In-Domain
+                        train = get_annotation_as_train(ace05_zh_all)
+                        dev = ReExpParams(propTrainAsDev=0.2)
+                        exp = defaults + evl + train + dev + embed + feats #+ hyperparam
+                        exp.remove("trainGoldOut")
+                        exp.remove("devGoldOut")
+                        exp.remove("testGoldOut")
+                        root.add_dependent(exp)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
