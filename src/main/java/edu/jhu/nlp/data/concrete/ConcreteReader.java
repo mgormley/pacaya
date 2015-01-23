@@ -126,8 +126,7 @@ public class ConcreteReader {
     
     public AnnoSentenceCollection sentsFromCommFile(File concreteFile) throws IOException {
         try {
-            byte[] bytez = Files.readAllBytes(Paths.get(concreteFile.getAbsolutePath()));
-            Communication communication = ser.fromBytes(bytez);
+            Communication communication = ser.fromPathString(concreteFile.getAbsolutePath());
             AnnoSentenceCollection sents = toSentences(communication);
             return sents;
         } catch (ConcreteException e) {
