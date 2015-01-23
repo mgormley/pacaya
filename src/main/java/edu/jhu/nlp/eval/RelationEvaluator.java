@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.relations.RelationMunger;
 import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.util.report.Reporter;
 
@@ -51,16 +52,16 @@ public class RelationEvaluator implements Evaluator {
                 String predLabel = (pred == null) ? null : pred.get(k);
                 
                 if (goldLabel.equals(predLabel)) {
-                    if (!goldLabel.equals(RelationsEncoder.getNoRelationLabel())) {
+                    if (!RelationMunger.isNoRelationLabel(goldLabel)) {
                         numCorrectPositive++;
                     } else {
                         numCorrectNegative++;
                     }
                 }
-                if (!RelationsEncoder.getNoRelationLabel().equals(goldLabel)) {
+                if (!RelationMunger.isNoRelationLabel(goldLabel)) {
                     numTruePositive++;
                 }
-                if (!RelationsEncoder.getNoRelationLabel().equals(predLabel)) {
+                if (!RelationMunger.isNoRelationLabel(predLabel)) {
                     numPredictPositive++;
                 }
                 numInstances++;

@@ -81,7 +81,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
                 new FastDepParseFeatureExtractor(sent, cs, prm.fePrm.dpFePrm.featureHashMod, ofc.getFeAlphabet()) :
                 new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
         dpFe = new FeatureCache(dpFe);
-        ObsFeatureExtractor relFe = new RelObsFe(prm.fgPrm.relPrm, sent, ofc.getTemplates());
+        ObsFeatureExtractor relFe = new RelObsFe(prm.fgPrm.relPrm.fePrm, sent, ofc.getTemplates());
         relFe = new ObsFeatureCache(relFe);
         
         // Construct the factor graph.
@@ -138,9 +138,6 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
                 if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
                     TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
                 }
-            }
-            if (prm.fgPrm.includeRel && prm.fgPrm.relPrm.templates != null) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fgPrm.relPrm.templates);
             }
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
