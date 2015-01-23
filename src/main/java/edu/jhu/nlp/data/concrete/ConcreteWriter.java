@@ -56,17 +56,32 @@ public class ConcreteWriter {
         /** Whether to add relations. */
         public boolean addRelations = true;
         /* ---------------------------------------------------- */
-        /** Whether to write out SRL as a labeled dependency tree (i.e. syntax) or as SituationMentions. */
+        /**
+         * Whether to write out SRL as a labeled dependency tree (i.e. syntax) or as SituationMentions.
+         * 
+         * If true, we put SRL annotations in as dependency parses.
+         * Dependency edges from root (gov=-1) represent predicates,
+         * with the edge type giving the predicate sense. Arguments
+         * are dependents of their predicate token, with the dependency
+         * label capturing the argument label (e.g. "ARG0" and "ARG1").
+         * 
+         * Otherwise, we create a SituationMention for every predicate,
+         * which have proper Arguments, each of which includes an EntityMention
+         * that is added to its own EntityMentionSet (all EntityMentions created
+         * by this tool in a document are unioned before making an EntityMentionSet).
+         */
         public boolean srlIsSyntax = false;
         /** Sets the include flag for each annotation type to true, or warns if it's not supported. */
         public void addAnnoTypes(Collection<AT> ats) {
+            this.addDepParse = ats.contains(AT.DEP_TREE);
+            this.addSrl = ats.contains(AT.SRL);
+            this.addNerMentions = ats.contains(AT.NER);
+            this.addRelations = ats.contains(AT.RELATIONS);
+            
+            EnumSet<AT> others = EnumSet.complementOf(EnumSet.of(AT.DEP_TREE, AT.SRL, AT.NER, AT.RELATIONS));
             for (AT at : ats) {
-                switch (at) {
-                case DEP_TREE: this.addDepParse = true; break;
-                case SRL: this.addSrl = true; break;
-                case NER: this.addNerMentions = true; break;
-                case RELATIONS: this.addRelations = true; break;
-                default: log.warn("Annotations of type {} are not supported by ConcreteWriter and will not be added to Concrete Communications.", at);
+                if (others.contains(at)) {
+                    log.warn("Annotations of type {} are not supported by ConcreteWriter and will not be added to Concrete Communications.", at);
                 }
             }
         }
@@ -82,19 +97,6 @@ public class ConcreteWriter {
     private final long timestamp;     // time that every annotation that is processed will get
     private final ConcreteWriterPrm prm;
 
-    /**
-     * @param srlIsSyntax
-     * If true, we put SRL annotations in as dependency parses.
-     * Dependency edges from root (gov=-1) represent predicates,
-     * with the edge type giving the predicate sense. Arguments
-     * are dependents of their predicate token, with the dependency
-     * label capturing the argument label (e.g. "ARG0" and "ARG1").
-     * 
-     * Otherwise, we create a SituationMention for every predicate,
-     * which have proper Arguments, each of which includes an EntityMention
-     * that is added to its own EntityMentionSet (all EntityMentions created
-     * by this tool in a document are unioned before making an EntityMentionSet).
-     */
     public ConcreteWriter(ConcreteWriterPrm prm) {
         this.timestamp = System.currentTimeMillis();
         this.prm = prm;
