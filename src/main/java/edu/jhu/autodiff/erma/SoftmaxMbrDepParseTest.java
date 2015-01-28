@@ -3,7 +3,7 @@ package edu.jhu.autodiff.erma;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.commons.lang.mutable.MutableDouble;
+import org.apache.commons.lang3.mutable.MutableDouble;
 import org.junit.Before;
 import org.junit.Test;
 

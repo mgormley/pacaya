@@ -611,11 +611,11 @@ public class TemplateFeatureExtractor {
     }
     
     private String toFeat(String... vals) {
-        return org.apache.commons.lang.StringUtils.join(vals, "_");
+        return org.apache.commons.lang3.StringUtils.join(vals, "_");
     }
 
     private String toFeat(String name, Collection<String> vals) {
-        return name + "_" + org.apache.commons.lang.StringUtils.join(vals, "_");
+        return name + "_" + org.apache.commons.lang3.StringUtils.join(vals, "_");
     }
 
     private String toFeat(String f1, String f2) {

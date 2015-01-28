@@ -1,9 +1,10 @@
 package edu.jhu.nlp.depparse;
 
 import java.io.File;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,7 @@ import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder;
@@ -33,6 +35,7 @@ import edu.jhu.prim.util.Lambda.FnIntToVoid;
 import edu.jhu.util.Prm;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
+import edu.jhu.util.collections.Sets;
 import edu.jhu.util.files.Files;
 import edu.jhu.util.semiring.Algebras;
 
@@ -129,4 +132,9 @@ public class FirstOrderPruner implements Annotator {
                 (double) numEdgesPruned / numEdgesTot.get()));  
     }
 
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Sets.getSet(AT.DEP_EDGE_MASK);
+    }
+    
 }

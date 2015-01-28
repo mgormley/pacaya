@@ -20,7 +20,7 @@ import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.data.simple.AlphabetStore;
 import edu.jhu.nlp.data.simple.AnnoSentence;
-import edu.jhu.nlp.relations.RelationsEncoder;
+import edu.jhu.nlp.relations.RelationMunger;
 import edu.jhu.prim.tuple.ComparablePair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -166,7 +166,7 @@ public class CorpusStatistics implements Serializable {
             	for (int k=0; k<sent.getRelLabels().size(); k++) {
                     String relation = sent.getRelLabels().get(k);
                     knownRelations.add(relation);
-                    if (!relation.equals(RelationsEncoder.getNoRelationLabel())) {
+                    if (!RelationMunger.isNoRelationLabel(relation)) {
                     	numTruePosRels++;
                     }
                 }

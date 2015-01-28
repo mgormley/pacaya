@@ -295,12 +295,12 @@
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-core</artifactId>
-      <version>3.10.7</version>
+      <version>4.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-util</artifactId>
-      <version>3.10.7</version>
+      <version>4.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>

@@ -138,7 +138,7 @@ public class AnnoSentence {
         case NER: dest.namedEntities = src.namedEntities; break;
         case NE_PAIRS: dest.nePairs = src.nePairs; break;
         case REL_LABELS: dest.relLabels = src.relLabels; break;
-        case RELATIONS: dest.namedEntities = src.namedEntities; break;
+        case RELATIONS: dest.relations = src.relations; break;
         default: throw new RuntimeException("not implemented for " + at);
         }
     }

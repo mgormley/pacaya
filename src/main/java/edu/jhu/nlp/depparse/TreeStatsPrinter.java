@@ -74,7 +74,7 @@ public class TreeStatsPrinter {
     public static void main(String[] args) {
         try {
             ArgParser parser = new ArgParser(JointNlpRunner.class);
-            parser.addClass(CorpusHandler.class);
+            parser.registerClass(CorpusHandler.class);
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {

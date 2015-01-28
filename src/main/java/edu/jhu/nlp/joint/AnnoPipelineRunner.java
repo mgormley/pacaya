@@ -83,7 +83,6 @@ import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.nlp.relations.RelationsOptions;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.nlp.tag.BrownClusterTagger;
@@ -155,10 +154,9 @@ public class AnnoPipelineRunner {
         ArgParser parser = null;
         try {
             parser = new ArgParser(AnnoPipelineRunner.class);
-            parser.addClass(AnnoPipelineRunner.class);
-            parser.addClass(CorpusHandler.class);
-            // TODO: What to do about these? parser.addClass(RelationsOptions.class);
-            parser.addClass(ReporterManager.class);
+            parser.registerClass(AnnoPipelineRunner.class);
+            parser.registerClass(CorpusHandler.class);
+            parser.registerClass(ReporterManager.class);
             parser.parseArgs(args);
             
             ReporterManager.init(ReporterManager.reportOut, true);

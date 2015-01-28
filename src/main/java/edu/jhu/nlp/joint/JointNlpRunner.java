@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
@@ -83,7 +85,11 @@ import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.nlp.relations.RelationsOptions;
+import edu.jhu.nlp.relations.RelObsFe;
+import edu.jhu.nlp.relations.RelObsFe.RelObsFePrm;
+import edu.jhu.nlp.relations.RelationMunger;
+import edu.jhu.nlp.relations.RelationMunger.RelationMungerPrm;
+import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
@@ -289,10 +295,6 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Whether to use the fast feature set for dep parsing.")
     public static boolean dpFastFeats = true;
     
-    // Options for relation extraction.
-    @Opt(hasArg = true, description = "Relation feature templates.")
-    public static String relFeatTpls = null;
-    
     // Options for data munging.
     @Deprecated
     @Opt(hasArg=true, description="Whether to normalize and clean words.")
@@ -366,9 +368,9 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Whether to evaluate test data.")
     public static boolean evalTest = true;
     
+    private static ArgParser parser;
     
-    public JointNlpRunner() {
-    }
+    public JointNlpRunner() { }
 
     public void run() throws ParseException, IOException {  
         Timer t = new Timer();
@@ -399,6 +401,10 @@ public class JointNlpRunner {
             jointAnno.loadModel(modelIn);
         }
         {
+            RelationMunger relMunger = new RelationMunger(parser.getInstanceFromParsedArgs(RelationMungerPrm.class));
+            if (CorpusHandler.getPredAts().contains(AT.REL_LABELS)) {
+                anno.add(relMunger.getDataPreproc());
+            }
             anno.add(new EnsureStaticOptionsAreSet());
             anno.add(new PrefixAnnotator(true));
             anno.add(new StrictPosTagAnnotator(true));
@@ -459,6 +465,9 @@ public class JointNlpRunner {
             }
             // Various NLP annotations.
             anno.add(jointAnno);
+            if (CorpusHandler.getPredAts().contains(AT.REL_LABELS) && !relMunger.getPrm().makeRelSingletons) {
+                anno.add(relMunger.getDataPostproc());
+            }
         }
         {
             if (pruneByDist || pruneByModel) {
@@ -566,6 +575,10 @@ public class JointNlpRunner {
             InsideOutsideDepParse.singleRoot = singleRoot;
             FastMath.useLogAddTable = useLogAddTable;
         }
+        @Override
+        public Set<AT> getAnnoTypes() {
+            return Collections.emptySet();
+        }
     }
     
     /* --------- Factory Methods ---------- */
@@ -615,8 +628,7 @@ public class JointNlpRunner {
         
         // Relation Feature extraction.
         if (CorpusHandler.getGoldOnlyAts().contains(AT.REL_LABELS)) {
-            if (relFeatTpls != null) { prm.fgPrm.relPrm.templates = getFeatTpls(relFeatTpls); }
-            prm.fgPrm.relPrm.featureHashMod = featureHashMod;
+            prm.fgPrm.relPrm.fePrm = parser.getInstanceFromParsedArgs(RelObsFePrm.class);
         }
         
         prm.fgPrm.includeDp = CorpusHandler.getGoldOnlyAts().contains(AT.DEP_TREE);
@@ -908,12 +920,14 @@ public class JointNlpRunner {
         ArgParser parser = null;
         try {
             parser = new ArgParser(JointNlpRunner.class);
-            parser.addClass(JointNlpRunner.class);
-            parser.addClass(CorpusHandler.class);
-            parser.addClass(RelationsOptions.class);
-            parser.addClass(InsideOutsideDepParse.class);      
-            parser.addClass(ReporterManager.class);
+            parser.registerClass(JointNlpRunner.class);
+            parser.registerClass(CorpusHandler.class);
+            parser.registerClass(RelationMungerPrm.class);
+            parser.registerClass(RelObsFePrm.class);
+            parser.registerClass(InsideOutsideDepParse.class);      
+            parser.registerClass(ReporterManager.class);
             parser.parseArgs(args);
+            JointNlpRunner.parser = parser;
             
             ReporterManager.init(ReporterManager.reportOut, true);
             Prng.seed(seed);

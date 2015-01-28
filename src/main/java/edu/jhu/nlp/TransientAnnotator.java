@@ -1,6 +1,10 @@
 package edu.jhu.nlp;
 
+import java.util.Collections;
+import java.util.Set;
+
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 
 /**
  * Annotator wrapper which skips serialization of its field.
@@ -28,6 +32,14 @@ public class TransientAnnotator implements Annotator, Trainable {
         if (anno != null) {
             anno.annotate(sents);
         }
+    }
+    
+    @Override
+    public Set<AT> getAnnoTypes() {
+        if (anno != null) {
+            return anno.getAnnoTypes();
+        }
+        return Collections.emptySet();
     }
 
 }
