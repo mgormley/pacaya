@@ -1,6 +1,7 @@
 package edu.jhu.nlp.tag;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
@@ -8,6 +9,7 @@ import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.util.collections.Sets;
 
 /**
  * Converts the POS tags or coarse POS tags to a very small enumerated (strict) POS tag set.
@@ -29,13 +31,13 @@ public class StrictPosTagAnnotator extends AbstractParallelAnnotator implements 
     public StrictPosTagAnnotator(boolean annoTrainGold) {
         this.annoTrainGold = annoTrainGold;
     }
-    
-    public static void addPrefixes(AnnoSentenceCollection sents) {
-        (new StrictPosTagAnnotator()).annotate(sents);
-    }
 
     public void annotate(AnnoSentence sent) {
         addStrictPosTags(sent);
+    }
+    
+    public static void addStrictPosTags(AnnoSentenceCollection sents) {
+        (new StrictPosTagAnnotator()).annotate(sents);
     }
     
     public static void addStrictPosTags(AnnoSentence sent) {
@@ -98,8 +100,13 @@ public class StrictPosTagAnnotator extends AbstractParallelAnnotator implements 
     public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
             AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
         if (annoTrainGold) {
-            addPrefixes(trainGold);
+            addStrictPosTags(trainGold);
         }
+    }
+
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Sets.getSet(AT.STRICT_POS);
     }
 
 }

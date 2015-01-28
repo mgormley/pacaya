@@ -7,6 +7,7 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.nlp.data.simple.AlphabetStore;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.prim.list.ShortArrayList;
 import edu.jhu.prim.sort.ByteSort;
 import edu.jhu.prim.sort.ShortSort;
@@ -24,10 +25,23 @@ public class BitshiftDepParseFeatures {
     private static final int TOK_END_INT = AlphabetStore.TOK_END_INT;
     private static final int TOK_WALL_INT = AlphabetStore.TOK_WALL_INT;
     
-    private enum FeatureCollection {
-        ARC,
-        SIBLING,
-        GRANDPARENT,
+
+    public static class FeatureCollection {
+        public static int MAX_VAL = 0xf; // 4 bits
+        private static int templ = 0;
+        protected static byte next() {
+            byte b = SafeCast.safeIntToUnsignedByte(templ++);
+            if (b > MAX_VAL) { 
+                throw new IllegalStateException("Too many feature collections.");
+            }
+            return b;
+        }
+        public static final byte ARC = next();
+        public static final byte SIBLING = next();
+        public static final byte GRANDPARENT = next();
+        public static boolean isValid(byte type) {
+            return (0 <= type && type <= MAX_VAL);
+        }
     }
     
     /** 
@@ -252,24 +266,38 @@ public class BitshiftDepParseFeatures {
         return bins.length;
     }
     
-    private static int maxTokenContext = 2;
-    private static boolean notInTurboFeats = false;
-    private static boolean labeledParsing = false;
-    private static boolean useLemmaFeats = true;
-    private static boolean useMorphologicalFeatures = true;
-    private static boolean useCoarseTags = true;
+    private static final ShortArrayList WALL_MORPHO = new ShortArrayList();
+    static {
+        WALL_MORPHO.add((short)TOK_WALL_INT);
+    }
+    
+    public static void addArcFeats(IntAnnoSentence sent, int p, int c, BitshiftDepParseFeatureExtractorPrm prm, FeatureVector feats) {
+        if (prm.useMstFeats) {
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, p, c, FeatureCollection.ARC, feats, false, prm.useCoarseTags, prm.featureHashMod);
+        } else {
+            BitshiftDepParseFeatures.addTurboWordPairFeats(sent, p, c, FeatureCollection.ARC, feats, prm.featureHashMod, 
+                    prm.maxTokenContext, prm.isLabeledParsing, prm.useNonTurboFeats, prm.useLemmaFeats, prm.useMorphologicalFeatures, 
+                    prm.useCoarseTags);
+        }
+    }
     
     /**
      * Word pair features from Martins et al. (2013) "Turning on the Turbo...". This feature set
      * draws from EGSTRA
      * 
-     * From Martins (personal correspondance), TurboParser was found to perform best when the coarse
+     *  Martins (personal correspondance) notes that TurboParser was found to perform best when the coarse
      * POS tags were replaced with just POS tags. Accordingly, in the feature set below, we define features in 
      * terms of POS tags, and offer an optional <code>if (useCoarsePosTags) { ... }</code> option for the cases 
      * where the original features were defined in TurboParser over coarse tags only.
      */
-    public static void addTurboWordPairFeats(IntAnnoSentence sent, int p, int c, byte pairType, 
-            FeatureVector feats, int mod) {
+    public static void addTurboWordPairFeats(final IntAnnoSentence sent, final int p, final int c, final byte pairType, 
+            final FeatureVector feats, final int mod,
+            final int maxTokenContext,
+            final boolean isLabeledParsing,
+            final boolean useNonTurboFeats,
+            final boolean useLemmaFeats,
+            final boolean useMorphologicalFeatures,
+            final boolean useCoarseTags) {
         int sentLen = sent.size();
 
         // Distance codes.
@@ -388,15 +416,15 @@ public class BitshiftDepParseFeatures {
             addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_HQ, flags, pWord, pCpos));            
         }
         if (useMorphologicalFeatures) {
-            ShortArrayList pMophos2 = sent.getFeats(p);
-            short[] pMorphos = pMophos2.getInternalElements();
-            for (int j=0; j < pMophos2.size(); j++) {
+            ShortArrayList pMorphosList = safeGetFeats(sent, p);
+            short[] pMorphos = pMorphosList.getInternalElements();
+            for (int j=0; j < pMorphosList.size(); j++) {
                 short pMorpho = pMorphos[j];
                 if (pMorpho > 0xfff) {
                     throw new IllegalStateException("Too many morphological feature values.");
                 }
-                if (pMophos2.size() >= 0xf) {
-                    log.warn("Too many morphological fetures: " + pMophos2.size());
+                if (pMorphosList.size() >= 0xf) {
+                    log.warn("Too many morphological fetures: " + pMorphosList.size());
                     pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | 0xf);
                 } else {
                     pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | j);
@@ -406,7 +434,7 @@ public class BitshiftDepParseFeatures {
             }
         }
 
-        if (labeledParsing) {
+        if (isLabeledParsing) {
             // Modifier Only.
             addFeat(feats, mod, encodeFeatureS___(ArcTs.MW, flags, cWord));
             addFeat(feats, mod, encodeFeatureB___(ArcTs.MP, flags, cPos));
@@ -419,15 +447,15 @@ public class BitshiftDepParseFeatures {
                 addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_MQ, flags, cWord, cCpos));
             }
             if (useMorphologicalFeatures) {
-                ShortArrayList cMophos2 = sent.getFeats(c);
-                short[] cMorphos = cMophos2.getInternalElements();
-                for (int k=0; k < cMophos2.size(); k++) {
+                ShortArrayList cMorphosList = safeGetFeats(sent, c);
+                short[] cMorphos = cMorphosList.getInternalElements();
+                for (int k=0; k < cMorphosList.size(); k++) {
                     short cMorpho = cMorphos[k];
                     if (cMorpho > 0xfff) {
                         throw new IllegalStateException("Too many morphological feature values.");
                     }
-                    if (cMophos2.size() >= 0xf) {
-                        log.warn("Too many morphological fetures: " + cMophos2.size());
+                    if (cMorphosList.size() >= 0xf) {
+                        log.warn("Too many morphological fetures: " + cMorphosList.size());
                         cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | 0xf);
                     } else {
                         cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | k);
@@ -461,7 +489,7 @@ public class BitshiftDepParseFeatures {
             // -- Modifier Context --
             // TurboParser excludes these features that look only at the modifier unless they are
             // also conjoined with the label.
-            if (labeledParsing) {
+            if (isLabeledParsing) {
                 // Word to the left.
                 addFeat(feats, mod, encodeFeatureS___(ArcTs.lMW, flags, lcWord));
                 addFeat(feats, mod, encodeFeatureB___(ArcTs.lMP, flags, lcPos));
@@ -496,7 +524,7 @@ public class BitshiftDepParseFeatures {
             addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrHW_rrHP, flags, rrpWord, rrpPos));            
             if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrHW_rrHQ, flags, rrpWord, rrpCpos)); } 
             // -- Modifier Context --
-            if (labeledParsing) {
+            if (isLabeledParsing) {
                 // Two words to the left.
                 //
                 // TurboParser excludes these features that look only at the modifier unless they are
@@ -532,7 +560,7 @@ public class BitshiftDepParseFeatures {
             addFeat(feats, mod, encodeFeatureBB__(ArcTs.HQ_rHQ, flags, pCpos, rpCpos));
             addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_rHQ_rrHQ, flags, pCpos, rpCpos, rrpCpos));
         }
-        if (labeledParsing) {
+        if (isLabeledParsing) {
             // TurboParser excludes these features that look only at the modifier unless they are
             // also conjoined with the label.
             addFeat(feats, mod, encodeFeatureBB__(ArcTs.MP_lMP, flags, cPos, lcPos));
@@ -569,7 +597,7 @@ public class BitshiftDepParseFeatures {
             addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW_HQ_MQ, flags, pWord, pCpos, cCpos));        
             addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW_MW_HQ_MQ, flags, pWord, cWord, pCpos, cCpos));
         }
-        if (notInTurboFeats) {
+        if (useNonTurboFeats) {
             // Both Words plus a single Tag (from MST Parser).
             addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_MQ, flags, pWord, cWord, cCpos));
             addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_HQ, flags, pWord, cWord, pCpos));
@@ -579,29 +607,29 @@ public class BitshiftDepParseFeatures {
  
         if (useMorphologicalFeatures) {
             // For each morphological feature of the Head.
-            ShortArrayList pMophos2 = sent.getFeats(p);
-            short[] pMorphos = pMophos2.getInternalElements();
-            for (int j=0; j < pMophos2.size(); j++) {
+            ShortArrayList pMorphosList = safeGetFeats(sent, p);
+            short[] pMorphos = pMorphosList.getInternalElements();
+            for (int j=0; j < pMorphosList.size(); j++) {
                 short pMorpho = pMorphos[j];
                 if (pMorpho > 0xfff) {
                     throw new IllegalStateException("Too many morphological feature values.");
                 }
-                if (pMophos2.size() >= 0xf) {
-                    log.warn("Too many morphological fetures: " + pMophos2.size());
+                if (pMorphosList.size() >= 0xf) {
+                    log.warn("Too many morphological fetures: " + pMorphosList.size());
                     pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | 0xf);
                 } else {
                     pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | j);
                 }
                 // For each morphological feature of the Modifier.
-                ShortArrayList cMophos2 = sent.getFeats(c);
-                short[] cMorphos = cMophos2.getInternalElements();
-                for (int k=0; k < cMophos2.size(); k++) {
+                ShortArrayList cMorphosList = safeGetFeats(sent, c);
+                short[] cMorphos = cMorphosList.getInternalElements();
+                for (int k=0; k < cMorphosList.size(); k++) {
                     short cMorpho = cMorphos[k];
                     if (cMorpho > 0xfff) {
                         throw new IllegalStateException("Too many morphological feature values.");
                     }
-                    if (cMophos2.size() >= 0xf) {
-                        log.warn("Too many morphological fetures: " + cMophos2.size());
+                    if (cMorphosList.size() >= 0xf) {
+                        log.warn("Too many morphological fetures: " + cMorphosList.size());
                         cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | 0xf);
                     } else {
                         cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | k);
@@ -744,10 +772,18 @@ public class BitshiftDepParseFeatures {
             }                          
         }
     }
+
+    private static ShortArrayList safeGetFeats(IntAnnoSentence sent, int idx) {
+        if (idx >= 0) { 
+            return sent.getFeats(idx); 
+        } else {
+            return WALL_MORPHO ;
+        }
+    }
     
     /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." */
-    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, FeatureVector feats, 
-            boolean basicOnly, boolean coarseTagFeats, int mod) {
+    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, byte pairType,  
+            FeatureVector feats, boolean basicOnly, boolean useCoarseFeats, int mod) {
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
         // by c (for child).
         short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
@@ -769,40 +805,47 @@ public class BitshiftDepParseFeatures {
         byte rpPos = (p+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+1);
         byte rcPos = (c+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+1);
         
-        int distance = (p < c) ? c - p : p - c;        
-        byte binDistCode; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
+        int distance = (p < c) ? c - p : p - c;
+        // The bins are: 0, 2, 5, 10, 20, 30, 40. 
+        // We reserve the 7th bin to indicate mode == 0.
+        byte binDistCode; 
         if (distance >= 40) {
-            binDistCode = 0;
+            binDistCode = 6;
         } else if (distance >= 30) {
-            binDistCode = 1;
+            binDistCode = 5;
         } else if (distance >= 20) {
-            binDistCode = 2;
+            binDistCode = 4;
         } else if (distance >= 10) {
             binDistCode = 3;
         } else if (distance >= 5) {
-            binDistCode = 4;
+            binDistCode = 2;
         } else if (distance >= 2) {
-            binDistCode = 5;
+            binDistCode = 1;
         } else {
-            binDistCode = 6;
+            binDistCode = 0;
         }
 
         byte direction = (p < c) ? (byte) 0 : (byte) 1;        
         
         for (byte mode = 0; mode < 2; mode++) {
-            assert FeatureCollection.values().length <= 8;
-            byte flags = (byte) (FeatureCollection.ARC.ordinal() << 5); // 3 bits.
-            flags |= mode << 3; // 1 bit.
+            assert FeatureCollection.isValid(pairType);
+            byte flags = pairType; // 4 bits.
+            // We used to do this: "flags |= mode << 4; // 1 bit." but instead are packing the mode
+            // into the binDistCode as the last value.
             if (mode == 1) {
                 //    # All features in Table 1 were conjoined with *direction* of attachment and *distance*.
                 flags |= direction << 4; // 1 bit.
                 flags |= binDistCode << 5; // 3 bits. (8 total)
+                assert binDistCode < 7;
+            } else {
+                flags |= 0 << 4; // 1 bit. 
+                flags |= 7 << 5; // 3 bits (8 total).
             }
             
             extractMstFeaturesWithPos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
                     pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binDistCode, direction, mode,
                     flags, mod);
-            if (coarseTagFeats) {
+            if (useCoarseFeats) {
                 extractMstFeaturesWithCpos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
                         pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binDistCode, direction, mode,
                         flags, mod);
@@ -841,7 +884,7 @@ public class BitshiftDepParseFeatures {
         addFeat(feats, mod, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
         addFeat(feats, mod, encodeFeatureBB__(ArcTs.HP_MP, flags, pPos, cPos));            
         
-        if (!basicOnly) {            
+        if (!basicOnly) {
             //    # Surrounding Word POS Features
             addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_rHP_lMP_MP, flags, pPos, rpPos, lcPos, cPos));
             addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHP_HP_lMP_MP, flags, lpPos, pPos, lcPos, cPos));
@@ -984,11 +1027,10 @@ public class BitshiftDepParseFeatures {
         // Parent-sibling relationship.
         byte direction_ps = (p < s) ? (byte) 0 : (byte) 1;
         
-        assert FeatureCollection.values().length <= 8;
-        byte flags = (byte) (FeatureCollection.SIBLING.ordinal() << 5); // 3 bits.
-        flags |= direction_pc << 3; // 1 bit.
-        flags |= direction_ps << 4; // 1 bit.
-                
+        byte flags = FeatureCollection.SIBLING; // 4 bits.
+        flags |= direction_pc << 4; // 1 bit.
+        flags |= direction_ps << 5; // 1 bit.
+        
         addTripletFeatures(sent, p, c, s, feats, flags, mod);
     }
     
@@ -1004,10 +1046,7 @@ public class BitshiftDepParseFeatures {
         byte direction_pc = (p < c) ? (byte) 0 : (byte) 1;
         // Grandparent-child relationship.
         byte direction_gc = (g < c) ? (byte) 0 : (byte) 1;
-        
-        assert FeatureCollection.values().length <= 8;
-        byte flags = (byte) (FeatureCollection.GRANDPARENT.ordinal() << 5); // 3 bits.
-        
+               
         // Use the direction code from Martins' TurboParser.
         byte direction;
         if (direction_gp == direction_pc) {
@@ -1020,7 +1059,9 @@ public class BitshiftDepParseFeatures {
             // Non-projective with c outside range [g, p].
             direction = 2;
         }
-        flags |= direction << 3; // 2 bits.
+        
+        byte flags = FeatureCollection.GRANDPARENT; // 4 bits.
+        flags |= direction << 4; // 2 bits.
         
         addTripletFeatures(sent, g, p, c, feats, flags, mod);
     }

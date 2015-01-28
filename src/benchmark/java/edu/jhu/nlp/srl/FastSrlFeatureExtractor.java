@@ -15,6 +15,7 @@ import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
 import edu.jhu.nlp.depparse.BitshiftDepParseFeatures;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatures.FeatureCollection;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
@@ -55,11 +56,11 @@ public class FastSrlFeatureExtractor implements ObsFeatureExtractor {
             Var var = vars.iterator().next();
             int parent = ((RoleVar)var).getParent();
             int child = ((RoleVar)var).getChild();
-            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, parent, child, feats, false, false, featureHashMod);            
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, parent, child, FeatureCollection.ARC, feats, false, false, featureHashMod);            
         } else if (ft == SrlFactorTemplate.SENSE_UNARY) {
             SenseVar var = (SenseVar) vars.iterator().next();
             int parent = var.getParent();
-            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, -1, parent, feats, false, false, featureHashMod);
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, -1, parent, FeatureCollection.ARC, feats, false, false, featureHashMod);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

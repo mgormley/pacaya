@@ -25,6 +25,7 @@ import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseDecoder;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilderSpeedTest;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
@@ -222,8 +223,10 @@ public class DepParseFirstVsSecondOrderTest {
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
         fePrm.featureHashMod = numParams;
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
+        bsFePrm.featureHashMod = numParams;
         FeatureExtractor fe = onlyFast?
-                new BitshiftDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
@@ -330,8 +333,10 @@ public class DepParseFirstVsSecondOrderTest {
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
         fePrm.featureHashMod = numParams;
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
+        bsFePrm.featureHashMod = numParams;
         FeatureExtractor fe = onlyFast?
-                new BitshiftDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
