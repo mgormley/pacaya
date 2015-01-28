@@ -252,19 +252,12 @@ public class BitshiftDepParseFeatures {
         return bins.length;
     }
     
-
-    // TODO:
-    static {
-        if (true) {
-            throw new RuntimeException("Flags not initialized");
-        }
-    }
-    private static int maxTokenContext;
-    private static boolean notInTurboFeats;
-    private static boolean labeledParsing;
-    private static boolean useLemmaFeats;
-    private static boolean useMorphologicalFeatures;
-    private static boolean useCoarseTags;
+    private static int maxTokenContext = 2;
+    private static boolean notInTurboFeats = false;
+    private static boolean labeledParsing = false;
+    private static boolean useLemmaFeats = true;
+    private static boolean useMorphologicalFeatures = true;
+    private static boolean useCoarseTags = true;
     
     /**
      * Word pair features from Martins et al. (2013) "Turning on the Turbo...". This feature set
