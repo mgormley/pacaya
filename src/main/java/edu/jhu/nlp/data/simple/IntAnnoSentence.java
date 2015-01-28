@@ -125,32 +125,32 @@ public class IntAnnoSentence {
     }
 
     
-    /** Gets the i'th word as a String. */
+    /** Gets the i'th word. */
     public short getWord(int i) {
         return words.get(i);
     }
     
-    /** Gets the i'th word as a String. */
+    /** Gets the i'th word. */
     public short getPrefix(int i) {
         return prefixes.get(i);
     }
     
-    /** Gets the i'th lemma as a String. */
+    /** Gets the i'th lemma. */
     public short getLemma(int i) {
         return lemmas.get(i);
     }
 
-    /** Gets the i'th POS tag as a String. */
+    /** Gets the i'th POS tag. */
     public byte getPosTag(int i) {
         return posTags.get(i);
     }
     
-    /** Gets the i'th Coarse POS tag as a String. */
+    /** Gets the i'th Coarse POS tag. */
     public byte getCposTag(int i) {
         return cposTags.get(i);
     }
 
-    /** Gets the i'th Distributional Similarity Cluster ID as a String. */
+    /** Gets the i'th Distributional Similarity Cluster ID. */
     public short getCluster(int i) {
         return clusters.get(i);
     }
