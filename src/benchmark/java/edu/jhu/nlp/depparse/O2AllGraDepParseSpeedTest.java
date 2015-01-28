@@ -1,6 +1,5 @@
 package edu.jhu.nlp.depparse;
 
-import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -130,7 +129,7 @@ public class O2AllGraDepParseSpeedTest {
         fePrm.featureHashMod = numParams;
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         FeatureExtractor fe = onlyFast?
-                new FastDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
+                new BitshiftDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();

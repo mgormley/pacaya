@@ -18,9 +18,9 @@ import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash;
 
-public class FastDepParseFeSpeedTest {
+public class BitshiftDepParseFeaturesSpeedTest {
     
-    private static final Logger log = LoggerFactory.getLogger(FastDepParseFeSpeedTest.class);
+    private static final Logger log = LoggerFactory.getLogger(BitshiftDepParseFeaturesSpeedTest.class);
     private static final int featureHashMod = 1000000;
     
     /**
@@ -58,17 +58,18 @@ public class FastDepParseFeSpeedTest {
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
                         FeatureVector feats = new FeatureVector();
-                        FastDepParseFe.addArcFactoredMSTFeats(isent, i, j, feats, false, false);
+                        //BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, i, j, feats, false, false, featureHashMod);
+                        BitshiftDepParseFeatures.addTurboWordPairFeats(isent, i, j, (byte)0x1, feats, featureHashMod);
 
                         if (true) {
                             for (int k=0; k<sent.size(); k++) {
                                 if (k == i || k == j) { continue; }
                                 boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
                                 if (!isNonprojectiveGrandparent) {
-                                    FastDepParseFe.add2ndOrderGrandparentFeats(isent, k, i, j, feats);
+                                    BitshiftDepParseFeatures.add2ndOrderGrandparentFeats(isent, k, i, j, feats, featureHashMod);
                                 }
                                 if (j < k) {
-                                    FastDepParseFe.add2ndOrderSiblingFeats(isent, i, j, k, feats);
+                                    BitshiftDepParseFeatures.add2ndOrderSiblingFeats(isent, i, j, k, featureHashMod, feats);
                                 }
                             }
                         }
@@ -98,7 +99,7 @@ public class FastDepParseFeSpeedTest {
     }
     
     public static void main(String[] args) throws ParseException, IOException {
-        (new FastDepParseFeSpeedTest()).testSpeed();
+        (new BitshiftDepParseFeaturesSpeedTest()).testSpeed();
     }
     
 }
