@@ -281,11 +281,24 @@ public class BitshiftDepParseFeatures {
         }
     }
     
+    public static void addTurboSiblingFeats(final IntAnnoSentence sent, final int p, final int c, final int s, 
+            final boolean consecutive, 
+            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {        
+        int sentLen = sent.size();
+        // We encode the first child by setting the child to the same value as the parent.
+        boolean isFirstChild = consecutive && (p == c);
+        // We encode the last child by setting the sibling to -1.
+        boolean isLastChild = consecutive && (s == sentLen || s <= 0);
+        
+        
+    }
+    
+    
     /**
      * Word pair features from Martins et al. (2013) "Turning on the Turbo...". This feature set
      * draws from EGSTRA
      * 
-     *  Martins (personal correspondance) notes that TurboParser was found to perform best when the coarse
+     * Martins (personal correspondance) notes that TurboParser was found to perform best when the coarse
      * POS tags were replaced with just POS tags. Accordingly, in the feature set below, we define features in 
      * terms of POS tags, and offer an optional <code>if (useCoarsePosTags) { ... }</code> option for the cases 
      * where the original features were defined in TurboParser over coarse tags only.
