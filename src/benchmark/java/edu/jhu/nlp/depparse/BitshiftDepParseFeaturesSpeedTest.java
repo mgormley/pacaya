@@ -45,6 +45,8 @@ public class BitshiftDepParseFeaturesSpeedTest {
      *    ArcFactoredMST            s=2400 n=56427 Toks / sec: 5755.507955936352
      *                              (s=2400 n=169795 Toks / sec: 6781.221294780143)
      *    ArcFactoredMST (w/coarse) s=2400 n=56427 Toks / sec: 3116.480724621672
+     *    
+     *    TurboWordPair (tfs)       s=2400 n=169795 Toks / sec: 3735.781390948494
      */
     //@Test
     public void testSpeed() throws ParseException, IOException {
@@ -67,8 +69,9 @@ public class BitshiftDepParseFeaturesSpeedTest {
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
                         FeatureVector feats = new FeatureVector();
-                        BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, i, j, FeatureCollection.ARC, feats, false, true, featureHashMod);
-                        //BitshiftDepParseFeatures.addTurboWordPairFeats(isent, i, j, (byte)0x1, feats, featureHashMod);
+                        //BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, i, j, FeatureCollection.ARC, feats, false, true, featureHashMod);
+                        //BitshiftDepParseFeatures.addTurboWordPairFeats(isent, i, j, FeatureCollection.ARC, feats, featureHashMod);
+                        BitshiftDepParseFeatures.addTurboWordPairFeats(isent, i, j, FeatureCollection.ARC, feats, featureHashMod, 2, false, false, true, false, true);
 
                         if (false) {
                             for (int k=0; k<sent.size(); k++) {
