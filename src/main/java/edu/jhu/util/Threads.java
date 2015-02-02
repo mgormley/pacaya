@@ -17,6 +17,8 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.Lambda;
@@ -38,8 +40,14 @@ public class Threads {
     private Threads() { }
     
     public static void initDefaultPool(int numThreads) {
-        Threads.defaultPool = Executors.newFixedThreadPool(numThreads);
-        Threads.numThreads = numThreads;
+        if (numThreads == 1) {
+            Threads.defaultPool = MoreExecutors.newDirectExecutorService();
+            Threads.numThreads = 1;
+        } else {
+            log.info("Initialized default thread pool to {} threads. (This must be closed by Threads.shutdownDefaultPool)", numThreads);
+            Threads.defaultPool = Executors.newFixedThreadPool(numThreads);
+            Threads.numThreads = numThreads;
+        }
     }
     
     public static void shutdownDefaultPool() {
