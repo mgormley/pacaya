@@ -95,13 +95,13 @@
         <executions>
           <execution>
             <id>add-test-source</id>
-            <phase>generate-test-sources</phase>
+            <phase>generate-sources</phase>
             <goals>
               <goal>add-test-source</goal>
             </goals>
             <configuration>
               <sources>
-                <source>src/benchmark/java</source>
+                <source>${project.basedir}/src/benchmark/java</source>
               </sources>
             </configuration>
           </execution>
