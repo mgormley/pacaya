@@ -25,7 +25,10 @@ public class BitshiftDepParseFeatures {
     private static final int TOK_END_INT = AlphabetStore.TOK_END_INT;
     private static final int TOK_WALL_INT = AlphabetStore.TOK_WALL_INT;
     
-
+    /**
+     * IDs for feature collections.
+     * @author mgormley
+     */
     public static class FeatureCollection {
         public static int MAX_VAL = 0xf; // 4 bits
         private static int templ = 0;
@@ -48,15 +51,20 @@ public class BitshiftDepParseFeatures {
      * Template IDs for ARC features in {@link BitshiftDepParseFeatures}.
      * 
      * In the names below, we have the following mapping:
-     * H = head
-     * M = modifier
-     * W = word
-     * P = POS tag
-     * Q = coarse POS tag
-     * W5 = prefix of length 5
-     * l = token to the left of following position
-     * r = token to the right of following position
-     * BTWN = each position betwen the head and modifier
+     * h := parent (head) 
+     * m := child (modifier)
+     * s := sibling
+     * g := grandparent
+     * l := token to the left of following position
+     * r := token to the right of following position
+     * btwn := each position between the head and modifier
+     * 
+     * W := word
+     * P := POS tag
+     * C := coarse POS tag
+     * L := lemma
+     * F := morphological feature
+     * W5 := prefix of length 5
      */
     private static class ArcTs {
         private static int templ = 0;
@@ -64,175 +72,177 @@ public class BitshiftDepParseFeatures {
             return SafeCast.safeIntToUnsignedByte(templ++);
         }
         // McDonald et al. (2005) features templates.
-        public static final byte HW = next();
-        public static final byte MW = next();
+        public static final byte hW = next();
+        public static final byte mW = next();
         public static final byte BIAS = next();
         public static final byte DIR = next();
         public static final byte EXACT_DIST = next();
         public static final byte BIN_DIST = next();
-        public static final byte HW_HP = next();
-        public static final byte HP = next();
-        public static final byte MW_MP = next();
-        public static final byte MP = next();
-        public static final byte HW_MW_HP_MP = next();
-        public static final byte MW_HP_MP = next();
-        public static final byte HW_MW_MP = next();
-        public static final byte HW_HP_MP = next();
-        public static final byte HW_MW_HP = next();
-        public static final byte HW_MW = next();
-        public static final byte HP_MP = next();
-        public static final byte lHP_HP_lMP_MP = next();
-        public static final byte lHP_HP_MP_rMP = next();
-        public static final byte lHP_HP_MP = next();
-        public static final byte HP_rHP_lMP_MP = next();
-        public static final byte HP_rHP_MP_rMP = next();
-        public static final byte HP_lMP_MP = next();
-        public static final byte HP_MP_rMP = next();
-        public static final byte HP_rHP_MP = next();
-        public static final byte BTWNP_HP_MP = next();
-        public static final byte HW5_HP_MP = next();
-        public static final byte HW5_HP = next();
-        public static final byte HW5 = next();
-        public static final byte MW5_HP_MP = next();
-        public static final byte MW5_MP = next();
-        public static final byte MW5 = next();
-        public static final byte HW5_MW5_HP_MP = next();
-        public static final byte HW5_MW5_MP = next();
-        public static final byte HW5_MW5_HP = next();
-        public static final byte HW5_MW5 = next();
+        public static final byte hW_hP = next();
+        public static final byte hP = next();
+        public static final byte mW_mP = next();
+        public static final byte mP = next();
+        public static final byte hW_mW_hP_mP = next();
+        public static final byte mW_hP_mP = next();
+        public static final byte hW_mW_mP = next();
+        public static final byte hW_hP_mP = next();
+        public static final byte hW_mW_hP = next();
+        public static final byte hW_mW = next();
+        public static final byte hP_mP = next();
+        public static final byte lhP_hP_lmP_mP = next();
+        public static final byte lhP_hP_mP_rmP = next();
+        public static final byte lhP_hP_mP = next();
+        public static final byte hP_rhP_lmP_mP = next();
+        public static final byte hP_rhP_mP_rmP = next();
+        public static final byte hP_lmP_mP = next();
+        public static final byte hP_mP_rmP = next();
+        public static final byte hP_rhP_mP = next();
+        public static final byte btwnP_hP_mP = next();
+        public static final byte hW5_hP_mP = next();
+        public static final byte hW5_hP = next();
+        public static final byte hW5 = next();
+        public static final byte mW5_hP_mP = next();
+        public static final byte mW5_mP = next();
+        public static final byte mW5 = next();
+        public static final byte hW5_mW5_hP_mP = next();
+        public static final byte hW5_mW5_mP = next();
+        public static final byte hW5_mW5_hP = next();
+        public static final byte hW5_mW5 = next();
         // Coarse POS tag versions of McDonald et al. (2005) features templates.
-        public static final byte HW_HQ = next();
-        public static final byte HQ = next();
-        public static final byte MW_MQ = next();
-        public static final byte MQ = next();
-        public static final byte HW_MW_HQ_MQ = next();
-        public static final byte MW_HQ_MQ = next();
-        public static final byte HW_MW_MQ = next();
-        public static final byte HW_HQ_MQ = next();
-        public static final byte HW_MW_HQ = next();
-        public static final byte HQ_MQ = next();
-        public static final byte HQ_rHQ_lMQ_MQ = next();
-        public static final byte lHQ_HQ_lMQ_MQ = next();
-        public static final byte HQ_rHQ_MQ_rMQ = next();
-        public static final byte lHQ_HQ_MQ_rMQ = next();
-        public static final byte lHQ_HQ_MQ = next();
-        public static final byte HQ_lMQ_MQ = next();
-        public static final byte HQ_MQ_rMQ = next();
-        public static final byte HQ_rHQ_MQ = next();
-        public static final byte BTWNP_HQ_MQ = next();
-        public static final byte HW5_HQ_MQ = next();
-        public static final byte HW5_HQ = next();
-        public static final byte MW5_HQ_MQ = next();
-        public static final byte MW5_MQ = next();
-        public static final byte HW5_MW5_HQ_MQ = next();
-        public static final byte HW5_MW5_MQ = next();
-        public static final byte HW5_MW5_HQ = next();
+        public static final byte hW_hC = next();
+        public static final byte hC = next();
+        public static final byte mW_mC = next();
+        public static final byte mC = next();
+        public static final byte hW_mW_hC_mC = next();
+        public static final byte mW_hC_mC = next();
+        public static final byte hW_mW_mC = next();
+        public static final byte hW_hC_mC = next();
+        public static final byte hW_mW_hC = next();
+        public static final byte hC_mC = next();
+        public static final byte hC_rhC_lmC_mC = next();
+        public static final byte lhC_hC_lmC_mC = next();
+        public static final byte hC_rhC_mC_rmC = next();
+        public static final byte lhC_hC_mC_rmC = next();
+        public static final byte lhC_hC_mC = next();
+        public static final byte hC_lmC_mC = next();
+        public static final byte hC_mC_rmC = next();
+        public static final byte hC_rhC_mC = next();
+        public static final byte btwnP_hC_mC = next();
+        public static final byte hW5_hC_mC = next();
+        public static final byte hW5_hC = next();
+        public static final byte mW5_hC_mC = next();
+        public static final byte mW5_mC = next();
+        public static final byte hW5_mW5_hC_mC = next();
+        public static final byte hW5_mW5_mC = next();
+        public static final byte hW5_mW5_hC = next();
         // Additional feature templates from TurboParser (Martins et al., 2013)
-        public static final byte HL = next();
-        public static final byte HF = next();
-        public static final byte HW_HF = next();
-        public static final byte ML = next();
-        public static final byte MF = next();
-        public static final byte MW_MF = next();
-        public static final byte lHW = next();
-        public static final byte lHP = next();
-        public static final byte lHQ = next();
-        public static final byte lHL = next();
-        public static final byte lHW_lHP = next();
-        public static final byte lHW_lHQ = next();
-        public static final byte rHW = next();
-        public static final byte rHP = next();
-        public static final byte rHQ = next();
-        public static final byte rHL = next();
-        public static final byte rHW_rHP = next();
-        public static final byte rHW_rHQ = next();
-        public static final byte lMW = next();
-        public static final byte lMP = next();
-        public static final byte lMQ = next();
-        public static final byte lML = next();
-        public static final byte lMW_lMP = next();
-        public static final byte lMW_lMQ = next();
-        public static final byte rMW = next();
-        public static final byte rMP = next();
-        public static final byte rMQ = next();
-        public static final byte rML = next();
-        public static final byte rMW_rMP = next();
-        public static final byte rMW_rMQ = next();
-        public static final byte HP_lHP = next();
-        public static final byte HP_lHP_llHP = next();
-        public static final byte HP_rHP = next();
-        public static final byte HP_rHP_rrHP = next();
-        public static final byte HQ_lHQ = next();
-        public static final byte llHW = next();
-        public static final byte llHP = next();
-        public static final byte llHQ = next();
-        public static final byte llHL = next();
-        public static final byte llHW_llHP = next();
-        public static final byte llHW_llHQ = next();
-        public static final byte rrHW = next();
-        public static final byte rrHP = next();
-        public static final byte rrHQ = next();
-        public static final byte rrHL = next();
-        public static final byte rrHW_rrHP = next();
-        public static final byte rrHW_rrHQ = next();
-        public static final byte llMW = next();
-        public static final byte llMP = next();
-        public static final byte llMQ = next();
-        public static final byte llML = next();
-        public static final byte llMW_llMQ = next();
-        public static final byte rrMW = next();
-        public static final byte rrMP = next();
-        public static final byte rrMQ = next();
-        public static final byte rrML = next();
-        public static final byte rrMW_rrMP = next();
-        public static final byte rrMW_rrMQ = next();
-        public static final byte HQ_lHQ_llHQ = next();
-        public static final byte llMW_llMP = next();
-        public static final byte HQ_rHQ = next();
-        public static final byte HQ_rHQ_rrHQ = next();
-        public static final byte MP_lMP = next();
-        public static final byte MP_lMP_llMP = next();
-        public static final byte MP_rMP = next();
-        public static final byte MP_rMP_rrMP = next();
-        public static final byte MQ_lMQ = next();
-        public static final byte MQ_lMQ_llMQ = next();
-        public static final byte MQ_rMQ = next();
-        public static final byte MQ_rMQ_rrMQ = next();
-        public static final byte MW_HP = next();
-        public static final byte HW_MP = next();
-        public static final byte MW_HQ = next();
-        public static final byte HW_MQ = next();
-        public static final byte HF_MF = next();
-        public static final byte HF_MP = next();
-        public static final byte MF_HP = next();
-        public static final byte HF_MF_MP = next();
-        public static final byte HF_MF_HP = next();
-        public static final byte HF_HP_MP = next();
-        public static final byte MF_HP_MP = next();
-        public static final byte HF_MF_HP_MP = next();
-        public static final byte HF_MQ = next();
-        public static final byte MF_HQ = next();
-        public static final byte HF_MF_MQ = next();
-        public static final byte HF_MF_HQ = next();
-        public static final byte HF_HQ_MQ = next();
-        public static final byte MF_HQ_MQ = next();
-        public static final byte HF_MF_HQ_MQ = next();
-        public static final byte lHP_HP_rHP_lMP_MP_rMP = next();
-        public static final byte lHQ_HQ_rHQ_lMQ_MQ_rMQ = next();
+        public static final byte hL = next();
+        public static final byte hF = next();
+        public static final byte hW_hF = next();
+        public static final byte mL = next();
+        public static final byte mF = next();
+        public static final byte mW_mF = next();
+        public static final byte lhW = next();
+        public static final byte lhP = next();
+        public static final byte lhC = next();
+        public static final byte lhL = next();
+        public static final byte lhW_lhP = next();
+        public static final byte lhW_lhC = next();
+        public static final byte rhW = next();
+        public static final byte rhP = next();
+        public static final byte rhC = next();
+        public static final byte rhL = next();
+        public static final byte rhW_rhP = next();
+        public static final byte rhW_rhC = next();
+        public static final byte lmW = next();
+        public static final byte lmP = next();
+        public static final byte lmC = next();
+        public static final byte lmL = next();
+        public static final byte lmW_lmP = next();
+        public static final byte lmW_lmC = next();
+        public static final byte rmW = next();
+        public static final byte rmP = next();
+        public static final byte rmC = next();
+        public static final byte rmL = next();
+        public static final byte rmW_rmP = next();
+        public static final byte rmW_rmC = next();
+        public static final byte hP_lhP = next();
+        public static final byte hP_lhP_llhP = next();
+        public static final byte hP_rhP = next();
+        public static final byte hP_rhP_rrhP = next();
+        public static final byte hC_lhC = next();
+        public static final byte llhW = next();
+        public static final byte llhP = next();
+        public static final byte llhC = next();
+        public static final byte llhL = next();
+        public static final byte llhW_llhP = next();
+        public static final byte llhW_llhC = next();
+        public static final byte rrhW = next();
+        public static final byte rrhP = next();
+        public static final byte rrhC = next();
+        public static final byte rrhL = next();
+        public static final byte rrhW_rrhP = next();
+        public static final byte rrhW_rrhC = next();
+        public static final byte llmW = next();
+        public static final byte llmP = next();
+        public static final byte llmC = next();
+        public static final byte llmL = next();
+        public static final byte llmW_llmC = next();
+        public static final byte rrmW = next();
+        public static final byte rrmP = next();
+        public static final byte rrmC = next();
+        public static final byte rrmL = next();
+        public static final byte rrmW_rrmP = next();
+        public static final byte rrmW_rrmC = next();
+        public static final byte hC_lhC_llhC = next();
+        public static final byte llmW_llmP = next();
+        public static final byte hC_rhC = next();
+        public static final byte hC_rhC_rrhC = next();
+        public static final byte mP_lmP = next();
+        public static final byte mP_lmP_llmP = next();
+        public static final byte mP_rmP = next();
+        public static final byte mP_rmP_rrmP = next();
+        public static final byte mC_lmC = next();
+        public static final byte mC_lmC_llmC = next();
+        public static final byte mC_rmC = next();
+        public static final byte mC_rmC_rrmC = next();
+        public static final byte mW_hP = next();
+        public static final byte hW_mP = next();
+        public static final byte mW_hC = next();
+        public static final byte hW_mC = next();
+        public static final byte hF_mF = next();
+        public static final byte hF_mP = next();
+        public static final byte mF_hP = next();
+        public static final byte hF_mF_mP = next();
+        public static final byte hF_mF_hP = next();
+        public static final byte hF_hP_mP = next();
+        public static final byte mF_hP_mP = next();
+        public static final byte hF_mF_hP_mP = next();
+        public static final byte hF_mC = next();
+        public static final byte mF_hC = next();
+        public static final byte hF_mF_mC = next();
+        public static final byte hF_mF_hC = next();
+        public static final byte hF_hC_mC = next();
+        public static final byte mF_hC_mC = next();
+        public static final byte hF_mF_hC_mC = next();
+        public static final byte lhP_hP_rhP_lmP_mP_rmP = next();
+        public static final byte lhC_hC_rhC_lmC_mC_rmC = next();
         public static final byte BFLAG = next();
-        public static final byte HP_MP_BFLAG = next();
-        public static final byte HQ_MQ_BFLAG = next();
-        public static final byte BTWNP_HW_MW = next();
-        public static final byte BTWNP_HW_MP = next();
-        public static final byte BTWNP_HP_MW = next();
-        public static final byte BTWNQ_HQ_MQ = next();
-        public static final byte BTWNQ_HW_MQ = next();
-        public static final byte BTWNQ_HQ_MW = next();
-        public static final byte BTWNQ_HW_MW = next();
+        public static final byte hP_mP_BFLAG = next();
+        public static final byte hC_mC_BFLAG = next();
+        public static final byte btwnP_hW_mW = next();
+        public static final byte btwnP_hW_mP = next();
+        public static final byte btwnP_hP_mW = next();
+        public static final byte btwnC_hC_mC = next();
+        public static final byte btwnC_hW_mC = next();
+        public static final byte btwnC_hC_mW = next();
+        public static final byte btwnC_hW_mW = next();
     }
     
     /** 
      * Template IDs for triplet features (e.g. SIBLING or GRANDPARENT) in {@link BitshiftDepParseFeatures}. 
+     * 
+     * See {@link ArcTs} for a description of the encoding of these feature template names.
      */
     private static class TriTs {
         private static int templ = 0;
@@ -240,20 +250,19 @@ public class BitshiftDepParseFeatures {
             return SafeCast.safeIntToUnsignedByte(templ++);
         }
         // Carreras et al. (2007) templates.
-        public static final byte HQ_MQ_SQ = next();
-        public static final byte HQ_SQ = next();
-        public static final byte MQ_SQ = next();
-        public static final byte HQ_MQ = next();
-        public static final byte SW_HQ = next();
-        public static final byte SW_MQ = next();
-        public static final byte HW_SQ = next();
-        public static final byte MW_SQ = next();
-        public static final byte MW_HQ = next();
-        public static final byte HW_MQ = next();
-        public static final byte HW_SW = next();
-        public static final byte MW_SW = next();
-        public static final byte HW_MW = next();
-        
+        public static final byte hC_mC_sQ = next();
+        public static final byte hC_sQ = next();
+        public static final byte mC_sQ = next();
+        public static final byte hC_mC = next();
+        public static final byte sW_hC = next();
+        public static final byte sW_mC = next();
+        public static final byte hW_sQ = next();
+        public static final byte mW_sQ = next();
+        public static final byte mW_hC = next();
+        public static final byte hW_mC = next();
+        public static final byte hW_sW = next();
+        public static final byte mW_sW = next();
+        public static final byte hW_mW = next();
     }
 
     /** Returns the bin into which the given size falls. */
@@ -271,24 +280,24 @@ public class BitshiftDepParseFeatures {
         WALL_MORPHO.add((short)TOK_WALL_INT);
     }
     
-    public static void addArcFeats(IntAnnoSentence sent, int p, int c, BitshiftDepParseFeatureExtractorPrm prm, FeatureVector feats) {
+    public static void addArcFeats(IntAnnoSentence sent, int head, int modifier, BitshiftDepParseFeatureExtractorPrm prm, FeatureVector feats) {
         if (prm.useMstFeats) {
-            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, p, c, FeatureCollection.ARC, feats, false, prm.useCoarseTags, prm.featureHashMod);
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, head, modifier, FeatureCollection.ARC, feats, false, prm.useCoarseTags, prm.featureHashMod);
         } else {
-            BitshiftDepParseFeatures.addTurboWordPairFeats(sent, p, c, FeatureCollection.ARC, feats, prm.featureHashMod, 
+            BitshiftDepParseFeatures.addTurboWordPairFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm.featureHashMod, 
                     prm.maxTokenContext, prm.isLabeledParsing, prm.useNonTurboFeats, prm.useLemmaFeats, prm.useMorphologicalFeatures, 
                     prm.useCoarseTags);
         }
     }
     
-    public static void addTurboSiblingFeats(final IntAnnoSentence sent, final int p, final int c, final int s, 
+    public static void addTurboSiblingFeats(final IntAnnoSentence sent, final int head, final int modifier, final int sibling, 
             final boolean consecutive, 
             final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {        
         int sentLen = sent.size();
         // We encode the first child by setting the child to the same value as the parent.
-        boolean isFirstChild = consecutive && (p == c);
+        boolean isFirstChild = consecutive && (head == modifier);
         // We encode the last child by setting the sibling to -1.
-        boolean isLastChild = consecutive && (s == sentLen || s <= 0);
+        boolean isLastChild = consecutive && (sibling == sentLen || sibling <= 0);
         
         
     }
@@ -303,7 +312,7 @@ public class BitshiftDepParseFeatures {
      * terms of POS tags, and offer an optional <code>if (useCoarsePosTags) { ... }</code> option for the cases 
      * where the original features were defined in TurboParser over coarse tags only.
      */
-    public static void addTurboWordPairFeats(final IntAnnoSentence sent, final int p, final int c, final byte pairType, 
+    public static void addTurboWordPairFeats(final IntAnnoSentence sent, final int head, final int modifier, final byte pairType, 
             final FeatureVector feats, final int mod,
             final int maxTokenContext,
             final boolean isLabeledParsing,
@@ -314,7 +323,7 @@ public class BitshiftDepParseFeatures {
         int sentLen = sent.size();
 
         // Distance codes.
-        int distance = (p < c) ? c - p : p - c;
+        int distance = (head < modifier) ? modifier - head : head - modifier;
         byte exactDistCode = SafeCast.safeIntToUnsignedByte((distance > 0xff) ? 0xff : distance);
         byte binDistCode; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
         // The order here matters since we'll add features for each applicable bin.
@@ -335,14 +344,14 @@ public class BitshiftDepParseFeatures {
         }
 
         // Direction code and indices.
-        byte direction = (p < c) ? (byte) 0 : (byte) 1;        
-        int leftTok = (p < c) ? p : c;
-        int rightTok = (p < c) ? c : p;
+        byte direction = (head < modifier) ? (byte) 0 : (byte) 1;        
+        int leftTok = (head < modifier) ? head : modifier;
+        int rightTok = (head < modifier) ? modifier : head;
         
         // Number of certain POS tags in between.
-        int numVerbsBetween = sent.getNumVerbsInBetween(p, c);
-        int numPuncsBetween = sent.getNumPuncsInBetween(p, c);
-        int numConjsBetween = sent.getNumConjsInBetween(p, c);
+        int numVerbsBetween = sent.getNumVerbsInBetween(head, modifier);
+        int numPuncsBetween = sent.getNumPuncsInBetween(head, modifier);
+        int numConjsBetween = sent.getNumConjsInBetween(head, modifier);
         // Use at most 4-bits to denote the number in between. 
         int maxOccurrences = 0xf; // 15
         if (numVerbsBetween > maxOccurrences) { numVerbsBetween = maxOccurrences; }
@@ -355,57 +364,57 @@ public class BitshiftDepParseFeatures {
         
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
         // by c (for child).
-        short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
-        short cWord = (c < 0) ? TOK_WALL_INT : sent.getWord(c);
-        byte pPos = (p < 0) ? TOK_WALL_INT : sent.getPosTag(p);
-        byte cPos = (c < 0) ? TOK_WALL_INT : sent.getPosTag(c);
-        short pLemma = (p < 0) ? TOK_WALL_INT : sent.getLemma(p);
-        short cLemma = (c < 0) ? TOK_WALL_INT : sent.getLemma(c);
-        byte pCpos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
-        byte cCpos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
+        short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
+        short mWord = (modifier < 0) ? TOK_WALL_INT : sent.getWord(modifier);
+        byte hPos = (head < 0) ? TOK_WALL_INT : sent.getPosTag(head);
+        byte mPos = (modifier < 0) ? TOK_WALL_INT : sent.getPosTag(modifier);
+        short hLemma = (head < 0) ? TOK_WALL_INT : sent.getLemma(head);
+        short mLemma = (modifier < 0) ? TOK_WALL_INT : sent.getLemma(modifier);
+        byte hCpos = (head < 0) ? TOK_WALL_INT : sent.getCposTag(head);
+        byte mCpos = (modifier < 0) ? TOK_WALL_INT : sent.getCposTag(modifier);
 
         // Surrounding words / POS tags. 
         // One token to the left (l) and right (r).
-        short lpWord = (p-1 < 0) ? TOK_START_INT : sent.getWord(p-1);
-        short lcWord = (c-1 < 0) ? TOK_START_INT : sent.getWord(c-1);
-        short rpWord = (p+1 >= sentLen) ? TOK_END_INT : sent.getWord(p+1);
-        short rcWord = (c+1 >= sentLen) ? TOK_END_INT : sent.getWord(c+1);
+        short lhWord = (head-1 < 0) ? TOK_START_INT : sent.getWord(head-1);
+        short lmWord = (modifier-1 < 0) ? TOK_START_INT : sent.getWord(modifier-1);
+        short rhWord = (head+1 >= sentLen) ? TOK_END_INT : sent.getWord(head+1);
+        short rmWord = (modifier+1 >= sentLen) ? TOK_END_INT : sent.getWord(modifier+1);
         //
-        byte lpPos = (p-1 < 0) ? TOK_START_INT : sent.getPosTag(p-1);
-        byte lcPos = (c-1 < 0) ? TOK_START_INT : sent.getPosTag(c-1);
-        byte rpPos = (p+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+1);
-        byte rcPos = (c+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+1);
+        byte lhPos = (head-1 < 0) ? TOK_START_INT : sent.getPosTag(head-1);
+        byte lmPos = (modifier-1 < 0) ? TOK_START_INT : sent.getPosTag(modifier-1);
+        byte rhPos = (head+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(head+1);
+        byte rmPos = (modifier+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(modifier+1);
         //
-        short lpLemma = (p-1 < 0) ? TOK_START_INT : sent.getLemma(p-1);
-        short lcLemma = (c-1 < 0) ? TOK_START_INT : sent.getLemma(c-1);
-        short rpLemma = (p+1 >= sentLen) ? TOK_END_INT : sent.getLemma(p+1);
-        short rcLemma = (c+1 >= sentLen) ? TOK_END_INT : sent.getLemma(c+1);
+        short lhLemma = (head-1 < 0) ? TOK_START_INT : sent.getLemma(head-1);
+        short lmLemma = (modifier-1 < 0) ? TOK_START_INT : sent.getLemma(modifier-1);
+        short rhLemma = (head+1 >= sentLen) ? TOK_END_INT : sent.getLemma(head+1);
+        short rmLemma = (modifier+1 >= sentLen) ? TOK_END_INT : sent.getLemma(modifier+1);
         //
-        byte lpCpos = (p-1 < 0) ? TOK_START_INT : sent.getCposTag(p-1);
-        byte lcCpos = (c-1 < 0) ? TOK_START_INT : sent.getCposTag(c-1);
-        byte rpCpos = (p+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(p+1);
-        byte rcCpos = (c+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(c+1);
+        byte lhCpos = (head-1 < 0) ? TOK_START_INT : sent.getCposTag(head-1);
+        byte lmCpos = (modifier-1 < 0) ? TOK_START_INT : sent.getCposTag(modifier-1);
+        byte rhCpos = (head+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(head+1);
+        byte rmCpos = (modifier+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(modifier+1);
         
         // Two tokens to the left (ll) and right (rr).
-        short llpWord = (p-2 < 0) ? TOK_START_INT : sent.getWord(p-2);
-        short llcWord = (c-2 < 0) ? TOK_START_INT : sent.getWord(c-2);
-        short rrpWord = (p+2 >= sentLen) ? TOK_END_INT : sent.getWord(p+2);
-        short rrcWord = (c+2 >= sentLen) ? TOK_END_INT : sent.getWord(c+2);
+        short llhWord = (head-2 < 0) ? TOK_START_INT : sent.getWord(head-2);
+        short llmWord = (modifier-2 < 0) ? TOK_START_INT : sent.getWord(modifier-2);
+        short rrhWord = (head+2 >= sentLen) ? TOK_END_INT : sent.getWord(head+2);
+        short rrmWord = (modifier+2 >= sentLen) ? TOK_END_INT : sent.getWord(modifier+2);
         //
-        byte llpPos = (p-2 < 0) ? TOK_START_INT : sent.getPosTag(p-2);
-        byte llcPos = (c-2 < 0) ? TOK_START_INT : sent.getPosTag(c-2);
-        byte rrpPos = (p+2 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+2);
-        byte rrcPos = (c+2 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+2);
+        byte llhPos = (head-2 < 0) ? TOK_START_INT : sent.getPosTag(head-2);
+        byte llmPos = (modifier-2 < 0) ? TOK_START_INT : sent.getPosTag(modifier-2);
+        byte rrhPos = (head+2 >= sentLen) ? TOK_END_INT : sent.getPosTag(head+2);
+        byte rrmPos = (modifier+2 >= sentLen) ? TOK_END_INT : sent.getPosTag(modifier+2);
         //
-        short llpLemma = (p-2 < 0) ? TOK_START_INT : sent.getLemma(p-2);
-        short llcLemma = (c-2 < 0) ? TOK_START_INT : sent.getLemma(c-2);
-        short rrpLemma = (p+2 >= sentLen) ? TOK_END_INT : sent.getLemma(p+2);
-        short rrcLemma = (c+2 >= sentLen) ? TOK_END_INT : sent.getLemma(c+2);
+        short llhLemma = (head-2 < 0) ? TOK_START_INT : sent.getLemma(head-2);
+        short llmLemma = (modifier-2 < 0) ? TOK_START_INT : sent.getLemma(modifier-2);
+        short rrhLemma = (head+2 >= sentLen) ? TOK_END_INT : sent.getLemma(head+2);
+        short rrmLemma = (modifier+2 >= sentLen) ? TOK_END_INT : sent.getLemma(modifier+2);
         //
-        byte llpCpos = (p-2 < 0) ? TOK_START_INT : sent.getCposTag(p-2);
-        byte llcCpos = (c-2 < 0) ? TOK_START_INT : sent.getCposTag(c-2);
-        byte rrpCpos = (p+2 >= sentLen) ? TOK_END_INT : sent.getCposTag(p+2);
-        byte rrcCpos = (c+2 >= sentLen) ? TOK_END_INT : sent.getCposTag(c+2); 
+        byte llhCpos = (head-2 < 0) ? TOK_START_INT : sent.getCposTag(head-2);
+        byte llmCpos = (modifier-2 < 0) ? TOK_START_INT : sent.getCposTag(modifier-2);
+        byte rrhCpos = (head+2 >= sentLen) ? TOK_END_INT : sent.getCposTag(head+2);
+        byte rrmCpos = (modifier+2 >= sentLen) ? TOK_END_INT : sent.getCposTag(modifier+2); 
         
         // Flags for the type of feature.
         byte flags = pairType; // 4 bits.
@@ -418,63 +427,63 @@ public class BitshiftDepParseFeatures {
         // --------------------------------------------------------------------
         
         // Head Only.
-        addFeat(feats, mod, encodeFeatureS___(ArcTs.HW, flags, pWord));
-        addFeat(feats, mod, encodeFeatureB___(ArcTs.HP, flags, pPos));
-        addFeat(feats, mod, encodeFeatureB___(ArcTs.HQ, flags, pCpos));
+        addFeat(feats, mod, encodeFeatureS___(ArcTs.hW, flags, hWord));
+        addFeat(feats, mod, encodeFeatureB___(ArcTs.hP, flags, hPos));
+        addFeat(feats, mod, encodeFeatureB___(ArcTs.hC, flags, hCpos));
         if (useLemmaFeats) {
-            addFeat(feats, mod, encodeFeatureS___(ArcTs.HL, flags, pLemma));
+            addFeat(feats, mod, encodeFeatureS___(ArcTs.hL, flags, hLemma));
         }
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_HP, flags, pWord, pPos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_hP, flags, hWord, hPos));
         if (useCoarseTags) {
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_HQ, flags, pWord, pCpos));            
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_hC, flags, hWord, hCpos));            
         }
         if (useMorphologicalFeatures) {
-            ShortArrayList pMorphosList = safeGetFeats(sent, p);
-            short[] pMorphos = pMorphosList.getInternalElements();
-            for (int j=0; j < pMorphosList.size(); j++) {
-                short pMorpho = pMorphos[j];
-                if (pMorpho > 0xfff) {
+            ShortArrayList hMorphosList = safeGetFeats(sent, head);
+            short[] hMorphos = hMorphosList.getInternalElements();
+            for (int j=0; j < hMorphosList.size(); j++) {
+                short hMorpho = hMorphos[j];
+                if (hMorpho > 0xfff) {
                     throw new IllegalStateException("Too many morphological feature values.");
                 }
-                if (pMorphosList.size() >= 0xf) {
-                    log.warn("Too many morphological fetures: " + pMorphosList.size());
-                    pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | 0xf);
+                if (hMorphosList.size() >= 0xf) {
+                    log.warn("Too many morphological fetures: " + hMorphosList.size());
+                    hMorpho = SafeCast.safeIntToShort((hMorpho << 4) | 0xf);
                 } else {
-                    pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | j);
+                    hMorpho = SafeCast.safeIntToShort((hMorpho << 4) | j);
                 }
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.HF, flags, pMorpho));
-                addFeat(feats, mod, encodeFeatureSS__(ArcTs.HW_HF, flags, pWord, pMorpho));
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.hF, flags, hMorpho));
+                addFeat(feats, mod, encodeFeatureSS__(ArcTs.hW_hF, flags, hWord, hMorpho));
             }
         }
 
         if (isLabeledParsing) {
             // Modifier Only.
-            addFeat(feats, mod, encodeFeatureS___(ArcTs.MW, flags, cWord));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.MP, flags, cPos));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.MQ, flags, cCpos));
+            addFeat(feats, mod, encodeFeatureS___(ArcTs.mW, flags, mWord));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.mP, flags, mPos));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.mC, flags, mCpos));
             if (useLemmaFeats) {
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.ML, flags, cLemma));
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.mL, flags, mLemma));
             }            
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_MP, flags, cWord, cPos));
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_mP, flags, mWord, mPos));
             if (useCoarseTags) {
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_MQ, flags, cWord, cCpos));
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_mC, flags, mWord, mCpos));
             }
             if (useMorphologicalFeatures) {
-                ShortArrayList cMorphosList = safeGetFeats(sent, c);
-                short[] cMorphos = cMorphosList.getInternalElements();
-                for (int k=0; k < cMorphosList.size(); k++) {
-                    short cMorpho = cMorphos[k];
-                    if (cMorpho > 0xfff) {
+                ShortArrayList mMorphosList = safeGetFeats(sent, modifier);
+                short[] mMorphos = mMorphosList.getInternalElements();
+                for (int k=0; k < mMorphosList.size(); k++) {
+                    short mMorpho = mMorphos[k];
+                    if (mMorpho > 0xfff) {
                         throw new IllegalStateException("Too many morphological feature values.");
                     }
-                    if (cMorphosList.size() >= 0xf) {
-                        log.warn("Too many morphological fetures: " + cMorphosList.size());
-                        cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | 0xf);
+                    if (mMorphosList.size() >= 0xf) {
+                        log.warn("Too many morphological fetures: " + mMorphosList.size());
+                        mMorpho = SafeCast.safeIntToShort((mMorpho << 4) | 0xf);
                     } else {
-                        cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | k);
+                        mMorpho = SafeCast.safeIntToShort((mMorpho << 4) | k);
                     }
-                    addFeat(feats, mod, encodeFeatureS___(ArcTs.MF, flags, cMorpho));
-                    addFeat(feats, mod, encodeFeatureSS__(ArcTs.MW_MF, flags, pWord, cMorpho));
+                    addFeat(feats, mod, encodeFeatureS___(ArcTs.mF, flags, mMorpho));
+                    addFeat(feats, mod, encodeFeatureSS__(ArcTs.mW_mF, flags, hWord, mMorpho));
                 }
             }
         }
@@ -486,75 +495,75 @@ public class BitshiftDepParseFeatures {
         if (maxTokenContext >= 1) {
             // -- Head Context --
             // Word to the left.
-            addFeat(feats, mod, encodeFeatureS___(ArcTs.lHW, flags, lpWord));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.lHP, flags, lpPos));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.lHQ, flags, lpCpos));
-            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.lHL, flags, lpLemma)); }
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.lHW_lHP, flags, lpWord, lpPos));            
-            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.lHW_lHQ, flags, lpWord, lpCpos)); } 
+            addFeat(feats, mod, encodeFeatureS___(ArcTs.lhW, flags, lhWord));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.lhP, flags, lhPos));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.lhC, flags, lhCpos));
+            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.lhL, flags, lhLemma)); }
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.lhW_lhP, flags, lhWord, lhPos));            
+            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.lhW_lhC, flags, lhWord, lhCpos)); } 
             // Word to the right.
-            addFeat(feats, mod, encodeFeatureS___(ArcTs.rHW, flags, rpWord));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.rHP, flags, rpPos));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.rHQ, flags, rpCpos));
-            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rHL, flags, rpLemma)); }
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.rHW_rHP, flags, rpWord, rpPos));            
-            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rHW_rHQ, flags, rpWord, rpCpos)); } 
+            addFeat(feats, mod, encodeFeatureS___(ArcTs.rhW, flags, rhWord));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.rhP, flags, rhPos));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.rhC, flags, rhCpos));
+            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rhL, flags, rhLemma)); }
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.rhW_rhP, flags, rhWord, rhPos));            
+            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rhW_rhC, flags, rhWord, rhCpos)); } 
             // -- Modifier Context --
             // TurboParser excludes these features that look only at the modifier unless they are
             // also conjoined with the label.
             if (isLabeledParsing) {
                 // Word to the left.
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.lMW, flags, lcWord));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.lMP, flags, lcPos));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.lMQ, flags, lcCpos));
-                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.lML, flags, lcLemma)); }
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.lMW_lMP, flags, lcWord, lcPos));                
-                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.lMW_lMQ, flags, lcWord, lcCpos)); } 
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.lmW, flags, lmWord));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.lmP, flags, lmPos));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.lmC, flags, lmCpos));
+                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.lmL, flags, lmLemma)); }
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.lmW_lmP, flags, lmWord, lmPos));                
+                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.lmW_lmC, flags, lmWord, lmCpos)); } 
                 // Word to the right.
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.rMW, flags, rcWord));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.rMP, flags, rcPos));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.rMQ, flags, rcCpos));
-                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rML, flags, rcLemma)); }
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.rMW_rMP, flags, rcWord, rcPos));                
-                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rMW_rMQ, flags, rcWord, rcCpos)); }
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.rmW, flags, rmWord));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.rmP, flags, rmPos));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.rmC, flags, rmCpos));
+                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rmL, flags, rmLemma)); }
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.rmW_rmP, flags, rmWord, rmPos));                
+                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rmW_rmC, flags, rmWord, rmCpos)); }
             }
         }
         
         if (maxTokenContext >= 2) {
             // -- Head Context --
             // Two words to the left.
-            addFeat(feats, mod, encodeFeatureS___(ArcTs.llHW, flags, llpWord));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.llHP, flags, llpPos));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.llHQ, flags, llpCpos));
-            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.llHL, flags, llpLemma)); }
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.llHW_llHP, flags, llpWord, llpPos));            
-            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.llHW_llHQ, flags, llpWord, llpCpos)); } 
+            addFeat(feats, mod, encodeFeatureS___(ArcTs.llhW, flags, llhWord));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.llhP, flags, llhPos));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.llhC, flags, llhCpos));
+            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.llhL, flags, llhLemma)); }
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.llhW_llhP, flags, llhWord, llhPos));            
+            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.llhW_llhC, flags, llhWord, llhCpos)); } 
             // Two words to the right.
-            addFeat(feats, mod, encodeFeatureS___(ArcTs.rrHW, flags, rrpWord));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.rrHP, flags, rrpPos));
-            addFeat(feats, mod, encodeFeatureB___(ArcTs.rrHQ, flags, rrpCpos));
-            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rrHL, flags, rrpLemma)); }
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrHW_rrHP, flags, rrpWord, rrpPos));            
-            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrHW_rrHQ, flags, rrpWord, rrpCpos)); } 
+            addFeat(feats, mod, encodeFeatureS___(ArcTs.rrhW, flags, rrhWord));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.rrhP, flags, rrhPos));
+            addFeat(feats, mod, encodeFeatureB___(ArcTs.rrhC, flags, rrhCpos));
+            if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rrhL, flags, rrhLemma)); }
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrhW_rrhP, flags, rrhWord, rrhPos));            
+            if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrhW_rrhC, flags, rrhWord, rrhCpos)); } 
             // -- Modifier Context --
             if (isLabeledParsing) {
                 // Two words to the left.
                 //
                 // TurboParser excludes these features that look only at the modifier unless they are
                 // also conjoined with the label.
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.llMW, flags, llcWord));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.llMP, flags, llcPos));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.llMQ, flags, llcCpos));
-                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.llML, flags, llcLemma)); }
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.llMW_llMP, flags, llcWord, llcPos));                 
-                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.llMW_llMQ, flags, llcWord, llcCpos)); } 
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.llmW, flags, llmWord));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.llmP, flags, llmPos));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.llmC, flags, llmCpos));
+                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.llmL, flags, llmLemma)); }
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.llmW_llmP, flags, llmWord, llmPos));                 
+                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.llmW_llmC, flags, llmWord, llmCpos)); } 
                 // Two words to the right.
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.rrMW, flags, rrcWord));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.rrMP, flags, rrcPos));
-                addFeat(feats, mod, encodeFeatureB___(ArcTs.rrMQ, flags, rrcCpos));
-                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rrML, flags, rrcLemma)); }
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrMW_rrMP, flags, rrcWord, rrcPos));               
-                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrMW_rrMQ, flags, rrcWord, rrcCpos)); }
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.rrmW, flags, rrmWord));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.rrmP, flags, rrmPos));
+                addFeat(feats, mod, encodeFeatureB___(ArcTs.rrmC, flags, rrmCpos));
+                if (useLemmaFeats) { addFeat(feats, mod, encodeFeatureS___(ArcTs.rrmL, flags, rrmLemma)); }
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrmW_rrmP, flags, rrmWord, rrmPos));               
+                if (useCoarseTags) { addFeat(feats, mod, encodeFeatureSB__(ArcTs.rrmW_rrmC, flags, rrmWord, rrmCpos)); }
             }
         }
 
@@ -563,28 +572,28 @@ public class BitshiftDepParseFeatures {
         // or Child plus context. 
         // --------------------------------------------------------------------
 
-        addFeat(feats, mod, encodeFeatureBB__(ArcTs.HP_lHP, flags, pPos, lpPos));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_lHP_llHP, flags, pPos, lpPos, llpPos));
-        addFeat(feats, mod, encodeFeatureBB__(ArcTs.HP_rHP, flags, pPos, rpPos));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_rHP_rrHP, flags, pPos, rpPos, rrpPos));   
+        addFeat(feats, mod, encodeFeatureBB__(ArcTs.hP_lhP, flags, hPos, lhPos));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_lhP_llhP, flags, hPos, lhPos, llhPos));
+        addFeat(feats, mod, encodeFeatureBB__(ArcTs.hP_rhP, flags, hPos, rhPos));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_rhP_rrhP, flags, hPos, rhPos, rrhPos));   
         if (useCoarseTags) {         
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.HQ_lHQ, flags, pCpos, lpCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_lHQ_llHQ, flags, pCpos, lpCpos, llpCpos));
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.HQ_rHQ, flags, pCpos, rpCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_rHQ_rrHQ, flags, pCpos, rpCpos, rrpCpos));
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.hC_lhC, flags, hCpos, lhCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_lhC_llhC, flags, hCpos, lhCpos, llhCpos));
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.hC_rhC, flags, hCpos, rhCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_rhC_rrhC, flags, hCpos, rhCpos, rrhCpos));
         }
         if (isLabeledParsing) {
             // TurboParser excludes these features that look only at the modifier unless they are
             // also conjoined with the label.
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.MP_lMP, flags, cPos, lcPos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.MP_lMP_llMP, flags, cPos, lcPos, llcPos));
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.MP_rMP, flags, cPos, rcPos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.MP_rMP_rrMP, flags, cPos, rcPos, rrcPos));   
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.mP_lmP, flags, mPos, lmPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.mP_lmP_llmP, flags, mPos, lmPos, llmPos));
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.mP_rmP, flags, mPos, rmPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.mP_rmP_rrmP, flags, mPos, rmPos, rrmPos));   
             if (useCoarseTags) {         
-                addFeat(feats, mod, encodeFeatureBB__(ArcTs.MQ_lMQ, flags, cCpos, lcCpos));
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.MQ_lMQ_llMQ, flags, cCpos, lcCpos, llcCpos));
-                addFeat(feats, mod, encodeFeatureBB__(ArcTs.MQ_rMQ, flags, cCpos, rcCpos));
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.MQ_rMQ_rrMQ, flags, cCpos, rcCpos, rrcCpos));
+                addFeat(feats, mod, encodeFeatureBB__(ArcTs.mC_lmC, flags, mCpos, lmCpos));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.mC_lmC_llmC, flags, mCpos, lmCpos, llmCpos));
+                addFeat(feats, mod, encodeFeatureBB__(ArcTs.mC_rmC, flags, mCpos, rmCpos));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.mC_rmC_rrmC, flags, mCpos, rmCpos, rrmCpos));
             }
         }
         
@@ -593,128 +602,128 @@ public class BitshiftDepParseFeatures {
         // --------------------------------------------------------------------
 
         // Words only.
-        addFeat(feats, mod, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
+        addFeat(feats, mod, encodeFeatureSS__(ArcTs.hW_mW, flags, hWord, mWord));
         // POS tags and Words.
-        addFeat(feats, mod, encodeFeatureBB__(ArcTs.HP_MP, flags, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_HP, flags, cWord, pPos));
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_MP, flags, pWord, cPos));
-        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MW_HP_MP, flags, cWord, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW_HP_MP, flags, pWord, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW_MW_HP_MP, flags, pWord, cWord, pPos, cPos));       
+        addFeat(feats, mod, encodeFeatureBB__(ArcTs.hP_mP, flags, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_hP, flags, mWord, hPos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_mP, flags, hWord, mPos));
+        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mW_hP_mP, flags, mWord, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hW_hP_mP, flags, hWord, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hW_mW_hP_mP, flags, hWord, mWord, hPos, mPos));       
         if (useCoarseTags) {
             // Coarse POS tags and Words.
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.HQ_MQ, flags, pCpos, cCpos));     
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_HQ, flags, cWord, pCpos));
-            addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_MQ, flags, pWord, cCpos));
-            addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MW_HQ_MQ, flags, cWord, pCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW_HQ_MQ, flags, pWord, pCpos, cCpos));        
-            addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW_MW_HQ_MQ, flags, pWord, cWord, pCpos, cCpos));
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.hC_mC, flags, hCpos, mCpos));     
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_hC, flags, mWord, hCpos));
+            addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_mC, flags, hWord, mCpos));
+            addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mW_hC_mC, flags, mWord, hCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hW_hC_mC, flags, hWord, hCpos, mCpos));        
+            addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hW_mW_hC_mC, flags, hWord, mWord, hCpos, mCpos));
         }
         if (useNonTurboFeats) {
             // Both Words plus a single Tag (from MST Parser).
-            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_MQ, flags, pWord, cWord, cCpos));
-            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_HQ, flags, pWord, cWord, pCpos));
-            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_MP, flags, pWord, cWord, cPos));
-            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_HP, flags, pWord, cWord, pPos));
+            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_mC, flags, hWord, mWord, mCpos));
+            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_hC, flags, hWord, mWord, hCpos));
+            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_mP, flags, hWord, mWord, mPos));
+            addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_hP, flags, hWord, mWord, hPos));
         }
  
         if (useMorphologicalFeatures) {
             // For each morphological feature of the Head.
-            ShortArrayList pMorphosList = safeGetFeats(sent, p);
-            short[] pMorphos = pMorphosList.getInternalElements();
-            for (int j=0; j < pMorphosList.size(); j++) {
-                short pMorpho = pMorphos[j];
-                if (pMorpho > 0xfff) {
+            ShortArrayList hMorphosList = safeGetFeats(sent, head);
+            short[] hMorphos = hMorphosList.getInternalElements();
+            for (int j=0; j < hMorphosList.size(); j++) {
+                short hMorpho = hMorphos[j];
+                if (hMorpho > 0xfff) {
                     throw new IllegalStateException("Too many morphological feature values.");
                 }
-                if (pMorphosList.size() >= 0xf) {
-                    log.warn("Too many morphological fetures: " + pMorphosList.size());
-                    pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | 0xf);
+                if (hMorphosList.size() >= 0xf) {
+                    log.warn("Too many morphological fetures: " + hMorphosList.size());
+                    hMorpho = SafeCast.safeIntToShort((hMorpho << 4) | 0xf);
                 } else {
-                    pMorpho = SafeCast.safeIntToShort((pMorpho << 4) | j);
+                    hMorpho = SafeCast.safeIntToShort((hMorpho << 4) | j);
                 }
                 // For each morphological feature of the Modifier.
-                ShortArrayList cMorphosList = safeGetFeats(sent, c);
-                short[] cMorphos = cMorphosList.getInternalElements();
-                for (int k=0; k < cMorphosList.size(); k++) {
-                    short cMorpho = cMorphos[k];
-                    if (cMorpho > 0xfff) {
+                ShortArrayList mMorphosList = safeGetFeats(sent, modifier);
+                short[] mMorphos = mMorphosList.getInternalElements();
+                for (int k=0; k < mMorphosList.size(); k++) {
+                    short mMorpho = mMorphos[k];
+                    if (mMorpho > 0xfff) {
                         throw new IllegalStateException("Too many morphological feature values.");
                     }
-                    if (cMorphosList.size() >= 0xf) {
-                        log.warn("Too many morphological fetures: " + cMorphosList.size());
-                        cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | 0xf);
+                    if (mMorphosList.size() >= 0xf) {
+                        log.warn("Too many morphological fetures: " + mMorphosList.size());
+                        mMorpho = SafeCast.safeIntToShort((mMorpho << 4) | 0xf);
                     } else {
-                        cMorpho = SafeCast.safeIntToShort((cMorpho << 4) | k);
+                        mMorpho = SafeCast.safeIntToShort((mMorpho << 4) | k);
                     }
-                    addFeat(feats, mod, encodeFeatureSS__(ArcTs.HF_MF, flags, pMorpho, cMorpho));
+                    addFeat(feats, mod, encodeFeatureSS__(ArcTs.hF_mF, flags, hMorpho, mMorpho));
 
-                    addFeat(feats, mod, encodeFeatureSB__(ArcTs.HF_MP, flags, pMorpho, cPos));
-                    addFeat(feats, mod, encodeFeatureSB__(ArcTs.MF_HP, flags, cMorpho, pPos));
-                    addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HF_MF_MP, flags, pMorpho, cMorpho, cPos));
-                    addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HF_MF_HP, flags, pMorpho, cMorpho, pPos));                    
-                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HF_HP_MP, flags, pMorpho, pPos, cPos));
-                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MF_HP_MP, flags, cMorpho, pPos, cPos));                    
-                    addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HF_MF_HP_MP, flags, pMorpho, cMorpho, pPos, cPos));
+                    addFeat(feats, mod, encodeFeatureSB__(ArcTs.hF_mP, flags, hMorpho, mPos));
+                    addFeat(feats, mod, encodeFeatureSB__(ArcTs.mF_hP, flags, mMorpho, hPos));
+                    addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hF_mF_mP, flags, hMorpho, mMorpho, mPos));
+                    addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hF_mF_hP, flags, hMorpho, mMorpho, hPos));                    
+                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hF_hP_mP, flags, hMorpho, hPos, mPos));
+                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mF_hP_mP, flags, mMorpho, hPos, mPos));                    
+                    addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hF_mF_hP_mP, flags, hMorpho, mMorpho, hPos, mPos));
                     
                     if (useCoarseTags) {
-                        addFeat(feats, mod, encodeFeatureSB__(ArcTs.HF_MQ, flags, pMorpho, cCpos));
-                        addFeat(feats, mod, encodeFeatureSB__(ArcTs.MF_HQ, flags, cMorpho, pCpos));
-                        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HF_MF_MQ, flags, pMorpho, cMorpho, cCpos));
-                        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HF_MF_HQ, flags, pMorpho, cMorpho, pCpos));                    
-                        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HF_HQ_MQ, flags, pMorpho, pCpos, cCpos));
-                        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MF_HQ_MQ, flags, cMorpho, pCpos, cCpos));                    
-                        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HF_MF_HQ_MQ, flags, pMorpho, cMorpho, pCpos, cCpos));
+                        addFeat(feats, mod, encodeFeatureSB__(ArcTs.hF_mC, flags, hMorpho, mCpos));
+                        addFeat(feats, mod, encodeFeatureSB__(ArcTs.mF_hC, flags, mMorpho, hCpos));
+                        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hF_mF_mC, flags, hMorpho, mMorpho, mCpos));
+                        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hF_mF_hC, flags, hMorpho, mMorpho, hCpos));                    
+                        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hF_hC_mC, flags, hMorpho, hCpos, mCpos));
+                        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mF_hC_mC, flags, mMorpho, hCpos, mCpos));                    
+                        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hF_mF_hC_mC, flags, hMorpho, mMorpho, hCpos, mCpos));
                     }
                 }
             }
         }
 
         // Surrounding POS Features
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lHP_HP_MP, flags, lpPos, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_lMP_MP, flags, pPos, lcPos, cPos));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_MP_rMP, flags, pPos, cPos, rcPos));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_rHP_MP, flags, pPos, rpPos, cPos));
-        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_rHP_lMP_MP, flags, pPos, rpPos, lcPos, cPos));
-        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHP_HP_lMP_MP, flags, lpPos, pPos, lcPos, cPos));
-        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_rHP_MP_rMP, flags, pPos, rpPos, cPos, rcPos));
-        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHP_HP_MP_rMP, flags, lpPos, pPos, cPos, rcPos));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lhP_hP_mP, flags, lhPos, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_lmP_mP, flags, hPos, lmPos, mPos));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP_rmP, flags, hPos, mPos, rmPos));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_rhP_mP, flags, hPos, rhPos, mPos));
+        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_rhP_lmP_mP, flags, hPos, rhPos, lmPos, mPos));
+        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhP_hP_lmP_mP, flags, lhPos, hPos, lmPos, mPos));
+        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_rhP_mP_rmP, flags, hPos, rhPos, mPos, rmPos));
+        addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhP_hP_mP_rmP, flags, lhPos, hPos, mPos, rmPos));
         //    we don't backoff to the 5 tag case, i.e. BBBBB.
-        addFeat(feats, mod, encodeFeatureBBBBBB(ArcTs.lHP_HP_rHP_lMP_MP_rMP, flags, lpPos, pPos, rpPos, lcPos, cPos, rcPos));       
+        addFeat(feats, mod, encodeFeatureBBBBBB(ArcTs.lhP_hP_rhP_lmP_mP_rmP, flags, lhPos, hPos, rhPos, lmPos, mPos, rmPos));       
         if (useCoarseTags) {
             // Surrounding Coarse POS Features
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lHQ_HQ_MQ, flags, lpCpos, pCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_lMQ_MQ, flags, pCpos, lcCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_MQ_rMQ, flags, pCpos, cCpos, rcCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_rHQ_MQ, flags, pCpos, rpCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HQ_rHQ_lMQ_MQ, flags, pCpos, rpCpos, lcCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHQ_HQ_lMQ_MQ, flags, lpCpos, pCpos, lcCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HQ_rHQ_MQ_rMQ, flags, pCpos, rpCpos, cCpos, rcCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHQ_HQ_MQ_rMQ, flags, lpCpos, pCpos, cCpos, rcCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lhC_hC_mC, flags, lhCpos, hCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_lmC_mC, flags, hCpos, lmCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC_rmC, flags, hCpos, mCpos, rmCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_rhC_mC, flags, hCpos, rhCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_rhC_lmC_mC, flags, hCpos, rhCpos, lmCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhC_hC_lmC_mC, flags, lhCpos, hCpos, lmCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_rhC_mC_rmC, flags, hCpos, rhCpos, mCpos, rmCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhC_hC_mC_rmC, flags, lhCpos, hCpos, mCpos, rmCpos));
             //    we don't backoff to the 5 tag case, i.e. BBBBB.
-            addFeat(feats, mod, encodeFeatureBBBBBB(ArcTs.lHQ_HQ_rHQ_lMQ_MQ_rMQ, flags, lpCpos, pCpos, rpCpos, lcCpos, cCpos, rcCpos));
+            addFeat(feats, mod, encodeFeatureBBBBBB(ArcTs.lhC_hC_rhC_lmC_mC_rmC, flags, lhCpos, hCpos, rhCpos, lmCpos, mCpos, rmCpos));
         }
         
         // The two cases of Adjacent Dependencies.
-        if (p != -1 && p == c - 1) {
+        if (head != -1 && head == modifier - 1) {
             // Parent is the token to the Left of the Child.
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHP_HP_MP, flags, lpPos, pPos, cPos, (byte)0x1));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_MP_rMP, flags, pPos, cPos, rcPos, (byte)0x1));
-            addFeat(feats, mod, encodeFeatureBBBBB(ArcTs.lHP_HP_MP_rMP, flags, lpPos, pPos, cPos, rcPos, (byte)0x1)); 
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhP_hP_mP, flags, lhPos, hPos, mPos, (byte)0x1));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_mP_rmP, flags, hPos, mPos, rmPos, (byte)0x1));
+            addFeat(feats, mod, encodeFeatureBBBBB(ArcTs.lhP_hP_mP_rmP, flags, lhPos, hPos, mPos, rmPos, (byte)0x1)); 
             if (useCoarseTags) {                   
-                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHQ_HQ_MQ, flags, lpCpos, pCpos, cCpos, (byte)0x1));
-                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HQ_MQ_rMQ, flags, pCpos, cCpos, rcCpos, (byte)0x1));
-                addFeat(feats, mod, encodeFeatureBBBBB(ArcTs.lHQ_HQ_MQ_rMQ, flags, lpCpos, pCpos, cCpos, rcCpos, (byte)0x1));
+                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhC_hC_mC, flags, lhCpos, hCpos, mCpos, (byte)0x1));
+                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_mC_rmC, flags, hCpos, mCpos, rmCpos, (byte)0x1));
+                addFeat(feats, mod, encodeFeatureBBBBB(ArcTs.lhC_hC_mC_rmC, flags, lhCpos, hCpos, mCpos, rmCpos, (byte)0x1));
             }
-        } else if (p != -1 && p == c + 1) {
+        } else if (head != -1 && head == modifier + 1) {
             // Parent is the token to the Right of the Child.
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_lMP_MP, flags, pPos, lcPos, cPos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_rHP_MP, flags, pPos, rpPos, cPos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_rHP_lMP_MP, flags, pPos, rpPos, lcPos, cPos)); 
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_lmP_mP, flags, hPos, lmPos, mPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_rhP_mP, flags, hPos, rhPos, mPos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_rhP_lmP_mP, flags, hPos, rhPos, lmPos, mPos)); 
             if (useCoarseTags) {                  
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_lMQ_MQ, flags, pCpos, lcCpos, cCpos));
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_rHQ_MQ, flags, pCpos, rpCpos, cCpos));
-                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HQ_rHQ_lMQ_MQ, flags, pCpos, rpCpos, lcCpos, cCpos));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_lmC_mC, flags, hCpos, lmCpos, mCpos));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_rhC_mC, flags, hCpos, rhCpos, mCpos));
+                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_rhC_lmC_mC, flags, hCpos, rhCpos, lmCpos, mCpos));
             }
         }
         
@@ -726,13 +735,13 @@ public class BitshiftDepParseFeatures {
         // Add features for each applicable bin.
         for (byte bin = 0; bin <= binDistCode; bin++) {
             addFeat(feats, mod, encodeFeatureB___(ArcTs.BIN_DIST, flags, bin));
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.HP, flags, pPos, bin));
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.MP, flags, cPos, bin));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_MP, flags, pPos, cPos, bin));  
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.hP, flags, hPos, bin));
+            addFeat(feats, mod, encodeFeatureBB__(ArcTs.mP, flags, mPos, bin));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP, flags, hPos, mPos, bin));  
             if (useCoarseTags) {
-                addFeat(feats, mod, encodeFeatureBB__(ArcTs.HQ, flags, pCpos, bin));
-                addFeat(feats, mod, encodeFeatureBB__(ArcTs.MQ, flags, cCpos, bin));
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_MQ, flags, pCpos, cCpos, bin));                  
+                addFeat(feats, mod, encodeFeatureBB__(ArcTs.hC, flags, hCpos, bin));
+                addFeat(feats, mod, encodeFeatureBB__(ArcTs.mC, flags, mCpos, bin));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC, flags, hCpos, mCpos, bin));                  
             }
         }
 
@@ -743,13 +752,13 @@ public class BitshiftDepParseFeatures {
         addFeat(feats, mod, encodeFeatureB___(ArcTs.BFLAG, flags, verbsBetweenCode));
         addFeat(feats, mod, encodeFeatureB___(ArcTs.BFLAG, flags, puncsBetweenCode));
         addFeat(feats, mod, encodeFeatureB___(ArcTs.BFLAG, flags, conjsBetweenCode));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_MP_BFLAG, flags, pPos, cPos, verbsBetweenCode));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_MP_BFLAG, flags, pPos, cPos, puncsBetweenCode));
-        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_MP_BFLAG, flags, pPos, cPos, conjsBetweenCode));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP_BFLAG, flags, hPos, mPos, verbsBetweenCode));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP_BFLAG, flags, hPos, mPos, puncsBetweenCode));
+        addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP_BFLAG, flags, hPos, mPos, conjsBetweenCode));
         if (useCoarseTags) {
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_MQ_BFLAG, flags, pCpos, cCpos, verbsBetweenCode));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_MQ_BFLAG, flags, pCpos, cCpos, puncsBetweenCode));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_MQ_BFLAG, flags, pCpos, cCpos, conjsBetweenCode));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC_BFLAG, flags, hCpos, mCpos, verbsBetweenCode));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC_BFLAG, flags, hCpos, mCpos, puncsBetweenCode));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC_BFLAG, flags, hCpos, mCpos, conjsBetweenCode));
         }
            
         // In Between POS Features.
@@ -761,10 +770,10 @@ public class BitshiftDepParseFeatures {
         ByteSort.sortAsc(btwnPos);
         for (int i=0; i<btwnPos.length; i++) {
             if (i == 0 || btwnPos[i] != btwnPos[i-1]) {
-                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.BTWNP_HW_MW, flags, pWord, cWord, btwnPos[i]));
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.BTWNP_HP_MP, flags, pPos, cPos, btwnPos[i]));
-                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.BTWNP_HW_MP, flags, pWord, cPos, btwnPos[i]));
-                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.BTWNP_HP_MW, flags, cWord, pPos, btwnPos[i]));
+                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.btwnP_hW_mW, flags, hWord, mWord, btwnPos[i]));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.btwnP_hP_mP, flags, hPos, mPos, btwnPos[i]));
+                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.btwnP_hW_mP, flags, hWord, mPos, btwnPos[i]));
+                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.btwnP_hP_mW, flags, mWord, hPos, btwnPos[i]));
             }
         }
         if (useCoarseTags) {
@@ -777,10 +786,10 @@ public class BitshiftDepParseFeatures {
             ByteSort.sortAsc(btwnCpos);
             for (int i=0; i<btwnCpos.length; i++) {
                 if (i == 0 || btwnCpos[i] != btwnCpos[i-1]) {
-                    addFeat(feats, mod, encodeFeatureSSB_(ArcTs.BTWNQ_HW_MW, flags, pWord, cWord, btwnCpos[i]));
-                    addFeat(feats, mod, encodeFeatureBBB_(ArcTs.BTWNQ_HQ_MQ, flags, pCpos, cCpos, btwnCpos[i]));
-                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.BTWNQ_HW_MQ, flags, pWord, cCpos, btwnCpos[i]));
-                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.BTWNQ_HQ_MW, flags, cWord, pCpos, btwnCpos[i]));   
+                    addFeat(feats, mod, encodeFeatureSSB_(ArcTs.btwnC_hW_mW, flags, hWord, mWord, btwnCpos[i]));
+                    addFeat(feats, mod, encodeFeatureBBB_(ArcTs.btwnC_hC_mC, flags, hCpos, mCpos, btwnCpos[i]));
+                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.btwnC_hW_mC, flags, hWord, mCpos, btwnCpos[i]));
+                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.btwnC_hC_mW, flags, mWord, hCpos, btwnCpos[i]));   
                 }
             }                          
         }
@@ -795,30 +804,30 @@ public class BitshiftDepParseFeatures {
     }
     
     /** Features from McDonald et al. (2005) "Online Large-Margin Training of Dependency Parsers." */
-    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int p, int c, byte pairType,  
+    public static void addArcFactoredMSTFeats(IntAnnoSentence sent, int head, int modifier, byte pairType,  
             FeatureVector feats, boolean basicOnly, boolean useCoarseFeats, int mod) {
         // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
         // by c (for child).
-        short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
-        short cWord = (c < 0) ? TOK_WALL_INT : sent.getWord(c);
-        byte pPos = (p < 0) ? TOK_WALL_INT : sent.getPosTag(p);
-        byte cPos = (c < 0) ? TOK_WALL_INT : sent.getPosTag(c);
+        short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
+        short mWord = (modifier < 0) ? TOK_WALL_INT : sent.getWord(modifier);
+        byte hPos = (head < 0) ? TOK_WALL_INT : sent.getPosTag(head);
+        byte mPos = (modifier < 0) ? TOK_WALL_INT : sent.getPosTag(modifier);
         // 5-character prefixes.
-        short pPrefix = (p < 0) ? TOK_WALL_INT : sent.getPrefix(p);
-        short cPrefix = (c < 0) ? TOK_WALL_INT : sent.getPrefix(c);
+        short hPrefix = (head < 0) ? TOK_WALL_INT : sent.getPrefix(head);
+        short mPrefix = (modifier < 0) ? TOK_WALL_INT : sent.getPrefix(modifier);
         // Whether to include features for the 5-char prefixes.
         AnnoSentence aSent = sent.getAnnoSentence();
-        boolean pPrefixFeats = (p < 0) ? false : aSent.getWord(p).length() > 5;
-        boolean cPrefixFeats = (c < 0) ? false : aSent.getWord(c).length() > 5;
+        boolean hPrefixFeats = (head < 0) ? false : aSent.getWord(head).length() > 5;
+        boolean mPrefixFeats = (modifier < 0) ? false : aSent.getWord(modifier).length() > 5;
         
         // Surrounding words / POS tags. 
         int sentLen = sent.size();
-        byte lpPos = (p-1 < 0) ? TOK_START_INT : sent.getPosTag(p-1);
-        byte lcPos = (c-1 < 0) ? TOK_START_INT : sent.getPosTag(c-1);
-        byte rpPos = (p+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(p+1);
-        byte rcPos = (c+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(c+1);
+        byte lhPos = (head-1 < 0) ? TOK_START_INT : sent.getPosTag(head-1);
+        byte lmPos = (modifier-1 < 0) ? TOK_START_INT : sent.getPosTag(modifier-1);
+        byte rhPos = (head+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(head+1);
+        byte rmPos = (modifier+1 >= sentLen) ? TOK_END_INT : sent.getPosTag(modifier+1);
         
-        int distance = (p < c) ? c - p : p - c;
+        int distance = (head < modifier) ? modifier - head : head - modifier;
         // The bins are: 0, 2, 5, 10, 20, 30, 40. 
         // We reserve the 7th bin to indicate mode == 0.
         byte binDistCode; 
@@ -838,7 +847,7 @@ public class BitshiftDepParseFeatures {
             binDistCode = 0;
         }
 
-        byte direction = (p < c) ? (byte) 0 : (byte) 1;        
+        byte direction = (head < modifier) ? (byte) 0 : (byte) 1;        
         
         for (byte mode = 0; mode < 2; mode++) {
             assert FeatureCollection.isValid(pairType);
@@ -855,21 +864,21 @@ public class BitshiftDepParseFeatures {
                 flags |= 7 << 5; // 3 bits (8 total).
             }
             
-            extractMstFeaturesWithPos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
-                    pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binDistCode, direction, mode,
+            extractMstFeaturesWithPos(sent, head, modifier, feats, basicOnly, hWord, mWord, hPos, mPos, hPrefix, mPrefix,
+                    hPrefixFeats, mPrefixFeats, lhPos, lmPos, rhPos, rmPos, distance, binDistCode, direction, mode,
                     flags, mod);
             if (useCoarseFeats) {
-                extractMstFeaturesWithCpos(sent, p, c, feats, basicOnly, pWord, cWord, pPos, cPos, pPrefix, cPrefix,
-                        pPrefixFeats, cPrefixFeats, lpPos, lcPos, rpPos, rcPos, distance, binDistCode, direction, mode,
+                extractMstFeaturesWithCpos(sent, head, modifier, feats, basicOnly, hWord, mWord, hPos, mPos, hPrefix, mPrefix,
+                        hPrefixFeats, mPrefixFeats, lhPos, lmPos, rhPos, rmPos, distance, binDistCode, direction, mode,
                         flags, mod);
             }
         }
     }
 
     /** Regular POS tag versions of the MST features. */
-    private static void extractMstFeaturesWithPos(IntAnnoSentence sent, int p, int c, FeatureVector feats,
-            boolean basicOnly, short pWord, short cWord, byte pPos, byte cPos, short pPrefix, short cPrefix,
-            boolean pPrefixFeats, boolean cPrefixFeats, byte lpPos, byte lcPos, byte rpPos, byte rcPos, int distance,
+    private static void extractMstFeaturesWithPos(IntAnnoSentence sent, int head, int modifier, FeatureVector feats,
+            boolean basicOnly, short hWord, short mWord, byte hPos, byte mPos, short hPrefix, short mPrefix,
+            boolean hPrefixFeats, boolean mPrefixFeats, byte lhPos, byte lmPos, byte rhPos, byte rmPos, int distance,
             byte binnedDist, byte direction, byte mode, byte flags, int mod) {
         // Bias features.
         //    # TODO: It's not clear whether these were included in McDonald et al. (2005), 
@@ -881,38 +890,38 @@ public class BitshiftDepParseFeatures {
         }
         
         //    # Basic Unigram Features
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_HP, flags, pWord, pPos));
-        addFeat(feats, mod, encodeFeatureS___(ArcTs.HW, flags, pWord));
-        addFeat(feats, mod, encodeFeatureB___(ArcTs.HP, flags, pPos));
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_MP, flags, cWord, cPos));
-        addFeat(feats, mod, encodeFeatureS___(ArcTs.MW, flags, cWord));
-        addFeat(feats, mod, encodeFeatureB___(ArcTs.MP, flags, cPos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_hP, flags, hWord, hPos));
+        addFeat(feats, mod, encodeFeatureS___(ArcTs.hW, flags, hWord));
+        addFeat(feats, mod, encodeFeatureB___(ArcTs.hP, flags, hPos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_mP, flags, mWord, mPos));
+        addFeat(feats, mod, encodeFeatureS___(ArcTs.mW, flags, mWord));
+        addFeat(feats, mod, encodeFeatureB___(ArcTs.mP, flags, mPos));
         
         //    # Basic Bigram Features
-        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW_MW_HP_MP, flags, pWord, cWord, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MW_HP_MP, flags, cWord, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_MP, flags, pWord, cWord, cPos));
-        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW_HP_MP, flags, pWord, pPos, cPos));
-        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_HP, flags, pWord, cWord, pPos));
-        addFeat(feats, mod, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
-        addFeat(feats, mod, encodeFeatureBB__(ArcTs.HP_MP, flags, pPos, cPos));            
+        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hW_mW_hP_mP, flags, hWord, mWord, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mW_hP_mP, flags, mWord, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_mP, flags, hWord, mWord, mPos));
+        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hW_hP_mP, flags, hWord, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_hP, flags, hWord, mWord, hPos));
+        addFeat(feats, mod, encodeFeatureSS__(ArcTs.hW_mW, flags, hWord, mWord));
+        addFeat(feats, mod, encodeFeatureBB__(ArcTs.hP_mP, flags, hPos, mPos));            
         
         if (!basicOnly) {
             //    # Surrounding Word POS Features
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_rHP_lMP_MP, flags, pPos, rpPos, lcPos, cPos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHP_HP_lMP_MP, flags, lpPos, pPos, lcPos, cPos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HP_rHP_MP_rMP, flags, pPos, rpPos, cPos, rcPos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHP_HP_MP_rMP, flags, lpPos, pPos, cPos, rcPos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_rhP_lmP_mP, flags, hPos, rhPos, lmPos, mPos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhP_hP_lmP_mP, flags, lhPos, hPos, lmPos, mPos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_rhP_mP_rmP, flags, hPos, rhPos, mPos, rmPos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhP_hP_mP_rmP, flags, lhPos, hPos, mPos, rmPos));
             
             //    # Backed-off versions of Surrounding Word POS Features
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lHP_HP_MP, flags, lpPos, pPos, cPos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_lMP_MP, flags, pPos, lcPos, cPos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_MP_rMP, flags, pPos, cPos, rcPos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HP_rHP_MP, flags, pPos, rpPos, cPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lhP_hP_mP, flags, lhPos, hPos, mPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_lmP_mP, flags, hPos, lmPos, mPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP_rmP, flags, hPos, mPos, rmPos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_rhP_mP, flags, hPos, rhPos, mPos));
             
             //    # In Between POS Features
-            int leftTok  = (p < c) ? p : c;
-            int rightTok = (p > c) ? p : c;
+            int leftTok  = (head < modifier) ? head : modifier;
+            int rightTok = (head > modifier) ? head : modifier;
             byte[] btwnPos = new byte[distance+1];
             int j = 0;
             for (int i=leftTok; i<=rightTok; i++) {
@@ -921,80 +930,80 @@ public class BitshiftDepParseFeatures {
             ByteSort.sortAsc(btwnPos);
             for (int i=0; i<btwnPos.length; i++) {
                 if (i == 0 || btwnPos[i] != btwnPos[i-1]) {
-                    addFeat(feats, mod, encodeFeatureBBB_(ArcTs.BTWNP_HP_MP, flags, btwnPos[i], pPos, cPos));
+                    addFeat(feats, mod, encodeFeatureBBB_(ArcTs.btwnP_hP_mP, flags, btwnPos[i], hPos, mPos));
                 }
             }
             
             //    # These features are added for both the entire words as well as the
             //    # 5-gram prefix if the word is longer than 5 characters.
-            if (pPrefixFeats) {
-                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW5_HP_MP, flags, pPrefix, pPos, cPos));
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW5_HP, flags, pPrefix, pPos));
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.HW5, flags, pPrefix));
+            if (hPrefixFeats) {
+                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hW5_hP_mP, flags, hPrefix, hPos, mPos));
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW5_hP, flags, hPrefix, hPos));
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.hW5, flags, hPrefix));
             }
-            if (cPrefixFeats) {
-                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MW5_HP_MP, flags, cPrefix, pPos, cPos));
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW5_MP, flags, cPrefix, cPos));
-                addFeat(feats, mod, encodeFeatureS___(ArcTs.MW5, flags, cPrefix));
+            if (mPrefixFeats) {
+                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mW5_hP_mP, flags, mPrefix, hPos, mPos));
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW5_mP, flags, mPrefix, mPos));
+                addFeat(feats, mod, encodeFeatureS___(ArcTs.mW5, flags, mPrefix));
             }
-            if (pPrefixFeats || cPrefixFeats) {
-                addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW5_MW5_HP_MP, flags, pPrefix, cPrefix, pPos, cPos));
-                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW5_MW5_MP, flags, pPrefix, cPrefix, cPos));
-                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW5_MW5_HP, flags, pPrefix, cPrefix, pPos));
-                addFeat(feats, mod, encodeFeatureSS__(ArcTs.HW5_MW5, flags, pPrefix, cPrefix));
+            if (hPrefixFeats || mPrefixFeats) {
+                addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hW5_mW5_hP_mP, flags, hPrefix, mPrefix, hPos, mPos));
+                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW5_mW5_mP, flags, hPrefix, mPrefix, mPos));
+                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW5_mW5_hP, flags, hPrefix, mPrefix, hPos));
+                addFeat(feats, mod, encodeFeatureSS__(ArcTs.hW5_mW5, flags, hPrefix, mPrefix));
             }
         }
     }
     
     /** Coarse POS tag versions of the MST features. */
-    private static void extractMstFeaturesWithCpos(IntAnnoSentence sent, int p, int c, FeatureVector feats,
-            boolean basicOnly, short pWord, short cWord, byte pPos_NOTUSED, byte cPos_NOTUSED, short pPrefix,
-            short cPrefix, boolean pPrefixFeats, boolean cPrefixFeats, byte lpPos_NOTUSED, byte lcPos_NOTUSED, 
-            byte rpPos_NOTUSED, byte rcPos_NOTUSED,
+    private static void extractMstFeaturesWithCpos(IntAnnoSentence sent, int head, int modifier, FeatureVector feats,
+            boolean basicOnly, short hWord, short mWord, byte hPos_NOTUSED, byte mPos_NOTUSED, short hPrefix,
+            short mPrefix, boolean hPrefixFeats, boolean mPrefixFeats, byte lhPos_NOTUSED, byte lmPos_NOTUSED, 
+            byte rhPos_NOTUSED, byte rmPos_NOTUSED,
             int distance, byte binnedDist, byte direction, byte mode, byte flags, int mod) {
-        byte pCpos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
-        byte cCpos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
+        byte hCpos = (head < 0) ? TOK_WALL_INT : sent.getCposTag(head);
+        byte mCpos = (modifier < 0) ? TOK_WALL_INT : sent.getCposTag(modifier);
 
         // Surrounding words / POS tags. 
         int sentLen = sent.size();
-        byte lpCpos = (p-1 < 0) ? TOK_START_INT : sent.getCposTag(p-1);
-        byte lcCpos = (c-1 < 0) ? TOK_START_INT : sent.getCposTag(c-1);
-        byte rpCpos = (p+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(p+1);
-        byte rcCpos = (c+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(c+1);
+        byte lhCpos = (head-1 < 0) ? TOK_START_INT : sent.getCposTag(head-1);
+        byte lmCpos = (modifier-1 < 0) ? TOK_START_INT : sent.getCposTag(modifier-1);
+        byte rhCpos = (head+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(head+1);
+        byte rmCpos = (modifier+1 >= sentLen) ? TOK_END_INT : sent.getCposTag(modifier+1);
         
         //    # Basic Unigram Features
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW_HQ, flags, pWord, pCpos));
-        // word only: addFeat(feats, encodeFeatureS___(ArcTs.HW, flags, pWord));
-        addFeat(feats, mod, encodeFeatureB___(ArcTs.HQ, flags, pCpos));
-        addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW_MQ, flags, cWord, cCpos));
-        // word only: addFeat(feats, encodeFeatureS___(ArcTs.MW, flags, cWord));
-        addFeat(feats, mod, encodeFeatureB___(ArcTs.MQ, flags, cCpos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_hC, flags, hWord, hCpos));
+        // word only: addFeat(feats, encodeFeatureS___(ArcTs.hW, flags, hWord));
+        addFeat(feats, mod, encodeFeatureB___(ArcTs.hC, flags, hCpos));
+        addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_mC, flags, mWord, mCpos));
+        // word only: addFeat(feats, encodeFeatureS___(ArcTs.mW, flags, mWord));
+        addFeat(feats, mod, encodeFeatureB___(ArcTs.mC, flags, mCpos));
         
         //    # Basic Bigram Features
-        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW_MW_HQ_MQ, flags, pWord, cWord, pCpos, cCpos));
-        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MW_HQ_MQ, flags, cWord, pCpos, cCpos));
-        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_MQ, flags, pWord, cWord, cCpos));
-        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW_HQ_MQ, flags, pWord, pCpos, cCpos));
-        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW_MW_HQ, flags, pWord, cWord, pCpos));
-        // word only: addFeat(feats, encodeFeatureSS__(ArcTs.HW_MW, flags, pWord, cWord));
-        addFeat(feats, mod, encodeFeatureBB__(ArcTs.HQ_MQ, flags, pCpos, cCpos));            
+        addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hW_mW_hC_mC, flags, hWord, mWord, hCpos, mCpos));
+        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mW_hC_mC, flags, mWord, hCpos, mCpos));
+        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_mC, flags, hWord, mWord, mCpos));
+        addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hW_hC_mC, flags, hWord, hCpos, mCpos));
+        addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_hC, flags, hWord, mWord, hCpos));
+        // word only: addFeat(feats, encodeFeatureSS__(ArcTs.hW_mW, flags, hWord, mWord));
+        addFeat(feats, mod, encodeFeatureBB__(ArcTs.hC_mC, flags, hCpos, mCpos));            
         
         if (!basicOnly) {            
             //    # Surrounding Word POS Features
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HQ_rHQ_lMQ_MQ, flags, pCpos, rpCpos, lcCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHQ_HQ_lMQ_MQ, flags, lpCpos, pCpos, lcCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.HQ_rHQ_MQ_rMQ, flags, pCpos, rpCpos, cCpos, rcCpos));
-            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lHQ_HQ_MQ_rMQ, flags, lpCpos, pCpos, cCpos, rcCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_rhC_lmC_mC, flags, hCpos, rhCpos, lmCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhC_hC_lmC_mC, flags, lhCpos, hCpos, lmCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_rhC_mC_rmC, flags, hCpos, rhCpos, mCpos, rmCpos));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.lhC_hC_mC_rmC, flags, lhCpos, hCpos, mCpos, rmCpos));
             
             //    # Backed-off versions of Surrounding Word POS Features
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lHQ_HQ_MQ, flags, lpCpos, pCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_lMQ_MQ, flags, pCpos, lcCpos, cCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_MQ_rMQ, flags, pCpos, cCpos, rcCpos));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.HQ_rHQ_MQ, flags, pCpos, rpCpos, cCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.lhC_hC_mC, flags, lhCpos, hCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_lmC_mC, flags, hCpos, lmCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC_rmC, flags, hCpos, mCpos, rmCpos));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_rhC_mC, flags, hCpos, rhCpos, mCpos));
             
             //    # In Between POS Features
-            int leftTok  = (p < c) ? p : c;
-            int rightTok = (p > c) ? p : c;
+            int leftTok  = (head < modifier) ? head : modifier;
+            int rightTok = (head > modifier) ? head : modifier;
             // TODO: Switch to bytes.
             short[] btwnPos = new short[distance+1];
             int j = 0;
@@ -1004,27 +1013,27 @@ public class BitshiftDepParseFeatures {
             ShortSort.sortAsc(btwnPos);
             for (int i=0; i<btwnPos.length; i++) {
                 if (i == 0 || btwnPos[i] != btwnPos[i-1]) {
-                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.BTWNP_HQ_MQ, flags, btwnPos[i], pCpos, cCpos));
+                    addFeat(feats, mod, encodeFeatureSBB_(ArcTs.btwnP_hC_mC, flags, btwnPos[i], hCpos, mCpos));
                 }
             }
             
             //    # These features are added for both the entire words as well as the
             //    # 5-gram prefix if the word is longer than 5 characters.
-            if (pPrefixFeats) {
-                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.HW5_HQ_MQ, flags, pPrefix, pCpos, cCpos));
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.HW5_HQ, flags, pPrefix, pCpos));
-                // word only: addFeat(feats, encodeFeatureS___(ArcTs.HW5, flags, pPrefix));
+            if (hPrefixFeats) {
+                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.hW5_hC_mC, flags, hPrefix, hCpos, mCpos));
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW5_hC, flags, hPrefix, hCpos));
+                // word only: addFeat(feats, encodeFeatureS___(ArcTs.hW5, flags, hPrefix));
             }
-            if (cPrefixFeats) {
-                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.MW5_HQ_MQ, flags, cPrefix, pCpos, cCpos));
-                addFeat(feats, mod, encodeFeatureSB__(ArcTs.MW5_MQ, flags, cPrefix, cCpos));
-                // word only: addFeat(feats, encodeFeatureS___(ArcTs.MW5, flags, cPrefix));
+            if (mPrefixFeats) {
+                addFeat(feats, mod, encodeFeatureSBB_(ArcTs.mW5_hC_mC, flags, mPrefix, hCpos, mCpos));
+                addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW5_mC, flags, mPrefix, mCpos));
+                // word only: addFeat(feats, encodeFeatureS___(ArcTs.mW5, flags, mPrefix));
             }
-            if (pPrefixFeats || cPrefixFeats) {
-                addFeat(feats, mod, encodeFeatureSSBB(ArcTs.HW5_MW5_HQ_MQ, flags, pPrefix, cPrefix, pCpos, cCpos));
-                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW5_MW5_MQ, flags, pPrefix, cPrefix, cCpos));
-                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.HW5_MW5_HQ, flags, pPrefix, cPrefix, pCpos));
-                // word only: addFeat(feats, encodeFeatureSS__(ArcTs.HW5_MW5, flags, pPrefix, cPrefix));
+            if (hPrefixFeats || mPrefixFeats) {
+                addFeat(feats, mod, encodeFeatureSSBB(ArcTs.hW5_mW5_hC_mC, flags, hPrefix, mPrefix, hCpos, mCpos));
+                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW5_mW5_mC, flags, hPrefix, mPrefix, mCpos));
+                addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW5_mW5_hC, flags, hPrefix, mPrefix, hCpos));
+                // word only: addFeat(feats, encodeFeatureSS__(ArcTs.hW5_mW5, flags, hPrefix, mPrefix));
             }
         }
     }
@@ -1033,32 +1042,32 @@ public class BitshiftDepParseFeatures {
      * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int p, int c, int s, int mod, FeatureVector feats) {
+    public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling, int mod, FeatureVector feats) {
         // Direction flags.
         // Parent-child relationship.
-        byte direction_pc = (p < c) ? (byte) 0 : (byte) 1;
+        byte direction_pc = (head < modifier) ? (byte) 0 : (byte) 1;
         // Parent-sibling relationship.
-        byte direction_ps = (p < s) ? (byte) 0 : (byte) 1;
+        byte direction_ps = (head < sibling) ? (byte) 0 : (byte) 1;
         
         byte flags = FeatureCollection.SIBLING; // 4 bits.
         flags |= direction_pc << 4; // 1 bit.
         flags |= direction_ps << 5; // 1 bit.
         
-        addTripletFeatures(sent, p, c, s, feats, flags, mod);
+        addTripletFeatures(sent, head, modifier, sibling, feats, flags, mod);
     }
     
     /**
      * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int g, int p, int c, FeatureVector feats, int mod) {
+    public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int grandparent, int head, int modifier, FeatureVector feats, int mod) {
         // Direction flags.
         // Parent-grandparent relationship.
-        byte direction_gp = (g < p) ? (byte) 0 : (byte) 1;
+        byte direction_gp = (grandparent < head) ? (byte) 0 : (byte) 1;
         // Parent-child relationship.
-        byte direction_pc = (p < c) ? (byte) 0 : (byte) 1;
+        byte direction_pc = (head < modifier) ? (byte) 0 : (byte) 1;
         // Grandparent-child relationship.
-        byte direction_gc = (g < c) ? (byte) 0 : (byte) 1;
+        byte direction_gc = (grandparent < modifier) ? (byte) 0 : (byte) 1;
                
         // Use the direction code from Martins' TurboParser.
         byte direction;
@@ -1076,38 +1085,38 @@ public class BitshiftDepParseFeatures {
         byte flags = FeatureCollection.GRANDPARENT; // 4 bits.
         flags |= direction << 4; // 2 bits.
         
-        addTripletFeatures(sent, g, p, c, feats, flags, mod);
+        addTripletFeatures(sent, grandparent, head, modifier, feats, flags, mod);
     }
 
     // Extra triplets are from TurboParser and can be beneficial because of the flags with which they are conjoined.
     public static final boolean extraTriplets = false;
     
     /** Can be used for either sibling or grandparent features. */
-    private static void addTripletFeatures(IntAnnoSentence sent, int p, int c, int s, FeatureVector feats, byte flags, int mod) {
+    private static void addTripletFeatures(IntAnnoSentence sent, int head, int modifier, int sibling, FeatureVector feats, byte flags, int mod) {
         // Head, modifier, and sibling words / POS tags. We denote the head by p (for parent), the modifier
         // by c (for child), and the sibling by s.
-        short pWord = (p < 0) ? TOK_WALL_INT : sent.getWord(p);
-        short cWord = (c < 0) ? TOK_WALL_INT : sent.getWord(c);
-        short sWord = (s < 0) ? TOK_WALL_INT : sent.getWord(s);
+        short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
+        short mWord = (modifier < 0) ? TOK_WALL_INT : sent.getWord(modifier);
+        short sWord = (sibling < 0) ? TOK_WALL_INT : sent.getWord(sibling);
         // Use coarse POS tags.
-        byte pCpos = (p < 0) ? TOK_WALL_INT : sent.getCposTag(p);
-        byte cCpos = (c < 0) ? TOK_WALL_INT : sent.getCposTag(c);
-        byte sCpos = (s < 0) ? TOK_WALL_INT : sent.getCposTag(s);
+        byte hCpos = (head < 0) ? TOK_WALL_INT : sent.getCposTag(head);
+        byte mCpos = (modifier < 0) ? TOK_WALL_INT : sent.getCposTag(modifier);
+        byte sCpos = (sibling < 0) ? TOK_WALL_INT : sent.getCposTag(sibling);
                 
         // --- Triplet features. ----
         
         //    cpos(p) + cpos(c) + cpos(s)
-        addFeat(feats, mod, encodeFeatureBBB_(TriTs.HQ_MQ_SQ, flags, pCpos, cCpos, sCpos));
+        addFeat(feats, mod, encodeFeatureBBB_(TriTs.hC_mC_sQ, flags, hCpos, mCpos, sCpos));
 
         // --- Pairwise features. ----
         
         //    cpos(p) + cpos(s)
         //    cpos(c) + cpos(s)
         //    cpos(p) + cpos(c) << Not in Carreras. From TurboParser.
-        addFeat(feats, mod, encodeFeatureBB__(TriTs.HQ_SQ, flags, pCpos, sCpos));
-        addFeat(feats, mod, encodeFeatureBB__(TriTs.MQ_SQ, flags, cCpos, sCpos));
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_sQ, flags, hCpos, sCpos));
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.mC_sQ, flags, mCpos, sCpos));
         if (extraTriplets) {
-            addFeat(feats, mod, encodeFeatureBB__(TriTs.HQ_MQ, flags, pCpos, cCpos));
+            addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_mC, flags, hCpos, mCpos));
         }
 
         //    cpos(p) + word(s)
@@ -1116,22 +1125,22 @@ public class BitshiftDepParseFeatures {
         //    word(c) + cpos(s)
         //    word(p) + cpos(c) << Not in Carreras. From TurboParser.
         //    word(c) + cpos(p) << Not in Carreras. From TurboParser.
-        addFeat(feats, mod, encodeFeatureSB__(TriTs.SW_HQ, flags, sWord, pCpos));
-        addFeat(feats, mod, encodeFeatureSB__(TriTs.SW_MQ, flags, sWord, cCpos));
-        addFeat(feats, mod, encodeFeatureSB__(TriTs.HW_SQ, flags, pWord, sCpos));
-        addFeat(feats, mod, encodeFeatureSB__(TriTs.MW_SQ, flags, cWord, sCpos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_hC, flags, sWord, hCpos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_mC, flags, sWord, mCpos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_sQ, flags, hWord, sCpos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_sQ, flags, mWord, sCpos));
         if (extraTriplets) {
-            addFeat(feats, mod, encodeFeatureSB__(TriTs.MW_HQ, flags, cWord, pCpos));
-            addFeat(feats, mod, encodeFeatureSB__(TriTs.HW_MQ, flags, pWord, cCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_hC, flags, mWord, hCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_mC, flags, hWord, mCpos));
         }
 
         //    word(p) + word(s)
         //    word(c) + word(s)
         //    word(p) + word(c) << Not in Carreras. From TurboParser.
-        addFeat(feats, mod, encodeFeatureSS__(TriTs.HW_SW, flags, pWord, sWord));
-        addFeat(feats, mod, encodeFeatureSS__(TriTs.MW_SW, flags, cWord, sWord));
+        addFeat(feats, mod, encodeFeatureSS__(TriTs.hW_sW, flags, hWord, sWord));
+        addFeat(feats, mod, encodeFeatureSS__(TriTs.mW_sW, flags, mWord, sWord));
         if (extraTriplets) {
-            addFeat(feats, mod, encodeFeatureSS__(TriTs.HW_MW, flags, pWord, cWord));
+            addFeat(feats, mod, encodeFeatureSS__(TriTs.hW_mW, flags, hWord, mWord));
         }
     }
 
@@ -1147,59 +1156,59 @@ public class BitshiftDepParseFeatures {
     private static final long SHORT_MAX = 0xffff;
     private static final long INT_MAX =   0xffffffff;
 
-    private static long encodeFeatureS___(byte template, byte flags, short pWord) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pWord & SHORT_MAX) << 16);
+    private static long encodeFeatureS___(byte template, byte flags, short s1) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16);
     }
     
-    private static long encodeFeatureB___(byte template, byte flags, byte pPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pPos & BYTE_MAX) << 16);
+    private static long encodeFeatureB___(byte template, byte flags, byte b1) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & BYTE_MAX) << 16);
     }
     
-    private static long encodeFeatureSB__(byte template, byte flags, short pWord, byte pPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pWord & SHORT_MAX) << 16) | ((pPos & BYTE_MAX) << 32);
+    private static long encodeFeatureSB__(byte template, byte flags, short s1, byte b2) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) | ((b2 & BYTE_MAX) << 32);
     }
 
-    private static long encodeFeatureSS__(byte template, byte flags, short pWord, short cWord) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pWord & SHORT_MAX) << 16) | ((cWord & SHORT_MAX) << 32);
+    private static long encodeFeatureSS__(byte template, byte flags, short s1, short s2) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) | ((s2 & SHORT_MAX) << 32);
     }
 
-    private static long encodeFeatureBB__(byte template, byte flags, byte pPos, byte cPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pPos & SHORT_MAX) << 16) | ((cPos & SHORT_MAX) << 24);
+    private static long encodeFeatureBB__(byte template, byte flags, byte b1, byte b2) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & SHORT_MAX) << 16) | ((b2 & SHORT_MAX) << 24);
     }
 
-    private static long encodeFeatureSSB_(byte template, byte flags, short pWord, short cWord, byte pPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pWord & SHORT_MAX) << 16) | ((cWord & SHORT_MAX) << 32)
-                | ((pPos & BYTE_MAX) << 48);
+    private static long encodeFeatureSSB_(byte template, byte flags, short s1, short s2, byte b3) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) | ((s2 & SHORT_MAX) << 32)
+                | ((b3 & BYTE_MAX) << 48);
     }
 
-    private static long encodeFeatureSBB_(byte template, byte flags, short pWord, byte pPos, byte cPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pWord & SHORT_MAX) << 16) 
-                | ((pPos & BYTE_MAX) << 32) | ((cPos & BYTE_MAX) << 40);
+    private static long encodeFeatureSBB_(byte template, byte flags, short s1, byte b2, byte b3) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) 
+                | ((b2 & BYTE_MAX) << 32) | ((b3 & BYTE_MAX) << 40);
     }
     
-    private static long encodeFeatureSSBB(byte template, byte flags, short pWord, short cWord, byte pPos, byte cPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pWord & SHORT_MAX) << 16) | ((cWord & SHORT_MAX) << 32)
-                | ((pPos & BYTE_MAX) << 48) | ((cPos & BYTE_MAX) << 56);
+    private static long encodeFeatureSSBB(byte template, byte flags, short s1, short s2, byte b3, byte b4) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) | ((s2 & SHORT_MAX) << 32)
+                | ((b3 & BYTE_MAX) << 48) | ((b4 & BYTE_MAX) << 56); // Full.
     }
 
-    private static long encodeFeatureBBB_(byte template, byte flags, byte pPos, byte lpPos, byte rcPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pPos & BYTE_MAX) << 16) | ((lpPos & BYTE_MAX) << 24)
-                | ((rcPos & BYTE_MAX) << 32);
+    private static long encodeFeatureBBB_(byte template, byte flags, byte b1, byte b2, byte b3) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & BYTE_MAX) << 16) | ((b2 & BYTE_MAX) << 24)
+                | ((b3 & BYTE_MAX) << 32);
     }
     
-    private static long encodeFeatureBBBB(byte template, byte flags, byte pPos, byte lpPos, byte rcPos, byte cPos) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pPos & BYTE_MAX) << 16) | ((lpPos & BYTE_MAX) << 24)
-                | ((rcPos & BYTE_MAX) << 32) | ((cPos & BYTE_MAX) << 40);
+    private static long encodeFeatureBBBB(byte template, byte flags, byte b1, byte b2, byte b3, byte b4) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & BYTE_MAX) << 16) | ((b2 & BYTE_MAX) << 24)
+                | ((b3 & BYTE_MAX) << 32) | ((b4 & BYTE_MAX) << 40);
     }
     
-    private static long encodeFeatureBBBBB(byte template, byte flags, byte pos1, byte pos2, byte pos3, byte pos4, byte pos5) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pos1 & BYTE_MAX) << 16) | ((pos2 & BYTE_MAX) << 24)
-                | ((pos3 & BYTE_MAX) << 32) | ((pos4 & BYTE_MAX) << 40) | ((pos5 & BYTE_MAX) << 48);
+    private static long encodeFeatureBBBBB(byte template, byte flags, byte b1, byte b2, byte b3, byte b4, byte b5) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & BYTE_MAX) << 16) | ((b2 & BYTE_MAX) << 24)
+                | ((b3 & BYTE_MAX) << 32) | ((b4 & BYTE_MAX) << 40) | ((b5 & BYTE_MAX) << 48);
     }
     
-    private static long encodeFeatureBBBBBB(byte template, byte flags, byte pos1, byte pos2, byte pos3, byte pos4, byte pos5, byte pos6) {
-        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((pos1 & BYTE_MAX) << 16) | ((pos2 & BYTE_MAX) << 24)
-                | ((pos3 & BYTE_MAX) << 32) | ((pos4 & BYTE_MAX) << 40) | ((pos5 & BYTE_MAX) << 48) | ((pos6 & BYTE_MAX) << 56);
+    private static long encodeFeatureBBBBBB(byte template, byte flags, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & BYTE_MAX) << 16) | ((b2 & BYTE_MAX) << 24)
+                | ((b3 & BYTE_MAX) << 32) | ((b4 & BYTE_MAX) << 40) | ((b5 & BYTE_MAX) << 48) | ((b6 & BYTE_MAX) << 56); // Full.
     }
     
 }
