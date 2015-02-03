@@ -25,7 +25,7 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
 
     public static class BitshiftDepParseFeatureExtractorPrm extends Prm {
         private static final long serialVersionUID = 1L;
-        public int featureHashMod = -1;
+        public int featureHashMod = 10000000;
         @Opt(description = "Whether to use MST style word-pair features")
         public boolean useMstFeats = true;
         @Opt(description = "Whether to use coarse POS tag features (TurboParser and MST features)")
@@ -41,6 +41,16 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         public boolean useMorphologicalFeatures = true;
         @Opt(description = "Whether to use extra features (TurboParser style only)")
         public boolean useNonTurboFeats = false;
+        @Opt(description = "Whether to use word-pair features for 2nd-order features (TurboParser style only)")
+        public boolean usePairFor2ndOrder = true;
+        @Opt(description = "Whether to use word-pair features for arbitrary sibling features (TurboParser style only)")
+        public boolean usePairFor2ndOrderArbiSibl = false;
+        @Opt(description = "Whether to use word-pair features for the grandparent and head (TurboParser style only)")
+        public boolean useUpperGrandDepFeats = false;
+        @Opt(description = "Whether to use word-pair features for the head and modifier when non-projective in grandparent feats (TurboParser style only)")
+        public boolean useNonprojGrandDepFeats = false;
+        @Opt(description = "Whether to use trilexical features (TurboParser style only)")
+        public boolean useTrilexicalFeats = false;
     }
     
     private static final Logger log = LoggerFactory.getLogger(BitshiftDepParseFeatureExtractor.class);     
@@ -96,10 +106,10 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
             BitshiftDepParseFeatures.addArcFeats(isent, p, c, prm, feats);
         } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
             SibFeTypedFactor f2 = (SibFeTypedFactor)f;
-            BitshiftDepParseFeatures.add2ndOrderSiblingFeats(isent, f2.p, f2.c, f2.s, prm.featureHashMod, feats);
+            BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, f2.p, f2.c, f2.s, feats, prm.featureHashMod);
         } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT) {
             GraFeTypedFactor f2 = (GraFeTypedFactor)f;
-            BitshiftDepParseFeatures.add2ndOrderGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm.featureHashMod);
+            BitshiftDepParseFeatures.addCarerrasGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm.featureHashMod);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

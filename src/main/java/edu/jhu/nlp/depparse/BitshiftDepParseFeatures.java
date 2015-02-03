@@ -30,8 +30,10 @@ public class BitshiftDepParseFeatures {
      * @author mgormley
      */
     public static class FeatureCollection {
+        
         public static int MAX_VAL = 0xf; // 4 bits
         private static int templ = 0;
+
         protected static byte next() {
             byte b = SafeCast.safeIntToUnsignedByte(templ++);
             if (b > MAX_VAL) { 
@@ -39,12 +41,22 @@ public class BitshiftDepParseFeatures {
             }
             return b;
         }
-        public static final byte ARC = next();
-        public static final byte SIBLING = next();
-        public static final byte GRANDPARENT = next();
+        
         public static boolean isValid(byte type) {
             return (0 <= type && type <= MAX_VAL);
         }
+        
+        public static final byte ARC = next();
+        public static final byte SIBLING = next();
+        public static final byte GRANDPARENT = next();
+        public static final byte CONS_SIBL = next();
+        public static final byte ARBI_SIBL = next();
+        public static final byte CONS_SIBL_M_S = next();
+        public static final byte ARBI_SIBL_M_S = next();
+        public static final byte GRANDPARENT_G_H = next();
+        public static final byte GRANDPARENT_G_M = next();
+        public static final byte GRANDPARENT_NONPROJ_H_M = next();
+                
     }
     
     /** 
@@ -66,11 +78,14 @@ public class BitshiftDepParseFeatures {
      * F := morphological feature
      * W5 := prefix of length 5
      */
-    private static class ArcTs {
+    static class ArcTs {
+        
         private static int templ = 0;
+
         protected static byte next() {
             return SafeCast.safeIntToUnsignedByte(templ++);
         }
+        
         // McDonald et al. (2005) features templates.
         public static final byte hW = next();
         public static final byte mW = next();
@@ -250,19 +265,44 @@ public class BitshiftDepParseFeatures {
             return SafeCast.safeIntToUnsignedByte(templ++);
         }
         // Carreras et al. (2007) templates.
-        public static final byte hC_mC_sQ = next();
-        public static final byte hC_sQ = next();
-        public static final byte mC_sQ = next();
+        public static final byte BIAS = next();
+        public static final byte hC_mC_sC = next();
+        public static final byte hC_sC = next();
+        public static final byte mC_sC = next();
         public static final byte hC_mC = next();
         public static final byte sW_hC = next();
         public static final byte sW_mC = next();
-        public static final byte hW_sQ = next();
-        public static final byte mW_sQ = next();
+        public static final byte hW_sC = next();
+        public static final byte mW_sC = next();
         public static final byte mW_hC = next();
         public static final byte hW_mC = next();
         public static final byte hW_sW = next();
         public static final byte mW_sW = next();
         public static final byte hW_mW = next();
+        // Extra templates for Martins et al. (2013) templates.
+        public static final byte hP_mP_sP = next();
+        public static final byte hW_mP_sP = next();
+        public static final byte hP_mW_sP = next();
+        public static final byte hP_mP_sW = next();
+        public static final byte hW_mW_sP = next();
+        public static final byte hW_mP_sW= next();
+        public static final byte hP_mW_sW= next();
+        public static final byte hW_mW_sW= next();
+        public static final byte hP_mP= next();
+        public static final byte hP_sP= next();
+        public static final byte mP_sP= next();
+        public static final byte hW_sP= next();
+        public static final byte hW_mP= next();
+        public static final byte mW_sP= next();
+        public static final byte mW_hP= next();
+        public static final byte sW_hP= next();
+        public static final byte sW_mP= next();
+        public static final byte hW_mC_sC= next();
+        public static final byte hC_mW_sC= next();
+        public static final byte hC_mC_sW= next();
+        public static final byte hW_mW_sC= next();
+        public static final byte hW_mC_sW= next();
+        public static final byte hC_mW_sW= next();
     }
 
     /** Returns the bin into which the given size falls. */
@@ -284,24 +324,18 @@ public class BitshiftDepParseFeatures {
         if (prm.useMstFeats) {
             BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, head, modifier, FeatureCollection.ARC, feats, false, prm.useCoarseTags, prm.featureHashMod);
         } else {
-            BitshiftDepParseFeatures.addTurboWordPairFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm.featureHashMod, 
-                    prm.maxTokenContext, prm.isLabeledParsing, prm.useNonTurboFeats, prm.useLemmaFeats, prm.useMorphologicalFeatures, 
-                    prm.useCoarseTags);
+            BitshiftDepParseFeatures.addTurboWordPairFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm);
         }
     }
     
-    public static void addTurboSiblingFeats(final IntAnnoSentence sent, final int head, final int modifier, final int sibling, 
-            final boolean consecutive, 
-            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {        
-        int sentLen = sent.size();
-        // We encode the first child by setting the child to the same value as the parent.
-        boolean isFirstChild = consecutive && (head == modifier);
-        // We encode the last child by setting the sibling to -1.
-        boolean isLastChild = consecutive && (sibling == sentLen || sibling <= 0);
-        
-        
+
+    /** Wrapper of {@link #addTurboWordPairFeats(IntAnnoSentence, int, int, byte, FeatureVector, int, int, boolean, boolean, boolean, boolean, boolean)}. */
+    public static void addTurboWordPairFeats(final IntAnnoSentence sent, final int head, final int modifier, final byte pairType, 
+            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        addTurboWordPairFeats(sent, head, modifier, pairType, feats, prm.featureHashMod, 
+                prm.maxTokenContext, prm.isLabeledParsing, prm.useNonTurboFeats, prm.useLemmaFeats, prm.useMorphologicalFeatures, 
+                prm.useCoarseTags);
     }
-    
     
     /**
      * Word pair features from Martins et al. (2013) "Turning on the Turbo...". This feature set
@@ -362,8 +396,7 @@ public class BitshiftDepParseFeatures {
         byte puncsBetweenCode = SafeCast.safeIntToUnsignedByte(0x1 | (numPuncsBetween << 4));
         byte conjsBetweenCode = SafeCast.safeIntToUnsignedByte(0x2 | (numConjsBetween << 4));
         
-        // Head and modifier words / POS tags. We denote the head by p (for parent) and the modifier
-        // by c (for child).
+        // Head (h) and modifier (m) words/tags/lemmas.
         short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
         short mWord = (modifier < 0) ? TOK_WALL_INT : sent.getWord(modifier);
         byte hPos = (head < 0) ? TOK_WALL_INT : sent.getPosTag(head);
@@ -420,6 +453,9 @@ public class BitshiftDepParseFeatures {
         byte flags = pairType; // 4 bits.
         flags |= (direction << 4); // 1 more bit.
 
+        // --------------------------------------------------------------------
+        // Bias Feature.
+        // --------------------------------------------------------------------        
         addFeat(feats, mod, encodeFeatureB___(ArcTs.BIAS, flags, (byte)0));
 
         // --------------------------------------------------------------------
@@ -735,13 +771,16 @@ public class BitshiftDepParseFeatures {
         // Add features for each applicable bin.
         for (byte bin = 0; bin <= binDistCode; bin++) {
             addFeat(feats, mod, encodeFeatureB___(ArcTs.BIN_DIST, flags, bin));
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.hP, flags, hPos, bin));
-            addFeat(feats, mod, encodeFeatureBB__(ArcTs.mP, flags, mPos, bin));
-            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP_mP, flags, hPos, mPos, bin));  
+            // NOTE: It looks like TurboParser's approach to these flags actually leads to
+            // collisions with the non-binned-distance uses of these templates. The extra 0x1 flag
+            // ensures we avoid them.
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hP, flags, hPos, bin, (byte) 0x1));
+            addFeat(feats, mod, encodeFeatureBBB_(ArcTs.mP, flags, mPos, bin, (byte)0x1));
+            addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hP_mP, flags, hPos, mPos, bin, (byte)0x1));  
             if (useCoarseTags) {
-                addFeat(feats, mod, encodeFeatureBB__(ArcTs.hC, flags, hCpos, bin));
-                addFeat(feats, mod, encodeFeatureBB__(ArcTs.mC, flags, mCpos, bin));
-                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC_mC, flags, hCpos, mCpos, bin));                  
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.hC, flags, hCpos, bin, (byte)0x1));
+                addFeat(feats, mod, encodeFeatureBBB_(ArcTs.mC, flags, mCpos, bin, (byte)0x1));
+                addFeat(feats, mod, encodeFeatureBBBB(ArcTs.hC_mC, flags, hCpos, mCpos, bin, (byte)0x1));                  
             }
         }
 
@@ -1039,10 +1078,10 @@ public class BitshiftDepParseFeatures {
     }
     
     /**
-     * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
+     * This is similar to the 2nd order features from Carerras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void add2ndOrderSiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling, int mod, FeatureVector feats) {
+    public static void addCarerrasSiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling, FeatureVector feats, int mod) {
         // Direction flags.
         // Parent-child relationship.
         byte direction_pc = (head < modifier) ? (byte) 0 : (byte) 1;
@@ -1057,10 +1096,18 @@ public class BitshiftDepParseFeatures {
     }
     
     /**
-     * This is similar to the 2nd order features from Cararras et al. (2007), but incorporates some
+     * This is similar to the 2nd order features from Carerras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void add2ndOrderGrandparentFeats(IntAnnoSentence sent, int grandparent, int head, int modifier, FeatureVector feats, int mod) {
+    public static void addCarerrasGrandparentFeats(IntAnnoSentence sent, int grandparent, int head, int modifier, FeatureVector feats, int mod) {
+        byte direction = getGrandparentDirectionCode(grandparent, head, modifier);        
+        byte flags = FeatureCollection.GRANDPARENT; // 4 bits.
+        flags |= direction << 4; // 2 bits.        
+        addTripletFeatures(sent, grandparent, head, modifier, feats, flags, mod);
+    }
+
+    /** Gets a 2-bit grandparent direction code. */
+    protected static byte getGrandparentDirectionCode(int grandparent, int head, int modifier) {
         // Direction flags.
         // Parent-grandparent relationship.
         byte direction_gp = (grandparent < head) ? (byte) 0 : (byte) 1;
@@ -1081,11 +1128,7 @@ public class BitshiftDepParseFeatures {
             // Non-projective with c outside range [g, p].
             direction = 2;
         }
-        
-        byte flags = FeatureCollection.GRANDPARENT; // 4 bits.
-        flags |= direction << 4; // 2 bits.
-        
-        addTripletFeatures(sent, grandparent, head, modifier, feats, flags, mod);
+        return direction;
     }
 
     // Extra triplets are from TurboParser and can be beneficial because of the flags with which they are conjoined.
@@ -1104,17 +1147,18 @@ public class BitshiftDepParseFeatures {
         byte sCpos = (sibling < 0) ? TOK_WALL_INT : sent.getCposTag(sibling);
                 
         // --- Triplet features. ----
-        
+        addFeat(feats, mod, encodeFeatureB___(TriTs.BIAS, flags, (byte)0));
+
         //    cpos(p) + cpos(c) + cpos(s)
-        addFeat(feats, mod, encodeFeatureBBB_(TriTs.hC_mC_sQ, flags, hCpos, mCpos, sCpos));
+        addFeat(feats, mod, encodeFeatureBBB_(TriTs.hC_mC_sC, flags, hCpos, mCpos, sCpos));
 
         // --- Pairwise features. ----
         
         //    cpos(p) + cpos(s)
         //    cpos(c) + cpos(s)
         //    cpos(p) + cpos(c) << Not in Carreras. From TurboParser.
-        addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_sQ, flags, hCpos, sCpos));
-        addFeat(feats, mod, encodeFeatureBB__(TriTs.mC_sQ, flags, mCpos, sCpos));
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_sC, flags, hCpos, sCpos));
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.mC_sC, flags, mCpos, sCpos));
         if (extraTriplets) {
             addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_mC, flags, hCpos, mCpos));
         }
@@ -1127,8 +1171,8 @@ public class BitshiftDepParseFeatures {
         //    word(c) + cpos(p) << Not in Carreras. From TurboParser.
         addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_hC, flags, sWord, hCpos));
         addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_mC, flags, sWord, mCpos));
-        addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_sQ, flags, hWord, sCpos));
-        addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_sQ, flags, mWord, sCpos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_sC, flags, hWord, sCpos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_sC, flags, mWord, sCpos));
         if (extraTriplets) {
             addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_hC, flags, mWord, hCpos));
             addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_mC, flags, hWord, mCpos));
@@ -1144,12 +1188,180 @@ public class BitshiftDepParseFeatures {
         }
     }
 
+    /** Adds the features for consecutive siblings from TurboParser (Martins et al., 2013). */
+    public static void addTurboConsecutiveSiblingFeats(final IntAnnoSentence sent, final int head, final int modifier, final int sibling, 
+            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        addTurboSiblingFeats(sent, head, modifier, sibling, feats, prm, true);
+    }
+    
+    /** Adds the features for arbitrary siblings from TurboParser (Martins et al., 2013). */
+    public static void addTurboArbitrarySiblingFeats(final IntAnnoSentence sent, final int head, final int modifier, final int sibling, 
+            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        addTurboSiblingFeats(sent, head, modifier, sibling, feats, prm, false);
+    }
+    
+    /** Can be used for any type of sibling features. */
+    private static void addTurboSiblingFeats(final IntAnnoSentence sent, final int head, final int modifier, final int sibling, 
+            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm, final boolean consecutive) {
+        final int mod = prm.featureHashMod;
+        final boolean useCoarseTags = prm.useCoarseTags;
+        final boolean useTrilexicalFeats = prm.useTrilexicalFeats;
+        final boolean usePairFor2ndOrder = prm.usePairFor2ndOrder;
+        final boolean usePairFor2ndOrderArbiSibl = prm.usePairFor2ndOrderArbiSibl;
+
+        // The sibling is the first child of the head. Encoded by setting the modifier to -1.
+        // UNUSED: boolean isFirstChild = consecutive && modifier < 0;
+        // The modifier is the last child of the head. Encoded by setting the sibling to -1.
+        // UNUSED: boolean isLastChild = consecutive && sibling < 0;
+        
+        if (usePairFor2ndOrder) {
+            byte pairType = consecutive ? FeatureCollection.CONS_SIBL_M_S : FeatureCollection.ARBI_SIBL_M_S;
+            if (consecutive || usePairFor2ndOrderArbiSibl) {
+                addTurboWordPairFeats(sent, modifier, sibling, pairType, feats, prm);
+            }
+        }
+
+        // Direction code and indices.
+        byte directionFirst = (head < modifier) ? (byte) 0 : (byte) 1;
+        byte directionSecond = (head < sibling) ? (byte) 0 : (byte) 1;
+        
+        // Create flags.
+        byte flags = consecutive ? FeatureCollection.CONS_SIBL : FeatureCollection.ARBI_SIBL; // 4 bits.
+        if (!consecutive) {
+            flags |= (directionFirst << 4); // 1 more bit.
+        }
+        flags |= (directionSecond << 5); // 1 more bit.
+
+        addTurboTripletFeats(sent, head, modifier, sibling, flags, feats, mod, useCoarseTags, useTrilexicalFeats);
+    }
+    
+    /** Adds the features for grandparents siblings from TurboParser (Martins et al., 2013). */
+    public static void addTurboGrandparentFeats(final IntAnnoSentence sent, final int grandparent, final int head, 
+            final int modifier,             
+            final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        final int mod = prm.featureHashMod;
+        final boolean useCoarseTags = prm.useCoarseTags;
+        final boolean useTrilexicalFeats = prm.useTrilexicalFeats;
+        final boolean usePairFor2ndOrder = prm.usePairFor2ndOrder;
+        final boolean useUpperGrandDepFeats = prm.useUpperGrandDepFeats;
+        final boolean useNonprojGrandDepFeats = prm.useNonprojGrandDepFeats;
+
+        if (usePairFor2ndOrder) {
+            if (useUpperGrandDepFeats) {
+                addTurboWordPairFeats(sent, grandparent, head, FeatureCollection.GRANDPARENT_G_H, feats, prm);
+            }
+            addTurboWordPairFeats(sent, grandparent, modifier, FeatureCollection.GRANDPARENT_G_M, feats, prm);
+        }
+        
+        // Create flags.
+        byte direction = getGrandparentDirectionCode(grandparent, head, modifier);        
+        byte flags = FeatureCollection.GRANDPARENT; // 4 bits.
+        flags |= direction << 4; // 2 bits.  
+
+        if (useNonprojGrandDepFeats && direction == 0x2) {
+            addTurboWordPairFeats(sent, grandparent, modifier, FeatureCollection.GRANDPARENT_NONPROJ_H_M, feats, prm);
+        }
+
+        addTurboTripletFeats(sent, head, modifier, grandparent, flags, feats, mod, useCoarseTags, useTrilexicalFeats);
+    }
+
+    /** Features for siblings or grandparents. */
+    private static void addTurboTripletFeats(final IntAnnoSentence sent, final int head, final int modifier,
+            final int sibling, byte flags, final FeatureVector feats, final int mod, final boolean useCoarseTags,
+            final boolean useTrilexicalFeats) {
+        // Head, modifier, and sibling words/tags.
+        short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
+        byte hPos = (head < 0) ? TOK_WALL_INT : sent.getPosTag(head);
+        byte hCpos = (head < 0) ? TOK_WALL_INT : sent.getCposTag(head);
+        //
+        short mWord = (modifier < 0) ? TOK_START_INT : sent.getWord(modifier);
+        byte mPos = (modifier < 0) ? TOK_START_INT : sent.getPosTag(modifier);
+        byte mCpos = (modifier < 0) ? TOK_START_INT : sent.getCposTag(modifier);
+        //
+        short sWord = (sibling < 0) ? TOK_END_INT : sent.getWord(sibling);
+        byte sPos = (sibling < 0) ? TOK_END_INT : sent.getPosTag(sibling);
+        byte sCpos = (sibling < 0) ? TOK_END_INT : sent.getCposTag(sibling);
+
+        // Bias feature.
+        addFeat(feats, mod, encodeFeatureB___(TriTs.BIAS, flags, (byte)0));
+        
+        // --- Triplet features. ----
+
+        // Three POS tags.
+        addFeat(feats, mod, encodeFeatureBBB_(TriTs.hP_mP_sP, flags, hPos, mPos, sPos));
+        // One word; Two POS tags.
+        addFeat(feats, mod, encodeFeatureSBB_(TriTs.hW_mP_sP, flags, hWord, mPos, sPos));
+        addFeat(feats, mod, encodeFeatureSBB_(TriTs.hP_mW_sP, flags, mWord, hPos, sPos));
+        addFeat(feats, mod, encodeFeatureSBB_(TriTs.hP_mP_sW, flags, sWord, hPos, mPos));
+        // Two words; One POS tags.
+        addFeat(feats, mod, encodeFeatureSSB_(TriTs.hW_mW_sP, flags, hWord, mWord, sPos));
+        addFeat(feats, mod, encodeFeatureSSB_(TriTs.hW_mP_sW, flags, hWord, sWord, mPos));
+        addFeat(feats, mod, encodeFeatureSSB_(TriTs.hP_mW_sW, flags, mWord, sWord, hPos));
+        // Three words.
+        if (useTrilexicalFeats) {
+            addFeat(feats, mod, encodeFeatureSSS_(TriTs.hW_mW_sW, flags, hWord, mWord, sWord));
+        }
+
+        // --- Pairwise features. ----
+        // Martins notes that these are not redundant with the word-pair features added above, since the 
+        // flags used here may differ.
+        
+        // Two POS tags.
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.hP_mP, flags, hPos, mPos));
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.hP_sP, flags, hPos, sPos));
+        addFeat(feats, mod, encodeFeatureBB__(TriTs.mP_sP, flags, mPos, sPos));
+        // One word; One POS tag.
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_sP, flags, hWord, sPos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_mP, flags, hWord, mPos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_sP, flags, mWord, sPos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_hP, flags, mWord, hPos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_hP, flags, sWord, hPos));
+        addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_mP, flags, sWord, mPos));
+        // Two words.
+        addFeat(feats, mod, encodeFeatureSS__(TriTs.hW_sW, flags, hWord, sWord));
+        addFeat(feats, mod, encodeFeatureSS__(TriTs.mW_sW, flags, mWord, sWord));
+        addFeat(feats, mod, encodeFeatureSS__(TriTs.hW_mW, flags, hWord, mWord));
+        
+        if (useCoarseTags) {
+            // --- Triplet features. ----
+            // Three POS tags.
+            addFeat(feats, mod, encodeFeatureBBB_(TriTs.hC_mC_sC, flags, hCpos, mCpos, sCpos));
+            // One word; Two POS tags.
+            addFeat(feats, mod, encodeFeatureSBB_(TriTs.hW_mC_sC, flags, hWord, mCpos, sCpos));
+            addFeat(feats, mod, encodeFeatureSBB_(TriTs.hC_mW_sC, flags, mWord, hCpos, sCpos));
+            addFeat(feats, mod, encodeFeatureSBB_(TriTs.hC_mC_sW, flags, sWord, hCpos, mCpos));
+            // Two words; One POS tags.
+            addFeat(feats, mod, encodeFeatureSSB_(TriTs.hW_mW_sC, flags, hWord, mWord, sCpos));
+            addFeat(feats, mod, encodeFeatureSSB_(TriTs.hW_mC_sW, flags, hWord, sWord, mCpos));
+            addFeat(feats, mod, encodeFeatureSSB_(TriTs.hC_mW_sW, flags, mWord, sWord, hCpos));
+            // --- Pairwise features. ----
+            // Martins notes that these are not redundant with the word-pair features added above, since the 
+            // flags used here may differ.
+            //
+            // Two POS tags.
+            addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_mC, flags, hCpos, mCpos));
+            addFeat(feats, mod, encodeFeatureBB__(TriTs.hC_sC, flags, hCpos, sCpos));
+            addFeat(feats, mod, encodeFeatureBB__(TriTs.mC_sC, flags, mCpos, sCpos));
+            // One word; One POS tag.
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_sC, flags, hWord, sCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.hW_mC, flags, hWord, mCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_sC, flags, mWord, sCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.mW_hC, flags, mWord, hCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_hC, flags, sWord, hCpos));
+            addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_mC, flags, sWord, mCpos));           
+        }
+    }
+    
     private static void addFeat(FeatureVector feats, int mod, long feat) {
         int hash = MurmurHash.hash32(feat);
         if (mod > 0) {
             hash = FastMath.mod(hash, mod);
         }
         feats.add(hash, 1.0);
+        // Enable this for debugging of feature creation.
+        //        if (feats instanceof LongFeatureVector) {
+        //            ((LongFeatureVector)feats).addLong(feat, 1.0);
+        //        }
     }
 
     private static final long BYTE_MAX =  0xff;
@@ -1181,6 +1393,11 @@ public class BitshiftDepParseFeatures {
                 | ((b3 & BYTE_MAX) << 48);
     }
 
+    private static long encodeFeatureSSS_(byte template, byte flags, short s1, short s2, short s3) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) | ((s2 & SHORT_MAX) << 32)
+                | ((s3 & SHORT_MAX) << 48);
+    }
+    
     private static long encodeFeatureSBB_(byte template, byte flags, short s1, byte b2, byte b3) {
         return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) 
                 | ((b2 & BYTE_MAX) << 32) | ((b3 & BYTE_MAX) << 40);

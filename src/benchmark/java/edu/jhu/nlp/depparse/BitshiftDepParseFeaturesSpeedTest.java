@@ -78,10 +78,10 @@ public class BitshiftDepParseFeaturesSpeedTest {
                                 if (k == i || k == j) { continue; }
                                 boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
                                 if (!isNonprojectiveGrandparent) {
-                                    BitshiftDepParseFeatures.add2ndOrderGrandparentFeats(isent, k, i, j, feats, featureHashMod);
+                                    BitshiftDepParseFeatures.addCarerrasGrandparentFeats(isent, k, i, j, feats, featureHashMod);
                                 }
                                 if (j < k) {
-                                    BitshiftDepParseFeatures.add2ndOrderSiblingFeats(isent, i, j, k, featureHashMod, feats);
+                                    BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, i, j, k, feats, featureHashMod);
                                 }
                             }
                         }
