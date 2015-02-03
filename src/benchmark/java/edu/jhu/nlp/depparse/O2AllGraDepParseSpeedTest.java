@@ -1,6 +1,5 @@
 package edu.jhu.nlp.depparse;
 
-import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -13,6 +12,7 @@ import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.features.TemplateSets;
@@ -129,8 +129,10 @@ public class O2AllGraDepParseSpeedTest {
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
         fePrm.featureHashMod = numParams;
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
+        bsFePrm.featureHashMod = numParams;
         FeatureExtractor fe = onlyFast?
-                new FastDepParseFeatureExtractor(sent, cs, numParams, alphabet) :
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();

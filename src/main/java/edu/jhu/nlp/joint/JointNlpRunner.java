@@ -56,6 +56,7 @@ import edu.jhu.nlp.EvalPipeline;
 import edu.jhu.nlp.TransientAnnotator;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.CorpusHandler;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.FirstOrderPruner;
 import edu.jhu.nlp.depparse.GoldDepParseUnpruner;
@@ -97,6 +98,7 @@ import edu.jhu.nlp.srl.SrlFeatureSelection;
 import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.nlp.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.nlp.tag.FileMapTagReducer;
+import edu.jhu.nlp.tag.StrictPosTagAnnotator;
 import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prm;
@@ -406,6 +408,7 @@ public class JointNlpRunner {
             }
             anno.add(new EnsureStaticOptionsAreSet());
             anno.add(new PrefixAnnotator(true));
+            anno.add(new StrictPosTagAnnotator(true));
             // Add Brown clusters.
             if (brownClusters != null) {
                 anno.add(new BrownClusterTagger(getBrownCluterTaggerPrm(), brownClusters));
@@ -683,6 +686,8 @@ public class JointNlpRunner {
         JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         fePrm.srlFePrm = srlFePrm;
         fePrm.dpFePrm = dpFePrm;
+        fePrm.bsDpFePrm = parser.getInstanceFromParsedArgs(BitshiftDepParseFeatureExtractorPrm.class);
+        fePrm.bsDpFePrm.featureHashMod = featureHashMod;
         return fePrm;
     }
 

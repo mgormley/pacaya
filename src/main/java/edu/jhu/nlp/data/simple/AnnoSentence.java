@@ -12,8 +12,8 @@ import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.RelationMentions;
 import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.conll.SrlGraph;
-import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.tag.StrictPosTagAnnotator.StrictPosTag;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.set.IntHashSet;
@@ -39,6 +39,7 @@ public class AnnoSentence {
     private List<String> lemmas;
     private List<String> posTags;
     private List<String> cposTags;
+    private List<StrictPosTag> strictPosTags;
     private List<String> clusters;
     private List<double[]> embeds;
     private List<List<String>> feats;
@@ -86,6 +87,7 @@ public class AnnoSentence {
         newSent.lemmas = Lists.copyOf(this.lemmas);
         newSent.posTags = Lists.copyOf(this.posTags);
         newSent.cposTags = Lists.copyOf(this.cposTags);
+        newSent.strictPosTags = Lists.copyOf(this.strictPosTags);
         newSent.clusters = Lists.copyOf(this.clusters);
         newSent.embeds = Lists.copyOf(this.embeds);
         newSent.chunks = Lists.copyOf(this.chunks);
@@ -122,6 +124,7 @@ public class AnnoSentence {
         case LEMMA: dest.lemmas = src.lemmas; break;
         case POS: dest.posTags = src.posTags; break;
         case CPOS: dest.cposTags = src.cposTags; break;
+        case STRICT_POS: dest.strictPosTags = src.strictPosTags; break;
         case BROWN: dest.clusters = src.clusters; break;
         case EMBED: dest.embeds = src.embeds; break;
         case MORPHO: dest.feats = src.feats; break;
@@ -153,6 +156,7 @@ public class AnnoSentence {
         case LEMMA: this.lemmas = null; break;
         case POS: this.posTags = null; break;
         case CPOS: this.cposTags = null; break;
+        case STRICT_POS: this.strictPosTags = null; break;
         case BROWN: this.clusters = null; break;
         case EMBED: this.embeds = null; break;
         case MORPHO: this.feats = null; break;
@@ -178,6 +182,7 @@ public class AnnoSentence {
         case LEMMA: return this.lemmas != null;
         case POS: return this.posTags != null;
         case CPOS: return this.cposTags != null;
+        case STRICT_POS: return this.strictPosTags != null;
         case BROWN: return this.clusters != null;
         case EMBED: return this.embeds != null;
         case MORPHO: return this.feats != null;
@@ -202,6 +207,7 @@ public class AnnoSentence {
         Lists.intern(lemmas);
         Lists.intern(posTags);
         Lists.intern(cposTags);
+        // Not needed since these are enums. Lists.intern(strictPosTags);
         Lists.intern(clusters);
         if (feats != null) {
             for (int i=0; i<feats.size(); i++) {
@@ -233,6 +239,7 @@ public class AnnoSentence {
         appendIfNotNull(sb, "lemmas", lemmas);
         appendIfNotNull(sb, "tags", posTags);
         appendIfNotNull(sb, "cposTags", cposTags);
+        appendIfNotNull(sb, "strictPosTags", strictPosTags);
         appendIfNotNull(sb, "clusters", clusters);
         appendIfNotNull(sb, "embeds", embeds);
         appendIfNotNull(sb, "feats", feats);
@@ -283,10 +290,15 @@ public class AnnoSentence {
     public String getPosTag(int i) {
         return posTags.get(i);
     }
-    
+
     /** Gets the i'th Coarse POS tag as a String. */
     public String getCposTag(int i) {
         return cposTags.get(i);
+    }
+    
+    /** Gets the i'th Strict POS tag as a String. */
+    public StrictPosTag getStrictPosTag(int i) {
+        return strictPosTags.get(i);
     }
 
     /** Gets the i'th Distributional Similarity Cluster ID as a String. */
@@ -363,6 +375,13 @@ public class AnnoSentence {
      */
     public List<String> getCposTags(Span span) {
         return getSpan(cposTags, span);
+    }
+    
+    /**
+     * Gets a list of strict POS tags corresponding to a token span.
+     */
+    public List<StrictPosTag> getStrictPosTags(Span span) {
+        return getSpan(strictPosTags, span);
     }
     
     /**
@@ -581,6 +600,14 @@ public class AnnoSentence {
 
     public void setCposTags(List<String> cposTags) {
         this.cposTags = cposTags;
+    }
+        
+    public List<StrictPosTag> getStrictPosTags() {
+        return strictPosTags;
+    }
+
+    public void setStrictPosTags(List<StrictPosTag> strictPosTags) {
+        this.strictPosTags = strictPosTags;
     }
 
     public List<String> getClusters() {

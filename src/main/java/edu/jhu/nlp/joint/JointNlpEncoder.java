@@ -19,10 +19,11 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseEncoder;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
-import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor;
 import edu.jhu.nlp.features.TemplateLanguage;
 import edu.jhu.nlp.joint.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.nlp.relations.RelObsFe;
@@ -49,6 +50,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
     public static class JointNlpFeatureExtractorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         public DepParseFeatureExtractorPrm dpFePrm = new DepParseFeatureExtractorPrm();
+        public BitshiftDepParseFeatureExtractorPrm bsDpFePrm = new BitshiftDepParseFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();        
     }
 
@@ -78,7 +80,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
         ObsFeatureExtractor srlFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
         srlFe = new ObsFeatureCache(srlFe);        
         FeatureExtractor dpFe = prm.fePrm.dpFePrm.onlyFast ?
-                new BitshiftDepParseFeatureExtractor(sent, cs, prm.fePrm.dpFePrm.featureHashMod, ofc.getFeAlphabet()) :
+                new BitshiftDepParseFeatureExtractor(prm.fePrm.bsDpFePrm, sent, cs, ofc.getFeAlphabet()) :
                 new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
         dpFe = new FeatureCache(dpFe);
         ObsFeatureExtractor relFe = new RelObsFe(prm.fgPrm.relPrm.fePrm, sent, ofc.getTemplates());

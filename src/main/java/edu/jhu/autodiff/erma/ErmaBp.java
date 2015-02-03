@@ -250,14 +250,14 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 if (prm.keepTape) { tape.add(te); }
                 if (isConverged()) {
                     // Stop on convergence: Break out of inner and outer loop.
-                    log.trace("Stopping on convergence. Iterations = " + (iter+1));
+                    log.trace("Stopping on convergence. Iterations = {}", (iter+1));
                     break loops;
                 }
             }
             maybeWriteAllBeliefs(iter);
         }
         
-        log.trace("Oscillation rate: " + ((double) oscillationCount.get() / sendCount.get()));
+        log.trace("Oscillation rate: {}", ((double) oscillationCount.get() / sendCount.get()));
         
         forwardVarAndFacBeliefs();
         b = new Beliefs(varBeliefs, facBeliefs);

@@ -284,8 +284,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
                 prod.divBP(remove);
                 
                 assert !prod.containsBadValues() : "prod from cached beliefs = " + prod;
-            }
-            else {  // fall back on normal way of computing messages without caching
+            } else {  // fall back on normal way of computing messages without caching
                 // Set the initial values of the product to those of the sending factor.
                 prod = BruteForceInferencer.safeNewVarTensor(s, factor);
                 getProductOfMessages(edge.getParent(), prod, edge.getChild());
