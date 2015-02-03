@@ -113,4 +113,49 @@ public class RelationMention {
                 + trigger.getString(words, " ") + "]";
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((args == null) ? 0 : getNerOrderedArgs().hashCode());
+        result = prime * result + ((subType == null) ? 0 : subType.hashCode());
+        result = prime * result + ((trigger == null) ? 0 : trigger.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RelationMention other = (RelationMention) obj;
+        if (args == null) {
+            if (other.args != null)
+                return false;
+        } else if (!getNerOrderedArgs().equals(other.getNerOrderedArgs()))
+            return false;
+        if (subType == null) {
+            if (other.subType != null)
+                return false;
+        } else if (!subType.equals(other.subType))
+            return false;
+        if (trigger == null) {
+            if (other.trigger != null)
+                return false;
+        } else if (!trigger.equals(other.trigger))
+            return false;
+        if (type == null) {
+            if (other.type != null)
+                return false;
+        } else if (!type.equals(other.type))
+            return false;
+        return true;
+    }
+    
+    
+
 }

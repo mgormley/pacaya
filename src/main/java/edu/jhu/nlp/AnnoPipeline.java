@@ -1,9 +1,12 @@
 package edu.jhu.nlp;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 
 /**
  * Pipeline of Annotators each of which is optionally trainable.
@@ -40,6 +43,13 @@ public class AnnoPipeline implements Trainable, Annotator {
         }
     }
     
-    
+    @Override
+    public Set<AT> getAnnoTypes() {
+        HashSet<AT> ats = new HashSet<>();
+        for (Annotator anno : pipeline) {
+            ats.addAll(anno.getAnnoTypes());
+        }
+        return ats;
+    }
 
 }

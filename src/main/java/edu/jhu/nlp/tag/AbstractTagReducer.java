@@ -14,6 +14,8 @@ import edu.jhu.nlp.data.DepTreeNode;
 import edu.jhu.nlp.data.DepTreebank;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.util.collections.Sets;
 
 public abstract class AbstractTagReducer extends AbstractParallelAnnotator implements Annotator {
 
@@ -57,10 +59,16 @@ public abstract class AbstractTagReducer extends AbstractParallelAnnotator imple
             }
         }
     }
-    
+
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Sets.getSet(AT.CPOS);
+    }
+        
     /**
      * Returns null if the tag is unknown.
      */
     public abstract String reduceTag(String tag);
 
+    
 }

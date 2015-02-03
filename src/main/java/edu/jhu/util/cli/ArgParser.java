@@ -37,6 +37,7 @@ public class ArgParser {
     
     private Options options;
     private Map<Option, Field> optionFieldMap;
+    private Map<Field, String> fieldValueMap;
     private Class<?> mainClass = null;
     private Set<String> names;
     private Set<String> shortNames;
@@ -59,44 +60,46 @@ public class ArgParser {
         this.createShortNames = createShortNames;
     }
 
-    public Options getOptions() {
-        return options;
-    }
-
-    public void addClass(Class<?> clazz) {
+    /** Registers all the @Opt annotations on a class with this ArgParser. */
+    public void registerClass(Class<?> clazz) {
         for (Field field : clazz.getFields()) {
             if (field.isAnnotationPresent(Opt.class)) {
                 int mod = field.getModifiers();
-                if (Modifier.isPublic(mod) && Modifier.isStatic(mod) && !Modifier.isFinal(mod)
-                        && !Modifier.isAbstract(mod)) {
-                    // Add an option for this field.
-                    Opt option = field.getAnnotation(Opt.class);
+                if (!Modifier.isPublic(mod)) { throw new IllegalStateException("@"+Opt.class.getName()+" on non-public field: " + field); }
+                if (Modifier.isFinal(mod)) { throw new IllegalStateException("@"+Opt.class.getName()+" on final field: " + field); }
+                if (Modifier.isAbstract(mod)) { throw new IllegalStateException("@"+Opt.class.getName()+" on abstract field: " + field); }
 
-                    String name = getName(option, field);
-                    if (!names.add(name)) {
-                        throw new RuntimeException("Multiple options have the same name: --" + name);
-                    }
+                // Add an Apache Commons CLI Option for this field.
+                Opt opt = field.getAnnotation(Opt.class);
 
-                    String shortName = null;
-                    if (createShortNames) {
-                        shortName = getAndAddUniqueShortName(name);
-                    }
-                    
-                    Option apacheOpt = new Option(shortName, name, option.hasArg(), option.description());                    
-                    apacheOpt.setRequired(option.required());
-                    options.addOption(apacheOpt);
+                String name = getName(opt, field);
+                if (!names.add(name)) {
+                    throw new RuntimeException("Multiple options have the same name: --" + name);
+                }
 
-                    optionFieldMap.put(apacheOpt, field);
+                String shortName = null;
+                if (createShortNames) {
+                    shortName = getAndAddUniqueShortName(name);
+                }
+                
+                Option apacheOpt = new Option(shortName, name, opt.hasArg(), opt.description());                    
+                apacheOpt.setRequired(opt.required());
+                options.addOption(apacheOpt);
 
-                    // Check that only boolean has hasArg() == false.
-                    if (!field.getType().equals(Boolean.TYPE) && !option.hasArg()) {
-                        throw new RuntimeException("Only booleans can not have arguments.");
-                    }
+                optionFieldMap.put(apacheOpt, field);
+
+                // Check that only boolean has hasArg() == false.
+                if (!field.getType().equals(Boolean.TYPE) && !opt.hasArg()) {
+                    throw new RuntimeException("Only booleans can not have arguments.");
                 }
             }
         }
     }
 
+    /**
+     * Creates a unique short name from the name of a field. For example, the field "trainPredOut"
+     * would have a long name of "--trainPredOut" and a short name of "-tpo".
+     */
     private String getAndAddUniqueShortName(String name) {
         // Capitalize the first letter of the name.
         String initCappedName = name.substring(0, 1).toUpperCase() + name.substring(1, name.length());
@@ -124,7 +127,8 @@ public class ArgParser {
         return shortName;
     }
 
-    public static String getName(Opt option, Field field) {
+    /** Gets the name specified in @Opt(name=...) if present, or the name of the field otherwise. */
+    private static String getName(Opt option, Field field) {
         if (option.name().equals(Opt.DEFAULT_STRING)) {
             return field.getName();
         } else {
@@ -132,34 +136,61 @@ public class ArgParser {
         }
     }
 
-    public CommandLine parseArgs(String[] args) throws ParseException {
+    /**
+     * Parses the command line arguments and sets any of public static fields annotated with @Opt
+     * that have been registered with this {@link ArgParser} via {@link #registerClass(Class)}.
+     */
+    public void parseArgs(String[] args) throws ParseException {
         // Parse command line.
         CommandLine cmd = null;
         CommandLineParser parser = new PosixParser();
         cmd = parser.parse(options, args);
 
-        // Set fields on added classes.
+        fieldValueMap = new HashMap<>();
         try {
-            for (Option option : optionFieldMap.keySet()) {
-                Field field = optionFieldMap.get(option);
-                if (cmd.hasOption(option.getLongOpt())) {
-                    if (option.hasArg()) {
-                        setStaticField(field, cmd.getOptionValue(option.getLongOpt()));
+            for (Option apacheOpt : optionFieldMap.keySet()) {
+                Field field = optionFieldMap.get(apacheOpt);
+                if (cmd.hasOption(apacheOpt.getLongOpt())) {
+                    String value = apacheOpt.hasArg() ? cmd.getOptionValue(apacheOpt.getLongOpt()) : "true";
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        // For static fields, set the value directly to the field.
+                        setStaticField(field, cmd.getOptionValue(apacheOpt.getLongOpt()));
                     } else {
-                        // We should have already checked that the field is a
-                        // boolean.
-                        field.setBoolean(null, true);
+                        // For non-static fields, cache the value for later use by getInstanceFromParsedArgs(). 
+                        fieldValueMap.put(field, value);
                     }
                 }
             }
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        
-        return cmd;
     }
 
-    public void printUsage() {        
+    /**
+     * Gets an instance of the given class by using the no-argument constructor (which must exist)
+     * and then setting all fields annotated with @Opt with values cached by {@link #parseArgs(String[])}.
+     */
+    public <T> T getInstanceFromParsedArgs(Class<T> clazz) {
+        try {
+            T obj = clazz.newInstance();
+            for (Field field : clazz.getFields()) {
+                if (field.isAnnotationPresent(Opt.class)) {
+                    String value = fieldValueMap.get(field);
+                    if (value != null) {
+                        setField(obj, field, value);
+                    }
+                }
+            }
+            return obj;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Prints the usage of the main class for this ArgParser. */ 
+    public void printUsage() {
         String name = mainClass == null ? "<MainClass>" : mainClass.getName();
         String usage = "java " + name + " [OPTIONS]";
         final HelpFormatter formatter = new HelpFormatter();
@@ -167,36 +198,41 @@ public class ArgParser {
         formatter.printHelp(usage, options, true);
     }
 
+    private static void setStaticField(Field field, String value) throws IllegalArgumentException,
+            IllegalAccessException {
+        setField(null, field, value);
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static void setStaticField(Field field, String value) throws IllegalArgumentException,
+    private static void setField(Object obj, Field field, String value) throws IllegalArgumentException,
             IllegalAccessException {
         Class<?> type = field.getType();
         if (type.equals(Boolean.TYPE)) {
-            field.setBoolean(null, Boolean.parseBoolean(value));
+            field.setBoolean(obj, Boolean.parseBoolean(value));
         } else if (type.equals(Byte.TYPE)) {
-            field.setByte(null, Byte.parseByte(value));
+            field.setByte(obj, Byte.parseByte(value));
         } else if (type.equals(Character.TYPE)) {
-            field.setChar(null, parseChar(value));
+            field.setChar(obj, parseChar(value));
         } else if (type.equals(Double.TYPE)) {
-            field.setDouble(null, Double.parseDouble(value));
+            field.setDouble(obj, Double.parseDouble(value));
         } else if (type.equals(Float.TYPE)) {
-            field.setFloat(null, Float.parseFloat(value));
+            field.setFloat(obj, Float.parseFloat(value));
         } else if (type.equals(Integer.TYPE)) {
-            field.setInt(null, safeStrToInt(value));
+            field.setInt(obj, safeStrToInt(value));
         } else if (type.equals(Long.TYPE)) {
-            field.setLong(null, Long.parseLong(value));
+            field.setLong(obj, Long.parseLong(value));
         } else if (type.equals(Short.TYPE)) {
-            field.setShort(null, Short.parseShort(value));
+            field.setShort(obj, Short.parseShort(value));
         } else if (type.isEnum()) {
-            field.set(null, Enum.valueOf((Class<Enum>) field.getType(), value));
+            field.set(obj, Enum.valueOf((Class<Enum>) field.getType(), value));
         } else if (type.equals(String.class)) {
-            field.set(field, value);
+            field.set(obj, value);
         } else if (type.equals(File.class)) {
-            field.set(field, new File(value));
+            field.set(obj, new File(value));
         } else if (type.equals(Date.class)) {
             DateFormat df = new SimpleDateFormat("MM-dd-yy.hh:mma");
             try {
-                field.set(field, df.parse(value));
+                field.set(obj, df.parse(value));
             } catch (java.text.ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -205,7 +241,7 @@ public class ArgParser {
         }
     }
 
-    public static char parseChar(String value) {
+    private static char parseChar(String value) {
         if (value.length() != 1) {
             throw new IllegalArgumentException("value cannot be converted to a char: " + value);
         }

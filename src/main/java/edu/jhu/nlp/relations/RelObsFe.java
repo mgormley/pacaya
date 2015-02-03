@@ -30,13 +30,14 @@ import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
 import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
-import edu.jhu.nlp.relations.RelationsOptions.EntityTypeRepl;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Lambda.FnObjDoubleToVoid;
 import edu.jhu.util.FeatureNames;
+import edu.jhu.util.Prm;
+import edu.jhu.util.cli.Opt;
 
 /**
  * Feature extraction for relations.
@@ -44,13 +45,29 @@ import edu.jhu.util.FeatureNames;
  */
 public class RelObsFe implements ObsFeatureExtractor {
 
+
+    public enum EmbFeatType { HEAD_ONLY, HEAD_TYPE, FULL_NO_CHUNKS, FULL }
+    public enum EntityTypeRepl { BROWN, NONE };
+
+    public static class RelObsFePrm extends Prm {
+        private static final long serialVersionUID = 1L;
+        @Opt(hasArg=true, description="Whether to use the standard binary features.")
+        public boolean useZhou05Features = true;
+        @Opt(hasArg=true, description="Whether to use the embedding features.")
+        public boolean useEmbeddingFeatures = true;
+        @Opt(hasArg=true, description="The feature set for embeddings.")
+        public EmbFeatType embFeatType = EmbFeatType.FULL;        
+        @Opt(hasArg=true, description="What to replace removed entity types with.")
+        public EntityTypeRepl entityTypeRepl = EntityTypeRepl.NONE;
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(RelObsFe.class);
 
-    private RelationsFactorGraphBuilderPrm prm;
+    private RelObsFePrm prm;
     private AnnoSentence sent;
     private FactorTemplateList fts;
 
-    public RelObsFe(RelationsFactorGraphBuilderPrm prm, AnnoSentence sent, FactorTemplateList fts) {
+    public RelObsFe(RelObsFePrm prm, AnnoSentence sent, FactorTemplateList fts) {
         this.prm = prm;
         this.sent = sent;
         this.fts = fts;
@@ -89,7 +106,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         // Set entity types to be Brown cluster tags if missing.
         NerMention ne1 = local.getNe1();
         if (ne1.getEntityType() == null) {
-            if (RelationsOptions.entityTypeRepl == EntityTypeRepl.BROWN) {
+            if (prm.entityTypeRepl == EntityTypeRepl.BROWN) {
                 ne1.setEntityType(sent.getCluster(ne1.getHead()));
             } else {
                 ne1.setEntityType("NOTYPE");
@@ -97,18 +114,18 @@ public class RelObsFe implements ObsFeatureExtractor {
         }
         NerMention ne2 = local.getNe2();
         if (ne2.getEntityType() == null) {
-            if (RelationsOptions.entityTypeRepl == EntityTypeRepl.BROWN) {
+            if (prm.entityTypeRepl == EntityTypeRepl.BROWN) {
                 ne2.setEntityType(sent.getCluster(ne2.getHead()));
             } else {
                 ne2.setEntityType("NOTYPE");
             }
         }
         
-        if (RelationsOptions.useZhou05Features) {
+        if (prm.useZhou05Features) {
             addZhou05Features(local, fv);
         }
         
-        if (RelationsOptions.useEmbeddingFeatures) {
+        if (prm.useEmbeddingFeatures) {
             addEmbeddingFeatures(local, fv);
         }
         
@@ -627,7 +644,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         String ne2 = m2.getEntityType();
         String ne1ne2 = ne1 + ne2;
                 
-        switch (RelationsOptions.embFeatType) {
+        switch (prm.embFeatType) {
         case FULL:            
             //     - chunk_head
             //     - chunk_head+ne1

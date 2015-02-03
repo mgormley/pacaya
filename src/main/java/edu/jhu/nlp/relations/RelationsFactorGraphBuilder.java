@@ -1,9 +1,7 @@
 package edu.jhu.nlp.relations;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +15,10 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.data.NerMention;
-import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.features.TemplateLanguage.FeatTemplate;
+import edu.jhu.nlp.relations.RelObsFe.RelObsFePrm;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Prm;
 
@@ -30,8 +28,7 @@ public class RelationsFactorGraphBuilder {
 
     public static class RelationsFactorGraphBuilderPrm extends Prm {
         private static final long serialVersionUID = 1L;
-        public List<FeatTemplate> templates;
-        public int featureHashMod = -1;
+        public RelObsFePrm fePrm = new RelObsFePrm();
     }
     
     public enum RelationFactorType {

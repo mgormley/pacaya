@@ -2,18 +2,14 @@ package edu.jhu.nlp.data.simple;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.jhu.hlt.concrete.Communication;
-import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
-import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.nlp.data.concrete.ConcreteWriter;
-import edu.jhu.nlp.data.concrete.TokenizationUtils;
+import edu.jhu.nlp.data.concrete.ConcreteWriter.ConcreteWriterPrm;
 import edu.jhu.nlp.data.conll.CoNLL08Sentence;
 import edu.jhu.nlp.data.conll.CoNLL08Writer;
 import edu.jhu.nlp.data.conll.CoNLL09Sentence;
@@ -40,7 +36,7 @@ public class AnnoSentenceWriter {
         this.prm = prm;
     }
     
-    public void write(File out, DatasetType type, AnnoSentenceCollection sents) throws IOException {
+    public void write(File out, DatasetType type, AnnoSentenceCollection sents, Collection<AT> addAnnoTypes) throws IOException {
         log.info("Writing sentences for " + prm.name + " data of type " + type + " to " + out);
         if (type == DatasetType.CONLL_2009) {
             CoNLL09Writer cw = new CoNLL09Writer(out);
@@ -88,7 +84,10 @@ public class AnnoSentenceWriter {
                 sw.close();
             }
         } else if (type == DatasetType.CONCRETE) {
-            ConcreteWriter w = new ConcreteWriter(prm.concreteSrlIsSyntax);
+            ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
+            cwPrm.srlIsSyntax = prm.concreteSrlIsSyntax;
+            cwPrm.addAnnoTypes(addAnnoTypes);
+            ConcreteWriter w = new ConcreteWriter(cwPrm);
             w.write(sents, out);
         } else {
             throw new IllegalStateException("Unsupported data type: " + type);
