@@ -25,6 +25,8 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.DepTree;
@@ -278,7 +280,7 @@ public class JointNlpFgExamplesBuilderTest {
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
-        
+        prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         // To run with SGD, uncomment these lines.
         //        SGDPrm optPrm = new SGDPrm();
         //        optPrm.iterations = 100;

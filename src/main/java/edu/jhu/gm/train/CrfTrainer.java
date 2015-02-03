@@ -12,8 +12,8 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.hlt.optimize.MalletLBFGS;
-import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.AdaGradComidL2;
+import edu.jhu.hlt.optimize.AdaGradComidL2.AdaGradComidL2Prm;
 import edu.jhu.hlt.optimize.Optimizer;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
@@ -40,9 +40,9 @@ public class CrfTrainer {
         private static final long serialVersionUID = 1L;
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public BeliefsModuleFactory bFactory = null;
-        public Optimizer<DifferentiableFunction> optimizer = new MalletLBFGS(new MalletLBFGSPrm());
-        public Optimizer<DifferentiableBatchFunction> batchOptimizer = null;//new SGD(new SGDPrm());
-        public Regularizer regularizer = new L2(1.0);
+        public Optimizer<DifferentiableFunction> optimizer = null;
+        public Optimizer<DifferentiableBatchFunction> batchOptimizer = new AdaGradComidL2(new AdaGradComidL2Prm());
+        public Regularizer regularizer = null;
         public int numThreads = 1;
         /** The type of trainer. */
         public Trainer trainer = Trainer.CLL;
