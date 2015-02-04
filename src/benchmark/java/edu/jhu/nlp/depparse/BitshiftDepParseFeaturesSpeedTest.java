@@ -12,6 +12,7 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.BitshiftDepParseFeatures.FeatureCollection;
 import edu.jhu.nlp.tag.StrictPosTagAnnotator;
 import edu.jhu.nlp.words.PrefixAnnotator;
@@ -47,6 +48,11 @@ public class BitshiftDepParseFeaturesSpeedTest {
      *    ArcFactoredMST (w/coarse) s=2400 n=56427 Toks / sec: 3116.480724621672
      *    
      *    TurboWordPair (tfs)       s=2400 n=169795 Toks / sec: 3735.781390948494
+     *    
+     *    w/MST & Carerras          s=800 n=19560 Toks / sec: 928.6426434980773
+     *    w/Turbo & Carerras        s=800 n=19560 Toks / sec: 1008.0395794681509
+     *    w/Turbo                   s=400 n=9669 Toks / sec: 123.39361145497008
+     *    w/Turbo (Max 10 heads)    s=800 n=19560 Toks / sec: 1077.2704741972793
      */
     //@Test
     public void testSpeed() throws ParseException, IOException {
@@ -59,6 +65,11 @@ public class BitshiftDepParseFeaturesSpeedTest {
         
         FeatureNames alphabet = new FeatureNames();
         
+        BitshiftDepParseFeatureExtractorPrm prm = new BitshiftDepParseFeatureExtractorPrm();
+        prm.useMstFeats = false;
+        prm.useCarerrasFeats = false;
+        prm.useMorphologicalFeatures = false;
+        
         Timer timer = new Timer();
         timer.start();
         int n=0;
@@ -69,19 +80,17 @@ public class BitshiftDepParseFeaturesSpeedTest {
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {
                         FeatureVector feats = new FeatureVector();
-                        //BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, i, j, FeatureCollection.ARC, feats, false, true, featureHashMod);
-                        //BitshiftDepParseFeatures.addTurboWordPairFeats(isent, i, j, FeatureCollection.ARC, feats, featureHashMod);
-                        BitshiftDepParseFeatures.addTurboWordPairFeats(isent, i, j, FeatureCollection.ARC, feats, featureHashMod, 2, false, false, true, false, true);
+                        BitshiftDepParseFeatures.addArcFeats(isent, i, j, prm, feats);
 
-                        if (false) {
+                        if (true) {
                             for (int k=0; k<sent.size(); k++) {
                                 if (k == i || k == j) { continue; }
                                 boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
                                 if (!isNonprojectiveGrandparent) {
-                                    BitshiftDepParseFeatures.addCarerrasGrandparentFeats(isent, k, i, j, feats, featureHashMod);
+                                    BitshiftDepParseFeatures.addGrandparentFeats(isent, k, i, j, feats, prm);
                                 }
                                 if (j < k) {
-                                    BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, i, j, k, feats, featureHashMod);
+                                    BitshiftDepParseFeatures.addArbitrarySiblingFeats(isent, i, j, k, feats, prm);
                                 }
                             }
                         }

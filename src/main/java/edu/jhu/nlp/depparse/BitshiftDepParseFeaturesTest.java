@@ -87,7 +87,7 @@ public class BitshiftDepParseFeaturesTest {
         IntAnnoSentence isent = getIntAnnoSentence();
         {
             FeatureVector feats = getFv();
-            BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, 0, 2, 3, feats, -1);
+            BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, 0, 2, 3, feats, -1, false);
             checkNumFeatsBeforeAndAfterCompact(feats, 10, 10);
         }
     }

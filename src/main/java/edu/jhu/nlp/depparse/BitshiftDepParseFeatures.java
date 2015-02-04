@@ -838,7 +838,7 @@ public class BitshiftDepParseFeatures {
         if (idx >= 0) { 
             return sent.getFeats(idx); 
         } else {
-            return WALL_MORPHO ;
+            return WALL_MORPHO;
         }
     }
     
@@ -1076,23 +1076,50 @@ public class BitshiftDepParseFeatures {
             }
         }
     }
+
+    public static void addArbitrarySiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling,
+            FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        if (prm.useCarerrasFeats) {
+            addCarerrasSiblingFeats(sent, head, modifier, sibling, feats, prm.featureHashMod, false);
+        } else {
+            addTurboArbitrarySiblingFeats(sent, head, modifier, sibling, feats, prm);
+        }
+    }
+
+    public static void addConsecutiveSiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling,
+            FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        if (prm.useCarerrasFeats) {
+            addCarerrasSiblingFeats(sent, head, modifier, sibling, feats, prm.featureHashMod, true);
+        } else {
+            addTurboConsecutiveSiblingFeats(sent, head, modifier, sibling, feats, prm);
+        }
+    }
+    
+    public static void addGrandparentFeats(IntAnnoSentence sent, int grandparent, int head, int modifier,
+            FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        if (prm.useCarerrasFeats) {
+            addCarerrasGrandparentFeats(sent, grandparent, head, modifier, feats, prm.featureHashMod);
+        } else {
+            addTurboGrandparentFeats(sent, grandparent, head, modifier, feats, prm);
+        }
+    }
     
     /**
      * This is similar to the 2nd order features from Carerras et al. (2007), but incorporates some
      * features from Martins' TurboParser.
      */
-    public static void addCarerrasSiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling, FeatureVector feats, int mod) {
+    public static void addCarerrasSiblingFeats(IntAnnoSentence sent, int head, int modifier, int sibling, FeatureVector feats, int mod, boolean consecutive) {
         // Direction flags.
         // Parent-child relationship.
         byte direction_pc = (head < modifier) ? (byte) 0 : (byte) 1;
         // Parent-sibling relationship.
         byte direction_ps = (head < sibling) ? (byte) 0 : (byte) 1;
-        
-        byte flags = FeatureCollection.SIBLING; // 4 bits.
+                
+        byte flags = consecutive ? FeatureCollection.CONS_SIBL : FeatureCollection.ARBI_SIBL; // 4 bits.
         flags |= direction_pc << 4; // 1 bit.
         flags |= direction_ps << 5; // 1 bit.
         
-        addTripletFeatures(sent, head, modifier, sibling, feats, flags, mod);
+        addCarerrasTripletFeatures(sent, head, modifier, sibling, feats, flags, mod);
     }
     
     /**
@@ -1103,7 +1130,7 @@ public class BitshiftDepParseFeatures {
         byte direction = getGrandparentDirectionCode(grandparent, head, modifier);        
         byte flags = FeatureCollection.GRANDPARENT; // 4 bits.
         flags |= direction << 4; // 2 bits.        
-        addTripletFeatures(sent, grandparent, head, modifier, feats, flags, mod);
+        addCarerrasTripletFeatures(sent, grandparent, head, modifier, feats, flags, mod);
     }
 
     /** Gets a 2-bit grandparent direction code. */
@@ -1135,7 +1162,7 @@ public class BitshiftDepParseFeatures {
     public static final boolean extraTriplets = false;
     
     /** Can be used for either sibling or grandparent features. */
-    private static void addTripletFeatures(IntAnnoSentence sent, int head, int modifier, int sibling, FeatureVector feats, byte flags, int mod) {
+    private static void addCarerrasTripletFeatures(IntAnnoSentence sent, int head, int modifier, int sibling, FeatureVector feats, byte flags, int mod) {
         // Head, modifier, and sibling words / POS tags. We denote the head by p (for parent), the modifier
         // by c (for child), and the sibling by s.
         short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
@@ -1427,5 +1454,6 @@ public class BitshiftDepParseFeatures {
         return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((b1 & BYTE_MAX) << 16) | ((b2 & BYTE_MAX) << 24)
                 | ((b3 & BYTE_MAX) << 32) | ((b4 & BYTE_MAX) << 40) | ((b5 & BYTE_MAX) << 48) | ((b6 & BYTE_MAX) << 56); // Full.
     }
+
     
 }

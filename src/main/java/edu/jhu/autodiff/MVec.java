@@ -4,9 +4,13 @@ import edu.jhu.util.semiring.Algebra;
 
 /**
  * A simple vector interface. This is specifically designed to be the output of a module.
- * 
+ * <p>
  * This interface is generic in order to accomodate a typed copy method. By convention, the type T
  * should always be the class which is implementing this interface.
+ * <p>
+ * Important Note for implementers of the copy methods: it is recommended that the return type in
+ * the declaration of the copy methods be the actual type instead of MVec. See {@link Tensor} for an
+ * example.
  * 
  * @author mgormley
  */
@@ -26,7 +30,7 @@ public interface MVec {
 
     /** Fills the entire vector with a value. */
     void fill(double val);
-
+    
     /** Creates a copy of this vector. */
     MVec copy();
     
