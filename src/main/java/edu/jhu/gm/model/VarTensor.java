@@ -218,12 +218,6 @@ public class VarTensor extends Tensor implements Serializable {
         super.setValuesOnly(f);
     }
 
-    public VarTensor copyAndConvertAlgebra(Algebra newS) {
-        VarTensor t = new VarTensor(newS, this.vars);
-        t.setFromDiffAlgebra(this);
-        return t;
-    }
-
     @Override
     public String toString() {
         return toString(false);
@@ -288,6 +282,25 @@ public class VarTensor extends Tensor implements Serializable {
     /** Takes the log of each value. */
     public void convertRealToLog() {
         this.log();
+    }
+    
+    @Override
+    public VarTensor copy() {
+        return new VarTensor(this);
+    }
+
+    @Override
+    public VarTensor copyAndFill(double val) {
+        VarTensor other = this.copy();
+        other.fill(val);
+        return other;
+    }
+
+    @Override
+    public VarTensor copyAndConvertAlgebra(Algebra newS) {
+        VarTensor t = new VarTensor(newS, this.vars);
+        t.setFromDiffAlgebra(this);
+        return t;
     }
     
 }
