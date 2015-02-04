@@ -16,7 +16,6 @@ ROOT_DIR=`pwd`
 
 echo "Setting CLASSPATH from maven."
 export CLASSPATH=$ROOT_DIR/target/classes
-export CLASSPATH=$CLASSPATH:$ROOT_DIR/target/pacaya-3.0.0-SNAPSHOT.jar
 export CLASSPATH=$CLASSPATH:`mvn exec:exec -q -Dexec.executable="echo" -Dexec.args="%classpath"`
 # The old way of setting the class path is below, we simply used the
 # output classes and the lib directory. Yet, we now have maven dependencies
