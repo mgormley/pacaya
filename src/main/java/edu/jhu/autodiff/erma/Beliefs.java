@@ -6,7 +6,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
-public class Beliefs implements MVec<Beliefs> {
+public class Beliefs implements MVec {
     
     public VarTensor[] varBeliefs;
     public VarTensor[] facBeliefs;
@@ -87,7 +87,7 @@ public class Beliefs implements MVec<Beliefs> {
     }
 
     @Override    
-    public void elemAdd(MVec<?> addend) {
+    public void elemAdd(MVec addend) {
         if (addend instanceof Beliefs) {
             elemAdd((Beliefs)addend);
         } else {

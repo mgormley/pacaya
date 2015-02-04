@@ -12,7 +12,7 @@ import edu.jhu.util.semiring.Algebra;
  * Converts from the abstract algebra of the input to a given abstract algebra.
  * @author mgormley
  */
-public class ConvertAlgebra<T extends MVec<T>> extends AbstractModule<T> implements Module<T> {
+public class ConvertAlgebra<T extends MVec> extends AbstractModule<T> implements Module<T> {
 
     private Module<T> modIn;
     

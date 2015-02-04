@@ -14,7 +14,7 @@ import edu.jhu.util.semiring.Algebra;
  * 
  * @author mgormley
  */
-public class TopoOrder<Y extends MVec<Y>> implements Module<Y> {
+public class TopoOrder<Y extends MVec> implements Module<Y> {
 
     private List<? extends Module<?>> inputs;
     private Module<Y> outMod;

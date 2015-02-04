@@ -6,7 +6,7 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for potential tables of a factor graph. */
-public class Factors implements MVec<Factors> {
+public class Factors implements MVec {
     
     public VarTensor[] f;
     public Algebra s;
@@ -61,7 +61,7 @@ public class Factors implements MVec<Factors> {
     }
     
     @Override    
-    public void elemAdd(MVec<?> addend) {
+    public void elemAdd(MVec addend) {
         if (addend instanceof Factors) {
             elemAdd((Factors)addend);
         } else {

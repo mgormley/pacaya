@@ -10,7 +10,7 @@ import edu.jhu.util.semiring.Algebra;
  * 
  * @author mgormley
  */
-public interface MVec<T> {
+public interface MVec {
         
     /** Gets the abstract algebra in which values are represented. */
     Algebra getAlgebra();
@@ -28,15 +28,15 @@ public interface MVec<T> {
     void fill(double val);
 
     /** Creates a copy of this vector. */
-    MVec<?> copy();
+    MVec copy();
     
     /** Creates a copy of this vector and converts it to a new abstract algebra. */
-    MVec<?> copyAndConvertAlgebra(Algebra newS);
+    MVec copyAndConvertAlgebra(Algebra newS);
 
     /** Creates a copy of this vector and fills it with a value. */
-    MVec<?> copyAndFill(double val);
+    MVec copyAndFill(double val);
     
     /** Adds (elementwise) a vector whose type is identical to this one. */
-    void elemAdd(MVec<?> addend);
+    void elemAdd(MVec addend);
     
 }

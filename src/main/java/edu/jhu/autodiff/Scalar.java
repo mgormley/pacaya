@@ -4,7 +4,7 @@ import edu.jhu.autodiff.erma.MVecFgModel;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
-public class Scalar implements MVec<Scalar> {
+public class Scalar implements MVec {
 
     private Algebra s;
     private double value;
@@ -34,7 +34,7 @@ public class Scalar implements MVec<Scalar> {
     }
 
     @Override    
-    public void elemAdd(MVec<?> addend) {
+    public void elemAdd(MVec addend) {
         if (addend instanceof Scalar) {
             elemAdd((Scalar)addend);
         } else {

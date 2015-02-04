@@ -11,7 +11,7 @@ import edu.jhu.util.semiring.Algebra;
  * @author mgormley
  * @param <Y> The type of vector (i.e. type of {@link MVec})
  */
-public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
+public class MVecArray<Y extends MVec> implements MVec {
     
     public Y[] f;
     public Algebra s;
@@ -42,7 +42,7 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
     
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void elemAdd(MVec<?> addend) {
+    public void elemAdd(MVec addend) {
         if (addend instanceof MVecArray) {
             elemAdd((MVecArray)addend);
         } else {
@@ -83,10 +83,10 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
     /* --------------------------------------------------------- */
     
     // For use by this class only, these methods can be rewritten as having type <T extends
-    // MVec<T>>. However, for the general case we would want <T extends MVec<? extends T>> which
+    // MVec>. However, for the general case we would want <T extends MVec> which
     // Java seems confused by. This is similar to the way the JDK handles Arrays.copyOf().
     
-    public static <T extends MVec<?>> int count(T[] beliefs) {
+    public static <T extends MVec> int count(T[] beliefs) {
         int count = 0;
         if (beliefs != null) {
             for (int i = 0; i < beliefs.length; i++) {
@@ -98,7 +98,7 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
         return count;
     }
         
-    public static <T extends MVec<?>> void fillArray(T[] beliefs, double val) {
+    public static <T extends MVec> void fillArray(T[] beliefs, double val) {
         if (beliefs != null) {
             for (int i = 0; i < beliefs.length; i++) {
                 if (beliefs[i] != null) {
@@ -108,7 +108,7 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
         }
     }
 
-    public static <T extends MVec<?>> double setValue(int idx, double val, T[] beliefs) {
+    public static <T extends MVec> double setValue(int idx, double val, T[] beliefs) {
         int seen = 0;
         for (int i = 0; i < beliefs.length; i++) {
             if (beliefs[i] != null) {
@@ -121,7 +121,7 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
         throw new RuntimeException("Index out of bounds: " + idx);
     }
     
-    public static <T extends MVec<?>> double getValue(int idx, T[] beliefs) {
+    public static <T extends MVec> double getValue(int idx, T[] beliefs) {
         int seen = 0;
         for (int i = 0; i < beliefs.length; i++) {
             if (beliefs[i] != null) {
@@ -135,7 +135,7 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
     }
     
     @SuppressWarnings("unchecked")
-    public static <T extends MVec<?>> T[] copyOfArray(T[] orig) {
+    public static <T extends MVec> T[] copyOfArray(T[] orig) {
         if (orig == null) {
             return null;
         }
@@ -149,7 +149,7 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
     }
     
     @SuppressWarnings("unchecked")
-    public static <T extends MVec<?>> T[] copyAndConvertAlgebraOfArray(T[] orig, Algebra newS) {
+    public static <T extends MVec> T[] copyAndConvertAlgebraOfArray(T[] orig, Algebra newS) {
         if (orig == null) {
             return null;
         }
@@ -163,11 +163,11 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
     }
     
     @SuppressWarnings("unchecked")
-    public static <T extends MVec<?>> void addArray(T[] b1, T[] addend) {
+    public static <T extends MVec> void addArray(T[] b1, T[] addend) {
         assert b1.length == addend.length;
         for (int i = 0; i < b1.length; i++) {            
             if (b1[i] != null) {
-                ((MVec<T>)b1[i]).elemAdd(addend[i]);
+                ((MVec)b1[i]).elemAdd(addend[i]);
             }
         }
     }

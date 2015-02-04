@@ -13,7 +13,7 @@ import edu.jhu.util.semiring.Algebras;
  * 
  * @author mgormley
  */
-public class Tensor implements MVec<Tensor> {
+public class Tensor implements MVec {
 
     protected int[] dims;
     protected int[] strides;
@@ -249,7 +249,7 @@ public class Tensor implements MVec<Tensor> {
 
     /** Implements {@link MVec#elemAdd(MVec)}. */
     @Override
-    public void elemAdd(MVec<?> addend) {
+    public void elemAdd(MVec addend) {
         if (addend instanceof Tensor) {
             elemAdd((Tensor)addend);
         } else {

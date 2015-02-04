@@ -6,7 +6,7 @@ import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
-public class MVecFgModel implements MVec<MVecFgModel> {
+public class MVecFgModel implements MVec {
 
     private FgModel model;
     private IntDoubleVector params;
@@ -33,7 +33,7 @@ public class MVecFgModel implements MVec<MVecFgModel> {
     }
     
     @Override    
-    public void elemAdd(MVec<?> addend) {
+    public void elemAdd(MVec addend) {
         if (addend instanceof MVecFgModel) {
             elemAdd((MVecFgModel)addend);
         } else {
