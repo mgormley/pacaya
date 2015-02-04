@@ -8,7 +8,8 @@ import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.AlgebraLambda;
 
 /**
- * A multivariate Multinomial distribution.
+ * A {@link Tensor} where each row corresponds to a variable (i.e. a {@link Var}). It can represent
+ * a not-necessarily-normalized multivariate Multinomial distribution.
  * 
  * @author mgormley
  *
@@ -23,18 +24,12 @@ public class VarTensor extends Tensor implements Serializable {
     /** The set of variables in this factor. */
     private VarSet vars;
 
-    /** Constructs a factor initializing the values to 0.0. 
-     * @param s TODO*/
+    /** Constructs a factor initializing the values to 0.0. */
     public VarTensor(Algebra s, VarSet vars) {
         this(s, vars, s.zero());
     }
 
-    /**
-     * Constructs a factor where each value is set to some initial value.
-     * @param s TODO
-     * @param vars The variable set.
-     * @param initialValue The initial value.
-     */
+    /** Constructs a factor where each value is set to some initial value. */
     public VarTensor(Algebra s, VarSet vars, double initialValue) {
         super(s, getDims(vars));
         this.vars = vars;
