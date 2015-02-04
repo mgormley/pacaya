@@ -35,7 +35,8 @@ public class TakeLeftIfZero extends AbstractModule<Tensor> implements Module<Ten
         Tensor left = leftIn.getOutput();
         Tensor right = rightIn.getOutput();
         Tensor.checkEqualSize(left, right);
-        y = left.copyAndFill(s.zero());
+        y = new Tensor(left); // copy
+        left.fill(s.zero());
         for (int c=0; c<y.size(); c++) {
             Tensor t = (mark.getValue(c) == s.zero()) ? left : right;
             y.setValue(c, t.getValue(c));

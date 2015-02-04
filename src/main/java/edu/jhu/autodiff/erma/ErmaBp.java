@@ -941,7 +941,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
 
     @Override
     public Beliefs getOutputAdj() {
-        if (bAdj == null) {
+        if (bAdj == null) {            
             bAdj = b.copyAndFill(s.zero());
         }
         return bAdj;

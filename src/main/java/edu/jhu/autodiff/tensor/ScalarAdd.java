@@ -32,7 +32,7 @@ public class ScalarAdd extends AbstractModule<Tensor> implements Module<Tensor> 
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         double w_k = modInW.getOutput().getValue(k);
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.add(w_k);
         return y;
     }

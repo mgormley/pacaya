@@ -30,7 +30,7 @@ public class ElemDivide extends AbstractModule<Tensor> implements Module<Tensor>
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.elemDivide(w);
         return y;
     }
@@ -45,13 +45,13 @@ public class ElemDivide extends AbstractModule<Tensor> implements Module<Tensor>
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.elemDivide(w);
             correctForZeros(tmp);
             modInX.getOutputAdj().elemAdd(tmp);
         }
         {
-            Tensor tmp = w.copy();
+            Tensor tmp = new Tensor(w); // copy
             tmp.fill(s.one());
             tmp.elemDivide(w);
             tmp.elemDivide(w);

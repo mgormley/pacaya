@@ -32,7 +32,7 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         double w_k = modInW.getOutput().getValue(k);
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.divide(w_k);
         return y;
     }
@@ -47,12 +47,12 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
         Tensor x = modInX.getOutput();
         double w_k = modInW.getOutput().getValue(k);
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.divide(w_k);
             modInX.getOutputAdj().elemAdd(tmp);
         }
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.elemMultiply(x);
             tmp.divide(s.negate(s.times(w_k, w_k)));
             modInW.getOutputAdj().addValue(k, tmp.getSum());
