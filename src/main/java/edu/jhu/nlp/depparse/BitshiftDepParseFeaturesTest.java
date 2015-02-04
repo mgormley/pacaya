@@ -68,7 +68,7 @@ public class BitshiftDepParseFeaturesTest {
         prm.maxTokenContext = 2;
         prm.useCoarseTags = true;
         prm.useLemmaFeats = true;
-        prm.useMorphologicalFeatures = true;
+        prm.useMorphologicalFeats = true;
         prm.featureHashMod = -1; // Only uses MurmurHash from long to int.
         
         // For 2nd-order only.

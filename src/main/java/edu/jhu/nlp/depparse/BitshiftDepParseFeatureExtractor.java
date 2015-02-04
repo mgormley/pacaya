@@ -40,7 +40,7 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         @Opt(description = "Whether to use lemma features (TurboParser style only)")
         public boolean useLemmaFeats = true;
         @Opt(description = "Whether to use mophology features (TurboParser style only)")
-        public boolean useMorphologicalFeatures = true;
+        public boolean useMorphologicalFeats = true;
         @Opt(description = "Whether to use extra features (TurboParser style only)")
         public boolean useNonTurboFeats = false;
         @Opt(description = "Whether to use word-pair features for 2nd-order features (TurboParser style only)")

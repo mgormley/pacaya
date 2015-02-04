@@ -333,7 +333,7 @@ public class BitshiftDepParseFeatures {
     public static void addTurboWordPairFeats(final IntAnnoSentence sent, final int head, final int modifier, final byte pairType, 
             final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
         addTurboWordPairFeats(sent, head, modifier, pairType, feats, prm.featureHashMod, 
-                prm.maxTokenContext, prm.isLabeledParsing, prm.useNonTurboFeats, prm.useLemmaFeats, prm.useMorphologicalFeatures, 
+                prm.maxTokenContext, prm.isLabeledParsing, prm.useNonTurboFeats, prm.useLemmaFeats, prm.useMorphologicalFeats, 
                 prm.useCoarseTags);
     }
     
@@ -352,7 +352,7 @@ public class BitshiftDepParseFeatures {
             final boolean isLabeledParsing,
             final boolean useNonTurboFeats,
             final boolean useLemmaFeats,
-            final boolean useMorphologicalFeatures,
+            final boolean useMorphologicalFeats,
             final boolean useCoarseTags) {
         int sentLen = sent.size();
 
@@ -473,7 +473,7 @@ public class BitshiftDepParseFeatures {
         if (useCoarseTags) {
             addFeat(feats, mod, encodeFeatureSB__(ArcTs.hW_hC, flags, hWord, hCpos));            
         }
-        if (useMorphologicalFeatures) {
+        if (useMorphologicalFeats) {
             ShortArrayList hMorphosList = safeGetFeats(sent, head);
             short[] hMorphos = hMorphosList.getInternalElements();
             for (int j=0; j < hMorphosList.size(); j++) {
@@ -504,7 +504,7 @@ public class BitshiftDepParseFeatures {
             if (useCoarseTags) {
                 addFeat(feats, mod, encodeFeatureSB__(ArcTs.mW_mC, flags, mWord, mCpos));
             }
-            if (useMorphologicalFeatures) {
+            if (useMorphologicalFeats) {
                 ShortArrayList mMorphosList = safeGetFeats(sent, modifier);
                 short[] mMorphos = mMorphosList.getInternalElements();
                 for (int k=0; k < mMorphosList.size(); k++) {
@@ -663,7 +663,7 @@ public class BitshiftDepParseFeatures {
             addFeat(feats, mod, encodeFeatureSSB_(ArcTs.hW_mW_hP, flags, hWord, mWord, hPos));
         }
  
-        if (useMorphologicalFeatures) {
+        if (useMorphologicalFeats) {
             // For each morphological feature of the Head.
             ShortArrayList hMorphosList = safeGetFeats(sent, head);
             short[] hMorphos = hMorphosList.getInternalElements();

@@ -22,7 +22,6 @@ import edu.jhu.util.Timer;
 public class BitshiftDepParseFeaturesSpeedTest {
     
     private static final Logger log = LoggerFactory.getLogger(BitshiftDepParseFeaturesSpeedTest.class);
-    private static final int featureHashMod = 1000000;
     
     /**
      * Speed test results.
@@ -68,7 +67,7 @@ public class BitshiftDepParseFeaturesSpeedTest {
         BitshiftDepParseFeatureExtractorPrm prm = new BitshiftDepParseFeatureExtractorPrm();
         prm.useMstFeats = false;
         prm.useCarerrasFeats = false;
-        prm.useMorphologicalFeatures = false;
+        prm.useMorphologicalFeats = false;
         
         Timer timer = new Timer();
         timer.start();

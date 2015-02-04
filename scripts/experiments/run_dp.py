@@ -298,11 +298,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             exps = []
             languages = ["en"] #["es", "bg", "en"]
-            
+
             # Speedups
             g.defaults.update(sgdNumPasses=5)
             g.defaults.remove("printModel")
-            
+            g.defaults.update(useMorphologicalFeats=False, useLemmaFeats=False) # English only.
+
             # Train a first-order pruning model for each language
             prune_exps = {}
             for lang_short in languages:

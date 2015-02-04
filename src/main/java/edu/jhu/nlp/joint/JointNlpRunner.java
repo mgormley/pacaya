@@ -929,6 +929,7 @@ public class JointNlpRunner {
             parser.registerClass(RelObsFePrm.class);
             parser.registerClass(InsideOutsideDepParse.class);      
             parser.registerClass(ReporterManager.class);
+            parser.registerClass(BitshiftDepParseFeatureExtractorPrm.class);
             parser.parseArgs(args);
             JointNlpRunner.parser = parser;
             
