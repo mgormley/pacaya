@@ -40,6 +40,16 @@ public class MVecArray<Y extends MVec<Y>> implements MVec<MVecArray<Y>> {
         return setValue(idx, val, f);
     }
     
+    @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void elemAdd(MVec<?> addend) {
+        if (addend instanceof MVecArray) {
+            elemAdd((MVecArray)addend);
+        } else {
+            throw new IllegalArgumentException("Addend must be of type " + this.getClass());
+        }
+    }
+    
     public void elemAdd(MVecArray<Y> addend) {
         addArray(this.f, addend.f);
     }

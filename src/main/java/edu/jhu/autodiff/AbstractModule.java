@@ -21,7 +21,7 @@ public abstract class AbstractModule<T extends MVec<T>> implements Module<T> {
     @Override
     public T getOutputAdj() {
         if (yAdj == null) {
-            yAdj = y.copyAndFill(s.zero());
+            yAdj = (T) y.copyAndFill(s.zero());
         }
         return yAdj;
     }

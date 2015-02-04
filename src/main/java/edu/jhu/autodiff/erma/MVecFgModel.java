@@ -31,8 +31,16 @@ public class MVecFgModel implements MVec<MVecFgModel> {
     public double setValue(int idx, double val) {
         return params.set(idx, val);
     }
-
-    @Override
+    
+    @Override    
+    public void elemAdd(MVec<?> addend) {
+        if (addend instanceof MVecFgModel) {
+            elemAdd((MVecFgModel)addend);
+        } else {
+            throw new IllegalArgumentException("Addend must be of type " + this.getClass());
+        }
+    }
+    
     public void elemAdd(MVecFgModel addend) {
         params.add(addend.params);
     }

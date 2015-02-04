@@ -1,5 +1,6 @@
 package edu.jhu.autodiff;
 
+import edu.jhu.autodiff.erma.MVecFgModel;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
@@ -32,7 +33,15 @@ public class Scalar implements MVec<Scalar> {
         return new Scalar(Algebras.convertAlgebra(value, this.s, newS));
     }
 
-    @Override
+    @Override    
+    public void elemAdd(MVec<?> addend) {
+        if (addend instanceof Scalar) {
+            elemAdd((Scalar)addend);
+        } else {
+            throw new IllegalArgumentException("Addend must be of type " + this.getClass());
+        }
+    }
+    
     public void elemAdd(Scalar addend) {
         value = s.plus(value, addend.value);
     }

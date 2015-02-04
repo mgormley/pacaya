@@ -86,7 +86,15 @@ public class Beliefs implements MVec<Beliefs> {
         }
     }
 
-    @Override
+    @Override    
+    public void elemAdd(MVec<?> addend) {
+        if (addend instanceof Beliefs) {
+            elemAdd((Beliefs)addend);
+        } else {
+            throw new IllegalArgumentException("Addend must be of type " + this.getClass());
+        }
+    }
+    
     public void elemAdd(Beliefs addend) {
         MVecArray.addArray(this.varBeliefs, addend.varBeliefs);
         MVecArray.addArray(this.facBeliefs, addend.facBeliefs);

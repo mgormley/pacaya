@@ -247,6 +247,17 @@ public class Tensor implements MVec<Tensor> {
         }
     }
 
+    /** Implements {@link MVec#elemAdd(MVec)}. */
+    @Override
+    public void elemAdd(MVec<?> addend) {
+        if (addend instanceof Tensor) {
+            elemAdd((Tensor)addend);
+        } else {
+            throw new IllegalArgumentException("Addend must be of type " + this.getClass());
+        }
+    }
+    
+
     /**
      * Subtracts a factor elementwise from this one.
      * @param other The subtrahend.

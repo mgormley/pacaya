@@ -28,15 +28,15 @@ public interface MVec<T> {
     void fill(double val);
 
     /** Creates a copy of this vector. */
-    T copy();
+    MVec<?> copy();
     
     /** Creates a copy of this vector and converts it to a new abstract algebra. */
-    T copyAndConvertAlgebra(Algebra newS);
+    MVec<?> copyAndConvertAlgebra(Algebra newS);
 
     /** Creates a copy of this vector and fills it with a value. */
-    T copyAndFill(double val);
+    MVec<?> copyAndFill(double val);
     
     /** Adds (elementwise) a vector whose type is identical to this one. */
-    void elemAdd(T addend);
+    void elemAdd(MVec<?> addend);
     
 }
