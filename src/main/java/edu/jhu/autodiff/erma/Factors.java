@@ -1,6 +1,7 @@
 package edu.jhu.autodiff.erma;
 
 import edu.jhu.autodiff.MVec;
+import edu.jhu.autodiff.MVecArray;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
@@ -20,18 +21,18 @@ public class Factors implements MVec<Factors> {
 
     public Factors copy() {
         Factors clone = new Factors(s);
-        clone.f = Beliefs.copyOfVarTensorArray(this.f);
+        clone.f = MVecArray.copyOfArray(this.f);
         return clone;
     }
 
     public Factors copyAndConvertAlgebra(Algebra newS) {
         Factors clone = new Factors(newS);
-        clone.f = Beliefs.copyAndConvertAlgebraOfVarTensorArray(this.f, newS);
+        clone.f = MVecArray.copyAndConvertAlgebraOfArray(this.f, newS);
         return clone;
     }
 
     public void fill(double val) {
-        Beliefs.fillVarTensorArray(f, val);
+        MVecArray.fillArray(f, val);
     }
 
     public Factors copyAndFill(double val) {
@@ -41,19 +42,19 @@ public class Factors implements MVec<Factors> {
     }
     
     public int size() {
-        return Beliefs.count(f);
+        return MVecArray.count(f);
     }
 
     public double getValue(int idx) {
-        return Beliefs.getValue(idx, f);
+        return MVecArray.getValue(idx, f);
     }
     
     public double setValue(int idx, double val) {
-        return Beliefs.setValue(idx, val, f);
+        return MVecArray.setValue(idx, val, f);
     }
     
     public void elemAdd(Factors addend) {
-        Beliefs.addVarTensorArray(this.f, addend.f);
+        MVecArray.addArray(this.f, addend.f);
     }
 
     public Algebra getAlgebra() {
