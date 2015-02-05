@@ -15,8 +15,11 @@ import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.hash.MurmurHash;
 
-// TODO: we should have a special token representing the wall. Instead we're using the int
-// for the start of the sentence.
+/**
+ * Very fast feature extraction for dependency parsing.
+ * 
+ * @author mgormley
+ */
 public class BitshiftDepParseFeatures {
     
     private static final Logger log = LoggerFactory.getLogger(BitshiftDepParseFeatures.class);     
@@ -56,6 +59,7 @@ public class BitshiftDepParseFeatures {
         public static final byte GRANDPARENT_G_H = next();
         public static final byte GRANDPARENT_G_M = next();
         public static final byte GRANDPARENT_NONPROJ_H_M = next();
+        public static final byte HEAD_BIGRAM = next();
                 
     }
     
@@ -304,6 +308,32 @@ public class BitshiftDepParseFeatures {
         public static final byte hW_mC_sW= next();
         public static final byte hC_mW_sW= next();
     }
+    
+
+    /** 
+     * Template IDs for head bigram features in {@link BitshiftDepParseFeatures}. 
+     * 
+     * See {@link ArcTs} for a description of the encoding of these feature template names.
+     */
+    private static class HbTs {
+        private static int templ = 0;
+        protected static byte next() {
+            return SafeCast.safeIntToUnsignedByte(templ++);
+        }
+        public static final byte BIAS = next();
+        public static final byte lmP_mP_lDIST_DIST_FHB = next();
+        public static final byte jP_lmP_hP_mP_FHB = next();
+        public static final byte jW_lmP_hP_mP_FHB = next();
+        public static final byte jP_lmW_hP_mP_FHB = next();
+        public static final byte jP_lmP_hW_mP_FHB = next();
+        public static final byte jP_lmP_hP_mW_FHB = next();
+        public static final byte lmC_mC_lDIST_DIST_FHB = next();
+        public static final byte jC_lmC_hC_mC_FHB = next();
+        public static final byte jW_lmC_hC_mC_FHB = next();
+        public static final byte jC_lmW_hC_mC_FHB = next();
+        public static final byte jC_lmC_hW_mC_FHB = next();
+        public static final byte jC_lmC_hC_mW_FHB = next();
+    }
 
     /** Returns the bin into which the given size falls. */
     public static int binInt(int size, int...bins) {
@@ -359,23 +389,7 @@ public class BitshiftDepParseFeatures {
         // Distance codes.
         int distance = (head < modifier) ? modifier - head : head - modifier;
         byte exactDistCode = SafeCast.safeIntToUnsignedByte((distance > 0xff) ? 0xff : distance);
-        byte binDistCode; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
-        // The order here matters since we'll add features for each applicable bin.
-        if (distance > 40) {
-            binDistCode = 6;
-        } else if (distance > 30) {
-            binDistCode = 5;
-        } else if (distance > 20) {
-            binDistCode = 4;
-        } else if (distance > 10) {
-            binDistCode = 3;
-        } else if (distance > 5) {
-            binDistCode = 2;
-        } else if (distance > 2) {
-            binDistCode = 1;
-        } else {
-            binDistCode = 0;
-        }
+        byte binDistCode = getDistanceCode3Bits(distance);
 
         // Direction code and indices.
         byte direction = (head < modifier) ? (byte) 0 : (byte) 1;        
@@ -832,6 +846,31 @@ public class BitshiftDepParseFeatures {
                 }
             }                          
         }
+    }
+
+    /**
+     * Gets a distance code for a distance. The minimum value will be 0 and the maximum will be 6.
+     * Contractually, the value 7 will not be used.
+     */
+    private static byte getDistanceCode3Bits(int distance) {
+        byte binDistCode; // = SafeCast.safeIntToUnsignedByte(binInt(sentLen, 0, 2, 5, 10, 20, 30, 40));
+        // The order here matters since we'll add features for each applicable bin.
+        if (distance > 40) {
+            binDistCode = 6;
+        } else if (distance > 30) {
+            binDistCode = 5;
+        } else if (distance > 20) {
+            binDistCode = 4;
+        } else if (distance > 10) {
+            binDistCode = 3;
+        } else if (distance > 5) {
+            binDistCode = 2;
+        } else if (distance > 2) {
+            binDistCode = 1;
+        } else {
+            binDistCode = 0;
+        }
+        return binDistCode;
     }
 
     private static ShortArrayList safeGetFeats(IntAnnoSentence sent, int idx) {
@@ -1378,6 +1417,89 @@ public class BitshiftDepParseFeatures {
             addFeat(feats, mod, encodeFeatureSB__(TriTs.sW_mC, flags, sWord, mCpos));           
         }
     }
+
+    /** Adds the features for head-bigrams from TurboParser (Martins et al., 2013). */
+    public static void addTurboHeadBigramFeats(final IntAnnoSentence sent, final int head, final int modifier,
+            final int headB, final FeatureVector feats, BitshiftDepParseFeatureExtractorPrm prm) {
+        final int mod = prm.featureHashMod;
+        final boolean useCoarseTags = prm.useCoarseTags;
+        
+        int modifierB = modifier - 1;
+        
+        // Distance codes.
+        int distance = (head < modifier) ? modifier - head : head - modifier;
+        int distanceB = (headB < modifierB) ? modifierB - headB : headB - modifierB;
+        byte binDistCode = getDistanceCode3Bits(distance);
+        byte binDistCodeB = getDistanceCode3Bits(distanceB);
+
+        // Direction code and indices.
+        byte direction = (head < modifier) ? (byte) 0 : (byte) 1;        
+        byte directionB = (headB < modifierB) ? (byte) 0 : (byte) 1;
+        
+        // Note: TurboParser missed the case of the edges crossing when they point in opposite directions.
+        byte areCrossingArcs = 0x0;
+        if ((direction == directionB && headB < head) ||
+                (headB > modifier && head < modifierB)) {
+            areCrossingArcs = 0x1; // The arcs are crossing.
+        }
+
+        // Special flags indicating cases where there are not 4 distinct words.
+        byte sameHead = (headB == head) ? (byte)0b001 : (byte)0b0;
+        byte headLeft = (modifierB == head) ? (byte)0b010 : (byte)0b0;
+        byte headRight = (headB == modifier) ? (byte)0b100 : (byte)0b0;
+        byte flagsBigram = (byte) (sameHead | headLeft | headRight); // 3 bits.
+
+        // Head (h), modifier (m), left of modifier (lm), and its head (j) words/tags.
+        short hWord = (head < 0) ? TOK_WALL_INT : sent.getWord(head);
+        short mWord = (modifier < 0) ? TOK_WALL_INT : sent.getWord(modifier);
+        short jWord = (headB < 0) ? TOK_WALL_INT : sent.getWord(headB);
+        short lmWord = (modifierB < 0) ? TOK_WALL_INT : sent.getWord(modifierB);
+        //
+        byte hPos = (head < 0) ? TOK_WALL_INT : sent.getPosTag(head);
+        byte mPos = (modifier < 0) ? TOK_WALL_INT : sent.getPosTag(modifier);
+        byte jPos = (headB < 0) ? TOK_WALL_INT : sent.getPosTag(headB);
+        byte lmPos = (modifierB < 0) ? TOK_WALL_INT : sent.getPosTag(modifierB);
+        //
+        byte hCpos = (head < 0) ? TOK_WALL_INT : sent.getCposTag(head);
+        byte mCpos = (modifier < 0) ? TOK_WALL_INT : sent.getCposTag(modifier);
+        byte jCpos = (headB < 0) ? TOK_WALL_INT : sent.getCposTag(headB);
+        byte lmCpos = (modifierB < 0) ? TOK_WALL_INT : sent.getCposTag(modifierB);
+        
+        for (int mode = 0; mode < 2; mode++) {
+            byte flags = FeatureCollection.HEAD_BIGRAM; // 4 bits.
+            flags |= mode << 4; // 1 bit.
+            if (mode == 1) {
+                flags |= (areCrossingArcs << 5); // 1 bit.
+                flags |= (directionB << 6); // 1 bit.
+                flags |= (direction << 7); // 1 bit.
+            }
+
+            // Bias feature.
+            addFeat(feats, mod, encodeFeatureB___(HbTs.BIAS, flags, (byte)0));
+            // POS features.
+            if (mode == 1) {
+                addFeat(feats, mod, encodeFeatureBBBBB(HbTs.lmP_mP_lDIST_DIST_FHB, flags,  lmPos, mPos, binDistCodeB, binDistCode, flagsBigram));
+            }
+            addFeat(feats, mod, encodeFeatureBBBBB(HbTs.jP_lmP_hP_mP_FHB, flags, jPos, lmPos, hPos, mPos, flagsBigram));
+            // One word; Three POS tags.
+            addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jW_lmP_hP_mP_FHB, flags, jWord, lmPos, hPos, mPos, flagsBigram));
+            addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jP_lmW_hP_mP_FHB, flags, lmWord, jPos, hPos, mPos, flagsBigram));
+            addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jP_lmP_hW_mP_FHB, flags, hWord, jPos, lmPos, mPos, flagsBigram));
+            addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jP_lmP_hP_mW_FHB, flags, mWord, jPos, lmPos, hPos, flagsBigram));
+            if (useCoarseTags) {
+                // Coarse POS Features.
+                if (mode == 1) {
+                    addFeat(feats, mod, encodeFeatureBBBBB(HbTs.lmC_mC_lDIST_DIST_FHB, flags,  lmCpos, mCpos, binDistCodeB, binDistCode, flagsBigram));
+                }
+                addFeat(feats, mod, encodeFeatureBBBBB(HbTs.jC_lmC_hC_mC_FHB, flags, jCpos, lmCpos, hCpos, mCpos, flagsBigram));
+                // One word; Three Coarse POS tags.
+                addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jW_lmC_hC_mC_FHB, flags, jWord, lmCpos, hCpos, mCpos, flagsBigram));
+                addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jC_lmW_hC_mC_FHB, flags, lmWord, jCpos, hCpos, mCpos, flagsBigram));
+                addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jC_lmC_hW_mC_FHB, flags, hWord, jCpos, lmCpos, mCpos, flagsBigram));
+                addFeat(feats, mod, encodeFeatureSBBBB(HbTs.jC_lmC_hC_mW_FHB, flags, mWord, jCpos, lmCpos, hCpos, flagsBigram));
+            }
+        }
+    }
     
     private static void addFeat(FeatureVector feats, int mod, long feat) {
         int hash = MurmurHash.hash32(feat);
@@ -1428,6 +1550,12 @@ public class BitshiftDepParseFeatures {
     private static long encodeFeatureSBB_(byte template, byte flags, short s1, byte b2, byte b3) {
         return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) 
                 | ((b2 & BYTE_MAX) << 32) | ((b3 & BYTE_MAX) << 40);
+    }
+    
+    private static long encodeFeatureSBBBB(byte template, byte flags, short s1, byte b2, byte b3, byte b4, byte b5) {
+        return (template & BYTE_MAX) | ((flags & BYTE_MAX) << 8) | ((s1 & SHORT_MAX) << 16) 
+                | ((b2 & BYTE_MAX) << 32) | ((b3 & BYTE_MAX) << 40) | ((b4 & BYTE_MAX) << 48) 
+                | ((b5 & BYTE_MAX) << 56); // Full.
     }
     
     private static long encodeFeatureSSBB(byte template, byte flags, short s1, short s2, byte b3, byte b4) {

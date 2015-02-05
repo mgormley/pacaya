@@ -156,6 +156,17 @@ public class BitshiftDepParseFeaturesTest {
         }
     }
 
+    @Test
+    public void testAddTurboHeadBigramFeats() throws Exception {
+        IntAnnoSentence isent = getIntAnnoSentence();
+        BitshiftDepParseFeatureExtractorPrm prm = getDefaultBitshiftDepParseFeatureExtractorPrm();
+        {
+            FeatureVector feats = getFv();
+            BitshiftDepParseFeatures.addTurboHeadBigramFeats(isent, 0, 2, 3, feats, prm);
+            checkNumFeatsBeforeAndAfterCompact(feats, 24, 24);
+        }
+    }
+
     protected FeatureVector getFv() {
         return new FeatureVector();
     }
