@@ -55,6 +55,9 @@ public class DepParseFactorGraphBuilder implements Serializable {
         /** Whether to include 2nd-order sibling factors in the model. */
         public boolean siblingFactors = false;
         
+        /** Whether to include 2nd-order head-bigram factors in the model. */
+        public boolean headBigramFactors = false;
+        
         /** Whether to exclude non-projective grandparent factors. */
         public boolean excludeNonprojectiveGrandparents = true;
         
@@ -149,41 +152,76 @@ public class DepParseFactorGraphBuilder implements Serializable {
         }
         
         // Don't include factors on observed variables.
-        if (prm.linkVarType != VarType.OBSERVED) { 
-            // Add the factors.
-            for (int i = -1; i < n; i++) {
-                // Add the role/link factors.
-                for (int j = 0; j < n; j++) {
-                    if (i == j) { continue; }
-                    LinkVar ijVar = getLinkVar(i, j);
-                    if (ijVar != null) {
-                        if (depEdgeMask.isPruned(i, j)) {
-                            // This edge will never be "on".
-                            fg.addFactor(new ClampFactor(ijVar, LinkVar.FALSE));
-                        } else {
-                            // Add unary factors on root / child Links
-                            if (prm.unaryFactors) {
-                                fg.addFactor(new FeTypedFactor(new VarSet(ijVar), DepParseFactorTemplate.LINK_UNARY, fe));
-                            }
-                            for (int k = 0; k < n; k++) {
-                                if (i == k || j == k) { continue; }
-                                // Add grandparent factors.
-                                boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
-                                if (!prm.excludeNonprojectiveGrandparents || !isNonprojectiveGrandparent) {
-                                    LinkVar jkVar = getLinkVar(j, k);
-                                    if (prm.grandparentFactors && jkVar != null && !depEdgeMask.isPruned(j, k)) {
-                                        fg.addFactor(new GraFeTypedFactor(new VarSet(ijVar, jkVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, j, k, i));
-                                    }
-                                }
-                                if (j < k) {
-                                    // Add sibling factors.
-                                    LinkVar ikVar = getLinkVar(i, k);
-                                    if (prm.siblingFactors && ikVar != null && !depEdgeMask.isPruned(i, k)) {
-                                        fg.addFactor(new SibFeTypedFactor(new VarSet(ijVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, i, j, k));
-                                    }
-                                }
-                            }
-                        }
+        if (prm.linkVarType == VarType.OBSERVED) {
+            return;
+        }
+        
+        addClampFactors(fg, depEdgeMask, fe);
+        if (prm.unaryFactors) { addUnaryFactors(fg, depEdgeMask, fe); }
+        if (prm.grandparentFactors) { addGrandparentFactors(fg, depEdgeMask, fe); }
+        if (prm.siblingFactors) { addArbitrarySiblingFactors(fg, depEdgeMask, fe); }
+    }
+
+    private void addClampFactors(FactorGraph fg, DepEdgeMask depEdgeMask, FeatureExtractor fe) {
+        // Add factors clamping the pruned edges to be "off".
+        for (int p = -1; p < n; p++) {
+            for (int c = 0; c < n; c++) {
+                if (p == c) { continue; }
+                LinkVar pcVar = getLinkVar(p, c);
+                if (pcVar == null) { continue; }
+                if (depEdgeMask.isPruned(p, c)) {
+                    // This edge will never be "on".
+                    fg.addFactor(new ClampFactor(pcVar, LinkVar.FALSE));
+                }
+            }
+        }
+    }
+    
+    private void addUnaryFactors(FactorGraph fg, DepEdgeMask depEdgeMask, FeatureExtractor fe) {
+        // Add unary factors on root / child Links.
+        for (int p = -1; p < n; p++) {
+            for (int c = 0; c < n; c++) {
+                if (p == c) { continue; }
+                LinkVar pcVar = getLinkVar(p, c);
+                if (pcVar == null) { continue; }
+                if (depEdgeMask.isPruned(p, c)) { continue; }
+                fg.addFactor(new FeTypedFactor(new VarSet(pcVar), DepParseFactorTemplate.LINK_UNARY, fe));
+            }
+        }
+    }
+    
+    private void addGrandparentFactors(FactorGraph fg, DepEdgeMask depEdgeMask, FeatureExtractor fe) {
+        // Add grandparent factors.
+        for (int g = -1; g < n; g++) {
+            for (int p = 0; p < n; p++) {
+                if (g == p) { continue; }
+                LinkVar gpVar = getLinkVar(g, p);
+                if (depEdgeMask.isPruned(g, p) || gpVar == null) { continue; }
+                for (int c = 0; c < n; c++) {
+                    if (g == c || p == c) { continue; }                  
+                    LinkVar pcVar = getLinkVar(p, c);
+                    if (pcVar == null || depEdgeMask.isPruned(p, c)) { continue; }
+                    boolean isNonprojectiveGrandparent = (g < p && c < g) || (p < g && g < c);
+                    if (prm.excludeNonprojectiveGrandparents && isNonprojectiveGrandparent) { continue; }  
+                    fg.addFactor(new GraFeTypedFactor(new VarSet(gpVar, pcVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, p, c, g));
+                }
+            }
+        }
+    }
+    
+    private void addArbitrarySiblingFactors(FactorGraph fg, DepEdgeMask depEdgeMask, FeatureExtractor fe) {
+        // Add arbitrary sibling factors.
+        for (int p = -1; p < n; p++) {
+            for (int c = 0; c < n; c++) {
+                if (p == c) { continue; }
+                LinkVar pcVar = getLinkVar(p, c);
+                if (depEdgeMask.isPruned(p, c) || pcVar == null) { continue; }
+                for (int s = 0; s < n; s++) {
+                    if (p == s || c == s) { continue; }
+                    LinkVar ikVar = getLinkVar(p, s);
+                    if (ikVar == null || depEdgeMask.isPruned(p, s)) { continue; }
+                    if (c < s) {
+                        fg.addFactor(new SibFeTypedFactor(new VarSet(pcVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, p, c, s));                        
                     }
                 }
             }

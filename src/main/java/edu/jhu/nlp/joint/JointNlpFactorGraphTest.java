@@ -241,6 +241,7 @@ public class JointNlpFactorGraphTest {
     public void testFirstOrderDepParser() {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();
         prm.includeSrl = false;
+        prm.includeDp = true;
         prm.dpPrm.linkVarType = VarType.PREDICTED;
         prm.dpPrm.unaryFactors = true;
         JointNlpFactorGraph sfg = getSrlFg(prm);
