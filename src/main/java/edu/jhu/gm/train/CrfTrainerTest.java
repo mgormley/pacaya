@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +44,9 @@ import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
+import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
@@ -401,6 +403,8 @@ public class CrfTrainerTest {
             optPrm.sched.setEta0(0.1);
             prm.batchOptimizer = new SGD(optPrm);
             prm.optimizer = null;
+        } else {
+            prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         }
         prm.regularizer = r;
         
@@ -432,6 +436,8 @@ public class CrfTrainerTest {
             optPrm.sched.setEta0(0.2);
             prm.batchOptimizer = new SGD(optPrm);
             prm.optimizer = null;
+        } else {
+            prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         }
         prm.regularizer = r;
         

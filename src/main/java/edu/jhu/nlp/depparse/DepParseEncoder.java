@@ -13,6 +13,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.globalfac.LinkVar;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.data.simple.AnnoSentence;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.util.FeatureNames;
@@ -28,6 +29,7 @@ public class DepParseEncoder implements Encoder<AnnoSentence, int[]> {
     public static class DepParseEncoderPrm {
         // TODO: Fill w/non-null values.
         public DepParseFeatureExtractorPrm dpFePrm = null;
+        public BitshiftDepParseFeatureExtractorPrm bsDpFePrm = null;
         public DepParseFactorGraphBuilderPrm dpPrm = null;
     }
     
@@ -53,7 +55,7 @@ public class DepParseEncoder implements Encoder<AnnoSentence, int[]> {
 
     private LFgExample getExample(AnnoSentence sent, int[] parents, boolean labeledExample) {
         FeatureExtractor fe = prm.dpFePrm.onlyFast ?
-                new FastDepParseFeatureExtractor(sent, cs, prm.dpFePrm.featureHashMod, feAlphabet) :
+                new BitshiftDepParseFeatureExtractor(prm.bsDpFePrm, sent, cs, feAlphabet) :
                 new DepParseFeatureExtractor(prm.dpFePrm, sent, cs, feAlphabet);
         fe = new FeatureCache(fe);
         

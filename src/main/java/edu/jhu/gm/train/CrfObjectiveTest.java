@@ -37,6 +37,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
@@ -111,6 +113,7 @@ public class CrfObjectiveTest {
 		
 		// find out what the log-likelihood is
 		CrfTrainer.CrfTrainerPrm trainerPrm = new CrfTrainer.CrfTrainerPrm();
+		trainerPrm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
 		trainerPrm.infFactory = infFactory;
 		
 		FgExampleMemoryStore exs = new FgExampleMemoryStore();

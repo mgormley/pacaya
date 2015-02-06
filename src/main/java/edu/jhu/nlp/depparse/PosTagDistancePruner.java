@@ -2,9 +2,10 @@ package edu.jhu.nlp.depparse;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +17,12 @@ import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.LabelSequence;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda.FnIntToVoid;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Threads;
+import edu.jhu.util.collections.Sets;
 
 /**
  * Distance-based pruning method from Rush & Petrov (2012).
@@ -142,6 +145,11 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
         int numEdgesPruned = numEdgesTot.get() - numEdgesKept.get();
         log.info(String.format("Pruned %d / %d = %f edges", numEdgesPruned, numEdgesTot.get(), 
                     (double) numEdgesPruned / numEdgesTot.get()));
+    }
+    
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Sets.getSet(AT.DEP_EDGE_MASK);
     }
     
 }

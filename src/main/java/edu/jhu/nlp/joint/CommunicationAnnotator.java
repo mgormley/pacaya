@@ -5,7 +5,7 @@
 package edu.jhu.nlp.joint;
 
 import java.io.File;
-import java.io.InputStream;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,9 @@ import edu.jhu.nlp.AnnoPipeline;
 import edu.jhu.nlp.data.concrete.ConcreteReader;
 import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.nlp.data.concrete.ConcreteWriter;
+import edu.jhu.nlp.data.concrete.ConcreteWriter.ConcreteWriterPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Threads;
 import edu.jhu.util.files.Files;
@@ -78,7 +80,11 @@ public class CommunicationAnnotator {
         ConcreteReader cr = new ConcreteReader(new ConcreteReaderPrm());
         AnnoSentenceCollection sents = cr.toSentences(c);
         anno.annotate(sents);
-        ConcreteWriter cw = new ConcreteWriter(concreteSrlIsSyntax);
+        Set<AT> addAnnoTypes = anno.getAnnoTypes();
+        ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
+        cwPrm.srlIsSyntax = concreteSrlIsSyntax;
+        cwPrm.addAnnoTypes(anno.getAnnoTypes());
+        ConcreteWriter cw = new ConcreteWriter(cwPrm);
         cw.addAnnotations(sents, c);
         return c;
     }

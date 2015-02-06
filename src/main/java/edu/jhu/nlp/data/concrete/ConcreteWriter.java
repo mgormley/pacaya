@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -24,7 +26,7 @@ import edu.jhu.hlt.concrete.SituationMention;
 import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.Tokenization;
-import edu.jhu.hlt.concrete.serialization.ThreadSafeCompactCommunicationSerializer;
+import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
 import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
 import edu.jhu.nlp.data.conll.SrlGraph;
@@ -42,6 +44,49 @@ import edu.jhu.nlp.features.TemplateLanguage.AT;
  */
 public class ConcreteWriter {
 
+    public static class ConcreteWriterPrm {   
+        private static final Logger log = LoggerFactory.getLogger(ConcreteWriterPrm.class);
+        /* ----- Whether to include each annotation layer ----- */
+        /** Whether to add the dependency parses. */
+        public boolean addDepParse = true;
+        /** Whether to add SRL. */
+        public boolean addSrl = true;
+        /** Whether to add NER mentions. */
+        public boolean addNerMentions = true;
+        /** Whether to add relations. */
+        public boolean addRelations = true;
+        /* ---------------------------------------------------- */
+        /**
+         * Whether to write out SRL as a labeled dependency tree (i.e. syntax) or as SituationMentions.
+         * 
+         * If true, we put SRL annotations in as dependency parses.
+         * Dependency edges from root (gov=-1) represent predicates,
+         * with the edge type giving the predicate sense. Arguments
+         * are dependents of their predicate token, with the dependency
+         * label capturing the argument label (e.g. "ARG0" and "ARG1").
+         * 
+         * Otherwise, we create a SituationMention for every predicate,
+         * which have proper Arguments, each of which includes an EntityMention
+         * that is added to its own EntityMentionSet (all EntityMentions created
+         * by this tool in a document are unioned before making an EntityMentionSet).
+         */
+        public boolean srlIsSyntax = false;
+        /** Sets the include flag for each annotation type to true, or warns if it's not supported. */
+        public void addAnnoTypes(Collection<AT> ats) {
+            this.addDepParse = ats.contains(AT.DEP_TREE);
+            this.addSrl = ats.contains(AT.SRL);
+            this.addNerMentions = ats.contains(AT.NER);
+            this.addRelations = ats.contains(AT.RELATIONS);
+            
+            EnumSet<AT> others = EnumSet.complementOf(EnumSet.of(AT.DEP_TREE, AT.SRL, AT.NER, AT.RELATIONS));
+            for (AT at : ats) {
+                if (others.contains(at)) {
+                    log.warn("Annotations of type {} are not supported by ConcreteWriter and will not be added to Concrete Communications.", at);
+                }
+            }
+        }
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(ConcreteWriter.class);
 
     public static final String DEP_PARSE_TOOL = "Pacaya Dependency Parser";
@@ -50,24 +95,11 @@ public class ConcreteWriter {
     private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
     
     private final long timestamp;     // time that every annotation that is processed will get
-    private final boolean srlIsSyntax;
+    private final ConcreteWriterPrm prm;
 
-    /**
-     * @param srlIsSyntax
-     * If true, we put SRL annotations in as dependency parses.
-     * Dependency edges from root (gov=-1) represent predicates,
-     * with the edge type giving the predicate sense. Arguments
-     * are dependents of their predicate token, with the dependency
-     * label capturing the argument label (e.g. "ARG0" and "ARG1").
-     * 
-     * Otherwise, we create a SituationMention for every predicate,
-     * which have proper Arguments, each of which includes an EntityMention
-     * that is added to its own EntityMentionSet (all EntityMentions created
-     * by this tool in a document are unioned before making an EntityMentionSet).
-     */
-    public ConcreteWriter(boolean srlIsSyntax) {
+    public ConcreteWriter(ConcreteWriterPrm prm) {
         this.timestamp = System.currentTimeMillis();
-        this.srlIsSyntax = srlIsSyntax;
+        this.prm = prm;
     }
 
     public void write(AnnoSentenceCollection sents, File out) throws IOException {
@@ -84,7 +116,7 @@ public class ConcreteWriter {
             comm = comm.deepCopy();
             addAnnotations(sents, comm);
             try {
-                ThreadSafeCompactCommunicationSerializer ser = new ThreadSafeCompactCommunicationSerializer();
+                CompactCommunicationSerializer ser = new CompactCommunicationSerializer();
                 byte[] bytez =ser.toBytes(comm);
                 Files.write(Paths.get(out.getAbsolutePath()), bytez);
             } catch (ConcreteException e) {
@@ -102,9 +134,15 @@ public class ConcreteWriter {
                     "This can occur when the maximum sentence length or the total number of sentences is restricted.");
             throw new RuntimeException("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection.");
         }
-        addDependencyParse(sents, comm);
-        addSrlAnnotations(sents, comm);
-        addRelations(sents, comm);
+        if (prm.addDepParse) {
+            addDependencyParse(sents, comm);
+        }
+        if (prm.addSrl) {
+            addSrlAnnotations(sents, comm);
+        }
+        if (prm.addNerMentions || prm.addRelations) {
+            addNerMentionsAndRelations(sents, comm);
+        }
     }
 
     /**
@@ -166,7 +204,7 @@ public class ConcreteWriter {
         
         List<Tokenization> tokenizations = getTokenizationsCorrespondingTo(sents, comm);
         
-        if(srlIsSyntax) {
+        if(prm.srlIsSyntax) {
             // make a dependency parse for every sentence / SRL
             for(int i=0; i<tokenizations.size(); i++) {
                 AnnoSentence sent = sents.get(i);
@@ -253,7 +291,7 @@ public class ConcreteWriter {
         return mentions;
     }
 
-    private void addRelations(AnnoSentenceCollection sents, Communication comm) {
+    private void addNerMentionsAndRelations(AnnoSentenceCollection sents, Communication comm) {
         //if (!sents.someHaveAt(AT.REL_LABELS)) { return; } 
         // TODO Auto-generated method stub
         //throw new RuntimeException();

@@ -27,7 +27,7 @@ public class CoNLL09BrownTagger {
 
     public static void main(String[] args) throws IOException {
         ArgParser parser = new ArgParser(CoNLL09BrownTagger.class);
-        parser.addClass(CoNLL09BrownTagger.class);
+        parser.registerClass(CoNLL09BrownTagger.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {

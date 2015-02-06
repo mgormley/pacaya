@@ -257,10 +257,9 @@ public class RunCkyParser {
     
     public static void main(String[] args) throws IOException {
         ArgParser parser = new ArgParser(RunCkyParser.class);
-        parser.addClass(RunCkyParser.class);
-        CommandLine cmd = null;
+        parser.registerClass(RunCkyParser.class);
         try {
-            cmd = parser.parseArgs(args);
+            parser.parseArgs(args);
         } catch (ParseException e) {
             log.error(e.getMessage());
             parser.printUsage();

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +82,7 @@ public class Conll09ToConllLiteV2 {
     
     public static void main(String[] args) throws IOException {
         ArgParser parser = new ArgParser(Conll09ToConllLiteV2.class);
-        parser.addClass(Conll09ToConllLiteV2.class);
+        parser.registerClass(Conll09ToConllLiteV2.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {

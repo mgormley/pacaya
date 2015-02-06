@@ -9,6 +9,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.nlp.tag.StrictPosTagAnnotator.StrictPosTag;
 import edu.jhu.util.collections.Lists;
 
 public class AlphabetStoreTest {
@@ -120,31 +121,40 @@ public class AlphabetStoreTest {
         
         if (includeExtras) {
             // Add one token for word<i> for i in [100,..., 65545].
-            int i=100;
-            AnnoSentence s = new AnnoSentence();
-            s.setWords(getList("word"+i));
-            s.setPrefixes(getList("prefix"+i));
-            s.setLemmas(getList("lemma"+i));
-            s.setPosTags(getList("pos"+i));
-            s.setCposTags(getList("cpos"+i));
-            s.setClusters(getList("cluster"+i));
-            s.setFeats(getList(getList("feat"+i)));
-            s.setDeprels(getList("deprel"+i));
+            int start=100;
+            int end = 0xffff+10;
+            AnnoSentence s = getAnnoSentenceForRange(start, end);            
             sents.add(s);
-            
-            for (i=101; i<0xffff+10; i++) {
-                s.getWords().add("word"+i);
-                s.getPrefixes().add("prefix"+i);
-                s.getLemmas().add("lemma"+i);
-                s.getPosTags().add("pos"+i);
-                s.getCposTags().add("cpos"+i);
-                s.getClusters().add("cluster"+i);
-                s.getFeats().get(0).add("feat"+i);
-                s.getDeprels().add("deprel"+i);
-            }
         }
         
         return sents;
+    }
+
+    public static AnnoSentence getAnnoSentenceForRange(int start, int end) {
+        int len = end - start;
+        AnnoSentence s = new AnnoSentence();
+        s.setWords(getList("word"+start));
+        s.setPrefixes(getList("prefix"+start));
+        s.setLemmas(getList("lemma"+start));
+        s.setPosTags(getList("pos"+start));
+        s.setCposTags(getList("cpos"+start));
+        s.setClusters(getList("cluster"+start));
+        s.setDeprels(getList("deprel"+start));
+        s.setFeats(getList(getList("feat"+start)));    
+        s.setStrictPosTags(getList(StrictPosTag.values()[start%StrictPosTag.values().length]));
+        
+        for (int i=start+1; i<end; i++) {
+            s.getWords().add("word"+i);
+            s.getPrefixes().add("prefix"+i);
+            s.getLemmas().add("lemma"+i);
+            s.getPosTags().add("pos"+i);
+            s.getCposTags().add("cpos"+i);
+            s.getClusters().add("cluster"+i);
+            s.getDeprels().add("deprel"+i);
+            s.getFeats().add(getList("feat"+i));
+            s.getStrictPosTags().add(StrictPosTag.values()[i%StrictPosTag.values().length]);
+        }
+        return s;
     }
     
     @Test

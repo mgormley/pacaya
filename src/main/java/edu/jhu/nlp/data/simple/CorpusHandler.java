@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -145,7 +146,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted train";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(trainPredOut, getTrainTypeOut(), trainPredSents);
+            writer.write(trainPredOut, getTrainTypeOut(), trainPredSents, getPredAts());
         }
     }
 
@@ -187,7 +188,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold train";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(trainGoldOut, getTrainTypeOut(), trainGoldSents);
+            writer.write(trainGoldOut, getTrainTypeOut(), trainGoldSents, new HashSet<AT>());
         }
         
         // Cache input train data.
@@ -248,7 +249,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted dev";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(devPredOut, getDevTypeOut(), devPredSents);
+            writer.write(devPredOut, getDevTypeOut(), devPredSents, getPredAts());
         }
     }
 
@@ -269,7 +270,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold dev";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(devGoldOut, getDevTypeOut(), devGoldSents);
+            writer.write(devGoldOut, getDevTypeOut(), devGoldSents, new HashSet<AT>());
         }
     }    
     
@@ -334,7 +335,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted test";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(testPredOut, getTestTypeOut(), testPredSents);
+            writer.write(testPredOut, getTestTypeOut(), testPredSents, getPredAts());
         }
     }
 
@@ -360,7 +361,7 @@ public class CorpusHandler {
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold test";
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
-            writer.write(testGoldOut, getTestTypeOut(), testGoldSents);
+            writer.write(testGoldOut, getTestTypeOut(), testGoldSents, new HashSet<AT>());
         }
         
         // Cache input test data.

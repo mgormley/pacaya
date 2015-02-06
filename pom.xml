@@ -4,13 +4,18 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.0.4</version>
+  <version>3.0.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
   <description>Graphical Models and NLP Library.</description>
   <url>https://github.com/mgormley/pacaya</url>
 
+  <properties>
+    <pacaya.version>3.0.4-SNAPSHOT</pacaya.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
   <developers>
     <developer>
       <email>mrg@cs.jhu.edu</email>
@@ -49,15 +54,12 @@
     <developerConnection>scm:git:git@github.com:mgormley/pacaya.git</developerConnection>
   </scm>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>       
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
@@ -65,11 +67,11 @@
           <fork>true</fork>
           <!-- <compilerArgument>-verbose</compilerArgument> -->
         </configuration>
-        <version>3.0</version>
       </plugin>
       <!-- For use with: mvn clean compile assembly:single -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>        
         <configuration>
           <archive>
             <manifest>
@@ -83,8 +85,48 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version>
         <configuration>
           <testFailureIgnore>true</testFailureIgnore>
+        </configuration>
+      </plugin>
+      <!-- The following plugin includes alternate source directories in the compilation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>add-test-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/src/benchmark/java</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- This plugin allows us to update to the latest versions of prim, optimize, and optimize-wrappers. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <properties>
+            <property>
+              <name>manchu.version</name>
+              <dependencies>
+                <dependency>
+                  <groupId>com.foo.bar</groupId>
+                  <artifactId>manchu-wibble</artifactId>
+                </dependency>
+              </dependencies>
+            </property>
+          </properties>
         </configuration>
       </plugin>
     </plugins>
@@ -228,12 +270,12 @@
     <dependency>
       <groupId>edu.jhu.prim</groupId>
       <artifactId>prim</artifactId>
-      <version>3.0.3</version>
+      <version>${pacaya.version}</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
       <artifactId>optimize</artifactId>
-      <version>3.0.3</version>
+      <version>${pacaya.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
@@ -295,17 +337,17 @@
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-core</artifactId>
-      <version>3.10.7</version>
+      <version>4.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-util</artifactId>
-      <version>3.10.7</version>
+      <version>4.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
       <artifactId>optimize-wrappers</artifactId>
-      <version>3.0.3</version>
+      <version>${pacaya.version}</version>
       <optional>true</optional>      
     </dependency>
   </dependencies>

@@ -53,7 +53,7 @@ public class ArgParserTest {
             String[] args = "--intVal=2".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals(2, intVal);
@@ -63,7 +63,7 @@ public class ArgParserTest {
             String[] args = "--intVal 3 --doubleVal=3e10".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals(3, intVal);
@@ -73,7 +73,7 @@ public class ArgParserTest {
             String[] args = "--intVal 3e+06 --doubleVal=1E+06".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals(3000000, intVal);
@@ -83,7 +83,7 @@ public class ArgParserTest {
             String[] args = "--strVal=4 --fileVal=4/4".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals("4", strVal);
@@ -93,7 +93,7 @@ public class ArgParserTest {
             String[] args = "--enumVal=OPT2".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals(MockEnum.OPT2, enumVal);
@@ -106,7 +106,7 @@ public class ArgParserTest {
             String[] args = "--stopBy=01-10-14.06:00PM".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals("Fri Jan 10 18:00:00 EST 2014", stopBy.toString());
@@ -115,7 +115,7 @@ public class ArgParserTest {
             String[] args = "--stopBy=01-10-14.06:22AM".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(ArgParserTest.class);
+            parser.registerClass(ArgParserTest.class);
             parser.parseArgs(args);
 
             Assert.assertEquals("Fri Jan 10 06:22:00 EST 2014", stopBy.toString());
@@ -127,7 +127,7 @@ public class ArgParserTest {
         String[] args = "--boolArg FALSE --boolNoArg".split(" ");
 
         ArgParser parser = new ArgParser();
-        parser.addClass(ArgParserTest.class);
+        parser.registerClass(ArgParserTest.class);
         parser.parseArgs(args);
 
         Assert.assertEquals(false, boolArg);
@@ -147,7 +147,7 @@ public class ArgParserTest {
             String[] args = "--requiredInt 2".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(RequiredOpts.class);
+            parser.registerClass(RequiredOpts.class);
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {
@@ -160,7 +160,7 @@ public class ArgParserTest {
             String[] args = "".split(" ");
 
             ArgParser parser = new ArgParser();
-            parser.addClass(RequiredOpts.class);
+            parser.registerClass(RequiredOpts.class);
             try {
                 parser.parseArgs(args);
                 Assert.fail();
@@ -170,12 +170,84 @@ public class ArgParserTest {
 
         }
     }
+    
+    public static class NamedOpts {
+        @Opt(hasArg = true, name = "actualName", description = "my named int", required = true)
+        public static int originalName = 1;
+    }
 
+    @Test
     public void testName() {
-        // TODO: write this test.
+        {
+            String[] args = "--actualName 2".split(" ");
+            ArgParser parser = new ArgParser();
+            parser.registerClass(NamedOpts.class);
+            try {
+                parser.parseArgs(args);
+            } catch (ParseException e) {
+                Assert.fail();
+            }
+            Assert.assertEquals(2, NamedOpts.originalName);
+        }
+        {
+            String[] args = "--originalName 2".split(" ");
+            ArgParser parser = new ArgParser();
+            parser.registerClass(RequiredOpts.class);
+            try {
+                parser.parseArgs(args);
+                Assert.fail();
+            } catch (ParseException e) {
+                // success
+            }
+        }
     }
 
-    public void testUsage() {
-        // TODO: write this test.
+    @Test
+    public void testUsage() throws ParseException {
+        String[] args = "--intVal=2".split(" ");
+        ArgParser parser = new ArgParser(ArgParserTest.class, true);
+        parser.registerClass(ArgParserTest.class);
+        parser.parseArgs(args);
+        // This test isn't very robust. It just prints the usage and doesn't check anything.       
+        parser.printUsage();
     }
+    
+    @Test
+    public void testShortNames() throws ParseException {
+        String[] args = "-sv 4 -fv 4/4".split(" ");
+        ArgParser parser = new ArgParser(ArgParserTest.class, true);
+        parser.registerClass(ArgParserTest.class);
+        parser.parseArgs(args);
+        Assert.assertEquals("4", strVal);
+        Assert.assertEquals(new File("4/4"), fileVal);
+    }
+    
+    public static class InstanceOpts {
+        @Opt(hasArg = true, description = "my intVal")
+        public int intValI = 1;
+        @Opt(hasArg = true, description = "my doubleVal")
+        public double doubleValI = 1e10;
+        @Opt(hasArg = true, description = "my boolArg")
+        public boolean boolArgI = true;
+        @Opt(hasArg = false, description = "my boolNoArg")
+        public boolean boolNoArgI = false;
+        @Opt(hasArg = true, description = "my strVal")
+        public String strValI = "1";
+    }
+    
+    @Test
+    public void testInstanceFactory() throws ParseException {
+        String[] args = "--intValI=4 --doubleValI=0.3 --boolArgI=false --boolNoArgI".split(" ");
+        ArgParser parser = new ArgParser(InstanceOpts.class, true);
+        parser.registerClass(InstanceOpts.class);
+        parser.parseArgs(args);
+        InstanceOpts io = parser.getInstanceFromParsedArgs(InstanceOpts.class);
+        Assert.assertEquals(4, io.intValI);
+        Assert.assertEquals(0.3, io.doubleValI, 1e-13);
+        Assert.assertEquals(false, io.boolArgI);
+        Assert.assertEquals(true, io.boolNoArgI);
+        // Not set by ArgParser construction.
+        Assert.assertEquals("1", io.strValI);
+    }
+    
 }

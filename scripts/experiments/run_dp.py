@@ -138,7 +138,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb,
                                            dpSkipPunctuation=True)
             else:
-                gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
+                gl.cx_data += SrlExpParams(propTrainAsDev=0.10, reduceTags=p.cx_tag_maps[lang_short]) 
                 
         # This is a map from language to number of sentences.
         # ["ar", "eu", "ca", "zh", "cs", "en", "el", "hu", "it", "tr"]
@@ -150,7 +150,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             gl.c07_data = SrlExpParams(train=pl.c07_train, trainType="CONLL_X", devType="CONLL_X",
                                       test=pl.c07_test, testType="CONLL_X", datasource="CoNLL-2007",
                                       propTrainAsDev=0.10,
-                                      language=lang_short, l2variance=c07_l2var_map[lang_short])
+                                      language=lang_short, l2variance=c07_l2var_map[lang_short],
+                                      reduceTags=p.c07_tag_maps[lang_short])
                     
         # ------------------------ EXPERIMENTS --------------------------
                 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -14,7 +15,9 @@ import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.embed.Embeddings.Scaling;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.util.Prm;
+import edu.jhu.util.collections.Sets;
 
 public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements Annotator {
 
@@ -68,6 +71,11 @@ public class EmbeddingsAnnotator extends AbstractParallelAnnotator implements An
 
     public double getHitRate() {
         return (double) (numLookups.get() - numMisses.get()) / numLookups.get();
+    }
+    
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Sets.getSet(AT.EMBED);
     }
 
 }

@@ -14,8 +14,8 @@ import edu.jhu.nlp.CorpusStatistics;
 import edu.jhu.nlp.ObsFeTypedFactor;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
-import edu.jhu.nlp.depparse.FastDepParseFe;
-import edu.jhu.nlp.depparse.FastDepParseFeatureExtractor;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatures;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatures.FeatureCollection;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SenseVar;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
@@ -27,11 +27,11 @@ public class FastSrlFeatureExtractor implements ObsFeatureExtractor {
 
     private IntAnnoSentence isent;
     private FactorTemplateList fts;
+    private int featureHashMod;
     
     public FastSrlFeatureExtractor(AnnoSentence sent, CorpusStatistics cs, int featureHashMod, FactorTemplateList fts) {
         this.isent = new IntAnnoSentence(sent, cs.store);
-        // TODO: log.error("Using a static feature hash mod");
-        FastDepParseFeatureExtractor.featureHashMod = featureHashMod;
+        this.featureHashMod = featureHashMod;
         this.fts = fts;
     }
 
@@ -56,11 +56,11 @@ public class FastSrlFeatureExtractor implements ObsFeatureExtractor {
             Var var = vars.iterator().next();
             int parent = ((RoleVar)var).getParent();
             int child = ((RoleVar)var).getChild();
-            FastDepParseFe.addArcFactoredMSTFeats(isent, parent, child, feats, false, false);            
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, parent, child, FeatureCollection.ARC, feats, false, false, featureHashMod);            
         } else if (ft == SrlFactorTemplate.SENSE_UNARY) {
             SenseVar var = (SenseVar) vars.iterator().next();
             int parent = var.getParent();
-            FastDepParseFe.addArcFactoredMSTFeats(isent, -1, parent, feats, false, false);
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(isent, -1, parent, FeatureCollection.ARC, feats, false, false, featureHashMod);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

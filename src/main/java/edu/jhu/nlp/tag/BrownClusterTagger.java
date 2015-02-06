@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -20,8 +21,10 @@ import edu.jhu.nlp.data.Sentence;
 import edu.jhu.nlp.data.SentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
+import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
+import edu.jhu.util.collections.Sets;
 
 /**
  * Reads a brown clusters file and tags a sentence, by replacing each word with
@@ -167,6 +170,11 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
             i++;
         }
         return new Sentence(alphabet, labelIds);        
+    }
+
+    @Override
+    public Set<AT> getAnnoTypes() {
+        return Sets.getSet(AT.BROWN);
     }
     
 }
