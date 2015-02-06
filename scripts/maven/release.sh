@@ -78,8 +78,14 @@ function echo_version_number ( ) {
 function check_version_matches ( ) {
     local DIR=$1
     cd $DIR
-    git checkout develop
-    mvn versions:set -DoldVersion=${CUR_VERSION} -DnewVersion=${CUR_VERSION}
+    local LOC_VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\[|Download\w+:)'`
+    if [[ $LOC_VERSION != $CUR_VERSION ]]; then
+        echo "In ${DIR}, expected version ${CUR_VERSION}, but actual version was ${LOC_VERSION}."
+        echo "Exiting..."
+        exit 1
+    else
+        echo "In ${DIR}, expected version found ${CUR_VERSION}."
+    fi
 }
 
 function private_release( ) {
@@ -104,11 +110,7 @@ function private_release( ) {
     continue    
 
     echo "3. Then change the Pacaya version number from X.Y.Z-SNAPSHOT to X.Y.Z."
-    if [[ ${CHECK_CUR_VERSIONS} == "TRUE" ]]; then
-        mvn versions:set -DoldVersion=${CUR_VERSION} -DnewVersion=${RELEASE_VERSION}
-    else
-        mvn versions:set -DnewVersion=${RELEASE_VERSION}
-    fi
+    mvn versions:set -DnewVersion=${RELEASE_VERSION}
 
     echo "4. Open pom.xml and update the version numbers for Prim and Optimize to their non-SNAPSHOT versions from the release you just did."
     #${EDITOR:-emacs} pom.xml
@@ -143,12 +145,9 @@ function private_release( ) {
     git checkout develop
     git merge --no-ff --no-commit master
     confirm git commit 
-    if [[ ${CHECK_CUR_VERSIONS} == "TRUE" ]]; then
-        mvn versions:set -DoldVersion=${RELEASE_VERSION} -DnewVersion=${NEXT_VERSION}
-    else
-        mvn versions:set -DnewVersion=${NEXT_VERSION}
-    fi
-    
+
+    mvn versions:set -DnewVersion=${NEXT_VERSION}
+
     echo "9. Switch depedencies back to their latest SNAPSHOT version."
     mvn versions:update-properties -DallowSnapshots=true
 
@@ -168,7 +167,6 @@ check_version_matches ~/research/pacaya2
 
 exit 1
 
-CHECK_CUR_VERSIONS="TRUE"
 private_release ~/research/prim
 private_release ~/research/optimize
 private_release ~/research/optimize-wrappers
