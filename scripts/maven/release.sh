@@ -53,9 +53,10 @@ function export_version_number ( ) {
     local DIR=$1
     cd $DIR
     
-    echo "About to checkout the develop branch in ${DIR}"
+    echo "About to checkout the develop branch in ${DIR} then pull"
     ask_to_continue
     git checkout develop
+    git pull
 
     echo "Exporting the version numbers we'll be using."
     
@@ -65,13 +66,20 @@ function export_version_number ( ) {
     export RELEASE_VERSION=`echo ${CUR_VERSION} | sed -e 's/-SNAPSHOT//'`
 
     # This is the next version after this release. Don't include the -SNAPSHOT suffix.
-    export NEXT_VERSION=$(advance_version ${RELEASE_VERSION})
+    export NEXT_VERSION="$(advance_version ${RELEASE_VERSION})-SNAPSHOT"
 }
 
 function echo_version_number ( ) {
     echo CUR_VERSION=${CUR_VERSION}
     echo RELEASE_VERSION=${RELEASE_VERSION}
     echo NEXT_VERSION=${NEXT_VERSION}
+}
+
+function check_version_matches ( ) {
+    local DIR=$1
+    cd $DIR
+    git checkout develop
+    mvn versions:set -DoldVersion=${CUR_VERSION} -DnewVersion=${CUR_VERSION}
 }
 
 function private_release( ) {
@@ -82,8 +90,11 @@ function private_release( ) {
     echo "NOTE: You must have already done this manually before you proceed."
     ask_to_continue
 
-    echo "1. Ensure that you're on the master branch, and merge the develop branch."
+    echo "1. Ensure th# at you're on the master branch, and merge the develop branch."
+    git checkout develop
+    git pull
     git checkout master
+    git pull
     git merge --no-ff --no-commit develop
     confirm git commit
 
@@ -94,7 +105,7 @@ function private_release( ) {
 
     echo "3. Then change the Pacaya version number from X.Y.Z-SNAPSHOT to X.Y.Z."
     if [[ ${CHECK_CUR_VERSIONS} == "TRUE" ]]; then
-        mvn versions:set -DoldVersion=${RELEASE_VERSION}-SNAPSHOT -DnewVersion=${RELEASE_VERSION}
+        mvn versions:set -DoldVersion=${CUR_VERSION} -DnewVersion=${RELEASE_VERSION}
     else
         mvn versions:set -DnewVersion=${RELEASE_VERSION}
     fi
@@ -107,14 +118,16 @@ function private_release( ) {
     ask_to_continue
 
     echo "5. Setup a tunnel to checker, the CLSP maven repository. Then deploy to the CLSP maven repository."
+    confirm killall ssh
     if [ -f ~/bin/artifactory-tunnel-clsp]; then
         ~/bin/artifactory-tunnel-clsp
     else
         ssh -f -N -L 8081:checker:8081 -2 login.clsp.jhu.edu			
     fi
     mvn deploy -DskipTests -Pclsp 
-
+    
     echo "6. Setup a tunnel to the COE maven repository. Then deploy to the COE maven repository. (Important Note: this requires that you have correctly configured you ~/.m2/settings.xml to include proper authentication in order to deploy. You must copy the <servers/> section from /export/common/tools/maven/conf/settings.xml.)"
+    confirm killall ssh
     if [ -f ~/bin/artifactory-tunnel-coe]; then
         ~/bin/artifactory-tunnel-coe
     else
@@ -123,37 +136,41 @@ function private_release( ) {
     mvn deploy -DskipTests -Pcoe
 
     echo "7. Commit the non-SNAPSHOT release and tag it."
-    git commit -m "Release ${RELEASE_VERSION}"
+    git commit -a -m "Release ${RELEASE_VERSION}"
     git tag v${RELEASE_VERSION}
 
     echo "8. Open pom.xml, increment the version number to X.Y.Z+1, commit the change, and merge back to master."
     git checkout develop
-    git merge --no-ff master
+    git merge --no-ff --no-commit master
+    confirm git commit 
     if [[ ${CHECK_CUR_VERSIONS} == "TRUE" ]]; then
-        mvn versions:set -DoldVersion=${RELEASE_VERSION} -DnewVersion=${NEXT_VERSION}-SNAPSHOT
+        mvn versions:set -DoldVersion=${RELEASE_VERSION} -DnewVersion=${NEXT_VERSION}
     else
-        mvn versions:set -DnewVersion=${NEXT_VERSION}-SNAPSHOT
+        mvn versions:set -DnewVersion=${NEXT_VERSION}
     fi
     
     echo "9. Switch depedencies back to their latest SNAPSHOT version."
     mvn versions:update-properties -DallowSnapshots=true
 
-    git commit -m "Updating version to ${NEXT_VERSION}-SNAPSHOT"
+    git commit -a -m "Updating version to ${NEXT_VERSION}"
     git push --tags
-    git push     
+    git push origin master
+    git push origin develop
 }
-
 
 export_version_number ~/research/pacaya2
 echo_version_number
 
-CHECK_CUR_VERSIONS="TRUE"
-export_version_number ~/research/prim
-echo_version_number
-private_release ~/research/prim
+check_version_matches ~/research/prim
+check_version_matches ~/research/optimize
+check_version_matches ~/research/optimize-wrappers
+check_version_matches ~/research/pacaya2
+
 exit 1
+
+CHECK_CUR_VERSIONS="TRUE"
+private_release ~/research/prim
 private_release ~/research/optimize
 private_release ~/research/optimize-wrappers
-CHECK_CUR_VERSIONS="TRUE"
-private_release ~/research/pacaya
+private_release ~/research/pacaya2
 
