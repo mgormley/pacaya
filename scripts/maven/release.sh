@@ -96,20 +96,21 @@ function private_release( ) {
     echo "NOTE: You must have already done this manually before you proceed."
     ask_to_continue
 
-    echo "1. Ensure th# at you're on the master branch, and merge the develop branch."
+    echo "1. Ensure that you're on the master branch, and merge the develop branch."
     git checkout develop
     git pull
     git checkout master
     git pull
-    git merge --no-ff --no-commit develop
-    confirm git commit
+    git merge --no-ff develop
+    #git merge --no-ff --no-commit develop
+    #git commit
 
     echo "2. Cache the version numbers we'll be using."
     echo "The following version numbers will be used. If these are incorrect, please fix them and restart the release."
     echo_version_number
-    continue    
+    #continue    
 
-    echo "3. Then change the Pacaya version number from X.Y.Z-SNAPSHOT to X.Y.Z."
+    echo "3. Then change the version number from ${CUR_VERSION} to ${RELEASE_VERSION}"
     mvn versions:set -DnewVersion=${RELEASE_VERSION}
 
     echo "4. Open pom.xml and update the version numbers for Prim and Optimize to their non-SNAPSHOT versions from the release you just did."
@@ -117,13 +118,14 @@ function private_release( ) {
     mvn versions:update-properties -DallowSnapshots=false
 
     echo "5. Commit the non-SNAPSHOT release and tag it."
-    confirm git commit -a -m "Release ${RELEASE_VERSION}"
+    git commit -a -m "Release ${RELEASE_VERSION}"
     git tag v${RELEASE_VERSION}
 
     echo "6. Open pom.xml, increment the version number to X.Y.Z+1, commit the change, and merge back to develop."
     git checkout develop
-    git merge --no-ff --no-commit master
-    confirm git commit 
+    git merge --no-ff master
+    #git merge --no-ff --no-commit master
+    #git commit 
 
     mvn versions:set -DnewVersion=${NEXT_VERSION}
 
@@ -161,6 +163,7 @@ function deploy_and_push( ) {
     fi
     mvn deploy -DskipTests -Pcoe
 
+    echo "4. Pushing master and develop branches and tags to origin."
     git push --tags
     git push origin master
     git push origin develop
@@ -173,15 +176,15 @@ function deploy_and_push( ) {
 export_version_number ~/research/pacaya2
 echo_version_number
 
-check_version_matches ~/research/prim
-check_version_matches ~/research/optimize
+#check_version_matches ~/research/prim
+#check_version_matches ~/research/optimize
 check_version_matches ~/research/optimize-wrappers
 check_version_matches ~/research/pacaya2
 
 #exit 1
 
-private_release ~/research/prim
-private_release ~/research/optimize
+#private_release ~/research/prim
+#private_release ~/research/optimize
 private_release ~/research/optimize-wrappers
 private_release ~/research/pacaya2
 
