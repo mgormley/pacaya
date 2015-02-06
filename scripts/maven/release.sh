@@ -178,14 +178,14 @@ echo_version_number
 
 #check_version_matches ~/research/prim
 #check_version_matches ~/research/optimize
-check_version_matches ~/research/optimize-wrappers
+#check_version_matches ~/research/optimize-wrappers
 check_version_matches ~/research/pacaya2
 
 #exit 1
 
 #private_release ~/research/prim
 #private_release ~/research/optimize
-private_release ~/research/optimize-wrappers
+#private_release ~/research/optimize-wrappers
 private_release ~/research/pacaya2
 
 deploy_and_push ~/research/prim
