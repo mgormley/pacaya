@@ -116,10 +116,34 @@ function private_release( ) {
     #${EDITOR:-emacs} pom.xml
     mvn versions:update-properties -DallowSnapshots=false
 
+    echo "5. Commit the non-SNAPSHOT release and tag it."
+    confirm git commit -a -m "Release ${RELEASE_VERSION}"
+    git tag v${RELEASE_VERSION}
+
+    echo "6. Open pom.xml, increment the version number to X.Y.Z+1, commit the change, and merge back to develop."
+    git checkout develop
+    git merge --no-ff --no-commit master
+    confirm git commit 
+
+    mvn versions:set -DnewVersion=${NEXT_VERSION}
+
+    echo "7. Switch depedencies back to their latest SNAPSHOT version."
+    mvn versions:update-properties -DallowSnapshots=true
+    git commit -a -m "Updating version to ${NEXT_VERSION}"
+}
+
+function deploy_and_push( ) {
+    local DIR=$1
+    cd $DIR
+
     echo "NOTE: All changes for this release should have been made. The next step is deploying/committing."
     ask_to_continue
 
-    echo "5. Setup a tunnel to checker, the CLSP maven repository. Then deploy to the CLSP maven repository."
+    echo "1. Ensure that you're on the master branch."
+    git checkout master
+    git pull
+
+    echo "2. Setup a tunnel to checker, the CLSP maven repository. Then deploy to the CLSP maven repository."
     confirm killall ssh
     if [ -f ~/bin/artifactory-tunnel-clsp]; then
         ~/bin/artifactory-tunnel-clsp
@@ -128,7 +152,7 @@ function private_release( ) {
     fi
     mvn deploy -DskipTests -Pclsp 
     
-    echo "6. Setup a tunnel to the COE maven repository. Then deploy to the COE maven repository. (Important Note: this requires that you have correctly configured you ~/.m2/settings.xml to include proper authentication in order to deploy. You must copy the <servers/> section from /export/common/tools/maven/conf/settings.xml.)"
+    echo "3. Setup a tunnel to the COE maven repository. Then deploy to the COE maven repository. (Important Note: this requires that you have correctly configured you ~/.m2/settings.xml to include proper authentication in order to deploy. You must copy the <servers/> section from /export/common/tools/maven/conf/settings.xml.)"
     confirm killall ssh
     if [ -f ~/bin/artifactory-tunnel-coe]; then
         ~/bin/artifactory-tunnel-coe
@@ -137,25 +161,14 @@ function private_release( ) {
     fi
     mvn deploy -DskipTests -Pcoe
 
-    echo "7. Commit the non-SNAPSHOT release and tag it."
-    git commit -a -m "Release ${RELEASE_VERSION}"
-    git tag v${RELEASE_VERSION}
-
-    echo "8. Open pom.xml, increment the version number to X.Y.Z+1, commit the change, and merge back to master."
-    git checkout develop
-    git merge --no-ff --no-commit master
-    confirm git commit 
-
-    mvn versions:set -DnewVersion=${NEXT_VERSION}
-
-    echo "9. Switch depedencies back to their latest SNAPSHOT version."
-    mvn versions:update-properties -DallowSnapshots=true
-
-    git commit -a -m "Updating version to ${NEXT_VERSION}"
     git push --tags
     git push origin master
     git push origin develop
+
+    git checkout develop
 }
+
+
 
 export_version_number ~/research/pacaya2
 echo_version_number
@@ -165,10 +178,15 @@ check_version_matches ~/research/optimize
 check_version_matches ~/research/optimize-wrappers
 check_version_matches ~/research/pacaya2
 
-exit 1
+#exit 1
 
 private_release ~/research/prim
 private_release ~/research/optimize
 private_release ~/research/optimize-wrappers
 private_release ~/research/pacaya2
+
+deploy_and_push ~/research/prim
+deploy_and_push ~/research/optimize
+deploy_and_push ~/research/optimize-wrappers
+deploy_and_push ~/research/pacaya2
 
