@@ -233,12 +233,12 @@
         <repository>
           <id>coe-mvn</id>
           <name>coe-mvn-releases</name>
-          <url>http://localhost:8082/artifactory/libs-release-local</url>
+          <url>http://localhost:8081/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
           <id>coe-mvn-snapshots</id>
           <name>coe-mvn-snapshots</name>
-          <url>http://localhost:8082/artifactory/libs-snapshot-local</url>
+          <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>

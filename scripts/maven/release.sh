@@ -108,14 +108,13 @@ function private_release( ) {
     echo "2. Cache the version numbers we'll be using."
     echo "The following version numbers will be used. If these are incorrect, please fix them and restart the release."
     echo_version_number
-    #continue    
 
     echo "3. Then change the version number from ${CUR_VERSION} to ${RELEASE_VERSION}"
     mvn versions:set -DnewVersion=${RELEASE_VERSION}
 
     echo "4. Open pom.xml and update the version numbers for Prim and Optimize to their non-SNAPSHOT versions from the release you just did."
     #${EDITOR:-emacs} pom.xml
-    mvn versions:update-properties -DallowSnapshots=false
+    mvn versions:update-properties -DallowSnapshots=false -DgenerateBackupPoms=false
 
     echo "5. Commit the non-SNAPSHOT release and tag it."
     git commit -a -m "Release ${RELEASE_VERSION}"
@@ -130,7 +129,7 @@ function private_release( ) {
     mvn versions:set -DnewVersion=${NEXT_VERSION}
 
     echo "7. Switch depedencies back to their latest SNAPSHOT version."
-    mvn versions:update-properties -DallowSnapshots=true
+    mvn versions:update-properties -DallowSnapshots=true -DgenerateBackupPoms=false
     git commit -a -m "Updating version to ${NEXT_VERSION}"
 }
 
