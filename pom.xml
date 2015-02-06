@@ -67,7 +67,6 @@
           <fork>true</fork>
           <!-- <compilerArgument>-verbose</compilerArgument> -->
         </configuration>
-        <version>3.0</version>
       </plugin>
       <!-- For use with: mvn clean compile assembly:single -->
       <plugin>
