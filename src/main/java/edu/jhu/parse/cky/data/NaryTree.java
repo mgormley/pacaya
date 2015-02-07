@@ -223,7 +223,7 @@ public class NaryTree {
         // Pre-order traversal of each child.
         if (children != null) {
             for (NaryTree child : children) {
-                child.postOrderTraversal(function);
+                child.preOrderTraversal(function);
             }
         }
     }
