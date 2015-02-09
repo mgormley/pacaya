@@ -100,16 +100,16 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         FeatureVector feats = new FeatureVector();
 
         // Get the features for an edge that is "on".
-        if (ft == DepParseFactorTemplate.LINK_UNARY) {
+        if (ft == DepParseFactorTemplate.UNARY) {
             // Look at the variables to determine the parent and child.
             LinkVar var = (LinkVar) vars.get(0);
             int p = var.getParent();
             int c = var.getChild();
             BitshiftDepParseFeatures.addArcFeats(isent, p, c, prm, feats);
-        } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
+        } else if (ft == DepParseFactorTemplate.ARBITRARY_SIBLING) {
             SibFeTypedFactor f2 = (SibFeTypedFactor)f;
             BitshiftDepParseFeatures.addArbitrarySiblingFeats(isent, f2.p, f2.c, f2.s, feats, prm);
-        } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT) {
+        } else if (ft == DepParseFactorTemplate.GRANDPARENT) {
             GraFeTypedFactor f2 = (GraFeTypedFactor)f;
             BitshiftDepParseFeatures.addGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm);
         } else {

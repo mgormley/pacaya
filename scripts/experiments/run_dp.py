@@ -86,7 +86,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                           singleRoot=False,
                           inference="BP")
         g.defaults.set_incl_name("pruneByModel", False)
-        g.defaults.set_incl_name("siblingFactors", False)
+        g.defaults.set_incl_name("arbitrarySiblingFactors", False)
+        g.defaults.set_incl_name("headBigramFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
         g.defaults.set_incl_name("dpSkipPunctuation", False)
         g.defaults.set_incl_arg("group", False)
@@ -96,15 +97,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE",
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
                                    bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
-        g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
+        g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, 
+                                                      arbitrarySiblingFactors=True, 
+                                                      headBigramFactors=True, 
+                                                      tagger_parser="2nd-gra-asib-hb", 
                                                   bpMaxIterations=5, 
                                                   useMseForValue=True)
-        g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, 
+        g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, 
+                                                       arbitrarySiblingFactors=False,
+                                                       headBigramFactors=False,  
                                                        tagger_parser="2nd-gra")
         g.second_grand_exact = g.second_grand + SrlExpParams(inference="DP")
-        g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, 
-                                                     tagger_parser="2nd-sib")
-        g.unpruned_parsers = [g.second_grand_exact, g.second_sib, g.first_order, g.second_order, g.second_grand]
+        g.second_asib = g.second_order + SrlExpParams(grandparentFactors=False, 
+                                                     arbitrarySiblingFactors=True,
+                                                     headBigramFactors=False,  
+                                                     tagger_parser="2nd-asib")
+        g.second_hb = g.second_order + SrlExpParams(grandparentFactors=False, 
+                                                     arbitrarySiblingFactors=False,
+                                                     headBigramFactors=True,  
+                                                     tagger_parser="2nd-hb")
+        g.unpruned_parsers = [g.second_grand_exact, g.second_asib, g.first_order, g.second_order, g.second_grand, g.second_hb]
         g.pruned_parsers = pruned_parsers(g.unpruned_parsers)
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
@@ -330,7 +342,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                             exp.add_prereq(prune_exps[lang_short])
-                            if parser in [g.second_order, g.second_grand, g.second_sib]:
+                            if parser in [g.second_order, g.second_grand, g.second_asib]:
                                 exps += get_oome_stages(exp)
                             else:
                                 exps.append(exp)
@@ -356,7 +368,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         for lang_short in ['en']: #["bg", "es", "en"]:
                             gl = g.langs[lang_short]
                             pl = p.langs[lang_short]
-                            for parser in [g.first_order, g.second_order, g.second_sib, g.second_grand]:
+                            for parser in [g.first_order, g.second_order, g.second_asib, g.second_grand]:
                                 data = gl.cx_data
                                 data.remove("test")
                                 data.remove("testType")
@@ -401,7 +413,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             trainUseCoNLLXPhead=False)  # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                if parser in [g.second_order, g.second_grand, g.second_sib]:
+                if parser in [g.second_order, g.second_grand, g.second_asib]:
                     exps += get_oome_stages(exp)
                 else:
                     exps.append(exp)
@@ -456,7 +468,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     data.update(propTrainAsDev=0)  # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    if parser in [g.second_order, g.second_grand, g.second_sib]:
+                    if parser in [g.second_order, g.second_grand, g.second_asib]:
                         exps += get_oome_stages(exp)
                     else:
                         exps.append(exp)
@@ -477,7 +489,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 propTrainAsDev=0)  # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    if parser in [g.second_order, g.second_grand, g.second_sib]:
+                    if parser in [g.second_order, g.second_grand, g.second_asib]:
                         exps += get_oome_stages(exp)
                     else:
                         exps.append(exp)

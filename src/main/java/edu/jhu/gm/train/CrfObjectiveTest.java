@@ -396,7 +396,7 @@ public class CrfObjectiveTest {
         prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         //prm.fgPrm.dpPrm.grandparentFactors = true;
-        prm.fgPrm.dpPrm.siblingFactors = true;
+        prm.fgPrm.dpPrm.arbitrarySiblingFactors = true;
         prm.fePrm.dpFePrm.featureHashMod = featureHashMod;
         //prm.fePrm.dpFePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         prm.exPrm.cacheType = CacheType.NONE;

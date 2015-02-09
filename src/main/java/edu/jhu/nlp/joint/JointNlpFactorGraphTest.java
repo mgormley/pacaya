@@ -60,7 +60,7 @@ public class JointNlpFactorGraphTest {
         prm.srlPrm.makeUnknownPredRolesLatent = false;
         prm.srlPrm.allowPredArgSelfLoops = false;
         prm.dpPrm.useProjDepTreeFactor = false;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         LinkVar link = sfg.getLinkVar(1, 2);
         assertNotNull(link);
@@ -93,7 +93,7 @@ public class JointNlpFactorGraphTest {
         prm.dpPrm.useProjDepTreeFactor = false;
         prm.srlPrm.predictSense = true;
         prm.srlPrm.binarySenseRoleFactors = true;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         for (FgNode node : sfg.getConnectedComponents()) {
             if (!sfg.isUndirectedTree(node)) {
@@ -112,7 +112,7 @@ public class JointNlpFactorGraphTest {
         prm.srlPrm.makeUnknownPredRolesLatent = false;
         prm.srlPrm.allowPredArgSelfLoops = false;
         prm.dpPrm.useProjDepTreeFactor = false;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         LinkVar link = sfg.getLinkVar(-1, 2);
         assertNotNull(link);
@@ -141,7 +141,7 @@ public class JointNlpFactorGraphTest {
         prm.srlPrm.makeUnknownPredRolesLatent = false;
         prm.srlPrm.allowPredArgSelfLoops = true;
         prm.dpPrm.useProjDepTreeFactor = false;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
 
         assertNotNull(sfg.getRoleVar(1, 1));
         assertNotNull(sfg.getRoleVar(2, 2));
@@ -161,7 +161,7 @@ public class JointNlpFactorGraphTest {
         prm.srlPrm.makeUnknownPredRolesLatent = true;
         prm.srlPrm.allowPredArgSelfLoops = false;
         prm.dpPrm.useProjDepTreeFactor = false;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         List<Var> vars = sfg.getVars();
         assertEquals(2, VarSet.getVarsOfType(vars, VarType.LATENT).size());
@@ -178,7 +178,7 @@ public class JointNlpFactorGraphTest {
         prm.srlPrm.makeUnknownPredRolesLatent = false;
         prm.srlPrm.allowPredArgSelfLoops = false;
         prm.dpPrm.useProjDepTreeFactor = true;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         LinkVar link = sfg.getLinkVar(1, 2);
         assertNotNull(link);
@@ -206,7 +206,7 @@ public class JointNlpFactorGraphTest {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();
         prm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.srlPrm.predictSense = true;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         // Assertions about the Sense variables.
         assertNotNull(sfg.getSenseVar(0));
@@ -244,7 +244,7 @@ public class JointNlpFactorGraphTest {
         prm.includeDp = true;
         prm.dpPrm.linkVarType = VarType.PREDICTED;
         prm.dpPrm.unaryFactors = true;
-        JointNlpFactorGraph sfg = getSrlFg(prm);
+        JointNlpFactorGraph sfg = getJointNlpFg(prm);
         
         assertEquals(9, sfg.getFactors().size());
         assertTrue(sfg.isUndirectedTree(sfg.getFactorNode(0)));
@@ -260,23 +260,23 @@ public class JointNlpFactorGraphTest {
         
         // Grandparents only
         prm.dpPrm.grandparentFactors = true;
-        prm.dpPrm.siblingFactors = false;
-        sfg = getSrlFg(prm);        
+        prm.dpPrm.arbitrarySiblingFactors = false;
+        sfg = getJointNlpFg(prm);        
         assertEquals(9 + 10, sfg.getFactors().size());
         assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
 
         // Siblings only 
         prm.dpPrm.grandparentFactors = false;
-        prm.dpPrm.siblingFactors = true;
-        sfg = getSrlFg(prm);        
+        prm.dpPrm.arbitrarySiblingFactors = true;
+        sfg = getJointNlpFg(prm);        
         assertEquals(9 + 6, sfg.getFactors().size());
         assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
         
         // Siblings and Grandparents 
         prm.dpPrm.excludeNonprojectiveGrandparents = false;
         prm.dpPrm.grandparentFactors = true;
-        prm.dpPrm.siblingFactors = true;
-        sfg = getSrlFg(prm);     
+        prm.dpPrm.arbitrarySiblingFactors = true;
+        sfg = getJointNlpFg(prm);     
         assertEquals(9 + 12 + 6, sfg.getFactors().size());
         assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
     }
@@ -292,9 +292,9 @@ public class JointNlpFactorGraphTest {
         // Siblings and Grandparents 
         prm.dpPrm.excludeNonprojectiveGrandparents = false;
         prm.dpPrm.grandparentFactors = true;
-        prm.dpPrm.siblingFactors = true;
+        prm.dpPrm.arbitrarySiblingFactors = true;
         prm.dpPrm.pruneEdges = true;
-        sfg = getSrlFg(prm);     
+        sfg = getJointNlpFg(prm);     
         assertEquals(11, sfg.getFactors().size());
         System.out.println(sfg.getFactors());
         // This pruned version is a tree.
@@ -326,7 +326,7 @@ public class JointNlpFactorGraphTest {
         }
     }
     
-    public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
+    public static JointNlpFactorGraph getJointNlpFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
         FeatureExtractor fe = new SimpleVCFeatureExtractor(new FeatureNames()); 

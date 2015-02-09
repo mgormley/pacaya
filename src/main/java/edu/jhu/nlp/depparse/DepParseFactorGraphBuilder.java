@@ -53,7 +53,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
         public boolean grandparentFactors = false;
 
         /** Whether to include 2nd-order sibling factors in the model. */
-        public boolean siblingFactors = false;
+        public boolean arbitrarySiblingFactors = false;
         
         /** Whether to include 2nd-order head-bigram factors in the model. */
         public boolean headBigramFactors = false;
@@ -67,7 +67,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
     }
     
     public enum DepParseFactorTemplate {
-        LINK_UNARY, LINK_GRANDPARENT, LINK_SIBLING
+        UNARY, GRANDPARENT, ARBITRARY_SIBLING, HEAD_BIGRAM
     }
     
     public static class GraFeTypedFactor extends FeTypedFactor {
@@ -89,7 +89,18 @@ public class DepParseFactorGraphBuilder implements Serializable {
             this.p = p;
             this.c = c;
             this.s = s;
-        }        
+        }
+    }
+    
+    public static class HbFeTypedFactor extends FeTypedFactor {
+        private static final long serialVersionUID = 1L;
+        public int p,c,p_other;
+        public HbFeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int p, int c, int p_other) {
+            super(vars, type, fe);
+            this.p = p;
+            this.c = c;
+            this.p_other = p_other;
+        }
     }
     
     // Parameters for constructing the factor graph.
@@ -116,7 +127,6 @@ public class DepParseFactorGraphBuilder implements Serializable {
     
     /**
      * Adds factors and variables to the given factor graph.
-     * @param depEdgeMask TODO
      */
     public void build(List<String> words, DepEdgeMask depEdgeMask, FeatureExtractor fe, FactorGraph fg) {
         this.n = words.size();
@@ -159,7 +169,8 @@ public class DepParseFactorGraphBuilder implements Serializable {
         addClampFactors(fg, depEdgeMask, fe);
         if (prm.unaryFactors) { addUnaryFactors(fg, depEdgeMask, fe); }
         if (prm.grandparentFactors) { addGrandparentFactors(fg, depEdgeMask, fe); }
-        if (prm.siblingFactors) { addArbitrarySiblingFactors(fg, depEdgeMask, fe); }
+        if (prm.arbitrarySiblingFactors) { addArbitrarySiblingFactors(fg, depEdgeMask, fe); }
+        if (prm.headBigramFactors) { addHeadBigramFactors(fg, depEdgeMask, fe); }
     }
 
     private void addClampFactors(FactorGraph fg, DepEdgeMask depEdgeMask, FeatureExtractor fe) {
@@ -185,7 +196,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
                 LinkVar pcVar = getLinkVar(p, c);
                 if (pcVar == null) { continue; }
                 if (depEdgeMask.isPruned(p, c)) { continue; }
-                fg.addFactor(new FeTypedFactor(new VarSet(pcVar), DepParseFactorTemplate.LINK_UNARY, fe));
+                fg.addFactor(new FeTypedFactor(new VarSet(pcVar), DepParseFactorTemplate.UNARY, fe));
             }
         }
     }
@@ -203,7 +214,7 @@ public class DepParseFactorGraphBuilder implements Serializable {
                     if (pcVar == null || depEdgeMask.isPruned(p, c)) { continue; }
                     boolean isNonprojectiveGrandparent = (g < p && c < g) || (p < g && g < c);
                     if (prm.excludeNonprojectiveGrandparents && isNonprojectiveGrandparent) { continue; }  
-                    fg.addFactor(new GraFeTypedFactor(new VarSet(gpVar, pcVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, p, c, g));
+                    fg.addFactor(new GraFeTypedFactor(new VarSet(gpVar, pcVar), DepParseFactorTemplate.GRANDPARENT, fe, p, c, g));
                 }
             }
         }
@@ -218,11 +229,30 @@ public class DepParseFactorGraphBuilder implements Serializable {
                 if (depEdgeMask.isPruned(p, c) || pcVar == null) { continue; }
                 for (int s = 0; s < n; s++) {
                     if (p == s || c == s) { continue; }
-                    LinkVar ikVar = getLinkVar(p, s);
-                    if (ikVar == null || depEdgeMask.isPruned(p, s)) { continue; }
+                    LinkVar psVar = getLinkVar(p, s);
+                    if (psVar == null || depEdgeMask.isPruned(p, s)) { continue; }
                     if (c < s) {
-                        fg.addFactor(new SibFeTypedFactor(new VarSet(pcVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, p, c, s));                        
+                        fg.addFactor(new SibFeTypedFactor(new VarSet(pcVar, psVar), DepParseFactorTemplate.ARBITRARY_SIBLING, fe, p, c, s));                        
                     }
+                }
+            }
+        }
+    }
+    
+    private void addHeadBigramFactors(FactorGraph fg, DepEdgeMask depEdgeMask, FeatureExtractor fe) {
+        // Add head-bigram factors.
+        for (int p = -1; p < n; p++) {
+            // Exclude the bigram consisting of the wall and the first token in the sentence.
+            for (int c = 1; c < n; c++) {
+                if (p == c) { continue; }
+                LinkVar pcVar = getLinkVar(p, c);
+                if (depEdgeMask.isPruned(p, c) || pcVar == null) { continue; }
+                for (int p_other = -1; p_other < n; p_other++) {
+                    if (p_other == c-1) { continue; }
+                    LinkVar pcOtherVar = getLinkVar(p_other, c-1);
+                    if (pcOtherVar == null || depEdgeMask.isPruned(p_other, c-1)) { continue; }
+                    fg.addFactor(new HbFeTypedFactor(new VarSet(pcVar, pcOtherVar), DepParseFactorTemplate.HEAD_BIGRAM, fe, p, c, p_other));
+                    log.trace("Added head-bigram factor: parent={} child={} other-parent={} other-child={}", p, c, p_other, c-1);
                 }
             }
         }

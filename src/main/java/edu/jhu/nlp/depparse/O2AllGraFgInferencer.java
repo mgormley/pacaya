@@ -121,7 +121,7 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         for (Factor f : fg.getFactors()) {
             if (f instanceof ProjDepTreeFactor || f instanceof SimpleProjDepTreeFactor) {
                 containsProjDepTreeConstraint = true;
-            } else if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
+            } else if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.GRANDPARENT) {
                 GraFeTypedFactor ff = (GraFeTypedFactor) f;
                 scores[ff.p+1][ff.c+1][ff.g+1] += ff.getLogUnormalizedScore(LinkVar.TRUE_TRUE);
             } else if (f.getVars().size() == 1 && f.getVars().get(0) instanceof LinkVar) {
@@ -191,7 +191,7 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
 
     @Override
     protected VarTensor getFactorBeliefs(Factor f) {
-        if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.LINK_GRANDPARENT) {
+        if (f instanceof GraFeTypedFactor && ((GraFeTypedFactor) f).getFactorType() == DepParseFactorTemplate.GRANDPARENT) {
             GraFeTypedFactor ff = (GraFeTypedFactor) f;
             int g = ff.g+1;
             int p = ff.p+1;

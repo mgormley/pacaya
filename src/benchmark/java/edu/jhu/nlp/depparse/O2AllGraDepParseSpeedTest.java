@@ -138,7 +138,7 @@ public class O2AllGraDepParseSpeedTest {
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
         fgPrm.useProjDepTreeFactor = true;        
         fgPrm.grandparentFactors = true;
-        fgPrm.siblingFactors = false;    
+        fgPrm.arbitrarySiblingFactors = false;    
         DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(fgPrm);
         builder.build(sent, fe, fg);
         
