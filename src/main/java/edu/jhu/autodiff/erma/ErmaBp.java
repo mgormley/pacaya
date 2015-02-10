@@ -11,7 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.autodiff.MVecArray;
 import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.MutableModule;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -81,7 +83,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
 
         @Override
-        public Module<Beliefs> getBeliefsModule(Module<Factors> effm, FactorGraph fg) {
+        public Module<Beliefs> getBeliefsModule(Module<VarTensorArray> effm, FactorGraph fg) {
             return new ErmaBp(fg, this, effm);
         }
         
@@ -107,11 +109,13 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         public Object item;
         public List<VarTensor> msgs;
         public DoubleArrayList msgSums;
+        public MutableModule<MVecArray<VarTensor>> modIn = null;
+        public MutableModule<MVecArray<VarTensor>> modOut = null;
         
         public TapeEntry(Object item, List<FgEdge> edges) {
             this.item = item;
-            msgs = new ArrayList<VarTensor>(edges.size());
-            msgSums = new DoubleArrayList(edges.size());
+            this.msgs = new ArrayList<VarTensor>(edges.size());
+            this.msgSums = new DoubleArrayList(edges.size());
         }
         
     }
@@ -141,7 +145,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     
     private Beliefs b;
     private Beliefs bAdj;
-    private Module<Factors> effm;
+    private Module<VarTensorArray> effm;
 
     private static AtomicInteger oscillationCount = new AtomicInteger(0);
     private static AtomicInteger sendCount = new AtomicInteger(0);
@@ -156,7 +160,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         return effm;
     }
     
-    public ErmaBp(final FactorGraph fg, ErmaBpPrm prm, Module<Factors> effm) {
+    public ErmaBp(final FactorGraph fg, ErmaBpPrm prm, Module<VarTensorArray> effm) {
         if (prm.getAlgebra() != null && !prm.getAlgebra().equals(effm.getAlgebra())) {
             // TODO: We shouldn't even specify the algebra in prm.
             log.warn("Ignoring Algebra in ErmaBpPrm since the input module dictates the algebra: "
@@ -235,8 +239,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 for (Object elem : elems) {
                     if (elem instanceof FgEdge) {
                         forwardCreateMessage((FgEdge) elem);
-                    } else if (elem instanceof GlobalFactor) {
-                        forwardGlobalFacToVar((GlobalFactor) elem);
+                    } else if (elem instanceof AutodiffGlobalFactor) {
+                        forwardGlobalFacToVar((AutodiffGlobalFactor) elem, te);
                     } else {
                         throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
                     }
@@ -279,7 +283,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         return numConverged == msgs.length;
     }
 
-    private void forwardGlobalFacToVar(GlobalFactor globalFac) {
+    private void forwardGlobalFacToVar(AutodiffGlobalFactor globalFac, TapeEntry te) {
         if (globalFac.getVars().size() == 0) { return; }
         log.trace("Creating messages for global factor.");
         // Since this is a global factor, we pass the incoming messages to it, 
@@ -287,8 +291,15 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         FgNode node = fg.getNode(globalFac);
         VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
         VarTensor[] outMsgs = getMsgs(node, msgs, NEW_MSG, OUT_MSG);
-        globalFac.createMessages(inMsgs, outMsgs);
-    }    
+        MVecArrayIdentity<VarTensor> modIn = new MVecArrayIdentity<VarTensor>(new VarTensorArray(inMsgs));
+        MutableModule<MVecArray<VarTensor>> modOut = globalFac.getCreateMessagesModule(modIn);
+        modOut.setOutput(new VarTensorArray(outMsgs));
+        modOut.forward();
+        assert te.modIn == null;
+        assert te.modOut == null;
+        te.modIn = modIn;
+        te.modOut = modOut;
+    }
 
     // Constants for getMsgs().
     private static final boolean NEW_MSG = true;
@@ -447,7 +458,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 if (elem instanceof FgEdge) {
                     backwardCreateMessage((FgEdge) elem);
                 } else if (elem instanceof AutodiffGlobalFactor) {
-                    backwardGlobalFactorToVar((AutodiffGlobalFactor) elem);
+                    backwardGlobalFactorToVar((AutodiffGlobalFactor) elem, te);
                 } else {
                     throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
                 }
@@ -509,13 +520,17 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
     }
     
-    private void backwardGlobalFactorToVar(AutodiffGlobalFactor globalFac) {
+    private void backwardGlobalFactorToVar(AutodiffGlobalFactor globalFac, TapeEntry te) {
         if (globalFac.getVars().size() == 0) { return; }
         FgNode node = fg.getNode(globalFac);
         VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
         VarTensor[] inMsgsAdj = getMsgs(node, msgsAdj, CUR_MSG, IN_MSG);
         VarTensor[] outMsgsAdj = getMsgs(node, msgsAdj, NEW_MSG, OUT_MSG);
-        globalFac.backwardCreateMessages(inMsgs, outMsgsAdj, inMsgsAdj);
+        te.modIn.setOutput(new VarTensorArray(inMsgs));
+        te.modIn.setOutputAdj(new VarTensorArray(inMsgsAdj));
+        te.modOut.setOutputAdj(new VarTensorArray(outMsgsAdj));
+        te.modOut.backward();
+        // Replaced: globalFac.backwardCreateMessages(inMsgs, outMsgsAdj, inMsgsAdj);
     }
     
     /**
@@ -955,7 +970,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
 
     @Override
-    public List<Module<Factors>> getInputs() {
+    public List<Module<VarTensorArray>> getInputs() {
         if (effm == null) {
             throw new RuntimeException("No inputs until setEffm() is called.");    
         }        

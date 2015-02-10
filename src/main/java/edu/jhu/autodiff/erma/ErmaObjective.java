@@ -23,7 +23,7 @@ public class ErmaObjective implements ExampleObjective {
     }
     
     public interface BeliefsModuleFactory {
-        Module<Beliefs> getBeliefsModule(Module<Factors> effm, FactorGraph fg);
+        Module<Beliefs> getBeliefsModule(Module<VarTensorArray> effm, FactorGraph fg);
         Algebra getAlgebra();
     }
     

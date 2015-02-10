@@ -1,12 +1,18 @@
 package edu.jhu.gm.model.globalfac;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.autodiff.AbstractMutableModule;
+import edu.jhu.autodiff.MVec;
+import edu.jhu.autodiff.MVecArray;
 import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.MutableModule;
+import edu.jhu.autodiff.Scalar;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
 import edu.jhu.autodiff.erma.AutodiffGlobalFactor;
@@ -28,6 +34,7 @@ import edu.jhu.nlp.data.WallDepTreeNode;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
@@ -108,15 +115,42 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         }
         return vars;
     }
+    
+    @Override
+    public MutableModule<MVecArray<VarTensor>> getCreateMessagesModule(Module<MVecArray<VarTensor>> modIn) {
+        return new PDTFCreateMessagesModule(modIn);
+    }
         
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         forwardAndBackward(inMsgs, outMsgs, null, null, true);
     }
 
-    @Override
-    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
-        forwardAndBackward(inMsgs, null, outMsgsAdj, inMsgsAdj, false);
+    private class PDTFCreateMessagesModule extends AbstractMutableModule<MVecArray<VarTensor>> implements MutableModule<MVecArray<VarTensor>> {
+
+        private Module<MVecArray<VarTensor>> modIn;
+        
+        public PDTFCreateMessagesModule(Module<MVecArray<VarTensor>> modIn) {
+            super(modIn.getAlgebra());
+            this.modIn = modIn;
+        }
+
+        @Override
+        public MVecArray<VarTensor> forward() {
+            forwardAndBackward(modIn.getOutput().f, y.f, null, null, true);
+            return y;
+        }
+
+        @Override
+        public void backward() {
+            forwardAndBackward(modIn.getOutput().f, null, yAdj.f, modIn.getOutputAdj().f, false);
+        }
+
+        @Override
+        public List<? extends Module<? extends MVec>> getInputs() {
+            return Lists.getList(modIn);
+        }
+        
     }
     
     public void forwardAndBackward(VarTensor[] inMsgs, VarTensor[] outMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj, boolean isForward) {
@@ -309,6 +343,11 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             double val = es.getScore(link.getParent(), link.getChild());
             msg.addValue(tf, val);
         }
+    }
+    
+    @Override
+    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn) {
+        throw new RuntimeException("not implemented");
     }
 
     @Override

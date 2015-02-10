@@ -20,7 +20,7 @@ import edu.jhu.util.semiring.Algebra;
  * 
  * @author mgormley
  */
-public class FactorsModule extends AbstractModule<Factors> implements Module<Factors> {
+public class FactorsModule extends AbstractModule<VarTensorArray> implements Module<VarTensorArray> {
 
     private static final Logger log = LoggerFactory.getLogger(FactorsModule.class);
     
@@ -35,8 +35,8 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
     }
     
     @Override
-    public Factors forward() {
-        y = new Factors(s);
+    public VarTensorArray forward() {
+        y = new VarTensorArray(s);
         y.f = new VarTensor[fg.getNumFactors()];
         facMods = new ArrayList<>();
         for (int a = 0; a < y.f.length; a++) {
@@ -63,9 +63,9 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
     }
 
     @Override
-    public Factors getOutputAdj() {
+    public VarTensorArray getOutputAdj() {
         if (yAdj == null) {
-            yAdj = new Factors(y.s);
+            yAdj = new VarTensorArray(y.s);
             yAdj.f = new VarTensor[y.f.length];
             for (int a = 0; a < y.f.length; a++) {
                 Module<?> fm = facMods.get(a);
