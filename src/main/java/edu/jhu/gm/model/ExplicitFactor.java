@@ -1,5 +1,10 @@
 package edu.jhu.gm.model;
 
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.erma.AutodiffFactor;
+import edu.jhu.autodiff.erma.MVecFgModel;
+import edu.jhu.autodiff.erma.ParamFreeFactorModule;
+import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
 
@@ -8,7 +13,7 @@ import edu.jhu.util.semiring.Algebras;
  * 
  * @author mgormley
  */
-public class ExplicitFactor extends VarTensor implements Factor {
+public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor {
 
     private static final long serialVersionUID = 1L;
     
@@ -55,6 +60,11 @@ public class ExplicitFactor extends VarTensor implements Factor {
     @Override
     public void setId(int id) {
         this.id = id;
+    }
+
+    @Override
+    public Module<VarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
+        return new ParamFreeFactorModule(s, this);
     }
 
 }

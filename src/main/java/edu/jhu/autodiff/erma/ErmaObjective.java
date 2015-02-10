@@ -19,7 +19,7 @@ public class ErmaObjective implements ExampleObjective {
     
     public interface DlFactory {
         /** Get a module which decodes then evaluates the loss. */
-        Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter);
+        Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter);
     }
     
     public interface BeliefsModuleFactory {
@@ -76,7 +76,7 @@ public class ErmaObjective implements ExampleObjective {
         t.reset(); t.start();
         // Model initialization.
         FgModelIdentity mid = new FgModelIdentity(model);
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(mid, fg, bFactory.getAlgebra());
+        FactorsModule effm = new FactorsModule(mid, fg, bFactory.getAlgebra());
         // Inference.
         Module<Beliefs> inf = bFactory.getBeliefsModule(effm, fg);
         // Decoding and Loss.

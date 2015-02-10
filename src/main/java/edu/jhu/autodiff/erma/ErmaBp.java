@@ -150,8 +150,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         this(fg, prm, getFactorsModule(fg, prm));
     }
 
-    private static ExpFamFactorsModule getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(null, fg, prm.getAlgebra());
+    private static FactorsModule getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
+        FactorsModule effm = new FactorsModule(null, fg, prm.getAlgebra());
         effm.forward();
         return effm;
     }
@@ -446,8 +446,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 Object elem = elems.get(j);
                 if (elem instanceof FgEdge) {
                     backwardCreateMessage((FgEdge) elem);
-                } else if (elem instanceof GlobalFactor) {
-                    backwardGlobalFactorToVar((GlobalFactor) elem);
+                } else if (elem instanceof AutodiffGlobalFactor) {
+                    backwardGlobalFactorToVar((AutodiffGlobalFactor) elem);
                 } else {
                     throw new RuntimeException("Unsupported type in schedule: " + elem.getClass());
                 }
@@ -509,7 +509,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
     }
     
-    private void backwardGlobalFactorToVar(GlobalFactor globalFac) {
+    private void backwardGlobalFactorToVar(AutodiffGlobalFactor globalFac) {
         if (globalFac.getVars().size() == 0) { return; }
         FgNode node = fg.getNode(globalFac);
         VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
@@ -792,6 +792,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     }
     
     public double getPartitionBelief() {
+        // TODO: This method almost always overflows when s is the REAL semiring.
+
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL && prm.schedule == BpScheduleType.TREE_LIKE
                 && prm.normalizeMessages == false && fg.hasTreeComponents()) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 
@@ -960,7 +962,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         return Lists.getList(effm);
     }
 
-    public void setEffm(ExpFamFactorsModule effm) {
+    public void setEffm(FactorsModule effm) {
         if (!s.equals(effm.getAlgebra())) {
             throw new IllegalArgumentException("Algebras must be the same for ExpFamFactorModule and this class: " + s + " " + effm.getAlgebra());
         }

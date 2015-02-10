@@ -455,6 +455,8 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
     }
         
     public double getPartitionBelief() {
+        // TODO: This method almost always overflows when s is the REAL semiring.
+
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL && prm.schedule == BpScheduleType.TREE_LIKE
                 && prm.normalizeMessages == false && fg.hasTreeComponents()) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 

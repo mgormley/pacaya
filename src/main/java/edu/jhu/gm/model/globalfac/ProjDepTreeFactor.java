@@ -6,9 +6,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.autodiff.erma.MVecFgModel;
+import edu.jhu.autodiff.erma.ParamFreeGlobalFactorModule;
 import edu.jhu.autodiff.erma.ProjDepTreeModule;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
@@ -17,8 +21,8 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
+import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
 import edu.jhu.parse.dep.EdgeScores;
@@ -34,7 +38,7 @@ import edu.jhu.util.semiring.LogSemiring;
  * 
  * @author mgormley
  */
-public class ProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
+public class ProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor, AutodiffGlobalFactor {
 
     private static final long serialVersionUID = 1L;
  
@@ -364,6 +368,11 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             logPi += s.toLogProb(inMsg.getValue(LinkVar.FALSE));
         }
         return logPi;
+    }
+
+    @Override
+    public Module<?> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
+        return new ParamFreeGlobalFactorModule(s, this);
     }
 
 }
