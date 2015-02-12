@@ -198,7 +198,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # Datasets
         
         # ACE 2005
-        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete"))
+        ace05_concrete_dir = get_first_that_exists(os.path.join(p.corpora_dir, "processed", "ace_05_concrete3.3"))
         
         # ACE 2005 full domains:  bc bn cts nw un wl
         ace05_bc = get_ace05_data(ace05_concrete_dir, "bc")
