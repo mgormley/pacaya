@@ -223,6 +223,9 @@ public class ObsFeatureConjoiner implements Serializable {
         
         // Loop over all factors in the dataset. 
         for (int i=0; i<data.size(); i++) {
+            if (i % 1000 == 0) {
+                log.debug("Processing example: " + i);
+            }
             LFgExample ex = data.get(i);
             // Create a "no-op" inferencer, which returns arbitrary marginals.
             NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
