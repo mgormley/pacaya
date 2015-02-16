@@ -178,7 +178,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Path to word embeddings text file.")
     public static File embeddingsFile = null;
     @Opt(hasArg=true, description="Method for normalization of the embeddings.")
-    public static Scaling embNorm = Scaling.L1_NORM;
+    public static Scaling embNorm = Scaling.L2_NORM;
     @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
     public static double embScalar = 15.0;
     
