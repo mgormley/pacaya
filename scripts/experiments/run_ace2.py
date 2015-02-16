@@ -452,8 +452,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.adagrad_comid.update(regularizer="NONE")
             g.fobos.update(regularizer="NONE")
             g.adagrad.update(regularizer="NONE")
-            optis = [g.adagrad_comid, g.adagrad_comid, g.adagrad_comid, g.adagrad]
-            l2s = [10000, 40000, 160000, 0]
+            optis = [g.adagrad_comid, g.adagrad_comid, g.adagrad]
+            l2s = [10000, 40000, 0]
             for optimizer, l2variance in zip(optis, l2s):
                 for adaGradConstant in [1e-9, 0.1, 1.0]:
                     for isAddend in [True, False]:
