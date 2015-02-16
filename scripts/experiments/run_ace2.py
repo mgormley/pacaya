@@ -191,8 +191,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         useEmbeddingFeatures=True,
                         useZhou05Features=True,
                         entityTypeRepl="NONE")
-        defaults.update(optimizer="ADAGRAD_COMID", adaGradEta=0.05, adaGradConstantAddend=1, 
-                     sgdAutoSelectLr=True, regularizer="NONE")
+        defaults.update(optimizer="ADAGRAD_COMID", adaGradEta=0.05, 
+                        adaGradInitialSumSquares=1, adaGradConstantAddend=0,
+                        sgdAutoSelectLr=True, regularizer="NONE")
         #defaults += g.lbfgs + ReExpParams()
         
         # Datasets
@@ -232,7 +233,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                   embedName="polyglot-large-combined")
         cbow_nyt_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "vectors.nyt.cbow.out.d200.txt"),
                                   embedName="cbow-nyt")
-        cbow_nyt11_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "ace05.train_dev.lower.nyt2011.cbow.bin.filtered.txt"),
+        cbow_nyt11_en = ReExpParams(embeddingsFile=os.path.join(embeddings_dir, "ace05.nyt2011.cbow.bin.filtered.txt"),
                                   embedName="cbow-nyt11")
         defaults.set_incl_name("embeddingsFile", False)
         defaults.set_incl_arg("embedName", False)
@@ -271,7 +272,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
-        hyps=4
+        hyps=5
         if hyps==0:
             hyperparams = []
             for _ in range(10):
@@ -329,6 +330,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             hyp_lists.append([ReExpParams(embScalar=x) for x in loguniform_range(8, 80, num_hyp)])
             hyp_lists.append([ReExpParams(adaGradEta=x) for x in loguniform_range(0.005, 0.01, num_hyp)])
             hyperparams = combine(hyp_lists)
+        elif hyps == 5:
+            # Use default settings.
+            hyperparams = [ReExpParams()]
         for x in hyperparams: print x
 
         # ------------------------ EXPERIMENTS --------------------------
@@ -437,25 +441,29 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''Compares various methods of optimization for the simplest ACE log-linear model.'''
             root = RootStage()
             setup = get_annotation_as_train(ace05_bn_nw)
-            setup += cbow_nyt11_en + eval_pm13 + feats_no_embed
             setup += get_annotation_as_dev(ace05_bc_dev)
-            setup += get_annotation_as_test(ace05_cts)
+            setup += get_annotation_as_test(ace05_bc_test)
+            setup += cbow_nyt11_en + eval_types13 + feats_emb_only_noch
             defaults.remove("printModel")
             defaults.remove("modelOut")
             
-            setup.update(sgdAutoSelectLr=False)
+            setup.update(sgdAutoSelectLr=True)
             g.adagrad_comid = g.adagrad + ReExpParams(optimizer="ADAGRAD_COMID")
             g.adagrad_comid.update(regularizer="NONE")
             g.fobos.update(regularizer="NONE")
-            for l2variance in [10000, 40000, 160000]:
-                for adaGradEta in [0.025, 0.05, 0.1, 0.2]:
-                    for adaGradConstantAddend in [1e-9, 0.1, 1.0]:
-                        for optimizer in [g.adagrad_comid]:
-                            exp = defaults + setup + optimizer
-                            exp += ReExpParams(l2variance=l2variance, 
-                                               adaGradEta=adaGradEta,
-                                               adaGradConstantAddend=adaGradConstantAddend)
-                            root.add_dependent(exp)
+            g.adagrad.update(regularizer="NONE")
+            optis = [g.adagrad_comid, g.adagrad_comid, g.adagrad_comid, g.adagrad]
+            l2s = [10000, 40000, 160000, 0]
+            for optimizer, l2variance in zip(optis, l2s):
+                for adaGradConstant in [1e-9, 0.1, 1.0]:
+                    for isAddend in [True, False]:
+                        exp = defaults + setup + optimizer
+                        exp += ReExpParams(l2variance=l2variance)
+                        if isAddend: 
+                            exp.update(adaGradConstantAddend=adaGradConstant, adaGradInitialSumSquares=0)
+                        else:     
+                            exp.update(adaGradConstantAddend=0, adaGradInitialSumSquares=adaGradConstant)
+                        root.add_dependent(exp)
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
