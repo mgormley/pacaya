@@ -447,7 +447,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             defaults.remove("printModel")
             defaults.remove("modelOut")
             
-            setup.update(sgdAutoSelectLr=True)
+            setup.update(sgdAutoSelectLr=False, adaGradEta=0.1)
             g.adagrad_comid = g.adagrad + ReExpParams(optimizer="ADAGRAD_COMID")
             g.adagrad_comid.update(regularizer="NONE")
             g.fobos.update(regularizer="NONE")
@@ -457,7 +457,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for optimizer, l2variance in zip(optis, l2s):
                 for adaGradConstant in [1e-9, 0.1, 1.0]:
                     for isAddend in [True, False]:
-                        exp = defaults + setup + optimizer
+                        exp = defaults + optimizer + setup
                         exp += ReExpParams(l2variance=l2variance)
                         if isAddend: 
                             exp.update(adaGradConstantAddend=adaGradConstant, adaGradInitialSumSquares=0)
