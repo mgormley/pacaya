@@ -272,7 +272,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_arg("group", False)
         
         # Hyperparameters
-        hyps=5
+        hyps=3
         if hyps==0:
             hyperparams = []
             for _ in range(10):
@@ -295,7 +295,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             hyperparams = []
             for l2variance in [20000, 40000, 60000]:
                 for embScalar in [15, 20, 25]:
-                    for adaGradEta in [0.025, 0.05]:
+                    for adaGradEta in [0.05, 0.1]:
                         hyperparams.append(ReExpParams(l2variance=l2variance, adaGradEta=adaGradEta, 
                                                        embScalar=embScalar, sgdAutoSelectLr=False))   
         elif hyps==4:                   
