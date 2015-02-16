@@ -162,6 +162,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.set_incl_name("test", False)
         defaults.set_incl_name("modelIn", False)
         defaults.update(seed=random.getrandbits(63),
+                   algebra="LOG",
                    propTrainAsDev=0.1,
                    featCountCutoff=0,
                    featureHashMod=-1,
