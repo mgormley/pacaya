@@ -448,7 +448,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             defaults.remove("printModel")
             defaults.remove("modelOut")
             
-            setup.update(sgdAutoSelectLr=False, adaGradEta=0.1)
+            setup.update(sgdAutoSelectLr=False, adaGradEta=0.1, embScalar=1)
             g.adagrad_comid = g.adagrad + ReExpParams(optimizer="ADAGRAD_COMID")
             g.adagrad_comid.update(regularizer="NONE")
             g.fobos.update(regularizer="NONE")
