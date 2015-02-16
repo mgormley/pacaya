@@ -154,8 +154,8 @@ public class RelationsEncoder implements Encoder<AnnoSentence, List<String>> {
             List<Pair<String, NerMention>> argsOrd = rm.getNerOrderedArgs();
             Pair<String, NerMention> arg1 = argsOrd.get(0);
             Pair<String, NerMention> arg2 = argsOrd.get(1);
-        	String role1 = arg2.get1();
-        	String role2 = arg1.get1();
+        	String role1 = arg1.get1();
+        	String role2 = arg2.get1();
         	assert arg1.get2().compareTo(arg2.get2()) <= 0;
             relation = getRelation(rm.getType(), rm.getSubType(), role1, role2);
         } else {
