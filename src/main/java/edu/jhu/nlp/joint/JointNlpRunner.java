@@ -726,7 +726,7 @@ public class JointNlpRunner {
             } else if (optimizer == Optimizer.ADAGRAD){
                 AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
-                adaGradPrm.constantAddend = adaDeltaConstantAddend;
+                adaGradPrm.constantAddend = adaGradConstantAddend;
                 sgdPrm.sched = new AdaGradSchedule(adaGradPrm);
             } else if (optimizer == Optimizer.ADADELTA){
                 AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
@@ -742,7 +742,7 @@ public class JointNlpRunner {
             //TODO: sgdPrm.l1Lambda = l2Lambda;
             sgdPrm.l2Lambda = 1.0 / l2variance;
             sgdPrm.eta = adaGradEta;
-            sgdPrm.constantAddend = adaDeltaConstantAddend;
+            sgdPrm.constantAddend = adaGradConstantAddend;
             sgdPrm.sched = null;
             prm.optimizer = null;
             prm.batchOptimizer = new AdaGradComidL2(sgdPrm);
