@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.0.6-SNAPSHOT</version>
+  <version>3.0.6</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
