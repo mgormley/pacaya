@@ -117,8 +117,8 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     }
     
     @Override
-    public MutableModule<MVecArray<VarTensor>> getCreateMessagesModule(Module<MVecArray<VarTensor>> modIn) {
-        return new PDTFCreateMessagesModule(modIn);
+    public MutableModule<MVecArray<VarTensor>> getCreateMessagesModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+        return new PDTFCreateMessagesModule(modIn, fm);
     }
         
     @Override
@@ -129,10 +129,12 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     private class PDTFCreateMessagesModule extends AbstractMutableModule<MVecArray<VarTensor>> implements MutableModule<MVecArray<VarTensor>> {
 
         private Module<MVecArray<VarTensor>> modIn;
+        private Module<?> fm;
         
-        public PDTFCreateMessagesModule(Module<MVecArray<VarTensor>> modIn) {
+        public PDTFCreateMessagesModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
             super(modIn.getAlgebra());
             this.modIn = modIn;
+            this.fm = fm;
         }
 
         @Override
@@ -148,7 +150,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn);
+            return Lists.getList(modIn, fm);
         }
         
     }
@@ -346,7 +348,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     }
     
     @Override
-    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn) {
+    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
         throw new RuntimeException("not implemented");
     }
 

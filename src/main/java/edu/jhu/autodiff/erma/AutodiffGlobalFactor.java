@@ -29,8 +29,9 @@ public interface AutodiffGlobalFactor extends AutodiffFactor, GlobalFactor {
      * setOutput() and setOutputAdj() respectively to be called.
      * 
      * @param modIn The incoming messages to this factor.
+     * @param fm The factor module created by this.{@link #getFactorModule(Module, edu.jhu.util.semiring.Algebra)}.
      */
-    MutableModule<MVecArray<VarTensor>> getCreateMessagesModule(Module<MVecArray<VarTensor>> modIn);
+    MutableModule<MVecArray<VarTensor>> getCreateMessagesModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm);
     
     /**
      * Module which gets the expected log beliefs for this factor. We include factor's potential function in the
@@ -42,8 +43,9 @@ public interface AutodiffGlobalFactor extends AutodiffFactor, GlobalFactor {
      * semiring.
      * 
      * @param modIn The incoming messages to this factor.
+     * @param fm The factor module created by this.{@link #getFactorModule(Module, edu.jhu.util.semiring.Algebra)}.
      * @return The expected log belief.
      */
-    Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn);
+    Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm);
     
 }

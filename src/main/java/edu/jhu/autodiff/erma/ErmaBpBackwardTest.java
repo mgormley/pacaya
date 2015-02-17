@@ -141,8 +141,8 @@ public class ErmaBpBackwardTest {
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
-        OneToOneFactory<VarTensorArray,Beliefs> fact1 = new OneToOneFactory<VarTensorArray,Beliefs>() {
-            public Module<Beliefs> getModule(Module<VarTensorArray> m1) {
+        OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
                 ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
                 prm.schedule = BpScheduleType.TREE_LIKE;
@@ -152,8 +152,8 @@ public class ErmaBpBackwardTest {
         };
         
         // PARALLEL TREE_LIKE
-        OneToOneFactory<VarTensorArray,Beliefs> fact2 = new OneToOneFactory<VarTensorArray,Beliefs>() {
-            public Module<Beliefs> getModule(Module<VarTensorArray> m1) {
+        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
                 ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.PARALLEL;
                 prm.schedule = BpScheduleType.TREE_LIKE;
@@ -226,8 +226,8 @@ public class ErmaBpBackwardTest {
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
-        OneToOneFactory<VarTensorArray,Beliefs> fact1 = new OneToOneFactory<VarTensorArray,Beliefs>() {
-            public Module<Beliefs> getModule(Module<VarTensorArray> m1) {
+        OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
                 ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
                 prm.schedule = BpScheduleType.TREE_LIKE;
@@ -237,8 +237,8 @@ public class ErmaBpBackwardTest {
         };
         
         // SEQUENTIAL NO_GLOBAL_FACTORS
-        OneToOneFactory<VarTensorArray,Beliefs> fact2 = new OneToOneFactory<VarTensorArray,Beliefs>() {
-            public Module<Beliefs> getModule(Module<VarTensorArray> m1) {
+        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
                 ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
                 prm.schedule = BpScheduleType.NO_GLOBAL_FACTORS;
@@ -351,8 +351,8 @@ public class ErmaBpBackwardTest {
         //        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact1, effm);
         
         // Test BP by itself.
-        OneToOneFactory<VarTensorArray,Beliefs> fact2 = new OneToOneFactory<VarTensorArray,Beliefs>() {
-            public Module<Beliefs> getModule(Module<VarTensorArray> m1) {
+        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
+            public Module<Beliefs> getModule(Module<Factors> m1) {
                 return new ErmaBp(fg, prm, m1);
             }
         };

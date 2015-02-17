@@ -20,7 +20,7 @@ import edu.jhu.util.semiring.Algebra;
  * 
  * @author mgormley
  */
-public class FactorsModule extends AbstractModule<VarTensorArray> implements Module<VarTensorArray> {
+public class FactorsModule extends AbstractModule<Factors> implements Module<Factors> {
 
     private static final Logger log = LoggerFactory.getLogger(FactorsModule.class);
     
@@ -35,27 +35,32 @@ public class FactorsModule extends AbstractModule<VarTensorArray> implements Mod
     }
     
     @Override
-    public VarTensorArray forward() {
-        y = new VarTensorArray(s);
-        y.f = new VarTensor[fg.getNumFactors()];
+    public Factors forward() {
+        // Get modules that create the factors.
         facMods = new ArrayList<>();
-        for (int a = 0; a < y.f.length; a++) {
+        for (int a = 0; a < fg.getNumFactors(); a++) {
             Factor factor = fg.getFactor(a);
             if (factor instanceof AutodiffFactor) {
                 AutodiffFactor fmf = (AutodiffFactor) factor;
                 Module<?> fm = fmf.getFactorModule(modIn, s);
                 facMods.add(fm);
-                Object o = fm.forward();
-                if (o instanceof VarTensor) {
-                    y.f[a] = (VarTensor) o;
-                    assert !y.f[a].containsBadValues();
-                } else if (factor instanceof GlobalFactor) {
-                    y.f[a] = null;
-                } else {
-                    throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
-                }
             } else {
                 throw new RuntimeException("Every factor must implement the Module interface. Do so for the class " + factor.getClass());
+            }
+        }
+        // Forward pass and create output.
+        y = new Factors(s, facMods);
+        y.f = new VarTensor[fg.getNumFactors()];
+        for (int a = 0; a < y.f.length; a++) {
+            Module<?> fm = facMods.get(a);
+            Object o = fm.forward();
+            if (o instanceof VarTensor) {
+                y.f[a] = (VarTensor) o;
+                assert !y.f[a].containsBadValues();
+            } else if (fg.getFactor(a) instanceof GlobalFactor) {
+                y.f[a] = null;
+            } else {
+                throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
             }
         }
         yAdj = null;
@@ -63,18 +68,17 @@ public class FactorsModule extends AbstractModule<VarTensorArray> implements Mod
     }
 
     @Override
-    public VarTensorArray getOutputAdj() {
+    public Factors getOutputAdj() {
         if (yAdj == null) {
-            yAdj = new VarTensorArray(y.s);
+            yAdj = new Factors(y.s, facMods);
             yAdj.f = new VarTensor[y.f.length];
             for (int a = 0; a < y.f.length; a++) {
                 Module<?> fm = facMods.get(a);
                 Object o = fm.getOutputAdj();
-                Factor factor = fg.getFactor(a);
                 if (o instanceof VarTensor) {
                     yAdj.f[a] = (VarTensor) o;
                     assert !yAdj.f[a].containsBadValues();
-                } else if (factor instanceof GlobalFactor) {
+                } else if (fg.getFactor(a) instanceof GlobalFactor) {
                     yAdj.f[a] = null;
                 } else {
                     throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
@@ -93,6 +97,8 @@ public class FactorsModule extends AbstractModule<VarTensorArray> implements Mod
 
     @Override
     public List<Module<MVecFgModel>> getInputs() {
+        // Note that ONLY the FgModel's module is considered the input. 
+        // The factor creation modules are internal to this module.
         return Lists.getList(modIn);
     }
 

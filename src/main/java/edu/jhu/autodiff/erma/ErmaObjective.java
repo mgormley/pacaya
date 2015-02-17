@@ -19,11 +19,11 @@ public class ErmaObjective implements ExampleObjective {
     
     public interface DlFactory {
         /** Get a module which decodes then evaluates the loss. */
-        Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter);
+        Module<Tensor> getDl(VarConfig goldConfig, FactorsModule fm, Module<Beliefs> inf, int curIter, int maxIter);
     }
     
     public interface BeliefsModuleFactory {
-        Module<Beliefs> getBeliefsModule(Module<VarTensorArray> effm, FactorGraph fg);
+        Module<Beliefs> getBeliefsModule(Module<Factors> fm, FactorGraph fg);
         Algebra getAlgebra();
     }
     
