@@ -55,7 +55,7 @@ public class DepParseFactorGraphBuilderSpeedTest {
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
         fgPrm.useProjDepTreeFactor = true;
         fgPrm.grandparentFactors = false;
-        fgPrm.siblingFactors = false;
+        fgPrm.arbitrarySiblingFactors = false;
         DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(fgPrm);
         builder.build(sent, fe, fg);
         

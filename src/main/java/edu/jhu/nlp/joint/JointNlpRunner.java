@@ -274,7 +274,7 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
     public static boolean grandparentFactors = false;
     @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
-    public static boolean siblingFactors = false;
+    public static boolean arbitrarySiblingFactors = false;
     @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
     public static boolean excludeNonprojectiveGrandparents = true;
     
@@ -618,7 +618,7 @@ public class JointNlpRunner {
         prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
-        prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
+        prm.fgPrm.dpPrm.arbitrarySiblingFactors = arbitrarySiblingFactors;
         prm.fgPrm.dpPrm.pruneEdges = pruneByDist || pruneByModel;
                 
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
@@ -888,7 +888,7 @@ public class JointNlpRunner {
             return bpPrm;
         } else if (inference == Inference.DP) {
             if (CorpusHandler.getPredAts().size() == 1 && CorpusHandler.getPredAts().get(0) == AT.DEP_TREE
-                    && grandparentFactors && !siblingFactors) { 
+                    && grandparentFactors && !arbitrarySiblingFactors) { 
                 return new O2AllGraFgInferencerFactory(algebra.getAlgebra());
             } else {
                 throw new ParseException("DP inference only supported for dependency parsing with all grandparent factors.");
@@ -933,6 +933,7 @@ public class JointNlpRunner {
             parser.registerClass(RelObsFePrm.class);
             parser.registerClass(InsideOutsideDepParse.class);      
             parser.registerClass(ReporterManager.class);
+            parser.registerClass(BitshiftDepParseFeatureExtractorPrm.class);
             parser.parseArgs(args);
             JointNlpRunner.parser = parser;
             

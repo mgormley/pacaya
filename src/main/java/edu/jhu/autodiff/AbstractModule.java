@@ -2,7 +2,7 @@ package edu.jhu.autodiff;
 
 import edu.jhu.util.semiring.Algebra;
 
-public abstract class AbstractModule<T extends MVec<T>> implements Module<T> {
+public abstract class AbstractModule<T extends MVec> implements Module<T> {
 
     protected T y;
     protected T yAdj;
@@ -21,7 +21,7 @@ public abstract class AbstractModule<T extends MVec<T>> implements Module<T> {
     @Override
     public T getOutputAdj() {
         if (yAdj == null) {
-            yAdj = y.copyAndFill(s.zero());
+            yAdj = (T) y.copyAndFill(s.zero());
         }
         return yAdj;
     }
@@ -41,13 +41,13 @@ public abstract class AbstractModule<T extends MVec<T>> implements Module<T> {
         return this.getClass() + " [y=" + y + ", yAdj=" + yAdj + "]";
     }
 
-    public static <T extends MVec<T>> void checkEqualAlgebras(Module<T> m1, Module<T> m2) {
+    public static <T extends MVec> void checkEqualAlgebras(Module<T> m1, Module<T> m2) {
         if (m1.getAlgebra().getClass() != m2.getAlgebra().getClass()) {
             throw new IllegalArgumentException("Algebras must be the same");
         }
     }
     
-    public static <T extends MVec<T>> void checkEqualAlgebras(Module<T> m1, Module<T> m2, Module<T> m3) {
+    public static <T extends MVec> void checkEqualAlgebras(Module<T> m1, Module<T> m2, Module<T> m3) {
         checkEqualAlgebras(m1, m2);
         checkEqualAlgebras(m2, m3);
     }

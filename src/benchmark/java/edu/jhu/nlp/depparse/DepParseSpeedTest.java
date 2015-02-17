@@ -9,6 +9,8 @@ import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
+import edu.jhu.nlp.tag.StrictPosTagAnnotator;
+import edu.jhu.nlp.words.PrefixAnnotator;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
@@ -59,6 +61,8 @@ public class DepParseSpeedTest {
             
             t0.start();
             AnnoSentenceCollection sents = AnnoSentenceReaderSpeedTest.readPtbYmConllx();
+            PrefixAnnotator.addPrefixes(sents);
+            StrictPosTagAnnotator.addStrictPosTags(sents);
             t0.stop();
 
             // Don't time this stuff since it's "training".

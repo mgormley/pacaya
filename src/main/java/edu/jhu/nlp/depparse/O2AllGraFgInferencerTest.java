@@ -87,7 +87,7 @@ public class O2AllGraFgInferencerTest {
         DepParseFactorGraphBuilderPrm prm = new DepParseFactorGraphBuilderPrm();
         prm.useProjDepTreeFactor = true;
         prm.grandparentFactors = true;
-        prm.siblingFactors = false;
+        prm.arbitrarySiblingFactors = false;
         prm.linkVarType = VarType.PREDICTED;
         DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(prm);
         FactorGraph fg = new FactorGraph();

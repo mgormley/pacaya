@@ -32,12 +32,12 @@ public class AbstractModuleTest {
     }
     
     /** Factory for a module which takes one modules as input. */
-    public interface OneToOneFactory<X extends MVec<X>,Y extends MVec<Y>> {
+    public interface OneToOneFactory<X extends MVec,Y extends MVec> {
         Module<Y> getModule(Module<X> m1);
     }
         
     /** Factory for a module which takes two modules as input. */
-    public interface TwoToOneFactory<W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> {
+    public interface TwoToOneFactory<W extends MVec, X extends MVec, Y extends MVec> {
         Module<Y> getModule(Module<W> m1, Module<X> m2);
     }
     
@@ -147,14 +147,14 @@ public class AbstractModuleTest {
     /**
      * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with 0,1 Gaussian vector factory.
      */
-    public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
+    public static <X extends MVec, Y extends MVec> void evalOneToOneByFiniteDiffs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
         evalOneToOneByFiniteDiffsAbs(fact, in1, new StandardNormalVectorFactory());
     }
     
     /**
      * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with positive side of 0,1 Gaussian vector factory.
      */
-    public static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
+    public static <X extends MVec, Y extends MVec> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1) {        
         evalOneToOneByFiniteDiffsAbs(fact, in1, new AbsStandardNormalVectorFactory());
     }
     
@@ -162,7 +162,7 @@ public class AbstractModuleTest {
      * Evaluates a module by finite differences. This module takes one module as
      * input, and will be tested on multiple semirings.
      */
-    private static <X extends MVec<X>, Y extends MVec<Y>> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1, VectorFactory vec) {        
+    private static <X extends MVec, Y extends MVec> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1, VectorFactory vec) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         
         for (Algebra s : test2Algebras) {
@@ -205,7 +205,7 @@ public class AbstractModuleTest {
     /**
      * Calls {@link #evalTwoToOneByFiniteDiffs(TwoToOneFactory, Module, Module, VectorFactory)} with 0,1 Gaussian vector factory.
      */
-    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffs(
+    public static <W extends MVec, X extends MVec, Y extends MVec> void evalTwoToOneByFiniteDiffs(
             TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
         evalTwoToOneByFiniteDiffs(fact, in1, in2, new StandardNormalVectorFactory());
     }
@@ -213,7 +213,7 @@ public class AbstractModuleTest {
     /**
      * Calls {@link #evalTwoToOneByFiniteDiffs(TwoToOneFactory, Module, Module, VectorFactory)} with positive side of 0,1 Gaussian vector factory.
      */
-    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffsAbs(
+    public static <W extends MVec, X extends MVec, Y extends MVec> void evalTwoToOneByFiniteDiffsAbs(
             TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2) {        
         evalTwoToOneByFiniteDiffs(fact, in1, in2, new AbsStandardNormalVectorFactory());
     }
@@ -222,7 +222,7 @@ public class AbstractModuleTest {
      * Evaluates a module by finite differences. This module takes two modules as
      * input, and will be tested on multiple semirings.
      */
-    public static <W extends MVec<W>, X extends MVec<X>, Y extends MVec<Y>> void evalTwoToOneByFiniteDiffs(
+    public static <W extends MVec, X extends MVec, Y extends MVec> void evalTwoToOneByFiniteDiffs(
             TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2, VectorFactory vec) {        
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
         assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
@@ -241,19 +241,19 @@ public class AbstractModuleTest {
     }
     
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
-    public static <X extends MVec<X>, Y extends MVec<Y>> void checkOneToOneEqualAdjoints(OneToOneFactory<X, Y> fact1,
+    public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjoints(OneToOneFactory<X, Y> fact1,
             OneToOneFactory<X, Y> fact2, Module<X> in1) {
         checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, new StandardNormalVectorFactory());
     }
 
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
-    public static <X extends MVec<X>, Y extends MVec<Y>> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
+    public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
             OneToOneFactory<X, Y> fact2, Module<X> in1) {
         checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, new AbsStandardNormalVectorFactory());
     }
     
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
-    public static <X extends MVec<X>, Y extends MVec<Y>> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
+    public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
             OneToOneFactory<X, Y> fact2, Module<X> in1, VectorFactory vec) {
         assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
                 

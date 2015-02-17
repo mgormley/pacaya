@@ -68,7 +68,7 @@ public class FirstOrderPruner implements Annotator {
         exPrm.fgPrm.dpPrm = new DepParseFactorGraphBuilderPrm();
         exPrm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
         exPrm.fgPrm.dpPrm.grandparentFactors = false;
-        exPrm.fgPrm.dpPrm.siblingFactors = false;
+        exPrm.fgPrm.dpPrm.arbitrarySiblingFactors = false;
         exPrm.fgPrm.dpPrm.unaryFactors = true;
         exPrm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         // TODO: This should only be true if we already ran a pruner before this one.

@@ -39,6 +39,7 @@ public class ArgParser {
     private Map<Option, Field> optionFieldMap;
     private Map<Field, String> fieldValueMap;
     private Class<?> mainClass = null;
+    private Set<Class<?>> registeredClasses;
     private Set<String> names;
     private Set<String> shortNames;
     private boolean createShortNames;
@@ -58,10 +59,12 @@ public class ArgParser {
         names = new HashSet<String>();
         shortNames = new HashSet<String>();
         this.createShortNames = createShortNames;
+        this.registeredClasses = new HashSet<>();
     }
 
     /** Registers all the @Opt annotations on a class with this ArgParser. */
     public void registerClass(Class<?> clazz) {
+        registeredClasses.add(clazz);
         for (Field field : clazz.getFields()) {
             if (field.isAnnotationPresent(Opt.class)) {
                 int mod = field.getModifiers();
@@ -171,6 +174,9 @@ public class ArgParser {
      * and then setting all fields annotated with @Opt with values cached by {@link #parseArgs(String[])}.
      */
     public <T> T getInstanceFromParsedArgs(Class<T> clazz) {
+        if (!registeredClasses.contains(clazz)) {
+            throw new IllegalArgumentException("Class not registered: " + clazz);
+        }
         try {
             T obj = clazz.newInstance();
             for (Field field : clazz.getFields()) {

@@ -19,7 +19,7 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 
-public class ExpFamFactorsModuleTest {
+public class FactorsModuleTest {
 
     boolean logDomain = false;
     Algebra s = new RealAlgebra();
@@ -27,7 +27,7 @@ public class ExpFamFactorsModuleTest {
     private final FgModel model;
     private final FactorGraph fg;
     
-    public ExpFamFactorsModuleTest() {
+    public FactorsModuleTest() {
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
         ExplicitExpFamFactor emit1 = new ExplicitExpFamFactor(new VarSet(t0));
         for (int c=0; c<emit1.size(); c++) {
@@ -47,7 +47,7 @@ public class ExpFamFactorsModuleTest {
         model.getParams().set(1, 3);
         FgModelIdentity id1 = new FgModelIdentity(model);
         
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(id1, fg, s);
+        FactorsModule effm = new FactorsModule(id1, fg, s);
         effm.forward();
         VarTensor[] y = effm.getOutput().f;
         System.out.println(Arrays.deepToString(y));
@@ -71,7 +71,7 @@ public class ExpFamFactorsModuleTest {
         // This tests ONLY the real semiring, since that is the only supported semiring.
         model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(id1, fg, s);
+        FactorsModule effm = new FactorsModule(id1, fg, s);
         ModuleTestUtils.assertGradientCorrectByFd(effm, 1e-5, 1e-8);
     }
 

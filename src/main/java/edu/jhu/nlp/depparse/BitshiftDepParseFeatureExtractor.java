@@ -27,7 +27,9 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         private static final long serialVersionUID = 1L;
         public int featureHashMod = 10000000;
         @Opt(description = "Whether to use MST style word-pair features")
-        public boolean useMstFeats = true;
+        public boolean useMstFeats = false;
+        @Opt(description = "Whether to use Carerras style 2nd-order features")
+        public boolean useCarerrasFeats = false;
         @Opt(description = "Whether to use coarse POS tag features (TurboParser and MST features)")
         public boolean useCoarseTags = true;
         /* Options for TurboParser style features only. */
@@ -38,13 +40,13 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         @Opt(description = "Whether to use lemma features (TurboParser style only)")
         public boolean useLemmaFeats = true;
         @Opt(description = "Whether to use mophology features (TurboParser style only)")
-        public boolean useMorphologicalFeatures = true;
+        public boolean useMorphologicalFeats = true;
         @Opt(description = "Whether to use extra features (TurboParser style only)")
         public boolean useNonTurboFeats = false;
         @Opt(description = "Whether to use word-pair features for 2nd-order features (TurboParser style only)")
         public boolean usePairFor2ndOrder = true;
         @Opt(description = "Whether to use word-pair features for arbitrary sibling features (TurboParser style only)")
-        public boolean usePairFor2ndOrderArbiSibl = false;
+        public boolean usePairFor2ndOrderArbiSibl = true; // TODO: Switch this off once we add consecutive.
         @Opt(description = "Whether to use word-pair features for the grandparent and head (TurboParser style only)")
         public boolean useUpperGrandDepFeats = false;
         @Opt(description = "Whether to use word-pair features for the head and modifier when non-projective in grandparent feats (TurboParser style only)")
@@ -98,18 +100,18 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         FeatureVector feats = new FeatureVector();
 
         // Get the features for an edge that is "on".
-        if (ft == DepParseFactorTemplate.LINK_UNARY) {
+        if (ft == DepParseFactorTemplate.UNARY) {
             // Look at the variables to determine the parent and child.
             LinkVar var = (LinkVar) vars.get(0);
             int p = var.getParent();
             int c = var.getChild();
             BitshiftDepParseFeatures.addArcFeats(isent, p, c, prm, feats);
-        } else if (ft == DepParseFactorTemplate.LINK_SIBLING) {
+        } else if (ft == DepParseFactorTemplate.ARBITRARY_SIBLING) {
             SibFeTypedFactor f2 = (SibFeTypedFactor)f;
-            BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, f2.p, f2.c, f2.s, feats, prm.featureHashMod);
-        } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT) {
+            BitshiftDepParseFeatures.addArbitrarySiblingFeats(isent, f2.p, f2.c, f2.s, feats, prm);
+        } else if (ft == DepParseFactorTemplate.GRANDPARENT) {
             GraFeTypedFactor f2 = (GraFeTypedFactor)f;
-            BitshiftDepParseFeatures.addCarerrasGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm.featureHashMod);
+            BitshiftDepParseFeatures.addGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

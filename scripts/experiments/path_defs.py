@@ -65,13 +65,13 @@ class PathDefinitions():
         for lang_short in p.cx_lang_short_names + p.c07_lang_short_names + p.c09_lang_short_names:
             p.langs[lang_short] = ParamGroups()            
         
-        corpora_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora",
-                                            "/Users/mgormley/research/corpora",
-                                            "/home/mgormley/corpora")
+        corpora_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora", # COE
+                                            "/export/a12/mgormley/corpora", #CLSP
+                                            "/Users/mgormley/research/corpora")
         p.corpora_dir = corpora_dir
-        ldc_dir = get_first_that_exists("/export/common/data/corpora/LDC",
-                                        "/Users/mgormley/research/LDC",
-                                        self.root_dir + "/data/LDC")
+        ldc_dir = get_first_that_exists("/export/common/data/corpora/LDC", # COE
+                                        "/export/corpora/LDC", # CLSP
+                                        "/Users/mgormley/research/LDC")
         p.ldc_dir = ldc_dir
         
         # CoNLL'09 Shared Task datasets.

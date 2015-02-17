@@ -484,11 +484,5 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         }
         return parents;
     }
-    
-    @Override
-    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
-        throw new RuntimeException("This version of the global factor does not support adjoint computation. Use "
-                + ProjDepTreeFactor.class + " instead.");
-    }
 
 }

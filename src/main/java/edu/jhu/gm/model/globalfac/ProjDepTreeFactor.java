@@ -1,14 +1,24 @@
 package edu.jhu.gm.model.globalfac;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.autodiff.AbstractMutableModule;
+import edu.jhu.autodiff.MVec;
+import edu.jhu.autodiff.MVecArray;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.MutableModule;
+import edu.jhu.autodiff.Scalar;
 import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.TensorIdentity;
+import edu.jhu.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.autodiff.erma.InsideOutsideDepParse;
+import edu.jhu.autodiff.erma.MVecFgModel;
+import edu.jhu.autodiff.erma.ParamFreeGlobalFactorModule;
 import edu.jhu.autodiff.erma.ProjDepTreeModule;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var;
@@ -17,13 +27,14 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
+import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSemiring;
@@ -34,7 +45,7 @@ import edu.jhu.util.semiring.LogSemiring;
  * 
  * @author mgormley
  */
-public class ProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor {
+public class ProjDepTreeFactor extends AbstractConstraintFactor implements GlobalFactor, AutodiffGlobalFactor {
 
     private static final long serialVersionUID = 1L;
  
@@ -104,15 +115,44 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         }
         return vars;
     }
+    
+    @Override
+    public MutableModule<MVecArray<VarTensor>> getCreateMessagesModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+        return new PDTFCreateMessagesModule(modIn, fm);
+    }
         
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         forwardAndBackward(inMsgs, outMsgs, null, null, true);
     }
 
-    @Override
-    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
-        forwardAndBackward(inMsgs, null, outMsgsAdj, inMsgsAdj, false);
+    private class PDTFCreateMessagesModule extends AbstractMutableModule<MVecArray<VarTensor>> implements MutableModule<MVecArray<VarTensor>> {
+
+        private Module<MVecArray<VarTensor>> modIn;
+        private Module<?> fm;
+        
+        public PDTFCreateMessagesModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+            super(modIn.getAlgebra());
+            this.modIn = modIn;
+            this.fm = fm;
+        }
+
+        @Override
+        public MVecArray<VarTensor> forward() {
+            forwardAndBackward(modIn.getOutput().f, y.f, null, null, true);
+            return y;
+        }
+
+        @Override
+        public void backward() {
+            forwardAndBackward(modIn.getOutput().f, null, yAdj.f, modIn.getOutputAdj().f, false);
+        }
+
+        @Override
+        public List<? extends Module<? extends MVec>> getInputs() {
+            return Lists.getList(modIn, fm);
+        }
+        
     }
     
     public void forwardAndBackward(VarTensor[] inMsgs, VarTensor[] outMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj, boolean isForward) {
@@ -306,6 +346,11 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             msg.addValue(tf, val);
         }
     }
+    
+    @Override
+    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+        throw new RuntimeException("not implemented");
+    }
 
     @Override
     public double getExpectedLogBelief(VarTensor[] inMsgs) {
@@ -364,6 +409,11 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             logPi += s.toLogProb(inMsg.getValue(LinkVar.FALSE));
         }
         return logPi;
+    }
+
+    @Override
+    public Module<?> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
+        return new ParamFreeGlobalFactorModule(s, this);
     }
 
 }
