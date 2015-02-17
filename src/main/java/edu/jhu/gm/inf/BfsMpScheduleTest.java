@@ -223,11 +223,6 @@ public class BfsMpScheduleTest {
             throw new RuntimeException("not implemented");
         }
 
-        @Override
-        public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
-            throw new RuntimeException("not implemented");
-        }
-
     }
 
 }

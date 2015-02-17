@@ -42,9 +42,9 @@ public class ElemLinear extends AbstractModule<Tensor> implements Module<Tensor>
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.multiply(weightX);
-        Tensor tmp = w.copy();
+        Tensor tmp = new Tensor(w); // copy
         tmp.multiply(weightW);
         y.elemAdd(tmp);
         return y;
@@ -57,11 +57,11 @@ public class ElemLinear extends AbstractModule<Tensor> implements Module<Tensor>
      */
     @Override
     public void backward() {
-        Tensor tmp1 = yAdj.copy();
+        Tensor tmp1 = new Tensor(yAdj); // copy
         tmp1.multiply(weightX);
         modInX.getOutputAdj().elemAdd(tmp1);
 
-        Tensor tmp2 = yAdj.copy();
+        Tensor tmp2 = new Tensor(yAdj); // copy
         tmp2.multiply(weightW);
         modInW.getOutputAdj().elemAdd(tmp2);
     }

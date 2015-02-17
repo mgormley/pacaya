@@ -68,7 +68,7 @@ public class BitshiftDepParseFeaturesTest {
         prm.maxTokenContext = 2;
         prm.useCoarseTags = true;
         prm.useLemmaFeats = true;
-        prm.useMorphologicalFeatures = true;
+        prm.useMorphologicalFeats = true;
         prm.featureHashMod = -1; // Only uses MurmurHash from long to int.
         
         // For 2nd-order only.
@@ -87,7 +87,7 @@ public class BitshiftDepParseFeaturesTest {
         IntAnnoSentence isent = getIntAnnoSentence();
         {
             FeatureVector feats = getFv();
-            BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, 0, 2, 3, feats, -1);
+            BitshiftDepParseFeatures.addCarerrasSiblingFeats(isent, 0, 2, 3, feats, -1, false);
             checkNumFeatsBeforeAndAfterCompact(feats, 10, 10);
         }
     }
@@ -153,6 +153,17 @@ public class BitshiftDepParseFeaturesTest {
             FeatureVector feats = getFv();
             BitshiftDepParseFeatures.addTurboGrandparentFeats(isent, 0, 2, 3, feats, prm);
             checkNumFeatsBeforeAndAfterCompact(feats, 388, 388);
+        }
+    }
+
+    @Test
+    public void testAddTurboHeadBigramFeats() throws Exception {
+        IntAnnoSentence isent = getIntAnnoSentence();
+        BitshiftDepParseFeatureExtractorPrm prm = getDefaultBitshiftDepParseFeatureExtractorPrm();
+        {
+            FeatureVector feats = getFv();
+            BitshiftDepParseFeatures.addTurboHeadBigramFeats(isent, 0, 2, 3, feats, prm);
+            checkNumFeatsBeforeAndAfterCompact(feats, 24, 24);
         }
     }
 

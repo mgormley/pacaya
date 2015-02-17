@@ -29,7 +29,7 @@ public class ElemSubtract extends AbstractModule<Tensor> implements Module<Tenso
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.elemSubtract(w);
         return y;
     }

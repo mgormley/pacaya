@@ -137,7 +137,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        FactorsModule effm = new FactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
@@ -222,7 +222,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        FactorsModule effm = new FactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
@@ -337,7 +337,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        ExpFamFactorsModule effm = new ExpFamFactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        FactorsModule effm = new FactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
         effm.forward();
         
         // Test BP and Expected Recall together.

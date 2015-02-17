@@ -23,9 +23,9 @@ public interface GlobalFactor extends Factor {
     /**
      * Gets the expected log beliefs for this factor. We include factor's potential function in the
      * expectation since for most constraint factors \chi(x_a) \in \{0,1\}.
-     * 
+     * <p>
      * E[ln(b(x_a) / \chi(x_a)) ] = \sum_{x_a} b(x_a) ln (b(x_a) / \chi(x_a))
-     * 
+     * <p>
      * Note: The value should be returned as a real, though the messages may be in a different
      * semiring.
      * 
@@ -33,15 +33,6 @@ public interface GlobalFactor extends Factor {
      * @return The expected log belief.
      */
     double getExpectedLogBelief(VarTensor[] inMsgs);
-    
-    /**
-     * Computes and sets the adjoints of the incoming messages.
-     * 
-     * @param inMsgs The incoming messages to this factor.
-     * @param outMsgsAdj The adjoints of the outgoing messages from this factor.
-     * @param inMsgs The adjoints of the incoming messages to this factor. (OUTPUT)
-     */
-    void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj);
     
     /**
      * Adds the expected feature counts for this factor, given the marginal distribution 

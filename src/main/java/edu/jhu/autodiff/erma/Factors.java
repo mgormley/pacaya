@@ -1,63 +1,46 @@
 package edu.jhu.autodiff.erma;
 
+import java.util.List;
+
 import edu.jhu.autodiff.MVec;
+import edu.jhu.autodiff.MVecArray;
+import edu.jhu.autodiff.Module;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for potential tables of a factor graph. */
-public class Factors implements MVec<Factors> {
+public class Factors extends MVecArray<VarTensor> implements MVec {
     
     public VarTensor[] f;
     public Algebra s;
+    public List<Module<?>> facMods;
     
-    public Factors(Algebra s) {
-        this.s = s;
+    public Factors(Algebra s, List<Module<?>> facMods) {
+        super(s);
+        this.facMods = facMods;
     }
 
     public Factors(VarTensor[] facBeliefs) {
-        this.f = facBeliefs;
+        super(facBeliefs);
     }
-
+    
+    @Override
     public Factors copy() {
-        Factors clone = new Factors(s);
-        clone.f = Beliefs.copyOfVarTensorArray(this.f);
+        Factors clone = new Factors(s, facMods);
+        clone.f = MVecArray.copyOfArray(this.f);
         return clone;
     }
 
+    @Override
     public Factors copyAndConvertAlgebra(Algebra newS) {
-        Factors clone = new Factors(newS);
-        clone.f = Beliefs.copyAndConvertAlgebraOfVarTensorArray(this.f, newS);
-        return clone;
-    }
-
-    public void fill(double val) {
-        Beliefs.fillVarTensorArray(f, val);
-    }
-
-    public Factors copyAndFill(double val) {
-        Factors clone = copy();
-        clone.fill(val);
+        Factors clone = new Factors(newS, facMods);
+        clone.f = MVecArray.copyAndConvertAlgebraOfArray(this.f, newS);
         return clone;
     }
     
-    public int size() {
-        return Beliefs.count(f);
-    }
-
-    public double getValue(int idx) {
-        return Beliefs.getValue(idx, f);
-    }
-    
-    public double setValue(int idx, double val) {
-        return Beliefs.setValue(idx, val, f);
-    }
-    
-    public void elemAdd(Factors addend) {
-        Beliefs.addVarTensorArray(this.f, addend.f);
-    }
-
-    public Algebra getAlgebra() {
-        return s;
+    /** Gets the module that created the a'th factor. */
+    public Module<?> getFactorModule(int a) {
+        return facMods.get(a);
     }
     
 }

@@ -32,7 +32,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         public boolean annealMse = true;
         
         @Override
-        public Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
+        public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             double temperature = getTemperature(curIter, maxIter);
             TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(Algebras.REAL_ALGEBRA, temperature)); 
                     

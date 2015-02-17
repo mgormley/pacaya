@@ -28,7 +28,7 @@ public class SrlFactorGraphBuilderTest {
         prm.srlPrm.allowPredArgSelfLoops = false;
         prm.srlPrm.predictPredPos = true;
         prm.srlPrm.binarySenseRoleFactors = true;
-        JointNlpFactorGraph sfg = JointNlpFactorGraphTest.getSrlFg(prm);
+        JointNlpFactorGraph sfg = JointNlpFactorGraphTest.getJointNlpFg(prm);
                 
         System.out.print("Vars: ");
         for (Var var : sfg.getVars()) {
@@ -62,7 +62,7 @@ public class SrlFactorGraphBuilderTest {
         prm.srlPrm.predictSense = true;
         prm.srlPrm.predictPredPos = true;
         prm.srlPrm.binarySenseRoleFactors = true;
-        JointNlpFactorGraph sfg = JointNlpFactorGraphTest.getSrlFg(prm);
+        JointNlpFactorGraph sfg = JointNlpFactorGraphTest.getJointNlpFg(prm);
                 
         System.out.print("Vars: ");
         for (Var var : sfg.getVars()) {

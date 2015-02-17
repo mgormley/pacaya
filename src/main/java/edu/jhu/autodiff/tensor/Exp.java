@@ -25,7 +25,7 @@ public class Exp extends AbstractModule<Tensor> implements Module<Tensor> {
     @Override
     public Tensor forward() {
         Tensor x = modInX.getOutput();
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.exp();
         return y;
     }
@@ -36,7 +36,7 @@ public class Exp extends AbstractModule<Tensor> implements Module<Tensor> {
      */
     @Override
     public void backward() {
-        Tensor tmp = yAdj.copy();
+        Tensor tmp = new Tensor(yAdj); // copy
         tmp.elemMultiply(y);
         modInX.getOutputAdj().elemAdd(tmp);
     }

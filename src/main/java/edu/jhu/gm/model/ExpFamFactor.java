@@ -1,10 +1,21 @@
 package edu.jhu.gm.model;
 
+import java.util.List;
+
+import edu.jhu.autodiff.AbstractModule;
+import edu.jhu.autodiff.MVec;
+import edu.jhu.autodiff.Module;
+import edu.jhu.autodiff.erma.AutodiffFactor;
+import edu.jhu.autodiff.erma.MVecFgModel;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.iter.IntIncrIter;
 import edu.jhu.prim.iter.IntIter;
+import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.Algebra;
+import edu.jhu.util.semiring.Algebras;
 
 
 /**
@@ -13,7 +24,7 @@ import edu.jhu.prim.iter.IntIter;
  * 
  * @author mgormley
  */
-public abstract class ExpFamFactor extends ExplicitFactor implements Factor, FeatureCarrier {
+public abstract class ExpFamFactor extends ExplicitFactor implements Factor, FeatureCarrier, AutodiffFactor {
     
     private static final long serialVersionUID = 1L;
         
@@ -171,4 +182,51 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         }
         
     }
+    
+    @Override
+    public Module<VarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
+        return new ExpFamFactorModule(modIn, s, this);
+    }
+    
+    /**
+     * Module for computing exp(\theta \cdot f(x,y)) to populate each of the exponential family factors.
+     * 
+     * @author mgormley
+     */
+    public static class ExpFamFactorModule extends AbstractModule<VarTensor> implements Module<VarTensor> {
+
+        private Module<MVecFgModel> modIn;
+        private ExpFamFactor f;
+        
+        public ExpFamFactorModule(Module<MVecFgModel> modIn, Algebra s, ExpFamFactor f) {
+            super(s);
+            this.modIn = modIn;
+            this.f = f;
+        }
+        
+        @Override
+        public VarTensor forward() {
+            f.updateFromModel(modIn.getOutput().getModel());
+            y = BruteForceInferencer.safeNewVarTensor(s, f);
+            return y;
+        }
+
+        @Override
+        public void backward() {
+            FgModel modelAdj = modIn.getOutputAdj().getModel();
+            VarTensor factorMarginal = new VarTensor(yAdj);
+            factorMarginal.prod(y);
+            // addExpectedFeatureCounts() currently only supports the real semiring
+            assert modIn.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+            factorMarginal = factorMarginal.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
+            f.addExpectedFeatureCounts(modelAdj, factorMarginal, Algebras.REAL_ALGEBRA.one());
+        }
+
+        @Override
+        public List<? extends Module<MVecFgModel>> getInputs() {
+            return Lists.getList(modIn);
+        }
+        
+    }
+    
 }

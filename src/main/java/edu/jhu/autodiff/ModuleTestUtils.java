@@ -39,7 +39,7 @@ public class ModuleTestUtils {
         @Override
         public double getValue(IntDoubleVector point) {
             setInputsFromIdv(vecFn.getInputs(), point);
-            MVec<?> out = vecFn.forward();
+            MVec out = vecFn.forward();
             return out.getValue(outIdx);
         }
     
@@ -51,7 +51,7 @@ public class ModuleTestUtils {
             for (Module<?> x : vecFn.getInputs()) {
                 x.zeroOutputAdj();
             }
-            MVec<?> outAdj = vecFn.getOutputAdj();
+            MVec outAdj = vecFn.getOutputAdj();
             outAdj.fill(0.0);
             outAdj.setValue(outIdx, 1.0);
             vecFn.backward();
@@ -67,7 +67,7 @@ public class ModuleTestUtils {
          * Treats all the input modules as if they were concatenated into a long vector, and
          * computes the size of that vector.
          */
-        public static int getOutputSize(List<? extends Module<? extends MVec<?>>> mods) {
+        public static int getOutputSize(List<? extends Module<? extends MVec>> mods) {
             int totInDimension = 0;
             for (Module<?> mod : mods) {
                 totInDimension += mod.getOutput().size();
@@ -79,10 +79,10 @@ public class ModuleTestUtils {
          * Treats all the input modules as if they were concatenated into a long vector, and sets
          * their values to those in the given IntDoubleVector.
          */
-        public static void setInputsFromIdv(List<? extends Module<? extends MVec<?>>> inputs, IntDoubleVector point) {
+        public static void setInputsFromIdv(List<? extends Module<? extends MVec>> inputs, IntDoubleVector point) {
             int idx = 0;
-            for (Module<? extends MVec<?>> input : inputs) {
-                MVec<?> x = input.getOutput();
+            for (Module<? extends MVec> input : inputs) {
+                MVec x = input.getOutput();
                 int size = x.size();
                 for (int c=0; c<size; c++) {
                     x.setValue(c, point.get(idx++));
@@ -94,12 +94,12 @@ public class ModuleTestUtils {
          * Concatenates all the adjoints of a set of input modules to create a single
          * IntDoubleVector.
          */
-        public static IntDoubleVector getInputsAsIdv(List<? extends Module<? extends MVec<?>>> inputs) {
+        public static IntDoubleVector getInputsAsIdv(List<? extends Module<? extends MVec>> inputs) {
             int totInDimension = getOutputSize(inputs);
             IntDoubleVector grad = new IntDoubleDenseVector(totInDimension);
             int idx=0;
-            for (Module<? extends MVec<?>> input : inputs) {
-                MVec<?> xAdj = input.getOutputAdj();
+            for (Module<? extends MVec> input : inputs) {
+                MVec xAdj = input.getOutputAdj();
                 int size = xAdj.size();
                 for (int c=0; c<size; c++) {
                     grad.set(idx++, xAdj.getValue(c));

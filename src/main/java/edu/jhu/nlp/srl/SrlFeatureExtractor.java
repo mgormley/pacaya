@@ -85,7 +85,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         // Get the observation features.
         ArrayList<String> obsFeats;
         FeatureNames alphabet;
-        if (ft == JointFactorTemplate.LINK_ROLE_BINARY || ft == DepParseFactorTemplate.LINK_UNARY 
+        if (ft == JointFactorTemplate.LINK_ROLE_BINARY || ft == DepParseFactorTemplate.UNARY 
                 || ft == SrlFactorTemplate.ROLE_UNARY || ft == SrlFactorTemplate.SENSE_ROLE_BINARY) {
             // Look at the variables to determine the parent and child.
             Var var = vars.iterator().next();

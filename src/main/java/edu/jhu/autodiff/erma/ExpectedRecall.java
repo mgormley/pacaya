@@ -23,7 +23,7 @@ public class ExpectedRecall extends AbstractModule<Tensor> implements Module<Ten
     /** Factory for expected recall loss without a decoder. */
     public static class ExpectedRecallFactory implements DlFactory {
         @Override
-        public Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
+        public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             return new ExpectedRecall(inf, goldConfig);
         }        
     }
