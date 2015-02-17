@@ -195,7 +195,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         useZhou05Features=True,
                         entityTypeRepl="NONE")
         defaults.update(optimizer="ADAGRAD_COMID", adaGradEta=0.05, 
-                        adaGradInitialSumSquares=1, adaGradConstantAddend=0,
+                        adaGradInitialSumSquares=0.1, adaGradConstantAddend=0,
                         sgdAutoSelectLr=True, regularizer="NONE")
         #defaults += g.lbfgs + ReExpParams()
         
@@ -304,9 +304,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     hyperparams.append(ReExpParams(adaGradEta=adaGradEta, embScalar=embScalar, sgdAutoSelectLr=False))          
         elif hyps==3:
             hyperparams = []
-            for l2variance in [20000, 40000, 60000]:
-                for embScalar in [15, 20, 25]:
-                    for adaGradEta in [0.05, 0.1]:
+            for l2variance in [4000, 40000, 400000]:
+                for embScalar in [0.1, 1, 10]:
+                    for adaGradEta in [0.01, 0.1, 1.0]:
                         hyperparams.append(ReExpParams(l2variance=l2variance, adaGradEta=adaGradEta, 
                                                        embScalar=embScalar, sgdAutoSelectLr=False))   
         elif hyps==4:                   
