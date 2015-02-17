@@ -202,7 +202,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Path to word embeddings text file.")
     public static File embeddingsFile = null;
     @Opt(hasArg=true, description="Method for normalization of the embeddings.")
-    public static Scaling embNorm = Scaling.L1_NORM;
+    public static Scaling embNorm = Scaling.L2_NORM;
     @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
     public static double embScalar = 15.0;
     
@@ -274,7 +274,7 @@ public class JointNlpRunner {
     @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
     public static boolean grandparentFactors = false;
     @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
-    public static boolean siblingFactors = false;
+    public static boolean arbitrarySiblingFactors = false;
     @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
     public static boolean excludeNonprojectiveGrandparents = true;
     
@@ -340,6 +340,8 @@ public class JointNlpRunner {
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
     public static double adaGradConstantAddend = 1e-9;
+    @Opt(hasArg=true, description="The initial value of the sum of squares for AdaGrad.")
+    public static double adaGradInitialSumSquares = 0;
     @Opt(hasArg=true, description="The decay rate for AdaDelta.")
     public static double adaDeltaDecayRate = 0.95;
     @Opt(hasArg=true, description="The constant addend for AdaDelta.")
@@ -616,7 +618,7 @@ public class JointNlpRunner {
         prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
-        prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
+        prm.fgPrm.dpPrm.arbitrarySiblingFactors = arbitrarySiblingFactors;
         prm.fgPrm.dpPrm.pruneEdges = pruneByDist || pruneByModel;
                 
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
@@ -771,7 +773,8 @@ public class JointNlpRunner {
             } else if (optimizer == Optimizer.ADAGRAD){
                 AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
-                adaGradPrm.constantAddend = adaDeltaConstantAddend;
+                adaGradPrm.constantAddend = adaGradConstantAddend;
+                adaGradPrm.initialSumSquares = adaGradInitialSumSquares;
                 sgdPrm.sched = new AdaGradSchedule(adaGradPrm);
             } else if (optimizer == Optimizer.ADADELTA){
                 AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
@@ -784,17 +787,18 @@ public class JointNlpRunner {
         } else if (optimizer == Optimizer.ADAGRAD_COMID) {
             AdaGradComidL2Prm sgdPrm = new AdaGradComidL2Prm();
             setSgdPrm(sgdPrm);
-            //TODO: sgdPrm.l1Lambda = l2Lambda;
+            //TODO: sgdPrm.l1Lambda = l1Lambda;
             sgdPrm.l2Lambda = 1.0 / l2variance;
             sgdPrm.eta = adaGradEta;
-            sgdPrm.constantAddend = adaDeltaConstantAddend;
+            sgdPrm.constantAddend = adaGradConstantAddend;
+            sgdPrm.initialSumSquares = adaGradInitialSumSquares;
             sgdPrm.sched = null;
             prm.optimizer = null;
             prm.batchOptimizer = new AdaGradComidL2(sgdPrm);
         } else if (optimizer == Optimizer.FOBOS) {
             SGDFobosPrm sgdPrm = new SGDFobosPrm();
             setSgdPrm(sgdPrm);
-            //TODO: sgdPrm.l1Lambda = l2Lambda;            
+            //TODO: sgdPrm.l1Lambda = l1Lambda;            
             sgdPrm.l2Lambda = 1.0 / l2variance;
             BottouSchedulePrm boPrm = new BottouSchedulePrm();
             boPrm.initialLr = sgdInitialLr;
@@ -884,7 +888,7 @@ public class JointNlpRunner {
             return bpPrm;
         } else if (inference == Inference.DP) {
             if (CorpusHandler.getPredAts().size() == 1 && CorpusHandler.getPredAts().get(0) == AT.DEP_TREE
-                    && grandparentFactors && !siblingFactors) { 
+                    && grandparentFactors && !arbitrarySiblingFactors) { 
                 return new O2AllGraFgInferencerFactory(algebra.getAlgebra());
             } else {
                 throw new ParseException("DP inference only supported for dependency parsing with all grandparent factors.");
@@ -929,6 +933,7 @@ public class JointNlpRunner {
             parser.registerClass(RelObsFePrm.class);
             parser.registerClass(InsideOutsideDepParse.class);      
             parser.registerClass(ReporterManager.class);
+            parser.registerClass(BitshiftDepParseFeatureExtractorPrm.class);
             parser.parseArgs(args);
             JointNlpRunner.parser = parser;
             

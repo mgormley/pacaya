@@ -33,7 +33,7 @@ public class FgModelIdentity extends AbstractModule<MVecFgModel> implements Modu
     }
     
     @Override
-    public List<? extends Module<? extends MVec<?>>> getInputs() {
+    public List<? extends Module<? extends MVec>> getInputs() {
         return Lists.getList();
     }
 

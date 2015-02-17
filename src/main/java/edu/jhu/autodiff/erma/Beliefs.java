@@ -1,11 +1,12 @@
 package edu.jhu.autodiff.erma;
 
 import edu.jhu.autodiff.MVec;
+import edu.jhu.autodiff.MVecArray;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.util.semiring.Algebra;
 
 /** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
-public class Beliefs implements MVec<Beliefs> {
+public class Beliefs implements MVec {
     
     public VarTensor[] varBeliefs;
     public VarTensor[] facBeliefs;
@@ -22,21 +23,21 @@ public class Beliefs implements MVec<Beliefs> {
 
     public Beliefs copy() {
         Beliefs clone = new Beliefs(s);
-        clone.varBeliefs = copyOfVarTensorArray(this.varBeliefs);
-        clone.facBeliefs = copyOfVarTensorArray(this.facBeliefs);
+        clone.varBeliefs = MVecArray.copyOfArray(this.varBeliefs);
+        clone.facBeliefs = MVecArray.copyOfArray(this.facBeliefs);
         return clone;
     }
     
     public Beliefs copyAndConvertAlgebra(Algebra newS) {
         Beliefs clone = new Beliefs(newS);
-        clone.varBeliefs = copyAndConvertAlgebraOfVarTensorArray(this.varBeliefs, newS);
-        clone.facBeliefs = copyAndConvertAlgebraOfVarTensorArray(this.facBeliefs, newS);
+        clone.varBeliefs = MVecArray.copyAndConvertAlgebraOfArray(this.varBeliefs, newS);
+        clone.facBeliefs = MVecArray.copyAndConvertAlgebraOfArray(this.facBeliefs, newS);
         return clone;
     }
 
     public void fill(double val) {
-        fillVarTensorArray(varBeliefs, val);
-        fillVarTensorArray(facBeliefs, val);
+        MVecArray.fillArray(varBeliefs, val);
+        MVecArray.fillArray(facBeliefs, val);
     }
 
     public Beliefs copyAndFill(double val) {
@@ -46,7 +47,7 @@ public class Beliefs implements MVec<Beliefs> {
     }
     
     public int size() {
-        return count(varBeliefs) + count(facBeliefs);
+        return MVecArray.count(varBeliefs) + MVecArray.count(facBeliefs);
     }
 
     /**
@@ -59,11 +60,11 @@ public class Beliefs implements MVec<Beliefs> {
      */
     @Override
     public double getValue(int idx) {
-        int vSize = count(varBeliefs);
+        int vSize = MVecArray.count(varBeliefs);
         if (idx < vSize) {
-            return getValue(idx, varBeliefs);
+            return MVecArray.getValue(idx, varBeliefs);
         } else {
-            return getValue(idx - vSize, facBeliefs);
+            return MVecArray.getValue(idx - vSize, facBeliefs);
         }
     }
 
@@ -77,105 +78,28 @@ public class Beliefs implements MVec<Beliefs> {
      * @return The previous value at that index.
      */
     public double setValue(int idx, double val) {
-        int vSize = count(varBeliefs);
+        int vSize = MVecArray.count(varBeliefs);
         if (idx < vSize) {
-            return setValue(idx, val, varBeliefs);
+            return MVecArray.setValue(idx, val, varBeliefs);
         } else {
-            return setValue(idx - vSize, val, facBeliefs);
+            return MVecArray.setValue(idx - vSize, val, facBeliefs);
         }
     }
 
-    @Override
+    @Override    
+    public void elemAdd(MVec addend) {
+        if (addend instanceof Beliefs) {
+            elemAdd((Beliefs)addend);
+        } else {
+            throw new IllegalArgumentException("Addend must be of type " + this.getClass());
+        }
+    }
+    
     public void elemAdd(Beliefs addend) {
-        addVarTensorArray(this.varBeliefs, addend.varBeliefs);
-        addVarTensorArray(this.facBeliefs, addend.facBeliefs);
-    }
-
-    /* --------------------------------------------------------- */
-    
-    public static int count(VarTensor[] beliefs) {
-        int count = 0;
-        if (beliefs != null) {
-            for (int i = 0; i < beliefs.length; i++) {
-                if (beliefs[i] != null) {
-                    count += beliefs[i].size();
-                }
-            }
-        }
-        return count;
-    }
-
-    public static VarTensor[] copyOfVarTensorArray(VarTensor[] orig) {
-        if (orig == null) {
-            return null;
-        }
-        VarTensor[] clone = new VarTensor[orig.length];
-        for (int v = 0; v < clone.length; v++) {
-            if (orig[v] != null) {
-                clone[v] = new VarTensor(orig[v]);
-            }
-        }
-        return clone;
+        MVecArray.addArray(this.varBeliefs, addend.varBeliefs);
+        MVecArray.addArray(this.facBeliefs, addend.facBeliefs);
     }
     
-    public static VarTensor[] copyAndConvertAlgebraOfVarTensorArray(VarTensor[] orig, Algebra newS) {
-        if (orig == null) {
-            return null;
-        }
-        VarTensor[] clone = new VarTensor[orig.length];
-        for (int v = 0; v < clone.length; v++) {
-            if (orig[v] != null) {
-                clone[v] = orig[v].copyAndConvertAlgebra(newS);
-            }
-        }
-        return clone;
-    }
-
-    public static void fillVarTensorArray(VarTensor[] beliefs, double val) {
-        if (beliefs != null) {
-            for (int i = 0; i < beliefs.length; i++) {
-                if (beliefs[i] != null) {
-                    beliefs[i].fill(val);
-                }
-            }
-        }
-    }
-
-    public static double setValue(int idx, double val, VarTensor[] beliefs) {
-        int seen = 0;
-        for (int i = 0; i < beliefs.length; i++) {
-            if (beliefs[i] != null) {
-                if (beliefs[i].size() + seen > idx) {
-                    return beliefs[i].setValue(idx - seen, val);
-                }
-                seen += beliefs[i].size();
-            }
-        }
-        throw new RuntimeException("Index out of bounds: " + idx);
-    }
-    
-    public static double getValue(int idx, VarTensor[] beliefs) {
-        int seen = 0;
-        for (int i = 0; i < beliefs.length; i++) {
-            if (beliefs[i] != null) {
-                if (beliefs[i].size() + seen > idx) {
-                    return beliefs[i].getValue(idx - seen);
-                }
-                seen += beliefs[i].size();
-            }
-        }
-        throw new RuntimeException("Index out of bounds: " + idx);
-    }
-    
-    public static void addVarTensorArray(VarTensor[] b1, VarTensor[] addend) {
-        assert b1.length == addend.length;
-        for (int i = 0; i < b1.length; i++) {            
-            if (b1[i] != null) {
-                b1[i].elemAdd(addend[i]);
-            }
-        }
-    }
-
     @Override
     public Algebra getAlgebra() {
         return s;

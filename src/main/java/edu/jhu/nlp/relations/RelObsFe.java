@@ -704,10 +704,10 @@ public class RelObsFe implements ObsFeatureExtractor {
             addEmbFeat("-2_ne1", m1.getHead()-2, fv);
             addEmbFeat("+2_ne1", m1.getHead()+2, fv);
             
-            //     - -1_ne2: immediately to the left of the ne1 head
-            //     - +1_ne2: immediately to the right of the ne1 head
-            //     - -2_ne2: two to the left of the ne1 head
-            //     - +2_ne2: two to the right of the ne1 head
+            //     - -1_ne2: immediately to the left of the ne2 head
+            //     - +1_ne2: immediately to the right of the ne2 head
+            //     - -2_ne2: two to the left of the ne2 head
+            //     - +2_ne2: two to the right of the ne2 head
             addEmbFeat("-1_ne2", m2.getHead()-1, fv);
             addEmbFeat("+1_ne2", m2.getHead()+1, fv);
             addEmbFeat("-2_ne2", m2.getHead()-2, fv);

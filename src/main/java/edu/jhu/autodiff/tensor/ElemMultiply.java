@@ -29,7 +29,7 @@ public class ElemMultiply extends AbstractModule<Tensor> implements Module<Tenso
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.elemMultiply(w);
         return y;
     }
@@ -44,12 +44,12 @@ public class ElemMultiply extends AbstractModule<Tensor> implements Module<Tenso
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.elemMultiply(w);
             modInX.getOutputAdj().elemAdd(tmp);
         }
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.elemMultiply(x);
             modInW.getOutputAdj().elemAdd(tmp);
         }

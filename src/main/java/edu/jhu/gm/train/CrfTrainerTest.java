@@ -343,12 +343,12 @@ public class CrfTrainerTest {
                 if (i != j) {
                     ExpFamFactor f;
                     if (i == -1) {
-                        f = new ObsFeExpFamFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe);
+                        f = new ObsFeExpFamFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
                         //trainConfig.put(rootVars[j], 0);
                     } else {
-                        f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe);
+                        f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
                         childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));

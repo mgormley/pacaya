@@ -12,7 +12,7 @@ import edu.jhu.util.semiring.Algebra;
  * Converts from the abstract algebra of the input to a given abstract algebra.
  * @author mgormley
  */
-public class ConvertAlgebra<T extends MVec<T>> extends AbstractModule<T> implements Module<T> {
+public class ConvertAlgebra<T extends MVec> extends AbstractModule<T> implements Module<T> {
 
     private Module<T> modIn;
     
@@ -26,9 +26,10 @@ public class ConvertAlgebra<T extends MVec<T>> extends AbstractModule<T> impleme
      * x[i] is converted from a real to its semiring form.
      */
     @Override
+    @SuppressWarnings("unchecked")
     public T forward() {
         T x = modIn.getOutput();
-        y = x.copyAndConvertAlgebra(s);
+        y = (T) x.copyAndConvertAlgebra(s);
         return y;
     }
 
@@ -37,9 +38,10 @@ public class ConvertAlgebra<T extends MVec<T>> extends AbstractModule<T> impleme
      * dG/dy_i is converted to a real from the semiring form. 
      */
     @Override
+    @SuppressWarnings("unchecked")
     public void backward() {
         T xAdj = modIn.getOutputAdj();
-        T tmp = yAdj.copyAndConvertAlgebra(modIn.getAlgebra());
+        T tmp = (T) yAdj.copyAndConvertAlgebra(modIn.getAlgebra());
         xAdj.elemAdd(tmp);
     }
 

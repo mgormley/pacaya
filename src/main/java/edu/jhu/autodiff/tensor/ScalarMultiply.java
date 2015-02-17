@@ -32,7 +32,7 @@ public class ScalarMultiply extends AbstractModule<Tensor> implements Module<Ten
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         double w_k = modInW.getOutput().getValue(k);
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.multiply(w_k);
         return y;
     }
@@ -47,12 +47,12 @@ public class ScalarMultiply extends AbstractModule<Tensor> implements Module<Ten
         Tensor x = modInX.getOutput();
         double w_k = modInW.getOutput().getValue(k);
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.multiply(w_k);
             modInX.getOutputAdj().elemAdd(tmp);
         }
         {
-            Tensor tmp = yAdj.copy();
+            Tensor tmp = new Tensor(yAdj); // copy
             tmp.elemMultiply(x);
             modInW.getOutputAdj().addValue(k, tmp.getSum());
         }

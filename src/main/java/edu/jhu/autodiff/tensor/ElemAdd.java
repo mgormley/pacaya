@@ -29,7 +29,7 @@ public class ElemAdd extends AbstractModule<Tensor> implements Module<Tensor> {
     public Tensor forward() {
         Tensor x = modInX.getOutput();
         Tensor w = modInW.getOutput();
-        y = x.copy();
+        y = new Tensor(x); // copy
         y.elemAdd(w);
         return y;
     }

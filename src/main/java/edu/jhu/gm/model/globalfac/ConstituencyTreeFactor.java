@@ -431,10 +431,4 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         return true;
     }
 
-    @Override
-    public void backwardCreateMessages(VarTensor[] inMsgs, VarTensor[] outMsgsAdj, VarTensor[] inMsgsAdj) {
-        // TODO:
-        throw new RuntimeException("not yet implemented");        
-    }
-
 }
