@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.0.7-SNAPSHOT</version>
+  <version>3.0.8-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -12,7 +12,7 @@
   <url>https://github.com/mgormley/pacaya</url>
 
   <properties>
-    <pacaya.version>3.0.6-SNAPSHOT</pacaya.version>
+    <pacaya.version>3.0.6</pacaya.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
