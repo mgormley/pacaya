@@ -363,7 +363,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             train = get_annotation_as_train(ace05_bn_nw)
             if self.expname == "ace-pm13":
                 evls = [eval_types13,
-                        eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
+                        #eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
                         eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
                         ] # eval_ng14, eval_types7]:
             else:
