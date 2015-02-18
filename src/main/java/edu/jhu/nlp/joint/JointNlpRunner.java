@@ -511,6 +511,7 @@ public class JointNlpRunner {
             anno.train(trainInput, trainGold, devInput, devGold);
             
             // Decode and evaluate the train data.
+            corpus.writeTrainGold();
             corpus.writeTrainPreds(trainInput);
             eval.evaluate(trainInput, trainGold, name);
             corpus.clearTrainCache();
@@ -535,6 +536,7 @@ public class JointNlpRunner {
                 devInput = corpus.getDevInput();
                 anno.annotate(devInput);
             }
+            corpus.writeDevGold();
             corpus.writeDevPreds(devInput);
             // Evaluate dev data.
             devGold = corpus.getDevGold();
@@ -547,6 +549,7 @@ public class JointNlpRunner {
             String name = "test";
             AnnoSentenceCollection testInput = corpus.getTestInput();
             anno.annotate(testInput);
+            corpus.writeTestGold();
             corpus.writeTestPreds(testInput);
             // Evaluate test data.
             AnnoSentenceCollection testGold = corpus.getTestGold();
