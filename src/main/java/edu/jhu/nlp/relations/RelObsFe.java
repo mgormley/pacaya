@@ -30,6 +30,7 @@ import edu.jhu.nlp.features.TemplateLanguage.EdgeProperty;
 import edu.jhu.nlp.features.TemplateLanguage.TokProperty;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelVar;
 import edu.jhu.nlp.relations.RelationsFactorGraphBuilder.RelationsFactorGraphBuilderPrm;
+import edu.jhu.nlp.tag.BrownClusterTagger;
 import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
@@ -46,7 +47,7 @@ import edu.jhu.util.cli.Opt;
 public class RelObsFe implements ObsFeatureExtractor {
 
 
-    public enum EmbFeatType { HEAD_ONLY, HEAD_TYPE, FULL_NO_CHUNKS, FULL }
+    public enum EmbFeatType { HEAD_ONLY, HEAD_TYPE, HEAD_TYPE_LOC, HEAD_TYPE_LOC_ST, FULL }
     public enum EntityTypeRepl { BROWN, NONE };
 
     public static class RelObsFePrm extends Prm {
@@ -103,23 +104,7 @@ public class RelObsFe implements ObsFeatureExtractor {
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
         fv.add("BIAS_FEATURE", 1.0);
         
-        // Set entity types to be Brown cluster tags if missing.
-        NerMention ne1 = local.getNe1();
-        if (ne1.getEntityType() == null) {
-            if (prm.entityTypeRepl == EntityTypeRepl.BROWN) {
-                ne1.setEntityType(sent.getCluster(ne1.getHead()));
-            } else {
-                ne1.setEntityType("NOTYPE");
-            }
-        }
-        NerMention ne2 = local.getNe2();
-        if (ne2.getEntityType() == null) {
-            if (prm.entityTypeRepl == EntityTypeRepl.BROWN) {
-                ne2.setEntityType(sent.getCluster(ne2.getHead()));
-            } else {
-                ne2.setEntityType("NOTYPE");
-            }
-        }
+        maybeSetEntityTypesAndSubTypes(local);
         
         if (prm.useZhou05Features) {
             addZhou05Features(local, fv);
@@ -134,6 +119,32 @@ public class RelObsFe implements ObsFeatureExtractor {
         // TemplateFeatureExtractor fe = new TemplateFeatureExtractor(sent, null);
 
         return fv;
+    }
+
+    protected void maybeSetEntityTypesAndSubTypes(LocalObservations local) {
+        // Set entity types to be Brown cluster tags if missing.
+        NerMention ne1 = local.getNe1();        
+        final int typeMaxLength = 6;
+        final int subTypeMaxLength = 8;
+        if (ne1.getEntityType() == null) {
+            if (prm.entityTypeRepl == EntityTypeRepl.BROWN) {
+                ne1.setEntityType(BrownClusterTagger.cutCluster(sent.getCluster(ne1.getHead()), typeMaxLength));
+                ne1.setEntitySubType(BrownClusterTagger.cutCluster(sent.getCluster(ne1.getHead()), subTypeMaxLength));
+            } else {
+                ne1.setEntityType("NOTYPE");
+                ne1.setEntitySubType("NOTYPE");
+            }
+        }
+        NerMention ne2 = local.getNe2();
+        if (ne2.getEntityType() == null) {
+            if (prm.entityTypeRepl == EntityTypeRepl.BROWN) {
+                ne2.setEntityType(BrownClusterTagger.cutCluster(sent.getCluster(ne2.getHead()), typeMaxLength));
+                ne2.setEntitySubType(BrownClusterTagger.cutCluster(sent.getCluster(ne2.getHead()), subTypeMaxLength));
+            } else {
+                ne2.setEntityType("NOTYPE");
+                ne2.setEntitySubType("NOTYPE");
+            }
+        }
     }
     
     /** Add the features from Sun et al. (2011) and Zhou et al. (2005). */
@@ -642,6 +653,8 @@ public class RelObsFe implements ObsFeatureExtractor {
         
         String ne1 = m1.getEntityType();
         String ne2 = m2.getEntityType();
+        String sne1 = m1.getEntitySubType();
+        String sne2 = m2.getEntitySubType();
         String ne1ne2 = ne1 + ne2;
                 
         switch (prm.embFeatType) {
@@ -664,7 +677,18 @@ public class RelObsFe implements ObsFeatureExtractor {
                 addEmbFeat("chunk_head-t1t2"+ne1ne2, i, fv);
             }
             
-        case FULL_NO_CHUNKS:
+        case HEAD_TYPE_LOC_ST:
+            //     - ne1_head+sne1
+            //     - ne1_head+sne2
+            addEmbFeat("ne1_head-st1"+sne1,    m1.getHead(), fv);
+            addEmbFeat("ne1_head-st2"+sne2,    m1.getHead(), fv);
+            
+            //     - ne2_head+sne1
+            //     - ne2_head+sne2
+            addEmbFeat("ne2_head-st1"+sne1,    m2.getHead(), fv);
+            addEmbFeat("ne2_head-st2"+sne2,    m2.getHead(), fv);
+                        
+        case HEAD_TYPE_LOC:
             //     - in_between: is the word in between entities
             //     - in_between+ne1 if in_between = T: ne1 is the entity type
             //     - in_between+ne2 if in_between = T
