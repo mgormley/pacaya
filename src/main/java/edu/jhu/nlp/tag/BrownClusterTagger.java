@@ -86,9 +86,14 @@ public class BrownClusterTagger extends AbstractParallelAnnotator implements Ann
             String[] splits = tab.split(line);
             String cluster = splits[0];
             String word = splits[1];
-            String cutCluster = cluster.substring(0, Math.min(cluster.length(), prm.maxTagLength));
+            String cutCluster = cutCluster(cluster, prm.maxTagLength);
             map.put(word.intern(), cutCluster.intern());
         }
+    }
+
+    /** Cuts tags longer than the max length down to size. */
+    public static String cutCluster(String cluster, int maxTagLength) {
+        return cluster.substring(0, Math.min(cluster.length(), maxTagLength));
     }
 
     /** Looks up the Brown cluster for this word. */

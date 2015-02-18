@@ -202,7 +202,7 @@ public class JointNlpRunner {
     @Opt(hasArg=true, description="Path to word embeddings text file.")
     public static File embeddingsFile = null;
     @Opt(hasArg=true, description="Method for normalization of the embeddings.")
-    public static Scaling embNorm = Scaling.L1_NORM;
+    public static Scaling embNorm = Scaling.L2_NORM;
     @Opt(hasArg=true, description="Amount to scale embeddings after normalization.")
     public static double embScalar = 15.0;
     
@@ -340,6 +340,8 @@ public class JointNlpRunner {
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
     public static double adaGradConstantAddend = 1e-9;
+    @Opt(hasArg=true, description="The initial value of the sum of squares for AdaGrad.")
+    public static double adaGradInitialSumSquares = 0;
     @Opt(hasArg=true, description="The decay rate for AdaDelta.")
     public static double adaDeltaDecayRate = 0.95;
     @Opt(hasArg=true, description="The constant addend for AdaDelta.")
@@ -509,6 +511,7 @@ public class JointNlpRunner {
             anno.train(trainInput, trainGold, devInput, devGold);
             
             // Decode and evaluate the train data.
+            corpus.writeTrainGold();
             corpus.writeTrainPreds(trainInput);
             eval.evaluate(trainInput, trainGold, name);
             corpus.clearTrainCache();
@@ -533,6 +536,7 @@ public class JointNlpRunner {
                 devInput = corpus.getDevInput();
                 anno.annotate(devInput);
             }
+            corpus.writeDevGold();
             corpus.writeDevPreds(devInput);
             // Evaluate dev data.
             devGold = corpus.getDevGold();
@@ -545,6 +549,7 @@ public class JointNlpRunner {
             String name = "test";
             AnnoSentenceCollection testInput = corpus.getTestInput();
             anno.annotate(testInput);
+            corpus.writeTestGold();
             corpus.writeTestPreds(testInput);
             // Evaluate test data.
             AnnoSentenceCollection testGold = corpus.getTestGold();
@@ -771,7 +776,8 @@ public class JointNlpRunner {
             } else if (optimizer == Optimizer.ADAGRAD){
                 AdaGradSchedulePrm adaGradPrm = new AdaGradSchedulePrm();
                 adaGradPrm.eta = adaGradEta;
-                adaGradPrm.constantAddend = adaDeltaConstantAddend;
+                adaGradPrm.constantAddend = adaGradConstantAddend;
+                adaGradPrm.initialSumSquares = adaGradInitialSumSquares;
                 sgdPrm.sched = new AdaGradSchedule(adaGradPrm);
             } else if (optimizer == Optimizer.ADADELTA){
                 AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
@@ -784,17 +790,18 @@ public class JointNlpRunner {
         } else if (optimizer == Optimizer.ADAGRAD_COMID) {
             AdaGradComidL2Prm sgdPrm = new AdaGradComidL2Prm();
             setSgdPrm(sgdPrm);
-            //TODO: sgdPrm.l1Lambda = l2Lambda;
+            //TODO: sgdPrm.l1Lambda = l1Lambda;
             sgdPrm.l2Lambda = 1.0 / l2variance;
             sgdPrm.eta = adaGradEta;
-            sgdPrm.constantAddend = adaDeltaConstantAddend;
+            sgdPrm.constantAddend = adaGradConstantAddend;
+            sgdPrm.initialSumSquares = adaGradInitialSumSquares;
             sgdPrm.sched = null;
             prm.optimizer = null;
             prm.batchOptimizer = new AdaGradComidL2(sgdPrm);
         } else if (optimizer == Optimizer.FOBOS) {
             SGDFobosPrm sgdPrm = new SGDFobosPrm();
             setSgdPrm(sgdPrm);
-            //TODO: sgdPrm.l1Lambda = l2Lambda;            
+            //TODO: sgdPrm.l1Lambda = l1Lambda;            
             sgdPrm.l2Lambda = 1.0 / l2variance;
             BottouSchedulePrm boPrm = new BottouSchedulePrm();
             boPrm.initialLr = sgdInitialLr;

@@ -25,6 +25,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 
+// TODO: Rename this!
 public class Files {
 
     private static final int NUM_DIGITS = 3;

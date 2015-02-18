@@ -67,13 +67,11 @@ class PathDefinitions():
         
         corpora_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora", # COE
                                             "/export/a12/mgormley/corpora", #CLSP
-                                            "/Users/mgormley/research/corpora",
-                                            "/home/mgormley/corpora")
+                                            "/Users/mgormley/research/corpora")
         p.corpora_dir = corpora_dir
         ldc_dir = get_first_that_exists("/export/common/data/corpora/LDC", # COE
                                         "/export/corpora/LDC", # CLSP
-                                        corpora_dir + "/LDC",
-                                        self.root_dir + "/data/LDC")
+                                        "/Users/mgormley/research/LDC")
         p.ldc_dir = ldc_dir
         
         # CoNLL'09 Shared Task datasets.
@@ -104,34 +102,34 @@ class PathDefinitions():
         # Missing: japanese, chinese.
         # TODO: Fix language codes.
         conllx_dir = get_first_that_exists(corpora_dir + "/CoNLL-X")
-        self._set_paths_for_conllx_lang(p, "Arabic",     "ar", "PADT", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Bulgarian",  "bg", "bultreebank", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Czech",      "cs", "pdt", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Danish",     "da", "ddt", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Dutch",      "nl", "alpino", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "German",     "de", "tiger", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Japanese",   "ja", "verbmobil", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Portuguese", "pt", "bosque", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Slovene",    "sl", "sdt", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Spanish",    "es", "cast3lb", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Swedish",    "sv", "talbanken05", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Turkish",    "tr", "metu_sabanci", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Arabic",     "ar", "PADT", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Bulgarian",  "bg", "bultreebank", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Czech",      "cs", "pdt", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Danish",     "da", "ddt", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Dutch",      "nl", "alpino", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "German",     "de", "tiger", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Japanese",   "ja", "verbmobil", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Portuguese", "pt", "bosque", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Slovene",    "sl", "sdt", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Spanish",    "es", "cast3lb", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Swedish",    "sv", "talbanken05", conllx_dir, require=False)
+        self._set_paths_for_conllx_lang(p, "Turkish",    "tr", "metu_sabanci", conllx_dir, require=False)
         # Other data in CoNLL-X format.
         self._set_paths_for_conllx_lang(p, "English",    "en", "ptb_ym", conllx_dir, require=False, has_dev=True)
         self._set_paths_for_conllx_lang(p, "English",    "en-st", "ptb-stanford", conllx_dir, require=False, has_dev=True)
         
         # CoNLL-2007 Shared Task datasets.
         conll07_dir = get_first_that_exists(corpora_dir + "/CoNLL-2007")
-        self._set_paths_for_conll07_lang(p, "Arabic",     "ar", "PADT", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Basque",     "eu", "3lbBasque", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Catalan",    "ca", "cess-cat", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Chinese",    "zh", "sinica", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Czech",      "cs", "pdt", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "English",    "en", "ptb", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Greek",      "el", "gdt", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Hungarian",  "hu", "szegedtreebank", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Italian",    "it", "isst", conll07_dir, require=True)
-        self._set_paths_for_conll07_lang(p, "Turkish",    "tr", "metu_sabanci", conll07_dir, require=True)
+        self._set_paths_for_conll07_lang(p, "Arabic",     "ar", "PADT", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Basque",     "eu", "3lbBasque", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Catalan",    "ca", "cess-cat", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Chinese",    "zh", "sinica", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Czech",      "cs", "pdt", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "English",    "en", "ptb", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Greek",      "el", "gdt", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Hungarian",  "hu", "szegedtreebank", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Italian",    "it", "isst", conll07_dir, require=False)
+        self._set_paths_for_conll07_lang(p, "Turkish",    "tr", "metu_sabanci", conll07_dir, require=False)
         
         # Grammar Induction Output.
         parser_prefix = self.root_dir + "/exp/vem-conll_006"

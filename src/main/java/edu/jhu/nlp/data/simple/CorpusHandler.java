@@ -182,7 +182,12 @@ public class CorpusHandler {
             log.info("Projectivizing training trees");
             new Projectivizer().projectivize(trainGoldSents);
         }
-        
+                
+        // Cache input train data.
+        trainInputSents = trainGoldSents.getWithAtsRemoved(getGoldOnlyAts());
+    }
+
+    public void writeTrainGold() throws IOException {
         if (trainGoldOut != null) {
             // Write gold train data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
@@ -190,9 +195,6 @@ public class CorpusHandler {
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(trainGoldOut, getTrainTypeOut(), trainGoldSents, new HashSet<AT>());
         }
-        
-        // Cache input train data.
-        trainInputSents = trainGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     /**
@@ -263,8 +265,10 @@ public class CorpusHandler {
         }
         if (hasTrain() && propTrainAsDev > 0) {
             loadTrainAsDev();
-        }
-        
+        }        
+    }
+
+    public void writeDevGold() throws IOException {
         if (devGoldSents != null && devGoldOut != null) {
             // Write gold dev data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
@@ -355,7 +359,12 @@ public class CorpusHandler {
         // Cache gold test data.
         testGoldSents = reader.getData();
         testGoldSents = testGoldSents.getWithAtsRemoved(getRemoveAts());
+        
+        // Cache input test data.
+        testInputSents = testGoldSents.getWithAtsRemoved(getGoldOnlyAts());
+    }
 
+    public void writeTestGold() throws IOException {
         if (testGoldSents != null && testGoldOut != null) {
             // Write gold test data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
@@ -363,9 +372,6 @@ public class CorpusHandler {
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(testGoldOut, getTestTypeOut(), testGoldSents, new HashSet<AT>());
         }
-        
-        // Cache input test data.
-        testInputSents = testGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     private AnnoSentenceReaderPrm getDefaultReaderPrm() {
