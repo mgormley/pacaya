@@ -23,7 +23,7 @@ import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 
 
-public class ConsecutiveSiblingsFactorTest {
+public class HeadAutomataFactorTest {
 
     @Test
     public void testGetScore() throws Exception {
@@ -33,45 +33,56 @@ public class ConsecutiveSiblingsFactorTest {
         // 1-indexed by head, modifier, sibling.
         Tensor scores = new Tensor(s, n+1, n+1, n+1);
         scores.fill(s.one());
-        scores.set(s.fromReal(2), 0, 1, 2);
-        scores.set(s.fromReal(3),  0, 1, 3);
+        scores.set(s.fromReal(2), 0, 1, 2); // IGNORED
+        scores.set(s.fromReal(3),  0, 1, 3); // IGNORED
         scores.set(s.fromReal(5),  1, 2, 3);
         scores.set(s.fromReal(7),  1, 3, 4);
         scores.set(s.fromReal(11),  1, 4, 6);
         scores.set(s.fromReal(13),  1, 3, 5);
+        // 0 in modifier position indicates the start symbol.
+        scores.set(s.fromReal(17),  1, 0, 2);
+        // 0 in sibling position indicates the end symbol.
+        scores.set(s.fromReal(19),  1, 5, 0);
         
-        ConsecutiveSiblingsFactor treeFac = getDefaultCs(scores);    
+        HeadAutomataFactor treeFac = getDefaultFactor(scores);    
         // Create vc for left branching tree.
         VarConfig vc = new VarConfig();
-        for (int i=-1; i<n; i++) {
-            for (int j=0; j<n; j++) {
-                if (i == j) { continue; }
-                vc.put(treeFac.getLinkVar(i, j), (i == j - 1) ? LinkVar.TRUE : LinkVar.FALSE);
-            }
+        int i=1;
+        for (int j=0; j<n; j++) {
+            if (i == j) { continue; }
+            vc.put(getLinkVar1Idx(treeFac, i, j), (i == j - 1) ? LinkVar.TRUE : LinkVar.FALSE);
         }
 
+        // Check that the first child score fires correctly.
         treeFac.updateFromModel(null);        
-        assertEquals(1, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
+        assertEquals(17*1, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
         // Add edge from 1 to 3.
-        vc.put(treeFac.getLinkVar1Idx(1, 3), LinkVar.TRUE);
-        assertEquals(5, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
+        vc.put(getLinkVar1Idx(treeFac, 1, 3), LinkVar.TRUE);
+        assertEquals(17*5, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
         // Add edge from 1 to 4.
-        vc.put(treeFac.getLinkVar1Idx(1, 4), LinkVar.TRUE);
-        assertEquals(5*7, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
+        vc.put(getLinkVar1Idx(treeFac, 1, 4), LinkVar.TRUE);
+        assertEquals(17*5*7, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-10);
         // Add edge from 1 to 6.
-        vc.put(treeFac.getLinkVar1Idx(1, 6), LinkVar.TRUE);
-        assertEquals(5*7*11, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-10);
+        vc.put(getLinkVar1Idx(treeFac, 1, 6), LinkVar.TRUE);
+        assertEquals(17*5*7*11, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-10);
         // Add edge from 1 to 5.
-        vc.put(treeFac.getLinkVar1Idx(1, 5), LinkVar.TRUE);
-        assertEquals(5*7, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
+        vc.put(getLinkVar1Idx(treeFac, 1, 5), LinkVar.TRUE);
+        assertEquals(17*5*7, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-10);
         // Remove edge from 1 to 4.
-        vc.put(treeFac.getLinkVar1Idx(1, 4), LinkVar.FALSE);
-        assertEquals(5*13, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-13);
+        vc.put(getLinkVar1Idx(treeFac, 1, 4), LinkVar.FALSE);
+        assertEquals(17*5*13, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-10);
+        // Remove edge from 1 to 6. (leaving 5 as the last child)
+        vc.put(getLinkVar1Idx(treeFac, 1, 6), LinkVar.FALSE);
+        assertEquals(17*5*13*19, Math.exp(treeFac.getLogUnormalizedScore(vc)), 1e-10);
     }
     
+    private Var getLinkVar1Idx(HeadAutomataFactor treeFac, int p, int c) {
+        return treeFac.getVarByDist(Math.abs(p - c));
+    }
+
     @Test
     public void testGetFactorModule() throws Exception {
-        final ConsecutiveSiblingsFactor cs = getDefaultCs();
+        final HeadAutomataFactor cs = getDefaultCs();
         FgModel model = new FgModel(100); // TODO: Correctly set number of parameters.
         FgModelIdentity id1 = new FgModelIdentity(model); 
         Module<?> m = cs.getFactorModule(id1, Algebras.REAL_ALGEBRA);
@@ -85,7 +96,7 @@ public class ConsecutiveSiblingsFactorTest {
     public void testCreateMessages() throws Exception {
         Algebra s = Algebras.LOG_SEMIRING;
         int n = 4;
-        ConsecutiveSiblingsFactor f = getDefaultCs(getDefaultScores(s, n));
+        HeadAutomataFactor f = getDefaultFactor(getDefaultScores(s, n));
         
         // Create some arbitrary VarTensor[] as input messages.
         VarTensor[] inMsgs = getMsgsForFactor(f, s);
@@ -163,13 +174,24 @@ public class ConsecutiveSiblingsFactorTest {
         // Compare the results.
         throw new RuntimeException("not yet implemented");
     }
-    
+
     @Test
     public void testGetCreateMessagesModule() throws Exception {
+        // Compute the backwards pass on the explicit version of the global factor.
+        
+        // Compute backwards pass using the create-messages module.
+        
+        // Compare the results.
+        
+        throw new RuntimeException("not yet implemented");
+    }
+    
+    @Test
+    public void testGetCreateMessagesModuleByFiniteDiffs() throws Exception {
         Algebra s = Algebras.REAL_ALGEBRA;
         FgModel model = new FgModel(100); // TODO: Correctly set number of parameters.
         FgModelIdentity mid1 = new FgModelIdentity(model);         
-        final ConsecutiveSiblingsFactor cs = getDefaultCs();
+        final HeadAutomataFactor cs = getDefaultCs();
         final Module<?> fm1 = cs.getFactorModule(mid1, s);
 //        final Module<MVecArray<VarTensor>> vid1 = ; 
 //        
@@ -186,7 +208,7 @@ public class ConsecutiveSiblingsFactorTest {
     
     @Test
     public void testGetClamped() throws Exception {
-        final ConsecutiveSiblingsFactor cs = getDefaultCs();
+        final HeadAutomataFactor cs = getDefaultCs();
         {
             // Clamp no variables.
             Factor csClamped = cs.getClamped(new VarConfig());
@@ -202,8 +224,8 @@ public class ConsecutiveSiblingsFactorTest {
         }
     }
 
-    private static ConsecutiveSiblingsFactor getDefaultCs() {
-        return getDefaultCs(getDefaultScores(Algebras.REAL_ALGEBRA, 4));
+    private static HeadAutomataFactor getDefaultCs() {
+        return getDefaultFactor(getDefaultScores(Algebras.REAL_ALGEBRA, 4));
     }
     
     private static Tensor getDefaultScores(Algebra s, int n) {
@@ -219,10 +241,11 @@ public class ConsecutiveSiblingsFactorTest {
         return scores;
     }
     
-    private static ConsecutiveSiblingsFactor getDefaultCs(Tensor scores) {
+    private static HeadAutomataFactor getDefaultFactor(Tensor scores) {
         int n = scores.getDims()[0]-1;
         ProjDepTreeFactor pdtf = new ProjDepTreeFactor(n, VarType.PREDICTED);
-        return new ConsecutiveSiblingsFactor(pdtf.getRootVars(), pdtf.getChildVars(), scores);
+        LinkVar[] varsByDist = HeadAutomataFactor.getVarsByDist(1, true, pdtf.getRootVars(), pdtf.getChildVars());
+        return new HeadAutomataFactor(1, true, varsByDist, scores);
     }
     
 }

@@ -1,12 +1,10 @@
 package edu.jhu.gm.model.globalfac;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.jhu.autodiff.AbstractModule;
 import edu.jhu.autodiff.AbstractMutableModule;
 import edu.jhu.autodiff.MVec;
 import edu.jhu.autodiff.MVecArray;
@@ -24,8 +22,6 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
-import edu.jhu.parse.dep.EdgeScores;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
@@ -105,7 +101,8 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
 
         @Override
         public MVecArray<VarTensor> forward() {
-            // TODO: 
+            if (y == null) { throw new IllegalStateException("setOutput() must be called before calling forward."); }
+            
             return y;
         }
 
@@ -119,7 +116,7 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
             return Lists.getList(modIn, fm);
         }
     }
-    
+        
     @Override
     public Factor getClamped(VarConfig clmpVarConfig) {
         if (clmpVarConfig.size() == 0) {
