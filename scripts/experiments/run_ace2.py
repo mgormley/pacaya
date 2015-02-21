@@ -394,7 +394,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             dev = ReExpParams(propTrainAsDev=0.2)
                             exp_bnnw = defaults + evl + train + dev + embed + feats + hyperparam
                             root.add_dependent(exp_bnnw)
-            if self.fast: root.dependents = root.dependents[:10]
+            if self.fast: root.dependents = root.dependents[:1]
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)

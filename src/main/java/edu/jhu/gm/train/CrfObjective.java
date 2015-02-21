@@ -74,7 +74,7 @@ public class CrfObjective implements ExampleObjective {
         FactorGraph fgLatPred = ex.getFgLatPred();
         fgLat.updateFromModel(model);
         fgLatPred.updateFromModel(model);
-        t.stop(); updTimer.add(t);        
+        t.stop(); updTimer.add(t);
         
         // Get the inferencers.
         t.reset(); t.start();

@@ -548,6 +548,8 @@ public class JointNlpRunner {
                     log.info("Serializing pipeline to file: " + pipeOut);
                     Files.serialize(anno, pipeOut);
                 }
+            } else if (corpus.hasDev()) { // but not train
+                anno.annotate(devInput);
             }
             
             if (corpus.hasTrain()) {
