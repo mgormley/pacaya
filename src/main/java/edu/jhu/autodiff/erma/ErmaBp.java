@@ -155,8 +155,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         this(fg, prm, getFactorsModule(fg, prm));
     }
 
-    private static FactorsModule getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
-        FactorsModule fm = new FactorsModule(null, fg, prm.getAlgebra());
+    private static Module<Factors> getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
+        ForwardOnlyFactorsModule fm = new ForwardOnlyFactorsModule(null, fg, prm.getAlgebra());
         fm.forward();
         return fm;
     }
