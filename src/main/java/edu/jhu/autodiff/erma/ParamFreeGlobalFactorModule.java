@@ -17,10 +17,12 @@ import edu.jhu.util.semiring.Algebra;
 public class ParamFreeGlobalFactorModule extends AbstractModule<LazyVarTensor> implements Module<LazyVarTensor> {
 
     private GlobalFactor f;
+    private List<? extends Module<? extends MVec>> inputs;
     
-    public ParamFreeGlobalFactorModule(Algebra s, GlobalFactor f) {
+    public ParamFreeGlobalFactorModule(Algebra s, GlobalFactor f, List<? extends Module<? extends MVec>> inputs) {
         super(s);
         this.f = f;
+        this.inputs = inputs;
     }
     
     @Override
@@ -32,11 +34,20 @@ public class ParamFreeGlobalFactorModule extends AbstractModule<LazyVarTensor> i
     @Override
     public void backward() {
         // No op.
+        //
+        // The output (i.e. return value of forward()) should never be accessed directly. The entire
+        // point of the GlobalFactor interface is to avoid instantiating the massive tensor that 
+        // the factor represents.
+    }
+    
+    @Override
+    public LazyVarTensor getOutputAdj() {
+        throw new RuntimeException("This method fails when called since any modifications to this adjoint would require us to implement backward().");
     }
 
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
-        return Lists.getList();
+        return inputs;
     }
     
 }

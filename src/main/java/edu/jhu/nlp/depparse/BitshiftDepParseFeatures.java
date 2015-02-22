@@ -1275,9 +1275,9 @@ public class BitshiftDepParseFeatures {
         final boolean usePairFor2ndOrder = prm.usePairFor2ndOrder;
         final boolean usePairFor2ndOrderArbiSibl = prm.usePairFor2ndOrderArbiSibl;
 
-        // The sibling is the first child of the head. Encoded by setting the modifier to -1.
+        // Special case: The sibling is the first child of the head. Encoded by setting the modifier to -1.
         // UNUSED: boolean isFirstChild = consecutive && modifier < 0;
-        // The modifier is the last child of the head. Encoded by setting the sibling to -1.
+        // Special case: The modifier is the last child of the head. Encoded by setting the sibling to -1.
         // UNUSED: boolean isLastChild = consecutive && sibling < 0;
         
         if (usePairFor2ndOrder) {

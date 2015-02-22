@@ -48,6 +48,7 @@ public class DepParseFactorGraphBuilderSpeedTest {
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
         bsFePrm.featureHashMod = numParams;
+        bsFePrm.useCoarseTags = true;
         FeatureExtractor fe = onlyFast?
                 new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
                 new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
