@@ -380,12 +380,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp_cts = defaults + evl + train + dev + test + embed + feats + hyperparam
                             root.add_dependent(exp_cts)
                             # WL
-                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")), work_mem_megs=5000)
                             test = get_annotation_as_test(ace05_wl)
                             exp_wl = defaults + evl + train + dev + test + embed + feats + hyperparam
                             exp_cts.add_dependent(exp_wl)
                             # BC_TEST
-                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")), work_mem_megs=5000)
                             test = get_annotation_as_test(ace05_bc_test)
                             exp_bc = defaults + evl + train + dev + test + embed + feats + hyperparam
                             exp_cts.add_dependent(exp_bc)
