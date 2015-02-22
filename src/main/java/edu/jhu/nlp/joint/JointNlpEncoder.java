@@ -126,6 +126,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
 
     public static void checkForRequiredAnnotations(JointNlpEncoderPrm prm, AnnoSentenceCollection sents) {
         try {
+            if (sents.size() == 0) { return; }
             // Check that the first sentence has all the required annotation
             // types for the specified feature templates.
             AnnoSentence sent = sents.get(0);

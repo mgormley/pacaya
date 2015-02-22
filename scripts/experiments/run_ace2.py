@@ -149,8 +149,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)  
         if self.queue:
-            threads = 7
-            work_mem_megs = 15*1024
+            threads = 5
+            work_mem_megs = 11*1024
         elif self.big_machine:
             threads = 2
             work_mem_megs = 1.5*1024
@@ -362,9 +362,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             train = get_annotation_as_train(ace05_bn_nw)
             if self.expname == "ace-pm13":
-                evls = [eval_types13,
+                evls = [#eval_types13,
                         eval_pm13 + ReExpParams(entityTypeRepl="NONE"), 
-                        eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
+                        #eval_pm13 + ReExpParams(entityTypeRepl="BROWN"),
                         ] # eval_ng14, eval_types7]:
             else:
                 evls = [eval_types36]
@@ -380,12 +380,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp_cts = defaults + evl + train + dev + test + embed + feats + hyperparam
                             root.add_dependent(exp_cts)
                             # WL
-                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")), work_mem_megs=5000)
                             test = get_annotation_as_test(ace05_wl)
                             exp_wl = defaults + evl + train + dev + test + embed + feats + hyperparam
                             exp_cts.add_dependent(exp_wl)
                             # BC_TEST
-                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")))
+                            train = ReExpParams(modelIn=StagePath(exp_cts, exp_cts.get("modelOut")), work_mem_megs=5000)
                             test = get_annotation_as_test(ace05_bc_test)
                             exp_bc = defaults + evl + train + dev + test + embed + feats + hyperparam
                             exp_cts.add_dependent(exp_bc)
@@ -394,7 +394,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             dev = ReExpParams(propTrainAsDev=0.2)
                             exp_bnnw = defaults + evl + train + dev + embed + feats + hyperparam
                             root.add_dependent(exp_bnnw)
-            if self.fast: root.dependents = root.dependents[:10]
+            if self.fast: root.dependents = root.dependents[:1]
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)

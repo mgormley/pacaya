@@ -5,7 +5,6 @@ import java.util.Set;
 
 import edu.jhu.nlp.AbstractParallelAnnotator;
 import edu.jhu.nlp.Annotator;
-import edu.jhu.nlp.Trainable;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
@@ -16,20 +15,14 @@ import edu.jhu.util.collections.Sets;
  * 
  * @author mgormley
  */
-public class StrictPosTagAnnotator extends AbstractParallelAnnotator implements Annotator, Trainable {
+public class StrictPosTagAnnotator extends AbstractParallelAnnotator implements Annotator {
 
     // There should be at most 8 of these "coarsest" tags.
     public enum StrictPosTag { VERB, NOUN, PUNC, CONJ, OTHER }; 
     
     private static final long serialVersionUID = 1L;
-    private boolean annoTrainGold;
     
     public StrictPosTagAnnotator() {
-        this(false);
-    }
-    
-    public StrictPosTagAnnotator(boolean annoTrainGold) {
-        this.annoTrainGold = annoTrainGold;
     }
 
     public void annotate(AnnoSentence sent) {
@@ -94,14 +87,6 @@ public class StrictPosTagAnnotator extends AbstractParallelAnnotator implements 
            }
         }
         return StrictPosTag.OTHER;
-    } 
-
-    @Override
-    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
-            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
-        if (annoTrainGold) {
-            addStrictPosTags(trainGold);
-        }
     }
 
     @Override

@@ -89,6 +89,8 @@ import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.nlp.relations.RelObsFe;
 import edu.jhu.nlp.relations.RelObsFe.RelObsFePrm;
 import edu.jhu.nlp.relations.RelationMunger;
+import edu.jhu.nlp.relations.RelationMunger.RelationDataPostproc;
+import edu.jhu.nlp.relations.RelationMunger.RelationDataPreproc;
 import edu.jhu.nlp.relations.RelationMunger.RelationMungerPrm;
 import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
@@ -396,21 +398,33 @@ public class JointNlpRunner {
         	throw new ParseException("Either --modelIn or --train must be specified.");
         }
         
+        // The annotation pipeline.
         AnnoPipeline anno = new AnnoPipeline();
+        // The evaluation pipeline.
         EvalPipeline eval = new EvalPipeline();
+        // The pre-processing pipeline for gold data.
+        AnnoPipeline prep = new AnnoPipeline();
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
         JointNlpAnnotator jointAnno = new JointNlpAnnotator(prm);
         if (modelIn != null) {
             jointAnno.loadModel(modelIn);
         }
         {
+            // Pre-processing.
             RelationMunger relMunger = new RelationMunger(parser.getInstanceFromParsedArgs(RelationMungerPrm.class));
             if (CorpusHandler.getPredAts().contains(AT.REL_LABELS)) {
-                anno.add(relMunger.getDataPreproc());
+                RelationDataPreproc dataPreproc = relMunger.getDataPreproc();
+                anno.add(dataPreproc);
+                prep.add(dataPreproc);
             }
+            // Annotation pipeline.
             anno.add(new EnsureStaticOptionsAreSet());
-            anno.add(new PrefixAnnotator(true));
-            anno.add(new StrictPosTagAnnotator(true));
+            Annotator pa = new PrefixAnnotator();
+            anno.add(pa);
+            prep.add(pa);
+            Annotator spta = new StrictPosTagAnnotator();
+            anno.add(spta);
+            prep.add(spta);
             // Add Brown clusters.
             if (brownClusters != null) {
                 anno.add(new BrownClusterTagger(getBrownCluterTaggerPrm(), brownClusters));
@@ -468,11 +482,15 @@ public class JointNlpRunner {
             }
             // Various NLP annotations.
             anno.add(jointAnno);
+            // Post-processing.
             if (CorpusHandler.getPredAts().contains(AT.REL_LABELS) && !relMunger.getPrm().makeRelSingletons) {
-                anno.add(relMunger.getDataPostproc());
+                RelationDataPostproc dataPostproc = relMunger.getDataPostproc();
+                anno.add(dataPostproc);
+                prep.add(dataPostproc);
             }
         }
         {
+            // Evaluation pipeline.
             if (pruneByDist || pruneByModel) {
                 eval.add(new PruningEfficiency(dpSkipPunctuation));
                 eval.add(new OraclePruningAccuracy(dpSkipPunctuation));
@@ -496,52 +514,56 @@ public class JointNlpRunner {
             }
             eval.add(new ProportionAnnotated(CorpusHandler.getPredAts()));
         }
-
-        AnnoSentenceCollection devGold = null;
-        AnnoSentenceCollection devInput = null;
-        if (corpus.hasTrain()) {
-            String name = "train";            
+        
+        {
+            // Either of train or dev might be null.
             AnnoSentenceCollection trainGold = corpus.getTrainGold();
             AnnoSentenceCollection trainInput = corpus.getTrainInput();
-            // (Dev data might be null.)
-            devGold = corpus.getDevGold();
-            devInput = corpus.getDevInput();
-            
-            // Train a model. (The PipelineAnnotator also annotates all the input.)
-            anno.train(trainInput, trainGold, devInput, devGold);
-            
-            // Decode and evaluate the train data.
-            corpus.writeTrainGold();
-            corpus.writeTrainPreds(trainInput);
-            eval.evaluate(trainInput, trainGold, name);
-            corpus.clearTrainCache();
-            
-            if (modelOut != null) {
-                jointAnno.saveModel(modelOut);
+            AnnoSentenceCollection devGold = corpus.getDevGold();
+            AnnoSentenceCollection devInput = corpus.getDevInput();
+
+            if (corpus.hasTrain()) {
+                // Preprocess the gold train data and write it out.
+                prep.annotate(trainGold);
+                corpus.writeTrainGold();
             }
-            if (printModel != null) {
-                jointAnno.printModel(printModel);
+            if (corpus.hasDev()) {
+                // Preprocess the gold dev data and write it out.
+                prep.annotate(devGold);
+                corpus.writeDevGold();
             }
-            if (pipeOut != null) {
-                log.info("Serializing pipeline to file: " + pipeOut);
-                Files.serialize(anno, pipeOut);
-            }
-        }
-        
-        if (corpus.hasDev()) {
-            // Write dev data predictions.
-            String name = "dev";
-            if (devInput == null) {
-                // Train did not yet annotate the dev data.
-                devInput = corpus.getDevInput();
+            
+            if (corpus.hasTrain()) {
+                // Train a model. (AnnoPipeline also annotates all the train and dev input.)
+                anno.train(trainInput, trainGold, devInput, devGold);
+                
+                // Save the model.
+                if (modelOut != null) {
+                    jointAnno.saveModel(modelOut);
+                }
+                if (printModel != null) {
+                    jointAnno.printModel(printModel);
+                }
+                if (pipeOut != null) {
+                    log.info("Serializing pipeline to file: " + pipeOut);
+                    Files.serialize(anno, pipeOut);
+                }
+            } else if (corpus.hasDev()) { // but not train
                 anno.annotate(devInput);
             }
-            corpus.writeDevGold();
-            corpus.writeDevPreds(devInput);
-            // Evaluate dev data.
-            devGold = corpus.getDevGold();
-            eval.evaluate(devInput, devGold, name);
-            corpus.clearDevCache();
+            
+            if (corpus.hasTrain()) {
+                // Decode and evaluate. the train data.
+                corpus.writeTrainPreds(trainInput);
+                eval.evaluate(trainInput, trainGold, "train");
+                corpus.clearTrainCache();
+            }
+            if (corpus.hasDev()) {
+                // Decode and evaluate the dev data.
+                corpus.writeDevPreds(devInput);
+                eval.evaluate(devInput, devGold, "dev");
+                corpus.clearDevCache();
+            }
         }
         
         if (corpus.hasTest()) {
@@ -549,10 +571,11 @@ public class JointNlpRunner {
             String name = "test";
             AnnoSentenceCollection testInput = corpus.getTestInput();
             anno.annotate(testInput);
-            corpus.writeTestGold();
             corpus.writeTestPreds(testInput);
             // Evaluate test data.
             AnnoSentenceCollection testGold = corpus.getTestGold();
+            prep.annotate(testGold);
+            corpus.writeTestGold();
             if (evalTest) {
                 eval.evaluate(testInput, testGold, name);
             } else {

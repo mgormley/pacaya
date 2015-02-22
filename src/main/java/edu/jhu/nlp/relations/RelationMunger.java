@@ -108,7 +108,7 @@ public class RelationMunger implements Serializable {
      * Creates {@link AT#NE_PAIRS} from {@link AT#NER}, and {@link AT#REL_LABELS} from {@link AT#RELATIONS}.
      * @author mgormley
      */
-    public class RelationDataPreproc implements Trainable, Annotator {
+    public class RelationDataPreproc implements Annotator {
         
         private static final long serialVersionUID = 1L;
         private final Logger log = LoggerFactory.getLogger(RelationDataPreproc.class);
@@ -116,13 +116,6 @@ public class RelationMunger implements Serializable {
         @Override
         public Set<AT> getAnnoTypes() {
             return Collections.emptySet();
-        }
-        
-        @Override
-        public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
-                AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
-            munge(trainGold);
-            munge(devGold);
         }
         
         @Override
@@ -272,7 +265,7 @@ public class RelationMunger implements Serializable {
      * Creates {@link AT#RELATIONS} from {@link AT#NE_PAIRS} and {@link AT#REL_LABELS}.
      * @author mgormley
      */
-    public class RelationDataPostproc extends AbstractParallelAnnotator implements Trainable, Annotator {
+    public class RelationDataPostproc extends AbstractParallelAnnotator implements Annotator {
         
         private static final long serialVersionUID = 1L;
         private final Logger log = LoggerFactory.getLogger(RelationDataPreproc.class);
@@ -280,13 +273,6 @@ public class RelationMunger implements Serializable {
         @Override
         public Set<AT> getAnnoTypes() {
             return Sets.getSet(AT.RELATIONS);
-        }
-
-        @Override
-        public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
-                AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
-            annotate(trainGold);
-            annotate(devGold);
         }
 
         @Override

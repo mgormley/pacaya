@@ -18,17 +18,12 @@ import edu.jhu.util.collections.Sets;
  * 
  * @author mgormley
  */
-public class PrefixAnnotator extends AbstractParallelAnnotator implements Annotator, Trainable {
+public class PrefixAnnotator extends AbstractParallelAnnotator implements Annotator {
 
     private static final long serialVersionUID = 1L;
     private boolean annoTrainGold;
     
     public PrefixAnnotator() {
-        this(false);
-    }
-    
-    public PrefixAnnotator(boolean annoTrainGold) {
-        this.annoTrainGold = annoTrainGold;
     }
     
     public static void addPrefixes(AnnoSentenceCollection sents) {
@@ -50,14 +45,6 @@ public class PrefixAnnotator extends AbstractParallelAnnotator implements Annota
         }
         Lists.intern(prefixes);
         sent.setPrefixes(prefixes);
-    }
-
-    @Override
-    public void train(AnnoSentenceCollection trainInput, AnnoSentenceCollection trainGold,
-            AnnoSentenceCollection devInput, AnnoSentenceCollection devGold) {
-        if (annoTrainGold) {
-            addPrefixes(trainGold);
-        }
     }
 
     @Override

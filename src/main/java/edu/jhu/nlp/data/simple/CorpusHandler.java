@@ -155,6 +155,7 @@ public class CorpusHandler {
     }
     
     private void loadTrain() throws IOException {
+        if (!hasTrain()) { return; }
         // Read train data.
         AnnoSentenceReaderPrm prm = getDefaultReaderPrm();
         prm.name = "train";
@@ -348,6 +349,7 @@ public class CorpusHandler {
     }
     
     private void loadTest() throws IOException {
+        if (!hasTest()) { return; }
         // Read test data.
         AnnoSentenceReaderPrm prm = getDefaultReaderPrm();        
         prm.name = "test";
