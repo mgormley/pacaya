@@ -68,19 +68,17 @@ public class CrfObjective implements ExampleObjective {
         Timer t = new Timer();
 
         // Update the inferences with the current model parameters.
-        // (This is usually where feature extraction happens.)
         t.reset(); t.start();
         FactorGraph fgLat = ex.getFgLat();
         FactorGraph fgLatPred = ex.getFgLatPred();
-        fgLat.updateFromModel(model);
-        fgLatPred.updateFromModel(model);
-        t.stop(); updTimer.add(t);        
+        t.stop(); updTimer.add(t);
         
         // Get the inferencers.
+        // (This is usually where feature extraction happens.)
         t.reset(); t.start();
-        FgInferencer infLat = infFactory.getInferencer(fgLat);
-        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
-        t.stop(); infTimer.add(t);
+        FgInferencer infLat = infFactory.getInferencer(fgLat, model);
+        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred, model);
+        t.stop(); updTimer.add(t);
         
         t.reset(); t.start();
         // Run inference to compute Z(y,x) by summing over the latent variables w.
@@ -242,8 +240,7 @@ public class CrfObjective implements ExampleObjective {
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
             FactorGraph fgLat = ex.getFgLat();
-            fgLat.updateFromModel(model);
-            FgInferencer infLat = infFactory.getInferencer(fgLat);
+            FgInferencer infLat = infFactory.getInferencer(fgLat, model);
             infLat.run();
             addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), feats);
         }
@@ -260,8 +257,7 @@ public class CrfObjective implements ExampleObjective {
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
             FactorGraph fgLatPred = ex.getFgLatPred();
-            fgLatPred.updateFromModel(model);
-            FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
+            FgInferencer infLatPred = infFactory.getInferencer(fgLatPred, model);
             infLatPred.run();
             addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0 * ex.getWeight(), feats);
         }

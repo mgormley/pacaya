@@ -12,6 +12,7 @@ import edu.jhu.gm.inf.FgInferencerFactory;
 import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
@@ -42,7 +43,8 @@ public class O2AllGraFgInferencer extends AbstractFgInferencer implements FgInfe
         }
         
         @Override
-        public FgInferencer getInferencer(FactorGraph fg) { 
+        public FgInferencer getInferencer(FactorGraph fg, FgModel model) { 
+            fg.updateFromModel(model);
             return new O2AllGraFgInferencer(fg, s);
         }
 
