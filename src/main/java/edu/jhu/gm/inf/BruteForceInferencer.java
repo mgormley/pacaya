@@ -3,7 +3,6 @@ package edu.jhu.gm.inf;
 import edu.jhu.autodiff.erma.AbstractFgInferencer;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
@@ -33,8 +32,7 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
         }
         
         @Override
-        public FgInferencer getInferencer(FactorGraph fg, FgModel model) {
-            fg.updateFromModel(model);
+        public FgInferencer getInferencer(FactorGraph fg) {
             if (s == null) {
                 return new BruteForceInferencer(fg, logDomain);
             } else {

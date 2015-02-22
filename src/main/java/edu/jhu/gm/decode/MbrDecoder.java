@@ -65,7 +65,8 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
     public FgInferencer decode(FgModel model, UFgExample ex) {
         // Run inference.
         FactorGraph fgLatPred = ex.getFgLatPred();
-        FgInferencer infLatPred = prm.infFactory.getInferencer(fgLatPred, model);
+        fgLatPred.updateFromModel(model);
+        FgInferencer infLatPred = prm.infFactory.getInferencer(fgLatPred);
         infLatPred.run();        
         decode(infLatPred, ex);
         return infLatPred;

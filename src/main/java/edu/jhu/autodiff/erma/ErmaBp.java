@@ -32,7 +32,6 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
@@ -79,14 +78,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
         
         @Override
-        public FgInferencer getInferencer(FactorGraph fg, FgModel model) {
-            return new ErmaBp(fg, this, getFactorsModule(fg, model, this));
-        }
-
-        private static FactorsModule getFactorsModule(FactorGraph fg, FgModel model, ErmaBpPrm prm) {
-            FactorsModule fm = new FactorsModule(new FgModelIdentity(model), fg, prm.getAlgebra());
-            fm.forward();
-            return fm;
+        public FgInferencer getInferencer(FactorGraph fg) {
+            return new ErmaBp(fg, this);
         }
 
         @Override
@@ -159,8 +152,13 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     private static AtomicInteger sendCount = new AtomicInteger(0);
     
     public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
-        this(fg, prm, ErmaBpPrm.getFactorsModule(fg, null, prm));
-        log.warn("There is no model for this factor graph. Created a factors module with a null model.");
+        this(fg, prm, getFactorsModule(fg, prm));
+    }
+
+    private static FactorsModule getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
+        FactorsModule fm = new FactorsModule(null, fg, prm.getAlgebra());
+        fm.forward();
+        return fm;
     }
     
     public ErmaBp(final FactorGraph fg, ErmaBpPrm prm, Module<Factors> fm) {

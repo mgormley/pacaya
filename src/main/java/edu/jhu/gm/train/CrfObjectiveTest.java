@@ -177,7 +177,8 @@ public class CrfObjectiveTest {
         LFgExample ex = data.get(0);
         
         FactorGraph fgLat = ex.getFgLat();
-        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat(), model);
+        fgLat.updateFromModel(model);
+        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
         infLat.run();        
         assertEquals(2, infLat.getPartition(), 2);
         // Check that the partition function is computed identically for each variable.
@@ -189,7 +190,8 @@ public class CrfObjectiveTest {
         System.out.println("-------- Running LatPred Inference-----------");
         
         FactorGraph fgLatPred = ex.getFgLatPred();
-        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred, model);
+        fgLatPred.updateFromModel(model);
+        FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
         infLatPred.run();        
         // 2 trees, and 3 different roles (including argUNK)
         assertEquals(2*3, infLatPred.getPartition(), 1e-3);         
