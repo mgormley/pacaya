@@ -149,8 +149,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         defaults.update(seed=random.getrandbits(63))
         defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)  
         if self.queue:
-            threads = 7
-            work_mem_megs = 15*1024
+            threads = 5
+            work_mem_megs = 11*1024
         elif self.big_machine:
             threads = 2
             work_mem_megs = 1.5*1024
