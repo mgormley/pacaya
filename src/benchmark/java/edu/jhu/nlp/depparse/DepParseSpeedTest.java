@@ -2,6 +2,9 @@ package edu.jhu.nlp.depparse;
 
 import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.gm.data.UFgExample;
+import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.hypergraph.depparse.DepParseFirstVsSecondOrderTest;
@@ -91,7 +94,7 @@ public class DepParseSpeedTest {
             model.setRandomStandardNormal();
             CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
             cs.init(sents);
-            FeatureNames alphabet = new FeatureNames();
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), new FactorTemplateList());
             boolean onlyFast = true;
             t.start();
             
@@ -101,8 +104,8 @@ public class DepParseSpeedTest {
             for (AnnoSentence sent : sents) {
                 t1.start(); 
                 UFgExample ex = firstOrder ?
-                        DepParseFactorGraphBuilderSpeedTest.get1stOrderFg(sent, cs, alphabet, numParams, onlyFast) :
-                        DepParseFirstVsSecondOrderTest.get2ndOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                        DepParseFactorGraphBuilderSpeedTest.get1stOrderFg(sent, cs, ofc, numParams, onlyFast) :
+                        DepParseFirstVsSecondOrderTest.get2ndOrderFg(sent, cs, ofc, numParams, onlyFast);
                 t1.stop();
                 
                 t2.start();
