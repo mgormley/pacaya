@@ -404,6 +404,23 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
         }
     }
     
+    public String getStats() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("# vars: " + vars.size() + "\n");
+        sb.append("# facs: " + factors.size() + "\n");
+        int numVarNbs = 0;
+        for (FgNode node : varNodes) {
+            numVarNbs += node.getOutEdges().size();            
+        }
+        sb.append("avg. neighbors of var: " + (double)numVarNbs / vars.size() + "\n");
+        int numFacNbs = 0;
+        for (FgNode node : factorNodes) {
+            numFacNbs += node.getOutEdges().size();            
+        }
+        sb.append("avg. neighbors of fac: " + (double)numFacNbs / factors.size() + "\n");        
+        return sb.toString();
+    }
+    
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (FgEdge e : getEdges()) {
