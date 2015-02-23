@@ -17,6 +17,7 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.HbFeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.SibFeTypedFactor;
 import edu.jhu.util.Prm;
 import edu.jhu.util.cli.Opt;
@@ -104,6 +105,9 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         } else if (ft == DepParseFactorTemplate.GRANDPARENT) {
             GraFeTypedFactor f2 = (GraFeTypedFactor)f;
             BitshiftDepParseFeatures.addGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm);
+        } else if (ft == DepParseFactorTemplate.HEAD_BIGRAM) {
+            HbFeTypedFactor f2 = (HbFeTypedFactor)f;
+            BitshiftDepParseFeatures.addTurboHeadBigramFeats(isent, f2.p, f2.c, f2.p_other, feats, prm);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }
