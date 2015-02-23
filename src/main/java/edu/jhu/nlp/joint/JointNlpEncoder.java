@@ -80,7 +80,7 @@ public class JointNlpEncoder implements Encoder<AnnoSentence, AnnoSentence> {
         ObsFeatureExtractor srlFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
         srlFe = new ObsFeatureCache(srlFe);        
         FeatureExtractor dpFe = prm.fePrm.dpFePrm.onlyFast ?
-                new BitshiftDepParseFeatureExtractor(prm.fePrm.bsDpFePrm, sent, cs, ofc.getFeAlphabet()) :
+                new BitshiftDepParseFeatureExtractor(prm.fePrm.bsDpFePrm, sent, cs, ofc) :
                 new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
         dpFe = new FeatureCache(dpFe);
         ObsFeatureExtractor relFe = new RelObsFe(prm.fgPrm.relPrm.fePrm, sent, ofc.getTemplates());

@@ -2,7 +2,10 @@ package edu.jhu.nlp.depparse;
 
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -62,7 +65,7 @@ public class O2AllGraDepParseSpeedTest {
             FgModel model = new FgModel(numParams);
             CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
             cs.init(sents);
-            FeatureNames alphabet = new FeatureNames();
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), new FactorTemplateList());
             boolean onlyFast = true;
             t.start();
             
@@ -71,7 +74,7 @@ public class O2AllGraDepParseSpeedTest {
     
             for (AnnoSentence sent : sents) {
                 t1.start(); 
-                UFgExample ex = get2ndOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderFg(sent, cs, ofc, numParams, onlyFast);
                 t1.stop();
                 
                 t2.start();
@@ -124,7 +127,7 @@ public class O2AllGraDepParseSpeedTest {
         }
     }
     
-    public static UFgExample get2ndOrderFg(AnnoSentence sent, CorpusStatistics cs, FeatureNames alphabet, int numParams, boolean onlyFast) {
+    public static UFgExample get2ndOrderFg(AnnoSentence sent, CorpusStatistics cs, ObsFeatureConjoiner ofc, int numParams, boolean onlyFast) {
         FactorGraph fg = new FactorGraph();
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
         fePrm.featureHashMod = numParams;
@@ -132,8 +135,8 @@ public class O2AllGraDepParseSpeedTest {
         BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
         bsFePrm.featureHashMod = numParams;
         FeatureExtractor fe = onlyFast?
-                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
-                new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, ofc) :
+                new DepParseFeatureExtractor(fePrm, sent, cs, ofc.getFeAlphabet());
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
         fgPrm.useProjDepTreeFactor = true;        

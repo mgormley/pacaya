@@ -9,7 +9,10 @@ import edu.jhu.autodiff.Tensor;
 import edu.jhu.autodiff.erma.ErmaBp;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -23,9 +26,9 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.data.simple.AnnoSentenceReaderSpeedTest;
 import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor;
+import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseDecoder;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder;
-import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilderSpeedTest;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor;
@@ -65,7 +68,7 @@ public class DepParseFirstVsSecondOrderTest {
         
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(sents);
-        FeatureNames alphabet = new FeatureNames();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), new FactorTemplateList());
         boolean onlyFast = true;
 
         int numSentsWithDiffMargs = 0;
@@ -83,7 +86,7 @@ public class DepParseFirstVsSecondOrderTest {
             int[] parents1, parents2;            
             {
                 // First order
-                UFgExample ex = DepParseFactorGraphBuilderSpeedTest.get1stOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = DepParseFactorGraphBuilderSpeedTest.get1stOrderFg(sent, cs, ofc, numParams, onlyFast);
                 fg1 = ex.getFgLatPred();
                 fg1.updateFromModel(model);
                 bp1 = DepParseInferenceSpeedTest.runBp(fg1);
@@ -92,7 +95,7 @@ public class DepParseFirstVsSecondOrderTest {
             }
             {
                 // Second order
-                UFgExample ex = get2ndOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderFg(sent, cs, ofc, numParams, onlyFast);
                 fg2 = ex.getFgLatPred();
                 fg2.updateFromModel(model);
                 bp2 = DepParseInferenceSpeedTest.runBp(fg2);
@@ -155,7 +158,7 @@ public class DepParseFirstVsSecondOrderTest {
         
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(sents);
-        FeatureNames alphabet = new FeatureNames();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), new FactorTemplateList());
         boolean onlyFast = true;
         
         int s=0;
@@ -173,7 +176,7 @@ public class DepParseFirstVsSecondOrderTest {
             int[] parents1, parents2;            
             {
                 // Second order 5 iters
-                UFgExample ex = get2ndOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderFg(sent, cs, ofc, numParams, onlyFast);
                 fg1 = ex.getFgLatPred();
                 fg1.updateFromModel(model);
                 bp1 = DepParseInferenceSpeedTest.runBp(fg1, 5);
@@ -182,7 +185,7 @@ public class DepParseFirstVsSecondOrderTest {
             }
             {
                 // Second order 10 iters
-                UFgExample ex = get2ndOrderFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderFg(sent, cs, ofc, numParams, onlyFast);
                 fg2 = ex.getFgLatPred();
                 fg2.updateFromModel(model);
                 bp2 = DepParseInferenceSpeedTest.runBp(fg2, 10);
@@ -218,7 +221,7 @@ public class DepParseFirstVsSecondOrderTest {
         System.out.println("Tokens / sec: " + (sents.getNumTokens() / t.totSec()));
     }
 
-    public static UFgExample get2ndOrderFg(AnnoSentence sent, CorpusStatistics cs, FeatureNames alphabet, int numParams, boolean onlyFast) {
+    public static UFgExample get2ndOrderFg(AnnoSentence sent, CorpusStatistics cs, ObsFeatureConjoiner ofc, int numParams, boolean onlyFast) {
         FactorGraph fg = new FactorGraph();
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
         fePrm.featureHashMod = numParams;
@@ -226,8 +229,8 @@ public class DepParseFirstVsSecondOrderTest {
         BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
         bsFePrm.featureHashMod = numParams;
         FeatureExtractor fe = onlyFast?
-                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
-                new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, ofc) :
+                new DepParseFeatureExtractor(fePrm, sent, cs, ofc.getFeAlphabet());
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
         fgPrm.useProjDepTreeFactor = true;        
@@ -251,7 +254,7 @@ public class DepParseFirstVsSecondOrderTest {
         
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(sents);
-        FeatureNames alphabet = new FeatureNames();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), new FactorTemplateList());
         boolean onlyFast = true;
         
         int s=0;
@@ -272,7 +275,7 @@ public class DepParseFirstVsSecondOrderTest {
             int[] parents1, parents2;            
             {
                 // Second order 10 iters
-                UFgExample ex = get2ndOrderGraOnlyFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderGraOnlyFg(sent, cs, ofc, numParams, onlyFast);
                 fg1 = ex.getFgLatPred();
                 fg1.updateFromModel(model);
                 bp1 = DepParseInferenceSpeedTest.runBp(fg1, 10);
@@ -282,7 +285,7 @@ public class DepParseFirstVsSecondOrderTest {
             }
             {
                 // Second order exact
-                UFgExample ex = get2ndOrderGraOnlyFg(sent, cs, alphabet, numParams, onlyFast);
+                UFgExample ex = get2ndOrderGraOnlyFg(sent, cs, ofc, numParams, onlyFast);
                 fg2 = ex.getFgLatPred();
                 fg2.updateFromModel(model);
                 bp2 = new O2AllGraFgInferencer(fg2, Algebras.LOG_SIGN_ALGEBRA);
@@ -328,7 +331,7 @@ public class DepParseFirstVsSecondOrderTest {
         System.out.println("Tokens / sec: " + (sents.getNumTokens() / t.totSec()));
     }
     
-    public static UFgExample get2ndOrderGraOnlyFg(AnnoSentence sent, CorpusStatistics cs, FeatureNames alphabet, int numParams, boolean onlyFast) {
+    public static UFgExample get2ndOrderGraOnlyFg(AnnoSentence sent, CorpusStatistics cs, ObsFeatureConjoiner ofc, int numParams, boolean onlyFast) {
         FactorGraph fg = new FactorGraph();
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();
         fePrm.featureHashMod = numParams;
@@ -336,8 +339,8 @@ public class DepParseFirstVsSecondOrderTest {
         BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
         bsFePrm.featureHashMod = numParams;
         FeatureExtractor fe = onlyFast?
-                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
-                new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, ofc) :
+                new DepParseFeatureExtractor(fePrm, sent, cs, ofc.getFeAlphabet());
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
         fgPrm.grandparentFactors = false;
