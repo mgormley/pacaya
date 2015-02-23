@@ -1,6 +1,7 @@
 package edu.jhu.util.semiring;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -10,21 +11,26 @@ import edu.jhu.util.dist.Gaussian;
 
 public abstract class AbstractAlgebraTest {
 
-    private interface BinOp {
+    protected interface BinOp {
         double call(double x, double y, Algebra s);
     }
 
-    private interface UnaryOp {
+    protected interface UnaryOp {
         double call(double x, Algebra s);
     }
 
-    private static final int NUM_RANDS = 100;
+    protected static final int NUM_RANDS = 100;
     protected Algebra sLog = getAlgebra();
-    private RealAlgebra sReal = new RealAlgebra();
+    protected RealAlgebra sReal = new RealAlgebra();
     protected double deltaStrict = 1e-13;
     protected double deltaLoose = 1e-5;
             
     public abstract Algebra getAlgebra();
+
+    /** Override this method if the support of the Algebra is only the non-negative numbers. */
+    public boolean supportsNegatives() {
+        return true;
+    }
     
     @Test
     public void testEquals() {
@@ -37,17 +43,19 @@ public abstract class AbstractAlgebraTest {
     public void testToFromReal() {
         toFromCheck(1);
         toFromCheck(0);
-        toFromCheck(-1);
         toFromCheck(Double.POSITIVE_INFINITY);
-        toFromCheck(Double.NEGATIVE_INFINITY);
         toFromCheck(Double.NaN);
+        if (supportsNegatives()) {
+            toFromCheck(-1);
+            toFromCheck(Double.NEGATIVE_INFINITY);
+        }
 
         int i = 0, j = 0;
         double nan3 = (double)i/j;
         toFromCheck(nan3);
     }
     
-    private void toFromCheck(double x) {
+    protected void toFromCheck(double x) {
         System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sLog.fromReal(x)));
         assertEquals(x, sLog.toReal(sLog.fromReal(x)), deltaStrict);
     }
@@ -64,8 +72,8 @@ public abstract class AbstractAlgebraTest {
         toFromLogProbCheck(nan3);
     }
     
-    private void toFromLogProbCheck(double x) {
-        System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sLog.fromReal(x)));
+    protected void toFromLogProbCheck(double x) {
+        System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sLog.fromLogProb(x)));
         assertEquals(x, sLog.toLogProb(sLog.fromLogProb(x)), deltaStrict);
     }
 
@@ -119,107 +127,125 @@ public abstract class AbstractAlgebraTest {
         x = 11.11;
         y = 44.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        x = -11.11;
-        y = 44.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        x = 11.11;
-        y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        x = -11.11;
-        y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);         
+        if (supportsNegatives()) {
+            x = -11.11;
+            y = 44.44;
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            x = 11.11;
+            y = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            x = -11.11;
+            y = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
         // Swap the relative scales of x and y and test again
         y = 11.11;
         x = 44.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        y = -11.11;
-        x = 44.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        y = 11.11;
-        x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        y = -11.11;
-        x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+        if (supportsNegatives()) {
+            y = -11.11;
+            x = 44.44;
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            y = 11.11;
+            x = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            y = -11.11;
+            x = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
 
         // Test numbers whose abs is equal.
         double abs = 13.1313;
         y = abs;
-        x = -abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
-        y = abs;
         x = abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
-        y = -abs;
-        x = abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
-        y = -abs;
-        x = -abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        if (supportsNegatives()) {
+            y = abs;
+            x = -abs;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+            y = -abs;
+            x = abs;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+            y = -abs;
+            x = -abs;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
         
         // Test positive and negative numbers with abs(x) < 1.
         x = 0.11;
         y = 0.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        x = -0.11;
-        y = 0.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        x = 0.11;
-        y = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        x = -0.11;
-        y = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);         
+        if (supportsNegatives()) {
+            x = -0.11;
+            y = 0.44;
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            x = 0.11;
+            y = -0.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            x = -0.11;
+            y = -0.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
         // Swap the relative scales of x and y and test again
         y = 0.11;
         x = 0.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        y = -0.11;
-        x = 0.44;
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        y = 0.11;
-        x = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
-        y = -0.11;
-        x = -0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+        if (supportsNegatives()) {
+            y = -0.11;
+            x = 0.44;
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            y = 0.11;
+            x = -0.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            y = -0.11;
+            x = -0.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
 
         // Test with one value as an infinity.
         x = Double.POSITIVE_INFINITY;
         y = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
-        x = Double.NEGATIVE_INFINITY;
-        y = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
-        x = Double.POSITIVE_INFINITY;
-        y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
-        x = Double.NEGATIVE_INFINITY;
-        y = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        if (supportsNegatives()) {
+            x = Double.NEGATIVE_INFINITY;
+            y = 44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
+            x = Double.POSITIVE_INFINITY;
+            y = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
+            x = Double.NEGATIVE_INFINITY;
+            y = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
         
         // Swap the position of the infinities and test again.
         y = Double.POSITIVE_INFINITY;
         x = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
-        y = Double.NEGATIVE_INFINITY;
-        x = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
-        y = Double.POSITIVE_INFINITY;
-        x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
-        y = Double.NEGATIVE_INFINITY;
-        x = -44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        if (supportsNegatives()) {
+            y = Double.NEGATIVE_INFINITY;
+            x = 44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
+            y = Double.POSITIVE_INFINITY;
+            x = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
+            y = Double.NEGATIVE_INFINITY;
+            x = -44.44;        
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        }
         
         for (int i=0; i<NUM_RANDS; i++) {
             x = Gaussian.nextDouble(0.0, 1000);
-            y = Gaussian.nextDouble(0.0, 1000);                    
+            y = Gaussian.nextDouble(0.0, 1000);
+            if (!supportsNegatives()) {
+                x = Math.abs(x);
+                y = Math.abs(y);
+            }
             assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaLoose);  
         }
     }
         
-    private static double compute(BinOp lambda, double x, double y, Algebra s) {
+    protected static double compute(BinOp lambda, double x, double y, Algebra s) {
         double compacted = lambda.call(s.fromReal(x), s.fromReal(y), s);
         System.out.printf("%0#16x\n", Double.doubleToRawLongBits(compacted));
         return s.toReal(compacted);
@@ -256,7 +282,7 @@ public abstract class AbstractAlgebraTest {
         x = Double.POSITIVE_INFINITY;
         assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);    
         
-        if (!failOnNegatives) {
+        if (!failOnNegatives && supportsNegatives()) {
             x = -11.11;
             assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaStrict);
             x = -0.11;
@@ -287,7 +313,7 @@ public abstract class AbstractAlgebraTest {
             }
         }
         
-        if (!failOnNegatives) {
+        if (!failOnNegatives && supportsNegatives()) {
             for (int i=0; i<NUM_RANDS; i++) {
                 x = Gaussian.nextDouble(0.0, 1);                  
                 assertEquals(compute(lambda, x, sReal), compute(lambda, x, sLog), deltaLoose);  
@@ -299,8 +325,18 @@ public abstract class AbstractAlgebraTest {
             }
         }
     }
+       
+    @Test
+    public void testTwoZeros() {
+        if (supportsNegatives()) {
+            // Add positive and negative zero.
+            Algebra s = getAlgebra();
+            double sum = s.plus(s.times(s.fromReal(-1), s.fromReal(0)), s.fromReal(0));
+            assertFalse(s.isNaN(sum));
+        }
+    }
         
-    private static double compute(UnaryOp lambda, double x, Algebra s) {
+    protected static double compute(UnaryOp lambda, double x, Algebra s) {
         double compacted = lambda.call(s.fromReal(x), s);
         System.out.printf("%0#16x %f\n", Double.doubleToRawLongBits(compacted), s.toReal(compacted));
         return s.toReal(compacted);
