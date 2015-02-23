@@ -80,7 +80,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.update(featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=20000000, sgdNumPasses=10, l2variance=10000,
                           sgdAutoSelecFreq=5, sgdAutoSelectLr=True, pruneByDist=True,
-                          useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
+                          useLogAddTable=True, acl14DepFeats=False, normalizeMessages=True,
                           algebra="LOG_SIGN",
                           includeUnsupportedFeatures=True,
                           singleRoot=False,
@@ -116,12 +116,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                      arbitrarySiblingFactors=False,
                                                      headBigramFactors=True,  
                                                      tagger_parser="2nd-hb")
-        g.unpruned_parsers = [g.second_grand_exact, g.second_asib, g.first_order, g.second_order, g.second_grand, g.second_hb]
+        g.unpruned_parsers = [g.second_asib, g.second_grand_exact, g.first_order, g.second_order, g.second_grand, g.second_hb]
         g.pruned_parsers = pruned_parsers(g.unpruned_parsers)
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
         # Trainers
         g.erma_dp = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
+        g.erma_dp_nomse = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=100, dpEndTemp=.01, dpAnnealMse=False)
         g.erma_mse = SrlExpParams(trainer="ERMA", dpLoss="MSE")
         g.erma_er = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL")
         g.cll = SrlExpParams(trainer="CLL", trainProjectivize=True) # TODO: projectivize for ERMA?
@@ -148,7 +149,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       language=lang_short, l2variance=l2var_map[lang_short])        
             if lang_short.startswith("en"):
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb,
-                                           dpSkipPunctuation=True)
+                                           dpSkipPunctuation=True,
+                                           useMorphologicalFeats=False, useLemmaFeats=False)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10, reduceTags=p.cx_tag_maps[lang_short]) 
                 
@@ -308,13 +310,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         elif self.expname == "dp-aware":
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
-            exps = []
+            root = RootStage()
             languages = ["en"] #["es", "bg", "en"]
 
             # Speedups
-            g.defaults.update(sgdNumPasses=5)
+            g.defaults.update(sgdNumPasses=8)
             g.defaults.remove("printModel")
-            g.defaults.update(useMorphologicalFeats=False, useLemmaFeats=False) # English only.
 
             # Train a first-order pruning model for each language
             prune_exps = {}
@@ -326,16 +327,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp = g.defaults + data + g.first_order
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 prune_exps[lang_short] = exp
-                exps.append(exp)
+                root.add_dependent(exp)
                         
             # Train the second order models.
-            g.defaults.remove("modelOut") # Speedup.
             for lang_short in languages:
                 for bpMaxIterations in [1, 2, 3, 4]:
-                    for trainer in [g.cll, g.erma_mse, g.erma_dp]:
+                    for trainer in [g.erma_mse, g.cll]:
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
                         for parser in g.pruned_parsers:
+                            if parser.get("inference") == "DP" and trainer != g.cll:
+                                continue
                             data = gl.cx_data
                             data.update(pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
                                         propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
@@ -343,11 +345,22 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                             exp.add_prereq(prune_exps[lang_short])
                             if parser in [g.second_order, g.second_grand, g.second_asib]:
-                                exps += get_oome_stages(exp)
+                                get_oome_stages(exp) # These are auto-added as dependents.
+                            if trainer != g.cll:
+                                if parser in [g.second_order, g.second_grand, g.second_asib]:
+                                    raise Exception("Unable to specify which experiment directory will contain the model.")
+                                exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                                exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
+                                exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
+                                exp2.add_prereq(prune_exps[lang_short])
+                                exp2.add_prereq(exp)
                             else:
-                                exps.append(exp)
-
-            return self._get_pipeline_from_exps(exps)
+                                exp.remove("modelOut") # Speedup.
+                            
+            if self.fast: root.dependents[0].dependents = root.dependents[0].dependents[:2]
+            scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
+            scrape.add_prereqs(pipeline.dfs_stages(root))
+            return root
                 
         elif self.expname == "dp-aware-small":
             '''Comparison of CLL and ERMA training with varying models and iterations.
