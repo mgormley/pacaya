@@ -53,12 +53,13 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
         y.f = new VarTensor[fg.getNumFactors()];
         for (int a = 0; a < y.f.length; a++) {
             Module<?> fm = facMods.get(a);
+            // Call forward on regular factors and global factors.
             Object o = fm.forward();
-            if (o instanceof VarTensor) {
+            if (fg.getFactor(a) instanceof GlobalFactor) {
+                y.f[a] = null;
+            } else if (o instanceof VarTensor) {
                 y.f[a] = (VarTensor) o;
                 assert !y.f[a].containsBadValues();
-            } else if (fg.getFactor(a) instanceof GlobalFactor) {
-                y.f[a] = null;
             } else {
                 throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
             }
@@ -74,14 +75,17 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
             yAdj.f = new VarTensor[y.f.length];
             for (int a = 0; a < y.f.length; a++) {
                 Module<?> fm = facMods.get(a);
-                Object o = fm.getOutputAdj();
-                if (o instanceof VarTensor) {
-                    yAdj.f[a] = (VarTensor) o;
-                    assert !yAdj.f[a].containsBadValues();
-                } else if (fg.getFactor(a) instanceof GlobalFactor) {
+                if (fg.getFactor(a) instanceof GlobalFactor) {
                     yAdj.f[a] = null;
                 } else {
-                    throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
+                    // Call getOutputAdj() only on regular factors.
+                    Object o = fm.getOutputAdj();
+                    if (o instanceof VarTensor) {
+                        yAdj.f[a] = (VarTensor) o;
+                        assert !yAdj.f[a].containsBadValues();
+                    } else {
+                        throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
+                    }
                 }
             }
         }
@@ -91,6 +95,7 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
     @Override
     public void backward() {
         for (Module<?> fm : facMods) {
+            // Call backwards on both regular factors and global factors.
             fm.backward();
         }
     }

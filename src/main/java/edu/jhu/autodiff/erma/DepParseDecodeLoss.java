@@ -48,6 +48,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
             }
         }
 
+        /** Computes the temperature using a linear annealing schedule. */
         public double getTemperature(int curIter, int maxIter) {
             double prop = (double) curIter / maxIter;
             double temp = (1.0 - prop) * startTemp + prop * endTemp;
