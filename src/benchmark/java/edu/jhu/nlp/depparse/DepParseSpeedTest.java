@@ -27,7 +27,7 @@ public class DepParseSpeedTest {
      * t4: Run BP
      * 
      * Key:
-     *   ta = Log-add table, ex = Exact log-add
+     *   ta = Log-add table, ex = Exact log-add, st = high precision log-add table
      *   L = LOG_SEMIRING, R = REAL_ALGEGRA , S = LOG_SIGN_ALGEBRA
      *   co = coarse POS tag feats, nc = no coarse tag feats
      *   MST = MST features, TUR = Turbo Parser feats
@@ -44,8 +44,10 @@ public class DepParseSpeedTest {
      * on 02/22/14:
      * ta,L,nc,MST,hp     s=2401 n=56427 tot=1239.85 t0=154172.13 t1=5518.53 t2=14106750.00 t3=5524.48 t4=2485.44 t5=28541.73
      * ta,L,co,MST,hp     s=2401 n=56427 tot=1048.17 t0=141776.38 t1=5585.73 t2=18809000.00 t3=3059.70 t4=2485.66 t5=26015.21
-     * ta,L,co,MST,nh     s=2401 n=56427 tot=1092.15 t0=184401.96 t1=5446.10 t2=11285400.00 t3=2997.61 t4=2764.00 t5=32392.08
+     * st(e-8),L,co,MST,hp  2401 n=56427 tot=1132.64 t0=168438.81 t1=5432.46 t2=8061000.00 t3=3522.72 t4=2653.02 t5=31647.22
+     * st(e-11),L,co,MST,hp 2401 n=56427 tot=1069.77 t0=164991.23 t1=5767.27 t2=56427000.00 t3=3019.75 t4=2570.00 t5=28803.98 
      * ex,L,co,MST,hp     s=2401 n=56427 tot= 696.26 t0=160303.98 t1=5468.79 t2=56427000.00 t3=2425.51 t4=1263.79 t5=23211.44
+     * ta,L,co,MST,nh     s=2401 n=56427 tot=1092.15 t0=184401.96 t1=5446.10 t2=11285400.00 t3=2997.61 t4=2764.00 t5=32392.08
      * ta,S,co,MST,hp     s=2401 n=56427 tot=1131.05 t0=136627.12 t1=5934.06 t2=11285400.00 t3=3409.69 t4=2623.29 t5=29950.64
      *
      *
@@ -60,7 +62,7 @@ public class DepParseSpeedTest {
     //@Test
     public void testSpeed() {
         FastMath.useLogAddTable = true;
-        boolean firstOrder = false;
+        boolean firstOrder = true;
         for (int trial = 0; trial < 2; trial++) {
             Timer t = new Timer();
             Timer t0 = new Timer();
@@ -86,6 +88,7 @@ public class DepParseSpeedTest {
             
             int numParams = 100000;
             FgModel model = new FgModel(numParams);
+            model.setRandomStandardNormal();
             CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
             cs.init(sents);
             FeatureNames alphabet = new FeatureNames();
