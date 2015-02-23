@@ -90,8 +90,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("headBigramFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
         g.defaults.set_incl_name("dpSkipPunctuation", False)
+        g.defaults.set_incl_name("reduceTags", False)
         g.defaults.set_incl_arg("group", False)
         g.defaults.set_incl_arg("datasource", False)
+        g.defaults.remove("printModel")
                 
         # Parsers
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE",
@@ -296,11 +298,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-pruning":            
             '''Trains the pruning models for the CoNLL-X languages.'''
             exps = []
-            g.defaults += g.feat_mcdonald_basic
-            g.defaults.update(pruneByDist=False) # TODO: Consider changing this.
-            for lang_short in ["bg", "es", "en"]:
+            for lang_short in p.cx_lang_short_names:
                 gl = g.langs[lang_short]
-                pl = p.langs[lang_short]
                 data = gl.cx_data
                 data.update(propTrainAsDev=0) # TODO: Set to zero for final experiments.
                 exp = g.defaults + data + g.first_order
@@ -315,7 +314,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
 
             # Speedups
             g.defaults.update(sgdNumPasses=8)
-            g.defaults.remove("printModel")
 
             # Train a first-order pruning model for each language
             prune_exps = {}
