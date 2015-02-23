@@ -233,6 +233,7 @@ public class DepParseFirstVsSecondOrderTest {
         fgPrm.useProjDepTreeFactor = true;        
         fgPrm.grandparentFactors = true;
         fgPrm.arbitrarySiblingFactors = true;    
+        fgPrm.pruneEdges = true;
         DepParseFactorGraphBuilder builder = new DepParseFactorGraphBuilder(fgPrm);
         builder.build(sent, fe, fg);
         
