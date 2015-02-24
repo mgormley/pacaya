@@ -79,8 +79,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.adagrad_comid
         g.defaults.update(featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=20000000, sgdNumPasses=10, l2variance=10000,
+                          #adaGradInitialSumSquares=0.1, adaGradConstantAddend=0,
                           sgdAutoSelecFreq=5, sgdAutoSelectLr=True, pruneByDist=True,
-                          useLogAddTable=True, acl14DepFeats=False, normalizeMessages=True,
+                          useLogAddTable=False, acl14DepFeats=False, normalizeMessages=True,
                           algebra="LOG_SIGN",
                           includeUnsupportedFeatures=True,
                           singleRoot=False,
