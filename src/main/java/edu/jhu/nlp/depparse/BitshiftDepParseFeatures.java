@@ -352,7 +352,7 @@ public class BitshiftDepParseFeatures {
     
     public static void addArcFeats(IntAnnoSentence sent, int head, int modifier, BitshiftDepParseFeatureExtractorPrm prm, FeatureVector feats) {
         if (prm.useMstFeats) {
-            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, head, modifier, FeatureCollection.ARC, feats, false, prm.useCoarseTags, prm.featureHashMod);
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm.basicOnly, prm.useCoarseTags, prm.featureHashMod);
         } else {
             BitshiftDepParseFeatures.addTurboWordPairFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm);
         }
