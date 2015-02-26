@@ -132,11 +132,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
         # Trainers
-        g.erma_dp = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True)
-        g.erma_dp_nomse = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=100, dpEndTemp=.01, dpAnnealMse=False)
-        g.erma_mse = SrlExpParams(trainer="ERMA", dpLoss="MSE")
-        g.erma_er = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL")
-        g.cll = SrlExpParams(trainer="CLL", trainProjectivize=True) # TODO: projectivize for ERMA?
+        g.erma_dp       = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True, trainProjectivize=False)
+        g.erma_dp_nomse = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=100, dpEndTemp=.01, dpAnnealMse=False, trainProjectivize=False)
+        g.erma_mse      = SrlExpParams(trainer="ERMA", dpLoss="MSE", trainProjectivize=False)
+        g.erma_er       = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL", trainProjectivize=False)
+        g.cll           = SrlExpParams(trainer="CLL", trainProjectivize=True)
         
         if self.fast:
             models_dir = os.path.join(self.root_dir, "exp", "models", "fast-dp-pruning")
@@ -481,7 +481,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for feats in [g.basic_car_feats, g.turbo_feats, g.mst_car_feats, g.turbo_coarse_feats]:                
                 for data in datasets:
                     data.update(propTrainAsDev=0) # TODO: Set to zero for final experiments.
-                    exp = g.defaults + data + g.first_order + feats
+                    exp = g.defaults + data + g.first_order + g.cll + feats
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     if feats == g.basic_car_feats:
                         exp.update(modelOut=data.get("prune_model_path"))
