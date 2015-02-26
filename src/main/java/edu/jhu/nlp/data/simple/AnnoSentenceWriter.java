@@ -83,6 +83,12 @@ public class AnnoSentenceWriter {
             } finally {
                 sw.close();
             }
+        } else if (type == DatasetType.DEP_EDGE_MASK) {
+            DepEdgeMaskWriter cw = new DepEdgeMaskWriter(out);
+            for (AnnoSentence sent : sents) {
+                cw.write(sent);
+            }
+            cw.close();
         } else if (type == DatasetType.CONCRETE) {
             ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
             cwPrm.srlIsSyntax = prm.concreteSrlIsSyntax;

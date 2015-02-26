@@ -167,7 +167,11 @@ public class JointNlpRunner {
     public static File printModel = null;
     @Opt(hasArg = true, description = "File to which to serialize the entire pipeline.")
     public static File pipeOut = null;
-    
+
+    // Options for joint model.
+    @Opt(hasArg = true, description = "Whether to include the joint model in the pipeline.")
+    public static boolean jointModel = true;
+
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
     public static InitParams initParams = InitParams.UNIFORM;
@@ -221,7 +225,7 @@ public class JointNlpRunner {
     public static boolean predictSense = false;
     @Opt(hasArg = true, description = "Whether to predict predicate positions.")
     public static boolean predictPredPos = false;
-
+    
     // Options for joint factor graph structure.
     @Opt(hasArg = true, description = "Whether to include unary factors in the model.")
     public static boolean unaryFactors = false;
@@ -481,9 +485,11 @@ public class JointNlpRunner {
                 // Don't predict SRL predicate position in the main jointAnno below.
                 prm.buPrm.fgPrm.srlPrm.predictPredPos = false;
                 prm.buPrm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+            }           
+            if (jointModel) {
+                // Various NLP annotations.
+                anno.add(jointAnno);
             }
-            // Various NLP annotations.
-            anno.add(jointAnno);
             // Post-processing.
             if (CorpusHandler.getPredAts().contains(AT.REL_LABELS) && !relMunger.getPrm().makeRelSingletons) {
                 RelationDataPostproc dataPostproc = relMunger.getDataPostproc();
