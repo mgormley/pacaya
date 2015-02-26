@@ -7,6 +7,7 @@
 # Specific directories
 /target
 /exp
+/exp_old
 /remote_exp
 /old_remote_exp
 /data
