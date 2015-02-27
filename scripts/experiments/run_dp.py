@@ -43,6 +43,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-conllx-tune",
                     "dp-pruning",
                     "gobble-memory",
+                    "dp-aware-tune",
                     "dp-aware-langs",
                     "dp-aware-en",
                     "dp-aware",
@@ -325,7 +326,55 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
 
             return self._get_pipeline_from_exps(exps)
-              
+            
+        elif self.expname == "dp-aware-tune":
+            '''Tuning parameters of the DP_DECODE_LOSS function.'''
+            root = RootStage()
+            
+            # Get the datasets.
+            datasets = []
+            for lang_short in ["tr", "sl"]:
+                gl = g.langs[lang_short]
+                datasets.append(gl.cx_data)
+                
+            # Train the second order models.
+            for data in datasets:
+                for trainer in [g.erma_mse, g.cll]:
+                    for parser in g.pruned_parsers:
+                        if parser.get("inference") == "DP" and (trainer != g.cll): # or bpMaxIterations != 1):
+                            continue
+                        if parser.get("tagger_parser").startswith("1st"):
+                            bpMaxIterations = 1
+                        else:
+                            bpMaxIterations = 4
+                        data.update(pruneModel=data.get("prune_model_path"),
+                                    propTrainAsDev=0.1) # DEV DATA.
+                        data.remove("test") # NO TEST DATA, we're just tuning.
+                        exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exp.add_prereq(root)
+                        if trainer != g.cll:
+                            # TUNE PARAMETERS HERE:
+                            pairs = []
+                            for s in [10000, 1000, 100, 10, 1, 0.1]:
+                                for e in [10, 1, 0.1, 0.01]:
+                                    if s >= e:
+                                        pairs.append((s,e))
+                            for dpStartTemp, dpEndTemp in pairs:
+                                exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                                exp2.update(dpStartTemp=dpStartTemp, dpEndTemp=dpEndTemp)
+                                exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
+                                exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
+                                exp2.add_prereq(exp)
+                                exp2.remove("modelOut") # Speedup.
+                        else:
+                            exp.remove("modelOut") # Speedup.
+                            
+            if self.fast: root.dependents[0].dependents = root.dependents[0].dependents[:2]
+            scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
+            scrape.add_prereqs(pipeline.dfs_stages(root))
+            return root
+        
         elif self.expname == "dp-aware-langs":
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             root = RootStage()
@@ -372,7 +421,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
             scrape.add_prereqs(pipeline.dfs_stages(root))
             return root
-         
+        
         elif self.expname == "dp-aware-en":
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             root = RootStage()

@@ -50,7 +50,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
 
         public double getTemperature(int curIter, int maxIter) {
             double prop = (double) curIter / maxIter;
-            double temp = (1.0 - prop) * startTemp + prop * endTemp;
+            double temp = ((1.0 - prop) * startTemp) + (prop * endTemp);
             assert !Double.isNaN(temp);
             return temp;
         }

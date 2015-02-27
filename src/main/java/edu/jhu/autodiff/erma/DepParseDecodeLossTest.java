@@ -1,9 +1,12 @@
 package edu.jhu.autodiff.erma;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import edu.jhu.autodiff.AbstractModuleTest;
 import edu.jhu.autodiff.AbstractModuleTest.TwoToOneFactory;
+import edu.jhu.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.autodiff.Module;
 import edu.jhu.autodiff.ModuleTestUtils;
 import edu.jhu.autodiff.Tensor;
@@ -22,6 +25,21 @@ public class DepParseDecodeLossTest {
 
     private Algebra s = new RealAlgebra();
 
+    @Test
+    public void testTemperatureLinearScale() {
+        // Linear scaling.
+        DepParseDecodeLossFactory fac = new DepParseDecodeLossFactory();
+        fac.annealMse = false;
+        fac.startTemp = 100;
+        fac.endTemp = 0.1;
+        int maxIter = 9;
+        for (int i=0; i<=maxIter; i++) {
+            System.out.printf("i=%d temp=%f\n", i, fac.getTemperature(i, maxIter));
+        }
+        assertEquals(fac.startTemp, fac.getTemperature(0, maxIter), 1e-13);
+        assertEquals(fac.endTemp, fac.getTemperature(maxIter, maxIter), 1e-13);
+    }
+    
     @Test
     public void testDecodeLossWith3WordGlobalFactor() {
         // Get factor graph.
