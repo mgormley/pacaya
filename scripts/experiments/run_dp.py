@@ -198,7 +198,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       prune_model_path=os.path.join(models_dir, "1st_c07_"+lang_short, "model.binary.gz"))
                     
         # Ordered from smallest to largest.
-        cx_lang_subset = ["tr", "sl", "ja", "da", "nl", "bg", "sv", "es", "en-st"] #, "pt", "de", "ar", "en", "en-st", "cs"]
+        cx_lang_subset = ["tr", "sl", "ja", "da", "nl", "bg", "sv", "es", "en", "en-st"] #, "pt", "de", "ar", "en", "en-st", "cs"]
         c07_lang_subset = ["eu", "zh", "el", "hu", "it"] #["eu", "tr", "zh", "el", "hu", "it", "en", "cs", "ca", "ar"]
         
         # ------------------------ EXPERIMENTS --------------------------
