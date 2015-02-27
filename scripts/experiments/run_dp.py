@@ -147,9 +147,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.cll           = SrlExpParams(trainer="CLL", trainProjectivize=True)
         
         if self.fast:
-            models_dir = os.path.join(self.root_dir, "exp", "models", "fast-dp-pruning")
+            models_dir = os.path.join(self.root_dir, "exp", "models", "fast-dp-pruning-workaround")
         else:
-            models_dir = os.path.join(self.root_dir, "exp", "models", "dp-pruning")
+            models_dir = os.path.join(self.root_dir, "exp", "models", "dp-pruning-workaround")
         
         # Feature sets
         g.turbo_feats = SrlExpParams(feature_set="turbo", useMstFeats=False, useCarerrasFeats=False, useCoarseTags=False)
@@ -586,7 +586,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 datasets.append(gl.c07_data)
                 
-            for feats in [g.basic_car_feats, g.turbo_feats, g.mst_car_feats, g.turbo_coarse_feats]:                
+            for feats in [g.basic_car_feats]: #, g.turbo_feats, g.mst_car_feats, g.turbo_coarse_feats]:                
                 for data in datasets:
                     data.update(propTrainAsDev=0) # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + g.first_order + g.cll + feats
