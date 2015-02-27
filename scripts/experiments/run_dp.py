@@ -135,7 +135,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                      arbitrarySiblingFactors=False,
                                                      headBigramFactors=True,  
                                                      tagger_parser="2nd-hb")
-        g.unpruned_parsers = [g.second_asib, g.second_grand_exact, g.first_order, g.second_order, g.second_grand, g.second_hb]
+        g.unpruned_parsers = [g.first_order, g.second_order, g.second_grand_asib, g.second_asib, g.second_grand_exact, g.second_grand, g.second_hb]
         g.pruned_parsers = pruned_parsers(g.unpruned_parsers)
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
