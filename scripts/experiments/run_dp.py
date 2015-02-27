@@ -43,6 +43,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-conllx-tune",
                     "dp-pruning",
                     "gobble-memory",
+                    "dp-aware-langs",
+                    "dp-aware2",
                     "dp-aware",
                     "dp-aware-small",
                     "dp-erma",
@@ -112,8 +114,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                       arbitrarySiblingFactors=True, 
                                                       headBigramFactors=True, 
                                                       tagger_parser="2nd-gra-asib-hb", 
-                                                  bpMaxIterations=5, 
-                                                  useMseForValue=True)
+                                                      bpMaxIterations=5, 
+                                                      useMseForValue=True)
+        g.second_grand_asib = g.first_order + SrlExpParams(grandparentFactors=True, 
+                                                      arbitrarySiblingFactors=True, 
+                                                      headBigramFactors=False, 
+                                                      tagger_parser="2nd-gra-asib", 
+                                                      bpMaxIterations=5, 
+                                                      useMseForValue=True)
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, 
                                                        arbitrarySiblingFactors=False,
                                                        headBigramFactors=False,  
@@ -148,6 +156,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.turbo_coarse_feats = g.turbo_feats + SrlExpParams(feature_set="turbo-coarse", useCoarseTags=True)
         g.mst_car_feats = SrlExpParams(feature_set="mst-car", useMstFeats=True, useCarerrasFeats=True, useCoarseTags=True)
         g.basic_car_feats = SrlExpParams(feature_set="basic-car", useMstFeats=True, useCarerrasFeats=True, useCoarseTags=True, basicOnly=True)
+        
+        g.defaults += g.turbo_feats
         
         # Language specific parameters
         p.cx_langs_with_phead = ["bg", "en", "de", "es"]
@@ -310,7 +320,102 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
 
             return self._get_pipeline_from_exps(exps)
+              
+        elif self.expname == "dp-aware-langs":
+            '''Comparison of CLL and ERMA training with varying models and iterations.'''
+            root = RootStage()
+
+            g.defaults.update(pruneByDist=False) # TEMPORARY
+
+            # Get the datasets.
+            datasets = []
+            for lang_short in p.cx_lang_short_names:
+                gl = g.langs[lang_short]
+                datasets.append(gl.cx_data)
+            for lang_short in ["it", "ca"]:
+                gl = g.langs[lang_short]
+                datasets.append(gl.c07_data)
                 
+            # Train the second order models.
+            for data in datasets:
+                for trainer in [g.erma_mse, g.cll]:
+                    for parser in pruned_parsers([g.first_order, g.second_grand_asib]):
+                        if parser.get("inference") == "DP" and trainer != g.cll:
+                            continue
+                        if parser.get("tagger_parser").startswith("1st"):
+                            bpMaxIterations = 1
+                        else:
+                            bpMaxIterations = 4
+                        data.update(pruneModel=data.get("prune_model_path"),
+                                    propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
+                        exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exp.add_prereq(root)
+                        if parser in [g.second_order, g.second_grand, g.second_asib]:
+                            get_oome_stages(exp) # These are auto-added as dependents.
+                        if trainer != g.cll:
+                            if parser in [g.second_order, g.second_grand, g.second_asib]:
+                                raise Exception("Unable to specify which experiment directory will contain the model.")
+                            exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                            exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
+                            exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
+                            exp2.add_prereq(exp)
+                            exp2.remove("modelOut") # Speedup.
+                        else:
+                            exp.remove("modelOut") # Speedup.
+                            
+            if self.fast: root.dependents[0].dependents = root.dependents[0].dependents[:2]
+            scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
+            scrape.add_prereqs(pipeline.dfs_stages(root))
+            return root
+         
+        elif self.expname == "dp-aware2":
+            '''Comparison of CLL and ERMA training with varying models and iterations.'''
+            root = RootStage()
+
+            g.defaults.update(pruneByDist=False) # TEMPORARY
+            
+            # Get the datasets.
+            datasets = []
+            for lang_short in ["en"]:
+                gl = g.langs[lang_short]
+                datasets.append(gl.cx_data)
+            for lang_short in []:
+                gl = g.langs[lang_short]
+                datasets.append(gl.c07_data)
+                
+            # Train the second order models.
+            for data in datasets:
+                for bpMaxIterations in [1, 2, 3, 4]:
+                    for trainer in [g.erma_mse, g.cll]:
+                        for parser in g.pruned_parsers:
+                            if parser.get("inference") == "DP" and trainer != g.cll:
+                                continue
+                            if parser.get("tagger_parser").startswith("1st") and bpMaxIterations != 1:
+                                continue
+                            data.update(pruneModel=data.get("prune_model_path"),
+                                        propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
+                            exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            exp.add_prereq(root)
+                            if parser in [g.second_order, g.second_grand, g.second_asib]:
+                                get_oome_stages(exp) # These are auto-added as dependents.
+                            if trainer != g.cll:
+                                if parser in [g.second_order, g.second_grand, g.second_asib]:
+                                    raise Exception("Unable to specify which experiment directory will contain the model.")
+                                exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                                exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
+                                exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
+                                exp2.add_prereq(exp)
+                                exp2.remove("modelOut") # Speedup.
+                            else:
+                                exp.remove("modelOut") # Speedup.
+                            
+            if self.fast: root.dependents[0].dependents = root.dependents[0].dependents[:2]
+            scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
+            scrape.add_prereqs(pipeline.dfs_stages(root))
+            return root
+            
         elif self.expname == "dp-aware":
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             root = RootStage()
@@ -337,7 +442,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         for parser in g.pruned_parsers:
                             if parser.get("inference") == "DP" and trainer != g.cll:
                                 continue
-                            if parser == g.first_order and bpMaxIterations != 1:
+                            if parser.get("tagger_parser").startswith("1st") and bpMaxIterations != 1:
                                 continue
                             data = gl.cx_data
                             data.update(pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
