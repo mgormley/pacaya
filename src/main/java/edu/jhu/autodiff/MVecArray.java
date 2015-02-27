@@ -142,7 +142,12 @@ public class MVecArray<Y extends MVec> implements MVec {
         T[] clone = Arrays.copyOf(orig, orig.length);
         for (int v = 0; v < clone.length; v++) {
             if (orig[v] != null) {
-                clone[v] = (T) orig[v].copy();
+                MVec copy = orig[v].copy();
+                if (!copy.getClass().equals(orig[v].getClass())) {
+                    throw new RuntimeException(orig[v].getClass() + "does not correctly implement MVec."
+                            + " Its copy method must return its own type instead of " + copy.getClass());
+                }
+                clone[v] = (T) copy;
             }
         }
         return clone;
@@ -156,13 +161,17 @@ public class MVecArray<Y extends MVec> implements MVec {
         T[] clone = Arrays.copyOf(orig, orig.length);
         for (int v = 0; v < clone.length; v++) {
             if (orig[v] != null) {
-                clone[v] = (T) orig[v].copyAndConvertAlgebra(newS);
+                MVec copy = orig[v].copyAndConvertAlgebra(newS);
+                if (!copy.getClass().equals(orig[v].getClass())) {
+                    throw new RuntimeException(orig[v].getClass() + " does not correctly implement MVec."
+                            + " Its copy method must return its own type instead of " + copy.getClass());
+                }
+                clone[v] = (T) copy;
             }
         }
         return clone;
     }
     
-    @SuppressWarnings("unchecked")
     public static <T extends MVec> void addArray(T[] b1, T[] addend) {
         assert b1.length == addend.length;
         for (int i = 0; i < b1.length; i++) {            
