@@ -32,11 +32,31 @@ public class DepParseDecodeLossTest {
         fac.annealMse = false;
         fac.startTemp = 100;
         fac.endTemp = 0.1;
+        fac.useLogScale = false;
         int maxIter = 9;
         for (int i=0; i<=maxIter; i++) {
             System.out.printf("i=%d temp=%f\n", i, fac.getTemperature(i, maxIter));
         }
         assertEquals(fac.startTemp, fac.getTemperature(0, maxIter), 1e-13);
+        assertEquals(44.5, fac.getTemperature(5, maxIter), 1e-13);
+        assertEquals(fac.endTemp, fac.getTemperature(maxIter, maxIter), 1e-13);
+    }
+    
+    @Test
+    public void testTemperatureLogScale() {
+        // Linear scaling.
+        DepParseDecodeLossFactory fac = new DepParseDecodeLossFactory();
+        fac.annealMse = false;
+        fac.startTemp = 100;
+        fac.endTemp = 0.1;
+        fac.useLogScale = true;
+        int maxIter = 9;
+        for (int i=0; i<=maxIter; i++) {
+            System.out.printf("i=%d temp=%f\n", i, fac.getTemperature(i, maxIter));
+        }
+        assertEquals(fac.startTemp, fac.getTemperature(0, maxIter), 1e-13);
+        assertEquals(10, fac.getTemperature(3, maxIter), 1e-13);
+        assertEquals(1, fac.getTemperature(6, maxIter), 1e-13);
         assertEquals(fac.endTemp, fac.getTemperature(maxIter, maxIter), 1e-13);
     }
     

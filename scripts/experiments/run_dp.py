@@ -333,16 +333,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
             # Get the datasets.
             datasets = []
-            for lang_short in ["tr", "sl"]:
+            for lang_short in ["tr"]:
                 gl = g.langs[lang_short]
                 datasets.append(gl.cx_data)
                 
             # Train the second order models.
             for data in datasets:
-                for trainer in [g.erma_mse, g.cll]:
-                    for parser in g.pruned_parsers:
-                        if parser.get("inference") == "DP" and (trainer != g.cll): # or bpMaxIterations != 1):
-                            continue
+                for trainer in [g.erma_mse]: #, #g.cll]:
+                    for parser in pruned_parsers([g.first_order, g.second_grand_asib]):
                         if parser.get("tagger_parser").startswith("1st"):
                             bpMaxIterations = 1
                         else:
@@ -361,12 +359,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                     if s >= e:
                                         pairs.append((s,e))
                             for dpStartTemp, dpEndTemp in pairs:
-                                exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
-                                exp2.update(dpStartTemp=dpStartTemp, dpEndTemp=dpEndTemp)
-                                exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
-                                exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
-                                exp2.add_prereq(exp)
-                                exp2.remove("modelOut") # Speedup.
+                                for dpUseLogScale in [True, False]:
+                                    exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                                    exp2.update(dpStartTemp=dpStartTemp, dpEndTemp=dpEndTemp, dpUseLogScale=dpUseLogScale)
+                                    exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
+                                    exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
+                                    exp2.add_prereq(exp)
+                                    exp2.remove("modelOut") # Speedup.
                         else:
                             exp.remove("modelOut") # Speedup.
                             

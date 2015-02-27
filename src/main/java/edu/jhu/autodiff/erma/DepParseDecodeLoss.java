@@ -9,6 +9,7 @@ import edu.jhu.autodiff.tensor.ElemLinear;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebras;
 import edu.jhu.util.semiring.LogSignAlgebra;
@@ -30,6 +31,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         public double startTemp = 10;
         public double endTemp = .1;
         public boolean annealMse = true;
+        public boolean useLogScale = true;
         
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, ExpFamFactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
@@ -50,7 +52,17 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
 
         public double getTemperature(int curIter, int maxIter) {
             double prop = (double) curIter / maxIter;
-            double temp = ((1.0 - prop) * startTemp) + (prop * endTemp);
+            double temp;
+            if (useLogScale) {
+                // Use log scale.
+                double startLog = FastMath.log(startTemp);
+                double endLog = FastMath.log(endTemp);
+                double tempLog = ((1.0 - prop) * startLog) + (prop * endLog);
+                temp = Math.exp(tempLog);
+            } else {
+                // Use linear scale.
+                temp = ((1.0 - prop) * startTemp) + (prop * endTemp);
+            }
             assert !Double.isNaN(temp);
             return temp;
         }
