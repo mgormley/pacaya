@@ -57,8 +57,9 @@ class PathDefinitions():
     
     def get_paths(self):
         p = Paths()
-        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en", "en-st"]
-        p.c07_lang_short_names = ["ar", "eu", "ca", "zh", "cs", "en", "el", "hu", "it", "tr"]
+        # CoNLL-X and CoNLL-2007 are ordered from smallest to largest.
+        p.cx_lang_short_names = ["tr", "sl", "ja", "da", "nl", "bg", "sv", "es", "pt", "de", "ar", "en", "en-st", "cs"]
+        p.c07_lang_short_names = ["eu", "tr", "zh", "el", "hu", "it", "en", "cs", "ca", "ar"]
         p.c09_lang_short_names = ["ca", "cs", "es", "de", "en", "zh"] 
 
         p.langs = {}        
