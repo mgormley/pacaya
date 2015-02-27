@@ -196,6 +196,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       reduceTags=p.c07_tag_maps[lang_short],
                                       prune_model_path=os.path.join(models_dir, "1st_c07_"+lang_short, "model.binary.gz"))
                     
+        # Ordered from smallest to largest.
+        cx_lang_subset = ["tr", "sl", "ja", "da", "nl", "bg", "sv", "es", "en-st"] #, "pt", "de", "ar", "en", "en-st", "cs"]
+        c07_lang_subset = ["eu", "zh", "el", "hu", "it"] #["eu", "tr", "zh", "el", "hu", "it", "en", "cs", "ca", "ar"]
+        
         # ------------------------ EXPERIMENTS --------------------------
                 
         if self.expname is None:
@@ -328,11 +332,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
 
             # Get the datasets.
             datasets = []
-            for lang_short in p.cx_lang_short_names:
+            for lang_short in cx_lang_subset:
                 if lang_short == "en": continue          # SKIP PTB-YM since we already have the results.
                 gl = g.langs[lang_short]
                 datasets.append(gl.cx_data)
-            for lang_short in ["it", "ca"]:
+            for lang_short in c07_lang_subset:
                 gl = g.langs[lang_short]
                 datasets.append(gl.c07_data)
                 
@@ -378,9 +382,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for lang_short in ["en"]:
                 gl = g.langs[lang_short]
                 datasets.append(gl.cx_data)
-            for lang_short in []:
-                gl = g.langs[lang_short]
-                datasets.append(gl.c07_data)
                 
             # Train the second order models.
             for data in datasets:
@@ -579,10 +580,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(featureHashMod=10000000) # Speedup
             
             datasets = []
-            for lang_short in p.cx_lang_short_names:
+            for lang_short in cx_lang_subset:
                 gl = g.langs[lang_short]
                 datasets.append(gl.cx_data)
-            for lang_short in p.c07_lang_short_names:
+            for lang_short in c07_lang_subset:
                 gl = g.langs[lang_short]
                 datasets.append(gl.c07_data)
                 
