@@ -91,7 +91,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.set_incl_name("pruneByModel", False)
         g.defaults.set_incl_name("pruneModel", False)
         g.defaults.set_incl_name("prune_model_path", False)
-        g.defaults.set_incl_name("arbitrarySiblingFactors", False)
+        g.defaults.set_incl_name("siblingFactors", False)
         g.defaults.set_incl_name("headBigramFactors", False)
         g.defaults.set_incl_name("grandparentFactors", False)
         g.defaults.set_incl_name("dpSkipPunctuation", False)
@@ -111,31 +111,32 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False,
                                    bpUpdateOrder="SEQUENTIAL", bpSchedule="TREE_LIKE", bpMaxIterations=1)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, 
-                                                      arbitrarySiblingFactors=True, 
-                                                      headBigramFactors=True, 
+                                                      siblingFactors=True, 
+                                                      #headBigramFactors=True, 
                                                       tagger_parser="2nd-gra-asib-hb", 
                                                       bpMaxIterations=5, 
                                                       useMseForValue=True)
         g.second_grand_asib = g.first_order + SrlExpParams(grandparentFactors=True, 
-                                                      arbitrarySiblingFactors=True, 
-                                                      headBigramFactors=False, 
+                                                      siblingFactors=True, 
+                                                      #headBigramFactors=False, 
                                                       tagger_parser="2nd-gra-asib", 
                                                       bpMaxIterations=5, 
                                                       useMseForValue=True)
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, 
-                                                       arbitrarySiblingFactors=False,
-                                                       headBigramFactors=False,  
+                                                       siblingFactors=False,
+                                                       #headBigramFactors=False,  
                                                        tagger_parser="2nd-gra")
         g.second_grand_exact = g.second_grand + SrlExpParams(inference="DP")
         g.second_asib = g.second_order + SrlExpParams(grandparentFactors=False, 
-                                                     arbitrarySiblingFactors=True,
-                                                     headBigramFactors=False,  
+                                                     siblingFactors=True,
+                                                     #headBigramFactors=False,  
                                                      tagger_parser="2nd-asib")
         g.second_hb = g.second_order + SrlExpParams(grandparentFactors=False, 
-                                                     arbitrarySiblingFactors=False,
-                                                     headBigramFactors=True,  
+                                                     siblingFactors=False,
+                                                     #headBigramFactors=True,  
                                                      tagger_parser="2nd-hb")
-        g.unpruned_parsers = [g.first_order, g.second_order, g.second_grand_asib, g.second_asib, g.second_grand_exact, g.second_grand, g.second_hb]
+        #g.unpruned_parsers = [g.first_order, g.second_order, g.second_grand_asib, g.second_asib, g.second_grand_exact, g.second_grand, g.second_hb]
+        g.unpruned_parsers = [g.first_order, g.second_grand_asib, g.second_asib, g.second_grand_exact, g.second_grand]
         g.pruned_parsers = pruned_parsers(g.unpruned_parsers)
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
