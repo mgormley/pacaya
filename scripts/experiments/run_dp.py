@@ -578,6 +578,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-pruning":            
             '''Trains the pruning models for the CoNLL-X and CoNLL-2007 languages.'''
             exps = []
+            g.defaults.update(featureHashMod=10000000) # Speedup
+            
             datasets = []
             for lang_short in p.cx_lang_short_names:
                 gl = g.langs[lang_short]
