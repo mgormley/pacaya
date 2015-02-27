@@ -28,6 +28,8 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         public int featureHashMod = 10000000;
         @Opt(description = "Whether to use MST style word-pair features")
         public boolean useMstFeats = false;
+        @Opt(description = "Whether to use only the basic MST style word-pair features")
+        public boolean basicOnly = false;
         @Opt(description = "Whether to use Carerras style 2nd-order features")
         public boolean useCarerrasFeats = false;
         @Opt(description = "Whether to use coarse POS tag features (TurboParser and MST features)")
