@@ -44,7 +44,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-pruning",
                     "gobble-memory",
                     "dp-aware-langs",
-                    "dp-aware2",
+                    "dp-aware-en",
                     "dp-aware",
                     "dp-aware-small",
                     "dp-erma",
@@ -326,11 +326,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             root = RootStage()
 
-            g.defaults.update(pruneByDist=False) # TEMPORARY
-
             # Get the datasets.
             datasets = []
             for lang_short in p.cx_lang_short_names:
+                if lang_short == "en": continue          # SKIP PTB-YM since we already have the results.
                 gl = g.langs[lang_short]
                 datasets.append(gl.cx_data)
             for lang_short in ["it", "ca"]:
@@ -341,7 +340,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for data in datasets:
                 for trainer in [g.erma_mse, g.cll]:
                     for parser in pruned_parsers([g.first_order, g.second_grand_asib]):
-                        if parser.get("inference") == "DP" and trainer != g.cll:
+                        if parser.get("inference") == "DP" and (trainer != g.cll): # or bpMaxIterations != 1):
                             continue
                         if parser.get("tagger_parser").startswith("1st"):
                             bpMaxIterations = 1
@@ -370,11 +369,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(pipeline.dfs_stages(root))
             return root
          
-        elif self.expname == "dp-aware2":
+        elif self.expname == "dp-aware-en":
             '''Comparison of CLL and ERMA training with varying models and iterations.'''
             root = RootStage()
-
-            g.defaults.update(pruneByDist=False) # TEMPORARY
             
             # Get the datasets.
             datasets = []
@@ -390,7 +387,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for bpMaxIterations in [1, 2, 3, 4]:
                     for trainer in [g.erma_mse, g.cll]:
                         for parser in g.pruned_parsers:
-                            if parser.get("inference") == "DP" and trainer != g.cll:
+                            if parser.get("inference") == "DP" and (trainer != g.cll or bpMaxIterations != 1):
                                 continue
                             if parser.get("tagger_parser").startswith("1st") and bpMaxIterations != 1:
                                 continue
@@ -441,7 +438,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         gl = g.langs[lang_short]
                         pl = p.langs[lang_short]
                         for parser in g.pruned_parsers:
-                            if parser.get("inference") == "DP" and trainer != g.cll:
+                            if parser.get("inference") == "DP" and (trainer != g.cll or bpMaxIterations != 1):
                                 continue
                             if parser.get("tagger_parser").startswith("1st") and bpMaxIterations != 1:
                                 continue
