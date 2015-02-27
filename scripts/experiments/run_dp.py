@@ -166,7 +166,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       prune_model_path=os.path.join(models_dir, "1st_cx_"+lang_short, "model.binary.gz"))      
             if lang_short.startswith("en"):
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev, reduceTags=p.tag_map_en_ptb,
-                                           dpSkipPunctuation=True,
+                                           dpSkipPunctuation=True, useGoldSyntax=False,
                                            useMorphologicalFeats=False, useLemmaFeats=False)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10, reduceTags=p.cx_tag_maps[lang_short]) 
@@ -323,7 +323,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 pl = p.langs[lang_short]
                 data = gl.cx_data
                 data.update(propTrainAsDev=0) # TODO: Set to zero for final experiments.
-                exp = g.defaults + data + g.first_order
+                exp = g.defaults + data + g.first_order + g.basic_car_feats
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 prune_exps[lang_short] = exp
                 root.add_dependent(exp)
@@ -336,6 +336,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         pl = p.langs[lang_short]
                         for parser in g.pruned_parsers:
                             if parser.get("inference") == "DP" and trainer != g.cll:
+                                continue
+                            if parser == g.first_order and bpMaxIterations != 1:
                                 continue
                             data = gl.cx_data
                             data.update(pruneModel=StagePath(prune_exps[lang_short], "model.binary.gz"),
@@ -353,6 +355,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
                                 exp2.add_prereq(prune_exps[lang_short])
                                 exp2.add_prereq(exp)
+                                exp2.remove("modelOut") # Speedup.
                             else:
                                 exp.remove("modelOut") # Speedup.
                             
