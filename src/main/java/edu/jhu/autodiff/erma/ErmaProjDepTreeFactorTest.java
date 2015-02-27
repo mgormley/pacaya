@@ -391,11 +391,6 @@ public class ErmaProjDepTreeFactorTest {
         double Z = 4;
         // Check partition function.
         assertEquals(Z, bp.getPartition(), 1e-3);
-        for (Var v : fg.getVars()) {
-            double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
-            System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-            assertEquals(Z, partition, 1e-3);
-        }
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
         assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
@@ -448,13 +443,6 @@ public class ErmaProjDepTreeFactorTest {
         double Z = 2;
         // Check partition function.
         assertEquals(Z,  bp.getPartition(), 1e-3);
-        if (prm.normalizeMessages == false) {
-            for (Var v : fg.getVars()) {
-                double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
-                System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-                assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
-            }
-        }
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
         assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);

@@ -48,6 +48,7 @@ public class AbstractModuleTest {
     public interface Tensor2Factory extends TwoToOneFactory<Tensor, Tensor, Tensor> { }
 
     private static final List<Algebra> test2Algebras = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
+    //private static final List<RealAlgebra> test2Algebras = Lists.getList(Algebras.REAL_ALGEBRA);
     private static final List<Algebra> test3Algebras = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.SPLIT_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
     
     /** Evaluation of a module which takes one tensor modules as input. */

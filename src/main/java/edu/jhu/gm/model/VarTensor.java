@@ -143,6 +143,14 @@ public class VarTensor extends Tensor implements Serializable {
     	VarTensor newFactor = applyBinOp(this, f, new AlgebraLambda.DivBP());
         internalSet(newFactor);
     }
+    
+    /**
+     * this /= f
+     * indices matching 0 /= 0 are set to 0.
+     */
+    public void elemDivBP(VarTensor f) {
+        elemApplyBinOp(this, f, new AlgebraLambda.DivBP());
+    }
 
     /** This set method is used to internally update ALL the fields. */
     private void internalSet(VarTensor newFactor) {
@@ -203,6 +211,25 @@ public class VarTensor extends Tensor implements Serializable {
             assert(!iter1.hasNext());
             assert(!iter2.hasNext());
             return out;
+        }
+    }
+    
+    /**
+     * Applies the operation to each element of f1 and f2, which are assumed to be of the same size.
+     * The result is stored in f1.
+     * 
+     * @param f1 Input factor 1 and the output factor.
+     * @param f2 Input factor 2. 
+     * @param op The operation to apply.
+     */
+    private static void elemApplyBinOp(final VarTensor f1, final VarTensor f2, final AlgebraLambda.LambdaBinOp op) {
+        checkSameAlgebra(f1, f2);
+        Algebra s = f1.s;
+        if (f1.size() != f2.size()) {
+            throw new IllegalArgumentException("VarTensors are different sizes");
+        }
+        for (int c = 0; c < f1.values.length; c++) {
+            f1.values[c] = op.call(s, f1.values[c], f2.values[c]);
         }
     }
     

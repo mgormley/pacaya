@@ -15,6 +15,7 @@ public class PosTagDistancePrunerTest {
 
     @Test
     public void testAutoSents() {
+        // Checks that we get 100% oracle pruning accuracy when evaluating on our training data.
         AnnoSentenceCollection sents = getSents(3, 10, 10);
         System.out.println(sents);
         PosTagDistancePruner pruner = new PosTagDistancePruner();
@@ -29,9 +30,7 @@ public class PosTagDistancePrunerTest {
                     continue;
                 }
                 boolean pruned = sent.getDepEdgeMask().isPruned(p, child);
-                if (p == -1) {
-                    assertTrue(!pruned);
-                } else if (p == trueParent) {
+                if (p == trueParent) {
                     assertTrue(!pruned);
                 } else {
                     assertTrue(pruned);
@@ -125,6 +124,7 @@ public class PosTagDistancePrunerTest {
         System.out.println(sents1);
         System.out.println(sents2);
         
+        // Check that edges to or from an unknown tag (NEW_TAG) are NOT pruned. 
         assertTrue(!sent2.getDepEdgeMask().isPruned(0, 1));
         assertTrue(!sent2.getDepEdgeMask().isPruned(1, 0));
     }

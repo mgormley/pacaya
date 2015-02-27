@@ -61,11 +61,13 @@ public class DepParseSpeedTest {
      * gr,as,i4            s=701 n=16862 tot=  69.35 t0=16794.82 t1=2199.58 t2=3372400.00 t3=2782.51 t4=  74.11 t5=19493.64
      * (same no inference) s=701 n=16862 tot=1069.65 t0=16794.82 t1=2066.67 t2=Infinity t3=2557.56 t4=Infinity t5=Infinity
      * (same elemMultiply) s=701 n=16862 tot=  87.08 t0=15329.09 t1=2286.99 t2=2810333.33 t3=2695.76 t4=  94.69 t5=20791.62
+     * gr,as,i4,ta(elemMult) 701 n=16862 tot=  53.64 t0=10999.35 t1=2004.04 t2=Infinity t3= 332.98 t4=  66.70 t5=17294.36
+     * 
      */
     //@Test
     public void testSpeed() {
         FastMath.useLogAddTable = true;
-        boolean firstOrder = true;
+        boolean firstOrder = false;
         for (int trial = 0; trial < 2; trial++) {
             Timer t = new Timer();
             Timer t0 = new Timer();

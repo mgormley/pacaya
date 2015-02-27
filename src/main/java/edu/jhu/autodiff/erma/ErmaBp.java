@@ -70,9 +70,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
          * false can save memory. 
          */
         public boolean keepTape = true;
-
         /** Directory for dumping of beliefs at each iteration (debugging only). */
         public Path dumpDir = null;
+        /** Minimum number of neighbors for a variable to compute messages by dividing out from a cached belief. */
+        public int minVarNbsForCache = 3;
+        /** Minimum number of neighbors for a factor   to compute messages by dividing out from a cached belief. */
+        public int minFacNbsForCache = 4;
         
         public ErmaBpPrm() {
         }
@@ -254,14 +257,28 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Initialize Messages.
         this.msgs = new Messages[fg.getNumEdges()];
         for (int i=0; i<msgs.length; i++) {
-            // TODO: consider alternate initializations. For example, we could initialize to null.
             msgs[i] = new Messages(s, fg.getEdge(i), s.one());
         }
-        // Clear the variable and factor beliefs and their sums.
-        varBeliefs = null;
-        facBeliefs = null;
-        varBeliefsUnSum = null;
-        facBeliefsUnSum = null;
+        // Cache the variable beliefs.
+        varBeliefs = new VarTensor[fg.getNumVars()];
+        for (int v=0; v<varBeliefs.length; v++) {
+            varBeliefs[v] = calcVarBeliefs(fg.getVar(v));
+        }
+        // Cache the factor beliefs.
+        facBeliefs = new VarTensor[fg.getNumFactors()];
+        for (int a=0; a<facBeliefs.length; a++) {
+            Factor fac = fg.getFactor(a);
+            if (!(fac instanceof GlobalFactor)) {
+                // Note that this is used to cache the product of messages. It is not a factor belief.
+                //facBeliefs[a] = new VarTensor(s, fac.getVars(), s.one());
+                //FgNode node = fg.getFactorNode(fac.getId());
+                //getProductOfMessages(node, facBeliefs[a], null, null);
+                facBeliefs[a] = calcFactorBeliefs(fac);
+            }
+        }
+        // Initialize the normalizing constants. These are used when computing the final beliefs.
+        varBeliefsUnSum = new double[fg.getNumVars()];
+        facBeliefsUnSum = new double[fg.getNumFactors()];
         // Clear the adjoints of the messages and potentials.
         msgsAdj = null;
         potentialsAdj = null;
@@ -291,7 +308,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         //
         // Compute the product of all messages received by v* except for the
         // one from f*.
-        getProductOfMessages(edge.getParent(), msg, edge.getChild());
+        FgNode vn = edge.getParent();
+        FgNode fn = edge.getChild();
+        getCavityProductAtVar(vn, msg, fn);
     }
 
     private void forwardFactorToVar(FgEdge edge) {
@@ -309,7 +328,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Compute the product of all messages received by f* (each
         // of which will have a different domain) with the factor f* itself.
         // Exclude the message going out to the variable, v*.
-        getProductOfMessages(edge.getParent(), prod, edge.getChild());
+        getCavityProductAtFactor(edge.getParent(), prod, edge.getChild());
         
         // Marginalize over all the assignments to variables for f*, except
         // for v*.
@@ -339,6 +358,18 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         te.modOut = modOut;
     }
 
+    private void normalizeAndAddToTape(FgEdge edge, TapeEntry te) {
+        double msgSum = 0;
+        if (prm.normalizeMessages) {
+            msgSum = forwardNormalize(edge);
+        }
+        if (prm.keepTape) {
+            // The tape stores the old message, the normalization constant of the new message, and the edge.
+            te.msgs.add(new VarTensor(msgs[edge.getId()].message));
+            te.msgSums.add(msgSum);
+        }
+    }
+
     private double forwardNormalize(FgEdge edge) {
         VarTensor msg = msgs[edge.getId()].newMessage;
         assert (msg.getVars().size() == 1) && (msg.getVars().get(0) == edge.getVar());
@@ -348,16 +379,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
 
     private void forwardVarAndFacBeliefs() {
         // Cache the variable beliefs and their normalizing constants.
-        varBeliefs = new VarTensor[fg.getNumVars()];
-        varBeliefsUnSum = new double[fg.getNumVars()];
         for (int v=0; v<varBeliefs.length; v++) {
             VarTensor b = calcVarBeliefs(fg.getVar(v));
             varBeliefsUnSum[v] = b.normalize();
             varBeliefs[v] = b;
         }
         // Cache the factor beliefs and their normalizing constants.
-        facBeliefs = new VarTensor[fg.getNumFactors()];
-        facBeliefsUnSum = new double[fg.getNumFactors()];
         for (int a=0; a<facBeliefs.length; a++) {
             Factor fac = fg.getFactor(a);
             if (!(fac instanceof GlobalFactor)) {
@@ -399,6 +426,20 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             }
             sendCount.incrementAndGet();
         }
+
+        // Update the cached belief.
+        FgNode child = edge.getChild();
+        if (child.isVar() && child.getInEdges().size() >= prm.minVarNbsForCache) {
+            Var v = child.getVar();
+            varBeliefs[v.getId()].elemDivBP(ec.message);
+            varBeliefs[v.getId()].elemMultiply(ec.newMessage);            
+        } else if (child.isFactor() && child.getInEdges().size() >= prm.minFacNbsForCache){
+            Factor f = child.getFactor();
+            if (! (f instanceof GlobalFactor)) {
+                facBeliefs[f.getId()].divBP(ec.message);
+                facBeliefs[f.getId()].prod(ec.newMessage);
+            }
+        }
         
         // Send message: Just swap the pointers to the current message and the new message, so
         // that we don't have to create a new factor object.
@@ -406,10 +447,23 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
         assert !ec.message.containsBadValues() : "ec.message = " + ec.message;
-        
+                
         if (log.isTraceEnabled()) {
             log.trace("Message sent: " + ec.message);
         }
+        
+        // TODO: Remove check.
+        //        if (child.isVar() && child.getInEdges().size() >= prm.minVarNbsForCache) {
+        //            Var v = child.getVar();
+        //            VarTensor b = calcVarBeliefs(v);
+        //            if (!b.equals(varBeliefs[v.getId()], 1e-8)) {
+        //                log.debug("b != varBeliefs[v.getId()]");
+        //                log.debug("b: " + b);
+        //                log.debug("varBeliefs[var.getId()]: " + varBeliefs[v.getId()]);
+        //                log.debug("");
+        //                assert false;
+        //            }
+        //        }
     }
 
     /** Returns the "converged" residual for constant messages, and the actual residual otherwise. */
@@ -439,18 +493,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             }
         }
         return residual;
-    }
-
-    private void normalizeAndAddToTape(FgEdge edge, TapeEntry te) {
-        double msgSum = 0;
-        if (prm.normalizeMessages) {
-            msgSum = forwardNormalize(edge);
-        }
-        if (prm.keepTape) {
-            // The tape stores the old message, the normalization constant of the new message, and the edge.
-            te.msgs.add(new VarTensor(msgs[edge.getId()].message));
-            te.msgSums.add(msgSum);
-        }
     }
     
     /* ---------------------------- END: Forward Pass Methods --------------------- */
@@ -507,20 +549,20 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         Factor fac = fg.getFactor(facId);
         VarTensor prod = safeNewVarTensor(fac);
         prod.prod(facBeliefsAdj[facId]);
-        getProductOfMessages(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
+        getCavityProductAtFactor(fg.getFactorNode(facId), prod, fg.getVarNode(varId));
         msgsAdj[i].message = prod.getMarginal(new VarSet(edge.getVar()), false);
         logTraceMsgUpdate("initVarToFactorAdj", msgsAdj[i].message, edge);
     }
 
     private void initFactorToVarAdj(int i, VarTensor[] varBeliefsAdj, int varId, int facId) {
         msgsAdj[i].message = new VarTensor(varBeliefsAdj[varId]);
-        getProductOfMessages(fg.getVarNode(varId), msgsAdj[i].message, fg.getFactorNode(facId));
+        getCavityProductAtVar(fg.getVarNode(varId), msgsAdj[i].message, fg.getFactorNode(facId));
         logTraceMsgUpdate("initFactorToVarAdj", msgsAdj[i].message, fg.getEdge(i));
     }
 
     private void initPotentialsAdj(int a, VarTensor[] facBeliefsAdj) {
         VarTensor tmp = new VarTensor(facBeliefsAdj[a]);
-        getProductOfMessages(fg.getFactorNode(a), tmp, null);
+        getProductAtFactor(fg.getFactorNode(a), tmp);
         potentialsAdj[a].add(tmp);
         logTraceMsgUpdate("initPotentialsAdj", potentialsAdj[a], null);
         assert !potentialsAdj[a].containsNaN() : "potentialsAdj[a] = " + potentialsAdj[a];
@@ -549,7 +591,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             if (edgeBI != edgeIA.getOpposing()) {
                 VarTensor prod = new VarTensor(msgsAdj[i].newMessage);
                 // Get the product with all the incoming messages into the variable, excluding the factor from edge and edge2.
-                getProductOfMessages(edgeIA.getParent(), prod, edgeIA.getChild(), edgeBI.getParent());
+                getCavityProductAtVar(edgeIA.getParent(), prod, edgeIA.getChild(), edgeBI.getParent());
                 msgsAdj[edgeBI.getId()].message.add(prod);
                 // TODO: Above we could alternatively divide out the edgeBI contribution to a cached product.
                 logTraceMsgUpdate("backwardVarToFactor", msgsAdj[edgeBI.getId()].message, edgeBI);
@@ -565,7 +607,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         {
             if (potentialsAdj[facId] != null) {
                 VarTensor prod = new VarTensor(msgsAdj[i].newMessage);
-                getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild());
+                getCavityProductAtFactor(edgeAI.getParent(), prod, edgeAI.getChild());
                 // Skip this step when testing global factors.
                 potentialsAdj[facId].add(prod);
                 logTraceMsgUpdate("backwardFactorToVar", potentialsAdj[facId], null);
@@ -576,7 +618,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         for (FgEdge edgeJA : fg.getFactorNode(facId).getInEdges()) {
             if (edgeJA != edgeAI.getOpposing()) {
                 VarTensor prod = safeNewVarTensor(factor);
-                getProductOfMessages(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
+                getCavityProductAtFactor(edgeAI.getParent(), prod, edgeAI.getChild(), edgeJA.getParent());
                 prod.prod(msgsAdj[i].newMessage);
                 VarSet varJ = msgsAdj[edgeJA.getId()].message.getVars();
                 msgsAdj[edgeJA.getId()].message.add(prod.getMarginal(varJ, false));
@@ -641,6 +683,20 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Dequeue from tape.
         int i = edge.getId();
         
+        // Update the cached belief.
+        FgNode child = edge.getChild();
+        if (child.isVar() && child.getInEdges().size() >= prm.minVarNbsForCache) {
+            Var v = child.getVar();
+            varBeliefs[v.getId()].elemDivBP(msgs[i].message);
+            varBeliefs[v.getId()].elemMultiply(oldMsg);
+        } else if (child.isFactor() && child.getInEdges().size() >= prm.minFacNbsForCache){
+            Factor f = child.getFactor();
+            if (! (f instanceof GlobalFactor)) {
+                facBeliefs[f.getId()].divBP(msgs[i].message);
+                facBeliefs[f.getId()].prod(oldMsg);
+            }
+        }
+        
         // Send messages and adjoints in reverse.
         msgs[i].newMessage = msgs[i].message;       // The message at time (t+1)
         msgs[i].message = oldMsg;                   // The message at time (t)
@@ -661,6 +717,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         double dotProd = dist.getDotProduct(distAdj);       
         unormAdj.subtract(dotProd);
         unormAdj.divide(unormSum);
+        dist.multiply(unormSum);
         logTraceMsgUpdate("unnormalizeAdjInPlace", distAdj, null);
     }
     
@@ -712,8 +769,168 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         assert !msg.containsNaN() : "msg = " + msg + "\n" + "edge: " + edge;
     }
 
-    protected void getProductOfMessages(FgNode node, VarTensor prod, FgNode exclNode) {
-        getProductOfMessages(node, prod, exclNode, null);
+    protected void getProductAtFactor(FgNode facNode, VarTensor prod) {
+        getCavityProductAtFactor(facNode, prod, null, null);
+    }
+    
+    protected void getCavityProductAtFactor(FgNode facNode, VarTensor prod, FgNode exclNode) {
+        getCavityProductAtFactor(facNode, prod, exclNode, null);
+    }
+    
+    protected void getCavityProductAtFactor(FgNode facNode, VarTensor prod, FgNode exclNode1, FgNode exclNode2) {
+        // TODO: Remove this check.
+//        assert facNode.isFactor();
+//        VarTensor prod2 = new VarTensor(prod);
+//        // Standard message computation.
+//        getProductOfMessages(facNode, prod, exclNode1, exclNode2);
+//        if (facNode.getInEdges().size() >= prm.minFacNbsForCache) {
+//            // Compute message by dividing out from cached belief.
+//            Factor f = facNode.getFactor();
+//            prod2.prod(facBeliefs[f.getId()]);
+//            // TODO: Change the usage of this method so that it returns the product of the messages AND the factor.
+//            prod2.divBP(fm.getOutput().f[f.getId()]);
+//            for (FgEdge nbEdge : facNode.getInEdges()) {
+//                if (nbEdge.getParent() == exclNode1) {
+//                    prod2.divBP(msgs[nbEdge.getId()].message);
+//                }
+//                if (nbEdge.getParent() == exclNode2) {
+//                    prod2.divBP(msgs[nbEdge.getId()].message);
+//                }
+//            }
+//            // TODO: We should really skip the O(n) loop above and have direct lookups.
+//            //            if (exclNode1 != null) {
+//            //                prod.elemDivBP(msgs[exclNode1.]);
+//            //            } 
+//            //            if (exclNode2 != null) {
+//            //                
+//            //            }
+//
+//            if (!prod.equals(prod2, 1e-8)) {
+//                log.debug("prod1 != prod2");
+//                log.debug("prod1: " + prod);
+//                log.debug("prod2: " + prod2);
+//                log.debug("");
+//                assert false;
+//            }
+//        } else {
+//            
+//        }
+        
+        assert facNode.isFactor();
+        if (facNode.getInEdges().size() >= prm.minFacNbsForCache) {
+            // Compute message by dividing out from cached belief.
+            Factor f = facNode.getFactor();
+            prod.prod(facBeliefs[f.getId()]);
+            // TODO: Change the usage of this method so that it returns the product of the messages
+            // AND the factor.
+            prod.divBP(fm.getOutput().f[f.getId()]);
+            for (FgEdge nbEdge : facNode.getInEdges()) {
+                if (nbEdge.getParent() == exclNode1) {
+                    prod.divBP(msgs[nbEdge.getId()].message);
+                }
+                if (nbEdge.getParent() == exclNode2) {
+                    prod.divBP(msgs[nbEdge.getId()].message);
+                }
+            }
+            // TODO: We should really skip the O(n) loop above and have direct lookups.
+            //            if (exclNode1 != null) {
+            //                prod.elemDivBP(msgs[exclNode1.]);
+            //            } 
+            //            if (exclNode2 != null) {
+            //                
+            //            }
+        } else {
+            // Standard message computation.
+            getProductOfMessages(facNode, prod, exclNode1, exclNode2);
+        }
+    }
+    
+    protected void getCavityProductAtVar(FgNode varNode, VarTensor prod, FgNode exclNode) {
+        getCavityProductAtVar(varNode, prod, exclNode, null);
+    }
+    
+    protected void getCavityProductAtVar(FgNode varNode, VarTensor prod, FgNode exclNode1, FgNode exclNode2) {
+        // TODO: Remove this check.
+//        assert varNode.isVar();
+//        VarTensor prod2 = new VarTensor(prod);
+//        // Standard message computation.
+//        for (FgEdge nbEdge : varNode.getInEdges()) {
+//            if (nbEdge.getParent() == exclNode1 || nbEdge.getParent() == exclNode2) {
+//                // Don't include messages to these nodes.
+//                continue;
+//            }
+//            // Get message from neighbor to this node.
+//            VarTensor nbMsg = msgs[nbEdge.getId()].message;
+//            
+//            // Since the node is a variable, this is an element-wise product. 
+//            prod.elemMultiply(nbMsg);
+//        }
+//        if (varNode.getInEdges().size() >= prm.minVarNbsForCache) {
+//            // Compute message by dividing out from cached belief.
+//            Var v = varNode.getVar();
+//            prod2.elemMultiply(varBeliefs[v.getId()]);
+//            for (FgEdge nbEdge : varNode.getInEdges()) {
+//                if (nbEdge.getParent() == exclNode1) {
+//                    prod2.elemDivBP(msgs[nbEdge.getId()].message);
+//                }
+//                if (nbEdge.getParent() == exclNode2) {
+//                    prod2.elemDivBP(msgs[nbEdge.getId()].message);
+//                }
+//            }
+//            //            // TODO: 
+//            //            if (exclNode1 != null) {
+//            //                prod.elemDivBP(msgs[exclNode1.]);
+//            //            } 
+//            //            if (exclNode2 != null) {
+//            //                
+//            //            }
+//
+//            if (!prod.equals(prod2, 1e-8)){
+//                log.debug("prod1 != prod2");
+//                log.debug("prod1: " + prod);
+//                log.debug("prod2: " + prod2);
+//                log.debug("");
+//                assert false;
+//            }
+//        } else {
+//         
+//        }
+        
+        assert varNode.isVar();
+        if (varNode.getInEdges().size() >= prm.minVarNbsForCache) {
+            // Compute message by dividing out from cached belief.
+            Var v = varNode.getVar();
+            VarTensor cache = varBeliefs[v.getId()];
+            prod.elemMultiply(cache);
+            for (FgEdge nbEdge : varNode.getInEdges()) {
+                if (nbEdge.getParent() == exclNode1) {
+                    prod.elemDivBP(msgs[nbEdge.getId()].message);
+                }
+                if (nbEdge.getParent() == exclNode2) {
+                    prod.elemDivBP(msgs[nbEdge.getId()].message);
+                }
+            }
+            // TODO: We should really skip the O(n) loop above and have direct lookups.
+            //            if (exclNode1 != null) {
+            //                prod.elemDivBP(msgs[exclNode1.]);
+            //            } 
+            //            if (exclNode2 != null) {
+            //                
+            //            }
+        } else {
+            // Standard message computation.
+            for (FgEdge nbEdge : varNode.getInEdges()) {
+                if (nbEdge.getParent() == exclNode1 || nbEdge.getParent() == exclNode2) {
+                    // Don't include messages to these nodes.
+                    continue;
+                }
+                // Get message from neighbor to this node.
+                VarTensor nbMsg = msgs[nbEdge.getId()].message;
+                
+                // Since the node is a variable, this is an element-wise product. 
+                prod.elemMultiply(nbMsg);
+            }
+        }
     }
     
     /**
@@ -733,22 +950,16 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     protected void getProductOfMessages(FgNode node, VarTensor prod, FgNode exclNode1, FgNode exclNode2) {
         for (FgEdge nbEdge : node.getInEdges()) {
             if (nbEdge.getParent() == exclNode1 || nbEdge.getParent() == exclNode2) {
-                // Don't include the receiving variable.
+                // Don't include messages to these nodes.
                 continue;
             }
-            // Get message from neighbor to factor.
+            // Get message from neighbor to this node.
             VarTensor nbMsg = msgs[nbEdge.getId()].message;
             
             // If the node is a variable, this is an element-wise product. 
             // If the node is a factor, this an an outer product.
             prod.prod(nbMsg);
         }
-    }
-
-    /** Gets the product of messages (as in getProductOfMessages()) and then normalizes. */
-    protected void getProductOfMessagesNormalized(FgNode node, VarTensor prod, FgNode exclNode) {
-        getProductOfMessages(node, prod, exclNode);
-        prod.normalize();
     }
     
     protected VarTensor getVarBeliefs(int varId) {
@@ -780,7 +991,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         VarTensor prod = new VarTensor(s, new VarSet(var), s.one());
         // Compute the product of all messages sent to this variable.
         FgNode node = fg.getVarNode(var.getId());
-        getProductOfMessages(node, prod, null);
+        getProductOfMessages(node, prod, null, null);
         return prod;
     }
 
@@ -795,7 +1006,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         VarTensor prod = safeNewVarTensor(factor);
         // Compute the product of all messages sent to this factor.
         FgNode node = fg.getFactorNode(factor.getId());
-        getProductOfMessages(node, prod, null);
+        getProductOfMessages(node, prod, null, null);
         return prod;
     }
     
@@ -822,7 +1033,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                     }
                 }
                 
-                double nodePartition = getPartitionBeliefAtVarNode(node);
+                double nodePartition = varBeliefsUnSum[node.getVar().getId()];
                 partition = s.times(partition, nodePartition);
             }
             assert !s.isNaN(partition);
@@ -893,28 +1104,9 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         return bethe;
     }
 
-    /**
-     * FOR TESTING ONLY.
-     * Gets the partition function for the connected component containing the given node.
-     */
-    // TODO: This should be package private or protected. It is exposed for testing only.
-    public double getPartitionBeliefAtVarNode(FgNode node) {
-        // We just return the normalizing constant for the marginals of any variable.
-        if (!node.isVar()) {
-            throw new IllegalArgumentException("Node must be a variable node.");
-        }
-        Var var = node.getVar();
-        VarTensor prod = new VarTensor(s, new VarSet(var), s.one());
-        // Compute the product of all messages sent to this node.
-        getProductOfMessages(node, prod, null);
-        return prod.getSum();
-    }
-
     private void maybeWriteAllBeliefs(int iter) {
         if (prm.dumpDir != null) {
             try {
-                forwardVarAndFacBeliefs();
-
                 BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
                 writer.write("Iteration: " + iter + "\n");
                 writer.write("Messages:\n");
@@ -928,12 +1120,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
                 }
                 writer.write("Var marginals:\n");
                 for (Var v : fg.getVars()) {
-                    writer.write(this.getMarginals(v) + "\n");
+                    writer.write(calcVarBeliefs(v) + "\n");
                 }
                 writer.write("Factor marginals:\n");
                 for (Factor f : fg.getFactors()) {
                     if (! (f instanceof GlobalFactor)) {
-                        writer.write(this.getMarginals(f) + "\n");
+                        writer.write(calcFactorBeliefs(f) + "\n");
                     }
                 }
                 writer.write("Partition: " + this.getPartition());
