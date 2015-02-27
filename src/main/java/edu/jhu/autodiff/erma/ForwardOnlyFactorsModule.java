@@ -69,7 +69,26 @@ class ForwardOnlyFactorsModule extends AbstractModule<Factors> implements Module
     
     @Override
     public Factors getOutputAdj() {
-        throw new IllegalStateException("Operation not supported");
+        if (yAdj == null) {
+            yAdj = new Factors(y.s, facMods);
+            yAdj.f = new VarTensor[y.f.length];
+            for (int a = 0; a < y.f.length; a++) {
+                Module<?> fm = facMods.get(a);
+                if (fg.getFactor(a) instanceof GlobalFactor) {
+                    yAdj.f[a] = null;
+                } else {
+                    // Call getOutputAdj() only on regular factors.
+                    Object o = fm.getOutputAdj();
+                    if (o instanceof VarTensor) {
+                        yAdj.f[a] = (VarTensor) o;
+                        assert !yAdj.f[a].containsBadValues();
+                    } else {
+                        throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
+                    }
+                }
+            }
+        }
+        return yAdj;
     }
 
     @Override
