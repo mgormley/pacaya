@@ -11,8 +11,6 @@ import edu.jhu.util.semiring.Algebra;
 /** Struct for potential tables of a factor graph. */
 public class Factors extends MVecArray<VarTensor> implements MVec {
     
-    public VarTensor[] f;
-    public Algebra s;
     public List<Module<?>> facMods;
     
     public Factors(Algebra s, List<Module<?>> facMods) {
