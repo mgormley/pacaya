@@ -158,7 +158,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.mst_car_feats = SrlExpParams(feature_set="mst-car", useMstFeats=True, useCarerrasFeats=True, useCoarseTags=True)
         g.basic_car_feats = SrlExpParams(feature_set="basic-car", useMstFeats=True, useCarerrasFeats=True, useCoarseTags=True, basicOnly=True)
         
-        g.defaults += g.turbo_feats
+        g.defaults += g.mst_car_feats
         
         # Language specific parameters
         p.cx_langs_with_phead = ["bg", "en", "de", "es"]
