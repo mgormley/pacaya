@@ -19,7 +19,9 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
@@ -128,16 +130,7 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
-        ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 1;
-        prm.logDomain = logDomain;
-        prm.schedule = BpScheduleType.TREE_LIKE;
-        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        // Don't normalize the messages, so that the partition function is the
-        // same as in the brute force approach.
-        prm.normalizeMessages = false;
-        ErmaBp bp = new ErmaBp(fg, prm);
-        bp.run();
+        ErmaBp bp = runDefaultBpForAcyclic(logDomain, fg);
 
         assertEqualMarginals(fg, bf, bp);
     }
@@ -256,6 +249,14 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
+        ErmaBp bp = runDefaultBpForAcyclic(logDomain, fg);
+
+        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
+                    
+        assertEqualMarginals(fg, bf, bp);
+    }
+
+    protected ErmaBp runDefaultBpForAcyclic(boolean logDomain, FactorGraph fg) {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
         prm.logDomain = logDomain;
@@ -266,10 +267,7 @@ public class ErmaBpForwardTest {
         prm.normalizeMessages = false;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
-
-        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
-                    
-        assertEqualMarginals(fg, bf, bp);
+        return bp;
     }
     
     @Test
@@ -393,6 +391,32 @@ public class ErmaBpForwardTest {
         System.out.println(bp.isConverged());
         assertEqualMarginals(fg, bf, bp);
     }    
+    
+    @Test
+    public void testGlobalExplicitFactor() throws IOException {
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph();
+        
+        VarSet allVars = new VarSet(fg.getVars().toArray(new Var[0]));
+        ExplicitFactor gf = new GlobalExplicitFactor(allVars);
+        gf.setValue(0, 2);
+        gf.setValue(1, 3);
+        gf.setValue(2, 5);
+        gf.setValue(3, 7);
+        gf.setValue(4, 11);
+        gf.setValue(5, 15);
+        gf.setValue(6, 19);
+        gf.setValue(7, 23);
+        gf.convertRealToLog();
+        
+        fg.addFactor(gf);
+
+        Algebra s = Algebras.LOG_SEMIRING;
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+        bf.run();
+        ErmaBp bp = runDefaultBpForAcyclic(true, fg);
+        System.out.println(bp.isConverged());
+        assertEqualMarginals(fg, bf, bp);
+    }
 
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             ErmaBp bp) {

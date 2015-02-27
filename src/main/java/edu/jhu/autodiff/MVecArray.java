@@ -22,6 +22,7 @@ public class MVecArray<Y extends MVec> implements MVec {
 
     public MVecArray(Y[] facBeliefs) {
         this.f = facBeliefs;
+        this.s = f[0].getAlgebra();
     }
 
     public void fill(double val) {
