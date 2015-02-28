@@ -142,8 +142,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
         # Trainers
-        g.erma_dp       = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=10, dpEndTemp=.1, dpAnnealMse=True, trainProjectivize=False)
-        g.erma_dp_nomse = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=100, dpEndTemp=.01, dpAnnealMse=False, trainProjectivize=False)
+        g.erma_dp       = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=0.1, dpEndTemp=0.0001, dpUseLogScale=False, dpAnnealMse=True, trainProjectivize=False)
+        g.erma_dp_nomse = SrlExpParams(trainer="ERMA", dpLoss="DP_DECODE_LOSS", dpStartTemp=0.1, dpEndTemp=0.0001, dpUseLogScale=False, dpAnnealMse=False, trainProjectivize=False)
         g.erma_mse      = SrlExpParams(trainer="ERMA", dpLoss="MSE", trainProjectivize=False)
         g.erma_er       = SrlExpParams(trainer="ERMA", dpLoss="EXPECTED_RECALL", trainProjectivize=False)
         g.cll           = SrlExpParams(trainer="CLL", trainProjectivize=True)
@@ -399,22 +399,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         else:
                             bpMaxIterations = 4
                         data.update(pruneModel=data.get("prune_model_path"),
-                                    propTrainAsDev=0.0)  # TODO: Set to zero for final experiments.
+                                    propTrainAsDev=0.1) # USING DEV DATA.
                         exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exp.add_prereq(root)
-                        if parser in [g.second_order, g.second_grand, g.second_asib]:
-                            get_oome_stages(exp) # These are auto-added as dependents.
-                        if trainer != g.cll:
-                            if parser in [g.second_order, g.second_grand, g.second_asib]:
-                                raise Exception("Unable to specify which experiment directory will contain the model.")
-                            exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
-                            exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
-                            exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
-                            exp2.add_prereq(exp)
-                            exp2.remove("modelOut") # Speedup.
-                        else:
-                            exp.remove("modelOut") # Speedup.
+
+                        exp2 = g.defaults + data + parser + g.erma_dp_nomse + SrlExpParams(bpMaxIterations=bpMaxIterations)
+                        exp2.update(modelIn=StagePath(exp, "model.binary.gz"))
+                        exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
+                        exp2.add_prereq(exp)
+                        exp2.remove("modelOut") # Speedup.
+                        if trainer == g.cll: exp2.update(group="initCLL")
+                        else: exp2.update(group="initMSE")
                             
             if self.fast: root.dependents[0].dependents = root.dependents[0].dependents[:2]
             scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
