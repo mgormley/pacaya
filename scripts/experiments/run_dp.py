@@ -333,14 +333,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
             # Get the datasets.
             datasets = []
-            for lang_short in ["tr"]:
+            for lang_short in ["tr", "sl"]:
                 gl = g.langs[lang_short]
                 datasets.append(gl.cx_data)
                 
             # Train the second order models.
             for data in datasets:
                 for trainer in [g.erma_mse]: #, #g.cll]:
-                    for parser in pruned_parsers([g.first_order, g.second_grand_asib]):
+                    for parser in pruned_parsers([g.first_order]): #, g.second_grand_asib]):
                         if parser.get("tagger_parser").startswith("1st"):
                             bpMaxIterations = 1
                         else:
@@ -354,8 +354,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         if trainer != g.cll:
                             # TUNE PARAMETERS HERE:
                             pairs = []
-                            for s in [10000, 1000, 100, 10, 1, 0.1]:
-                                for e in [10, 1, 0.1, 0.01]:
+                            for s in [0.1, 0.01, 0.001]:
+                                for e in [0.1, 0.01, 0.001, 0.0001, 0.00001]:
                                     if s >= e:
                                         pairs.append((s,e))
                             for dpStartTemp, dpEndTemp in pairs:
@@ -429,8 +429,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             datasets = []
             for lang_short in ["en"]:
                 gl = g.langs[lang_short]
+                # Trying the pruning model from develop branch.
+                models_dir = os.path.join(self.root_dir, "exp", "models", "dp-pruning")
+                gl.cx_data.update(prune_model_path=os.path.join(models_dir, "1st_cx_"+lang_short, "model.binary.gz"))
                 datasets.append(gl.cx_data)
-                
+
             # Train the second order models.
             for data in datasets:
                 for bpMaxIterations in [1, 2, 3, 4]:
