@@ -111,6 +111,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "ace-pm13",
+                    "ace-domains",
                     "ace-zh",
                     "ace-subtypes",
                     "ace-params",
@@ -402,6 +403,34 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                       hyperparam_keys=",".join(list(experiment_runner.get_all_keys(hyperparams))+['modelIn']),
                                       argmax_key='devRelF1')
             hypmax.add_prereqs(root.dependents)
+            return root
+        
+        if self.expname == "ace-domains":
+            '''Train on nw, test on each of the other domains.
+            '''
+            root = RootStage()
+            defaults += eval_types13
+            defaults += cbow_nyt11_en
+            defaults += feats_zhou
+                        
+            # Train on NW.
+            train = get_annotation_as_train(ace05_nw)
+            dev = ReExpParams(propTrainAsDev=0.2)
+            test = ReExpParams()
+            exp_nw = defaults + train + dev + test
+            root.add_dependent(exp_nw)
+
+            # Test on each other domain.
+            train = ReExpParams(modelIn=StagePath(exp_nw, exp_nw.get("modelOut")), work_mem_megs=5000)
+            for data in [ace05_bc, ace05_bn, ace05_cts, ace05_un, ace05_wl]:
+                test = get_annotation_as_test(data)
+                exp = defaults + train + test
+                exp_nw.add_dependent(exp)
+
+            # Scrape results.
+            scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(exp_nw.dependents)
+            scrape.add_prereq(exp_nw)
             return root
         
         elif self.expname == "ace-zh":
