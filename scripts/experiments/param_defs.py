@@ -86,7 +86,7 @@ class ParamDefinitions():
         g.defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         g.defaults.update(seed=random.getrandbits(63))
         if self.queue:
-            threads = 7
+            threads = 6
         elif self.big_machine:
             threads = 2
         else:
@@ -418,9 +418,6 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*1024
             elif exp.get("predAts") == "DEP_TREE":
                 base_work_mem_megs = 5 * 1000
-                is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
-                if is_higher_order: 
-                    base_work_mem_megs = 10*1000
             else:
                 if exp.get("useProjDepTreeFactor"):
                     base_work_mem_megs = 20 * 1000
