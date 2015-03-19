@@ -1,6 +1,7 @@
 package edu.jhu.nlp.relations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,37 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 
 public class RelationMungerTest {
+
+    @Test
+    public void testAddNePairsOnly() throws Exception {
+        AnnoSentence sent =  getSentWithRelationsAndNer();
+        sent.removeAt(AT.NE_PAIRS);
+        sent.removeAt(AT.RELATIONS);
+        sent.removeAt(AT.REL_LABELS);
         
+        // Convert NER to NE_PAIRS
+        RelationMungerPrm prm = new RelationMungerPrm();
+        prm.useRelationSubtype = true;
+        prm.predictArgRoles = true;
+        RelationMunger munger = new RelationMunger(prm);
+        RelationDataPreproc pre = munger.getDataPreproc(); 
+        pre.addNePairsAndMaybeRelLabels(sent);
+       
+        List<Pair<NerMention, NerMention>> nePairs = sent.getNePairs();
+        NerMentions ner = sent.getNamedEntities();
+        System.out.println(nePairs);
+        assertEquals(3, nePairs.size());
+        assertEquals(ner.get(0), nePairs.get(0).get1());
+        assertEquals(ner.get(1), nePairs.get(0).get2());
+        assertEquals(ner.get(0), nePairs.get(1).get1());
+        assertEquals(ner.get(2), nePairs.get(1).get2());
+        assertEquals(ner.get(1), nePairs.get(2).get1());
+        assertEquals(ner.get(2), nePairs.get(2).get2());
+        
+        // Check the conversion.
+        assertNull(sent.getRelLabels());
+    }
+    
     @Test
     public void testAddNePairsAndRelLabels() throws Exception {
         AnnoSentence sent =  getSentWithRelationsAndNer();
@@ -36,17 +67,20 @@ public class RelationMungerTest {
         prm.predictArgRoles = true;
         RelationMunger munger = new RelationMunger(prm);
         RelationDataPreproc pre = munger.getDataPreproc(); 
-        pre.addNePairsAndRelLabels(sent);
+        pre.addNePairsAndMaybeRelLabels(sent);
        
         List<Pair<NerMention, NerMention>> nePairs = sent.getNePairs();
         NerMentions ner = sent.getNamedEntities();
         System.out.println(nePairs);
+        assertEquals(4, nePairs.size());
         assertEquals(ner.get(1), nePairs.get(0).get1());
         assertEquals(ner.get(2), nePairs.get(0).get2());
         assertEquals(ner.get(0), nePairs.get(1).get1());
         assertEquals(ner.get(1), nePairs.get(1).get2());
         assertEquals(ner.get(0), nePairs.get(2).get1());
         assertEquals(ner.get(0), nePairs.get(2).get2());
+        assertEquals(ner.get(0), nePairs.get(3).get1());
+        assertEquals(ner.get(2), nePairs.get(3).get2());
         
         // Check the conversion.
         List<String> relLabels = sent.getRelLabels();

@@ -2,6 +2,7 @@ package edu.jhu.nlp.data.simple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import edu.jhu.nlp.data.DepEdgeMask;
@@ -143,7 +144,7 @@ public class AnnoSentence {
         }
     }
 
-    public void removeAts(List<AT> removeAts) {
+    public void removeAts(Collection<AT> removeAts) {
         for (AT at : removeAts) {
             removeAt(at);
         }

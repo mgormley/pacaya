@@ -86,13 +86,11 @@ import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.nlp.relations.RelObsFe;
 import edu.jhu.nlp.relations.RelObsFe.RelObsFePrm;
 import edu.jhu.nlp.relations.RelationMunger;
 import edu.jhu.nlp.relations.RelationMunger.RelationDataPostproc;
 import edu.jhu.nlp.relations.RelationMunger.RelationDataPreproc;
 import edu.jhu.nlp.relations.RelationMunger.RelationMungerPrm;
-import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
@@ -109,7 +107,7 @@ import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 import edu.jhu.util.files.Files;
 import edu.jhu.util.report.Reporter;
 import edu.jhu.util.report.ReporterManager;
@@ -485,7 +483,7 @@ public class JointNlpRunner {
                 // Don't predict SRL predicate position in the main jointAnno below.
                 prm.buPrm.fgPrm.srlPrm.predictPredPos = false;
                 prm.buPrm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-            }           
+            }
             if (jointModel) {
                 // Various NLP annotations.
                 anno.add(jointAnno);
@@ -857,7 +855,7 @@ public class JointNlpRunner {
         
         // TODO: add options for other loss functions.
         if (prm.trainer == Trainer.ERMA && 
-                CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
+                CorpusHandler.getPredAts().equals(Sets.getSet(AT.DEP_TREE))) {
             if (dpLoss == ErmaLoss.DP_DECODE_LOSS) {
                 DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
                 lossPrm.annealMse = dpAnnealMse;
@@ -922,7 +920,7 @@ public class JointNlpRunner {
             }
             return bpPrm;
         } else if (inference == Inference.DP) {
-            if (CorpusHandler.getPredAts().size() == 1 && CorpusHandler.getPredAts().get(0) == AT.DEP_TREE
+            if (CorpusHandler.getPredAts().equals(Sets.getSet(AT.DEP_TREE))
                     && grandparentFactors && !arbitrarySiblingFactors && !headBigramFactors) { 
                 return new O2AllGraFgInferencerFactory(algebra.getAlgebra());
             } else {

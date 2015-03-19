@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,15 +28,23 @@ import edu.jhu.hlt.concrete.SituationMention;
 import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.Tokenization;
+import edu.jhu.hlt.concrete.UUID;
+import edu.jhu.hlt.concrete.communications.SuperCommunication;
 import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
 import edu.jhu.hlt.concrete.util.ConcreteException;
 import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
+import edu.jhu.nlp.data.NerMention;
+import edu.jhu.nlp.data.NerMentions;
+import edu.jhu.nlp.data.RelationMention;
+import edu.jhu.nlp.data.RelationMentions;
+import edu.jhu.nlp.data.Span;
 import edu.jhu.nlp.data.conll.SrlGraph;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.nlp.data.conll.SrlGraph.SrlPred;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.prim.tuple.Pair;
 
 /**
  * Writer of Concrete files from {@link AnnoSentence}s.
@@ -91,6 +101,8 @@ public class ConcreteWriter {
 
     public static final String DEP_PARSE_TOOL = "Pacaya Dependency Parser";
     public static final String SRL_TOOL = "Pacaya Semantic Role Labeler (SRL)";
+    private static final String REL_TOOL = "Pacaya Relation Extractor";
+    private static final String NER_TOOL = "Pacaya Named Entity Recognizer (NER)";
     
     private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
     
@@ -107,10 +119,11 @@ public class ConcreteWriter {
         if (out.getName().endsWith(".zip")) {
             throw new RuntimeException("Zip file output not yet supported for Concrete");
         } else {
+            if (comms.size() == 0) {
+                throw new RuntimeException("No Communication in sourceSents field.");
+            }
             if (comms.size() > 1) {
                 throw new RuntimeException("Multiple Communications in input cannot be written to a single Communication as output.");
-            } else if (comms.size() == 0) {
-                throw new RuntimeException("No Communication in sourceSents field.");
             }
             Communication comm = comms.get(0);
             comm = comm.deepCopy();
@@ -171,10 +184,10 @@ public class ConcreteWriter {
         }
         DependencyParse p = new DependencyParse();
         p.setUuid(uuidFactory.getConcreteUUID());
-        AnnotationMetadata metadata = new AnnotationMetadata();
-        metadata.setTool(DEP_PARSE_TOOL);
-        metadata.setTimestamp(timestamp);
-        p.setMetadata(metadata);
+        AnnotationMetadata meta = new AnnotationMetadata();
+        meta.setTool(DEP_PARSE_TOOL);
+        meta.setTimestamp(timestamp);
+        p.setMetadata(meta);
         p.setDependencyList(new ArrayList<Dependency>());        
         for(int i=0; i<parents.length; i++) {
             if (parents[i] == -2) { continue; }
@@ -198,7 +211,6 @@ public class ConcreteWriter {
         if (!sents.someHaveAt(AT.SRL)) { return; }
         
         AnnotationMetadata meta = new AnnotationMetadata();
-        meta = new AnnotationMetadata();
         meta.setTool(SRL_TOOL);
         meta.setTimestamp(timestamp);
         
@@ -292,11 +304,118 @@ public class ConcreteWriter {
     }
 
     private void addNerMentionsAndRelations(AnnoSentenceCollection sents, Communication comm) {
-        //if (!sents.someHaveAt(AT.REL_LABELS)) { return; } 
-        // TODO Auto-generated method stub
-        //throw new RuntimeException();
+        // We require NER if we're adding it or not.
+        if (!sents.someHaveAt(AT.NER)) { return; }
+        // One map per sentence.
+        List<Map<NerMention, EntityMention>> aem2cem = new ArrayList<>();
+        if (prm.addNerMentions) {
+            // 1.a. If we are adding NerMentions, convert the NerMentions to
+            // EntityMentions (storing the below mapping along the
+            // way).
+            List<EntityMention> cEms = new ArrayList<>(); 
+            List<Tokenization> ts = getTokenizationsCorrespondingTo(sents, comm);
+            for(int i=0; i<sents.size(); i++) {
+                Tokenization cSent = ts.get(i);
+                AnnoSentence aSent = sents.get(i);
+                Map<NerMention, EntityMention> a2cForSent = new HashMap<>();
+                NerMentions aEms = aSent.getNamedEntities();
+                if (aEms != null) {
+                    for (NerMention aEm : aEms) {                    
+                        TokenRefSequence cSpan = new TokenRefSequence();
+                        cSpan.setTokenIndexList(toIntegerList(aEm.getSpan()));
+                        cSpan.setTokenizationId(cSent.getUuid());
+                        EntityMention cEm = new EntityMention();
+                        cEm.setUuid(uuidFactory.getConcreteUUID());
+                        cEm.setTokens(cSpan);
+                        String type = aEm.getEntityType();
+                        if (aEm.getEntitySubType() != null) {
+                            type += ":" + aEm.getEntitySubType();
+                        }
+                        cEm.setEntityType(type);
+                        if (aEm.getPhraseType() != null) {
+                            cEm.setPhraseType(aEm.getPhraseType());
+                        }
+                        a2cForSent.put(aEm, cEm);
+                        cEms.add(cEm);
+                    }
+                }
+                aem2cem.add(a2cForSent);
+            }
+            AnnotationMetadata cMeta = new AnnotationMetadata();
+            cMeta.setTool(NER_TOOL);
+            cMeta.setTimestamp(timestamp);
+            EntityMentionSet cEmSet = new EntityMentionSet();
+            cEmSet.setUuid(uuidFactory.getConcreteUUID());
+            cEmSet.setMetadata(cMeta);
+            cEmSet.setMentionList(cEms);
+        } else {
+            assert comm.getEntityMentionSetListSize() == 1;
+            // 1.b. Create a mapping from NerMention's to EntityMentions (these will be the existing
+            // EntityMentions that we read in.)
+            SuperCommunication cSupComm = new SuperCommunication(comm);
+            Map<UUID, EntityMention> id2cem = cSupComm.generateEntityMentionIdToEntityMentionMap();
+            for(int i=0; i<sents.size(); i++) {
+                Map<NerMention, EntityMention> a2cForSent = new HashMap<>();
+                AnnoSentence aSent = sents.get(i);
+                for (NerMention aEm : aSent.getNamedEntities()) {
+                    EntityMention cEm = id2cem.get(new UUID(aEm.getId()));
+                    a2cForSent.put(aEm, cEm);
+                }
+                aem2cem.add(a2cForSent);
+            }
+        }
+        
+        if (prm.addRelations) {
+            if (!sents.someHaveAt(AT.RELATIONS)) { return; }
+            // 2. Convert AnnoSentence.getRelations() to Concrete's
+            // SituationMentions using the above mapping.
+            List<SituationMention> cRels = new ArrayList<>();
+            for(int i=0; i<sents.size(); i++) {
+                AnnoSentence s = sents.get(i);
+                Map<NerMention, EntityMention> a2cForSent = aem2cem.get(i);
+                RelationMentions aRels = s.getRelations();
+                if (aRels != null) {
+                    for (RelationMention aRel : aRels) {
+                        List<MentionArgument> cArgs = new ArrayList<>();
+                        for (Pair<String, NerMention> aArg : aRel.getNerOrderedArgs()) {
+                            MentionArgument cArg = new MentionArgument();
+                            cArg.setRole(aArg.get1());
+                            cArg.setEntityMentionId(a2cForSent.get(aArg.get2()).getUuid());
+                            cArgs.add(cArg);
+                        }
+                        SituationMention cRel = new SituationMention();
+                        cRel.setUuid(uuidFactory.getConcreteUUID());
+                        cRel.setArgumentList(cArgs);
+                        String relation = aRel.getType();
+                        if (aRel.getSubType() != null) {
+                            relation += ":" + aRel.getSubType();
+                        }
+                        cRel.setSituationKind(relation);
+                        cRel.setSituationType("STATE");
+                        cRels.add(cRel);
+                    }
+                }
+            }
+            AnnotationMetadata cMeta = new AnnotationMetadata();
+            cMeta.setTool(REL_TOOL);
+            cMeta.setTimestamp(timestamp);
+            SituationMentionSet cRelSet = new SituationMentionSet();
+            cRelSet.setUuid(uuidFactory.getConcreteUUID());
+            cRelSet.setMetadata(cMeta);
+            cRelSet.setMentionList(cRels);
+            comm.addToSituationMentionSetList(cRelSet);
+        }
     }
     
+    /** Converts a {@link Span} to a list of integers. */
+    private static List<Integer> toIntegerList(Span span) {
+        List<Integer> ids = new ArrayList<>();
+        for (int i=span.start(); i<span.end(); i++) {
+            ids.add(i);
+        }
+        return ids;
+    }
+
     private List<Tokenization> getTokenizationsCorrespondingTo(AnnoSentenceCollection sentences, Communication from) {
         List<Tokenization> ts = new ArrayList<Tokenization>();
         for(Section s : from.getSectionList()) {

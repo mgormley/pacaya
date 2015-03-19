@@ -131,7 +131,7 @@ public class RelationMunger implements Serializable {
                     shortenEntityMentions(aSent);
                 }
                 // Add the named entity pairs.
-                addNePairsAndRelLabels(aSent);
+                addNePairsAndMaybeRelLabels(aSent);
             }
             if (prm.makeRelSingletons) {
                 AnnoSentenceCollection tmpSents = getSingletons(aSents);
@@ -150,27 +150,42 @@ public class RelationMunger implements Serializable {
             aSent.getNamedEntities().sort();
         }
         
-        void addNePairsAndRelLabels(AnnoSentence sent) {
+        void addNePairsAndMaybeRelLabels(AnnoSentence sent) {
+            addNePairs(sent);
+            if (sent.hasAt(AT.RELATIONS)) {
+                addRelLabels(sent);
+            }
+        }
+
+        protected void addNePairs(AnnoSentence sent) {
             if (sent.getNamedEntities() == null) { throw new RuntimeException("Missing named entities"); }
-            if (sent.getRelations() == null) { throw new RuntimeException("Missing relations"); }
-            List<Pair<NerMention,NerMention>> nePairs = new ArrayList<>();
-            List<String> relLabels = new ArrayList<>();
-            
+
             NerMentions nes = sent.getNamedEntities();
             RelationMentions rels = sent.getRelations();
-            // Add positive instances.
-            // 
-            // Note: we require gold instances here since, on the ACE '05 data, there are 28 relations
-            // which appear in the gold data but wouldn't be added just by iterating over all pairs 
-            // of named entities as below. These include relations between an entity and itself, and cases
-            // where the original training data contains multiple copies of the same relation.
-            for (RelationMention rm : rels) {
-                List<Pair<String, NerMention>> argsOrd = rm.getNerOrderedArgs();
-                NerMention ne1 = argsOrd.get(0).get2();
-                NerMention ne2 = argsOrd.get(1).get2();
-                nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
-                String relation = getRelation(rels, ne1, ne2);
-                relLabels.add(relation);
+            
+            if (prm.removeEntityTypes) {
+                for (NerMention ne : nes) {
+                    ne.setEntityType(null);
+                    ne.setEntitySubType(null);
+                }
+            }
+
+            // Add pairs of named entities.
+            List<Pair<NerMention,NerMention>> nePairs = new ArrayList<>();
+            
+            if (rels != null) {
+                // Add positive instances.
+                // 
+                // Note: we require gold instances here since, on the ACE '05 data, there are 28 relations
+                // which appear in the gold data but wouldn't be added just by iterating over all pairs 
+                // of named entities as below. These include relations between an entity and itself, and cases
+                // where the original training data contains multiple copies of the same relation.
+                for (RelationMention rm : rels) {
+                    List<Pair<String, NerMention>> argsOrd = rm.getNerOrderedArgs();
+                    NerMention ne1 = argsOrd.get(0).get2();
+                    NerMention ne2 = argsOrd.get(1).get2();
+                    nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
+                }
             }
             // Add negative instances. 
             //
@@ -179,27 +194,35 @@ public class RelationMunger implements Serializable {
             for (int i = 0; i < nes.size(); i++) {
                 NerMention ne1 = nes.get(i);
                 for (int j = i + 1; j < nes.size(); j++) {
-                    NerMention ne2 = nes.get(j);
-                    
+                    NerMention ne2 = nes.get(j);                    
                     int numMentsBtwn = RelObsFe.getNumBtwn(sent, ne1, ne2);
-                    if (numMentsBtwn <= prm.maxInterveningEntities) {                
-                        String relation = getRelation(rels, ne1, ne2);
-                        if (getNoRelationLabel().equals(relation)) {
+                    if (numMentsBtwn <= prm.maxInterveningEntities) {   
+                        if (rels != null) {
+                            // Only add if negative example, since we already added positive examples.
+                            String relation = getRelation(rels, ne1, ne2);
+                            if (getNoRelationLabel().equals(relation)) {
+                                nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
+                            }
+                        } else {
+                            // Add all examples.
                             nePairs.add(new Pair<NerMention,NerMention>(ne1, ne2));
-                            relLabels.add(relation);
                         }
                     }
                 }
             }
             sent.setNePairs(nePairs);
-            sent.setRelLabels(relLabels);
-            
-            if (prm.removeEntityTypes) {
-                for (NerMention ne : nes) {
-                    ne.setEntityType(null);
-                    ne.setEntitySubType(null);
-                }
+        }
+
+        protected void addRelLabels(AnnoSentence sent) {
+            // Add a relation label for each pair.
+            if (sent.getRelations() == null) { throw new RuntimeException("Missing relations"); }
+            RelationMentions rels = sent.getRelations();
+            List<String> relLabels = new ArrayList<>();
+            for (Pair<NerMention,NerMention> pair : sent.getNePairs()) {
+                String relation = getRelation(rels, pair.get1(), pair.get2());
+                relLabels.add(relation);
             }
+            sent.setRelLabels(relLabels);
         }
         
         AnnoSentenceCollection getSingletons(AnnoSentenceCollection sents) {
@@ -293,7 +316,7 @@ public class RelationMunger implements Serializable {
         /**
          * Creates and adds the relations {@link RelationMentions} to the AnnoSentence from the nePairs and relLabels. 
          * 
-         * This reverses the work of {@link #addNePairsAndRelLabels(AnnoSentence)}.
+         * This reverses the work of {@link #addNePairsAndMaybeRelLabels(AnnoSentence)}.
          */
         void addRelationsFromRelLabelsAndNePairs(AnnoSentence sent) {
             if (!sent.hasAt(AT.REL_LABELS)) { throw new IllegalStateException("Missing relation mentions"); }

@@ -7,6 +7,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.nlp.Trainable;
@@ -86,7 +88,7 @@ public class SrlFeatureSelection implements Annotator, Trainable {
     }
 
     private static void removeAts(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
-        List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
+        Set<AT> ats = Sets.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
         if (JointNlpRunner.brownClusters == null) {
             // Filter out the Brown cluster features.
             log.warn("Filtering out Brown cluster features.");

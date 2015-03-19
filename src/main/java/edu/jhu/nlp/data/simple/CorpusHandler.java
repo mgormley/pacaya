@@ -2,13 +2,15 @@ package edu.jhu.nlp.data.simple;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
@@ -17,7 +19,6 @@ import edu.jhu.nlp.depparse.Projectivizer;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.Lists;
 
 public class CorpusHandler {
     private static final Logger log = LoggerFactory.getLogger(CorpusHandler.class);
@@ -385,31 +386,31 @@ public class CorpusHandler {
     }
     
     /** Gets predicated annotations (included only in the gold data). */
-    public static List<AT> getPredAts() {
+    public static Set<AT> getPredAts() {
         return getAts(predAts);
     }
 
     /** Gets latent annotations (included only in the gold data). */
-    public static List<AT> getLatAts() {
+    public static Set<AT> getLatAts() {
         return getAts(latAts);
     }
 
     /** Gets the annotations removed from both gold and input data. */
-    public static List<AT> getRemoveAts() {
+    public static Set<AT> getRemoveAts() {
         return getAts(removeAts);
     }
 
     /** Gets predicated and latent annotations (included only in the gold data). */
-    public static List<AT> getGoldOnlyAts() {
-        return Lists.union(getPredAts(), getLatAts());
+    public static Set<AT> getGoldOnlyAts() {
+        return Sets.union(getPredAts(), getLatAts());
     }
     
-    public static List<AT> getAts(String atsStr) {
+    public static Set<AT> getAts(String atsStr) {
         if (atsStr == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }       
         String[] splits = atsStr.split(",");
-        ArrayList<AT> ats = new ArrayList<AT>();
+        HashSet<AT> ats = new HashSet<>();
         for (String s : splits) {
             ats.add(AT.valueOf(s));
         }

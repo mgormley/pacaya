@@ -25,7 +25,7 @@ import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
-from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory
+from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory, AnnoPipelineRunner
 from hyperparams import *
 
 class ReExpParams(experiment_runner.JavaExpParams):
@@ -117,7 +117,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "ace-params",
                     "ace-lc",
                     "ace-opt",
-                    "acl-feats",
+                    "ace-feats",
+                    "ace-agiga2",
                     )
     
     def __init__(self, options):
@@ -405,7 +406,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             hypmax.add_prereqs(root.dependents)
             return root
         
-        if self.expname == "ace-domains":
+        elif self.expname == "ace-domains":
             '''Train on nw, test on each of the other domains.
             '''
             root = RootStage()
@@ -606,6 +607,46 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Scrape results.
             scrape = ScrapeAce(tsv_file="results.data", csv_file="results.csv")
             scrape.add_prereqs(root.dependents)
+            return root
+        
+        elif self.expname == "ace-agiga2":
+            '''Trains an ACE 2005 model for relations on Annotated Gigaword 2.0'''
+            root = RootStage()            
+            defaults += eval_types13
+            defaults += cbow_nyt11_en
+            defaults += feats_zhou_htl
+            defaults.update(makeRelSingletons=False,
+                            predAts="RELATIONS,REL_LABELS",
+                            inference="BP") # Since we aren't using singletons.
+            defaults.set_incl_name("testPredOut", False)
+
+            # Train on all domains.
+            train = get_annotation_as_train(ace05_bn_nw) # TODO: This should be all domains
+            dev = get_annotation_as_dev(ace05_bc_dev) #ReExpParams(propTrainAsDev=0.2)
+            test = get_annotation_as_test(ace05_bc_test)
+            exp_train = defaults + train + dev + test
+            exp_train.update(pipeOut="pipe.binary.gz")
+            root.add_dependent(exp_train)
+
+            # Annotate small Concrete files (sanity check).
+            apr_defaults = AnnoPipelineRunner(pipeIn=StagePath(exp_train, exp_train.get("pipeOut")), predAts="RELATIONS,REL_LABELS")        
+            apr_defaults.set_incl_arg("group", False)
+            apr_defaults.set_incl_name("pipeIn", False)
+            apr_defaults.set_incl_name("test", False)
+            apr_defaults.set_incl_name("testPredOut", False)
+            for comm in glob(p.corpora_dir + "/processed/ace_05_concrete4.3/ace-05-splits/un/soc.culture.*"):
+                comm_name = os.path.basename(comm)
+                exp = apr_defaults + AnnoPipelineRunner(test=comm, testType="CONCRETE", group=comm_name, testPredOut=comm_name)
+                exp_train.add_dependent(exp)
+            
+            # Annotate the test domain again, using the saved model.
+            for test in [ace05_bc_test]:
+                test_name = os.path.basename(test)
+                exp = apr_defaults + AnnoPipelineRunner(test=test, testType="CONCRETE", group=test_name)
+                exp.remove("testPredOut") # Writing out a directory of communications is not supported.
+                if self.fast: exp.update(testMaxNumSentences=3, testMaxSentenceLength=7)
+                exp_train.add_dependent(exp)
+               
             return root
         
         else:

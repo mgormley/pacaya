@@ -1,6 +1,6 @@
 package edu.jhu.nlp.eval;
 
-import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,15 +8,14 @@ import org.slf4j.LoggerFactory;
 import edu.jhu.nlp.Evaluator;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
-import edu.jhu.nlp.data.simple.CorpusHandler;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 
 public class ProportionAnnotated implements Evaluator {
 
     private static final Logger log = LoggerFactory.getLogger(ProportionAnnotated.class);    
-    private List<AT> ats;
+    private Set<AT> ats;
     
-    public ProportionAnnotated(List<AT> ats) {
+    public ProportionAnnotated(Set<AT> ats) {
         this.ats = ats;
     }    
     

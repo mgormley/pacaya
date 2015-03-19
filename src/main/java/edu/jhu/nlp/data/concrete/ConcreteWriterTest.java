@@ -39,6 +39,7 @@ import edu.jhu.nlp.data.conll.SrlGraphTest;
 public class ConcreteWriterTest {
 
     private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
+    String concreteFilename = "/edu/jhu/nlp/data/concrete/agiga_dog-bites-man.concrete";
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -46,11 +47,9 @@ public class ConcreteWriterTest {
     @Test
     public void testWriteConcreteFile() throws Exception {
         // TODO: Create a Communication in-memory instead of reading from disk
-        String concreteFile = "/agiga_dog-bites-man.concrete";
+        assertNotNull("Test file missing", getClass().getResource(concreteFilename));
 
-        assertNotNull("Test file missing", getClass().getResource(concreteFile));
-
-        File f = new File(getClass().getResource(concreteFile).getFile());
+        File f = new File(getClass().getResource(concreteFilename).getFile());
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
 
         AnnoSentenceCollection asc = reader.toSentences(f);
@@ -64,7 +63,7 @@ public class ConcreteWriterTest {
 //        File tempFile = new File("tempFile.concrete");
 
         ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
-        cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER));
+        cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER, AT.RELATIONS));
         ConcreteWriter cw = new ConcreteWriter(cwPrm);
         cw.write(asc, tempFile);
     }
@@ -72,7 +71,6 @@ public class ConcreteWriterTest {
     @Test
     public void testCompareCommunications() throws Exception {
         CompactCommunicationSerializer ser = new CompactCommunicationSerializer();
-        String concreteFilename = "/agiga_dog-bites-man.concrete";
         File concreteFile = new File(getClass().getResource(concreteFilename).getFile());
 
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
@@ -80,7 +78,7 @@ public class ConcreteWriterTest {
         AnnoSentenceCollection sents = reader.toSentences(commOne);
 
         ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
-        cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER));
+        cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER, AT.RELATIONS));
         ConcreteWriter cw = new ConcreteWriter(cwPrm);
 
         Communication commTwo = commOne.deepCopy();
@@ -107,13 +105,13 @@ public class ConcreteWriterTest {
 
         // Add annotations to Communication
         ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
-        cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER));
+        cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER, AT.RELATIONS));
         ConcreteWriter cw = new ConcreteWriter(cwPrm);
         cw.addAnnotations(sentences, simpleComm);
 
         // Write annotated Communication to disk
         final File srlFile = tempFolder.newFile("srlFile.concrete");
-//        cw.write(sentences, new File("srlFile.concrete"));
+        cw.write(sentences, new File("srlFile.concrete"));
     }
 
     public Communication createSimpleCommunication() throws Exception {
