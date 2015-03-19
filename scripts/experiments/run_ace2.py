@@ -619,7 +619,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             defaults += feats_zhou_htl
             defaults.update(makeRelSingletons=False,
                             predAts="RELATIONS,REL_LABELS",
-                            inference="BP") # Since we aren't using singletons.
+                            inference="BP",
+                            cacheType="NONE")
             defaults.set_incl_name("testPredOut", False)
 
             # Train on all domains.
