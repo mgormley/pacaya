@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.nlp.Evaluator;
+import edu.jhu.nlp.data.DepEdgeMask;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 
@@ -34,7 +35,8 @@ public class OraclePruningExactMatch implements Evaluator {
                     continue;
                 }
                 int p = goldSent.getParent(c);
-                if (predSent.getDepEdgeMask().isPruned(p, c)) {
+                DepEdgeMask predMask = predSent.getDepEdgeMask();
+                if (predMask != null && predMask.isPruned(p, c)) {
                     // A gold edge is pruned.
                     numIncorrect++;
                     break;
