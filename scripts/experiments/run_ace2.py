@@ -215,12 +215,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
         ace05_un = get_ace05_data(ace05_concrete_dir, "un")
         ace05_wl = get_ace05_data(ace05_concrete_dir, "wl")
         
-        # ACE 2005 other sets: bn_nw, bc_dev, bc_test
+        # ACE 2005 other sets: bn_nw, bc_dev, bc_test, all_nobctest
         # TODO: We need to make sure bc_dev and bc_test exactly match
         # the settings in Plank & Moschitti (2013). 
         ace05_bn_nw = get_ace05_data(ace05_concrete_dir, "bn+nw")
         ace05_bc_dev = get_ace05_data(ace05_concrete_dir, "bc_dev")
         ace05_bc_test = get_ace05_data(ace05_concrete_dir, "bc_test")
+        ace05_all_nobctest = get_ace05_data(ace05_concrete_dir, "all_nobctest")
+        ace05_all = get_ace05_data(ace05_concrete_dir, "all")
         
         # ACE 2005 Chinese
         ace05_zh_all = get_ace05_data(ace05_zh_concrete_dir, "ace2005_cn_withPOS.zip")
@@ -621,8 +623,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             defaults.set_incl_name("testPredOut", False)
 
             # Train on all domains.
-            train = get_annotation_as_train(ace05_bn_nw) # TODO: This should be all domains
-            dev = get_annotation_as_dev(ace05_bc_dev) #ReExpParams(propTrainAsDev=0.2)
+            train = get_annotation_as_train(ace05_all_nobctest) # TODO: This should be all domains
+            dev = ReExpParams(propTrainAsDev=0.05)
             test = get_annotation_as_test(ace05_bc_test)
             exp_train = defaults + train + dev + test
             exp_train.update(pipeOut="pipe.binary.gz")
