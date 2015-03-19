@@ -1,13 +1,10 @@
 package edu.jhu.nlp.srl;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Sets;
 
 import edu.jhu.nlp.Annotator;
 import edu.jhu.nlp.CorpusStatistics.CorpusStatisticsPrm;
@@ -24,7 +21,7 @@ import edu.jhu.nlp.joint.JointNlpEncoder;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpRunner;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 
 /**
  * Train-time only "annotator" for feature selection. This modifies the feature templates on the

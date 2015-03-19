@@ -10,8 +10,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceReader.DatasetType;
 import edu.jhu.nlp.data.simple.AnnoSentenceWriter.AnnoSentenceWriterPrm;
@@ -19,6 +17,7 @@ import edu.jhu.nlp.depparse.Projectivizer;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.collections.Sets;
 
 public class CorpusHandler {
     private static final Logger log = LoggerFactory.getLogger(CorpusHandler.class);
