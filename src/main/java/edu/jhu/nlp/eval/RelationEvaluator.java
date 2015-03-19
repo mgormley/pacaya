@@ -45,6 +45,7 @@ public class RelationEvaluator implements Evaluator {
             
             if (gold == null) { continue; }
             if (pred == null) { numMissing++; }
+            if (pred != null) { assert gold.size() == pred.size(); }
             
             // For each pair of named entities.
             for (int k=0; k<gold.size(); k++) {                

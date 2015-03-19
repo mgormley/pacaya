@@ -716,7 +716,7 @@ public class RelObsFe implements ObsFeatureExtractor {
                     addEmbFeat("on_path-t1t2"+ne1ne2, i, fv);
                 }
             } else {
-                log.warn("No dependency path between mention heads");
+                log.trace("No dependency path between mention heads");
             }
             
             //     - -1_ne1: immediately to the left of the ne1 head

@@ -54,7 +54,9 @@ public class RelationMunger implements Serializable {
         @Opt(description="Whether to shorten entity mention spans following Zhou et al. (2005)")
         public boolean shortenEntityMentions = true;      
         @Opt(hasArg = true, description = "Whether ReConcreteReader should create a separate sentence for each relation.")
-        public boolean makeRelSingletons = true;  
+        public boolean makeRelSingletons = true;    
+        @Opt(hasArg = true, description = "Whether to look at the positive relations when constructing the named entity pairs.")
+        public boolean useRelationsForNePairs = true;  
     }
 
     private static final long serialVersionUID = 1L;
@@ -162,6 +164,15 @@ public class RelationMunger implements Serializable {
 
             NerMentions nes = sent.getNamedEntities();
             RelationMentions rels = sent.getRelations();
+            if (prm.useRelationsForNePairs && rels == null) {
+                // This setting is for a training setting that captures every relation in the annotated data.
+                // The relations must be present on both gold and input data.
+                throw new IllegalStateException("Relations are required when prm.useRelationsForNePairs is true");
+            }
+            if (!prm.useRelationsForNePairs) {
+                // Never consider the relations when constructing NE pairs.
+                rels = null;
+            }
             
             if (prm.removeEntityTypes) {
                 for (NerMention ne : nes) {

@@ -620,7 +620,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             defaults.update(makeRelSingletons=False,
                             predAts="RELATIONS,REL_LABELS",
                             inference="BP",
-                            cacheType="NONE")
+                            cacheType="NONE",
+                            useRelationsForNePairs=False)
             defaults.set_incl_name("testPredOut", False)
 
             # Train on all domains.
