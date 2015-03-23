@@ -102,7 +102,7 @@ public class DepParseSpeedTest {
             int n=0;
     
             for (AnnoSentence sent : sents) {
-                t1.start(); 
+                t1.start();
                 UFgExample ex = firstOrder ?
                         DepParseFactorGraphBuilderSpeedTest.get1stOrderFg(sent, cs, ofc, numParams, onlyFast) :
                         DepParseFirstVsSecondOrderTest.get2ndOrderFg(sent, cs, ofc, numParams, onlyFast);

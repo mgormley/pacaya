@@ -366,6 +366,8 @@ public class JointNlpRunner {
     public static double dpStartTemp = 10;
     @Opt(hasArg=true, description="The end temperature for the softmax MBR decoder for dependency parsing.")
     public static double dpEndTemp = .1;
+    @Opt(hasArg=true, description="Whether to use log scale for the temperature annealing.")
+    public static boolean dpUseLogScale = true;
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
     public static boolean dpAnnealMse = true;
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
@@ -860,6 +862,7 @@ public class JointNlpRunner {
                 DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
                 lossPrm.annealMse = dpAnnealMse;
                 lossPrm.startTemp = dpStartTemp;
+                lossPrm.useLogScale = dpUseLogScale;
                 lossPrm.endTemp = dpEndTemp;
                 prm.dlFactory = lossPrm;
             } else if (dpLoss == ErmaLoss.MSE) {
