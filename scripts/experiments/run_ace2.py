@@ -622,13 +622,20 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             inference="BP",
                             cacheType="NONE",
                             useRelationsForNePairs=False)
+            # Use best hyperparameters from ace-pm13_014.
+            defaults.update(adaGradInitialSumSquares=1,
+                            embScalar=1,
+                            adaGradEta=0.1,
+                            l2variance=400000,
+                            sgdAutoSelectLr=False,
+                            sgdNumPasses=20,
+                            )
             defaults.set_incl_name("testPredOut", False)
 
-            # Train on all domains.
-            train = get_annotation_as_train(ace05_all_nobctest) # TODO: This should be all domains
-            dev = ReExpParams(propTrainAsDev=0.05)
-            test = get_annotation_as_test(ace05_bc_test)
-            exp_train = defaults + train + dev + test
+            # Train on all domains except bc_test. Use bc_test as dev.
+            train = get_annotation_as_train(ace05_all_nobctest)
+            dev = get_annotation_as_dev(ace05_bc_test)
+            exp_train = defaults + train + dev
             exp_train.update(pipeOut="pipe.binary.gz")
             root.add_dependent(exp_train)
 
