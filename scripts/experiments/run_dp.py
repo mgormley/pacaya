@@ -740,7 +740,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "dp-agiga2":
             '''Trains an English-only model for making predictions on for Annotated Gigaword 2.0'''
             root = RootStage()
-            g.defaults += g.cll + g.first_order
+            g.defaults += g.cll + g.first_order + g.mst_car_feats
             g.defaults.update(pruneByDist=True, work_mem_megs=self.prm_defs.get_srl_work_mem_megs(g.defaults))
             train = g.defaults + g.langs['en'].cx_data
             comm = glob(p.concrete380 + "/*")[0]
