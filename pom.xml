@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>${version}</version>
+  <version>3.0.10-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -12,8 +12,6 @@
   <url>https://github.com/mgormley/pacaya</url>
 
   <properties>
-    <!-- The version for this artifact. -->
-    <version>3.0.10-SNAPSHOT</version>
     <!-- The version for the Pacaya dependencies. -->
     <pacaya.version>3.0.10-SNAPSHOT</pacaya.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -340,12 +338,12 @@
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-core</artifactId>
-      <version>4.2.1</version>
+      <version>4.4</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt</groupId>
       <artifactId>concrete-util</artifactId>
-      <version>4.2.1</version>
+      <version>4.4.4</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
