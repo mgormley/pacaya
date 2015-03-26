@@ -1,7 +1,6 @@
 package edu.jhu.nlp.srl;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -22,7 +21,7 @@ import edu.jhu.nlp.joint.JointNlpEncoder;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpRunner;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 
 /**
  * Train-time only "annotator" for feature selection. This modifies the feature templates on the
@@ -86,7 +85,7 @@ public class SrlFeatureSelection implements Annotator, Trainable {
     }
 
     private static void removeAts(JointNlpEncoder.JointNlpFeatureExtractorPrm fePrm) {
-        List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
+        Set<AT> ats = Sets.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
         if (JointNlpRunner.brownClusters == null) {
             // Filter out the Brown cluster features.
             log.warn("Filtering out Brown cluster features.");

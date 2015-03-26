@@ -1,7 +1,5 @@
 package edu.jhu.gm.model.globalfac;
 
-import static edu.jhu.prim.util.math.FastMath.logAdd;
-import static edu.jhu.prim.util.math.FastMath.logSubtract;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,7 +29,6 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.prim.util.math.LogAddTable;
 import edu.jhu.util.collections.Lists;
 
 public class SimpleProjDepTreeFactorTest {
@@ -634,46 +631,6 @@ public class SimpleProjDepTreeFactorTest {
 
         assertEquals(bf.getLogPartition(), bp.getLogPartition(), 1e-1);
         //BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
-    }
-    
-    @Test
-    public void testFloatingPointPrecision() {
-        // Original computation.
-        System.out.println(89+23);
-        System.out.println(7+145);
-        System.out.println(logAdd(7+145, 89+23));
-        System.out.println(logSubtract(logAdd(7+145, 89+23), 7+145));
-        //
-        // Try scaling. (doesn't help.)
-        //
-        System.out.println(89+23-200);
-        System.out.println(7+145-200);
-        System.out.println(logAdd(7+145-200, 89+23-200));
-        System.out.println(logAdd(7+145-200, 89+23-200)+200);
-        System.out.println(logSubtract(logAdd(7+145-200, 89+23-200), 7+145-200)+200);
-        
-        // Find the point at which logAdd loses precision.
-        //double j = 10d;
-        for (int j : Lists.getList(1, 10, 20)) {
-            for (boolean useExact : Lists.getList(true, false)) {
-                for (int i = j - 40; i < j + 40; i++) {
-                    double diff;
-                    if (useExact) {
-                        diff = FastMath.logSubtractExact(FastMath.logAddExact((double) i, (double) j), (double) i);
-                    } else {
-                        diff = LogAddTable.logSubtract(LogAddTable.logAdd((double) i, (double) j), (double) i); 
-                    }
-                    System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
-                            ""+(diff == Double.NEGATIVE_INFINITY), diff));
-                    if (diff == Double.NEGATIVE_INFINITY) {
-                        //System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
-                                //""+(diff == Double.NEGATIVE_INFINITY), diff));
-                        break;
-                    }
-                }
-            }
-        }
-        
     }
     
     public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {

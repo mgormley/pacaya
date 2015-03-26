@@ -117,7 +117,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             pl = p.langs[lang_short]      
             
             # Annotate CoNLL-2009 data with my dependency parser.
-            dp_pipe = get_first_that_exists("/home/hltcoe/mgormley/working/pacaya2/exp/dp-agiga2_000/1st_APW_ENG_19961005.0334_APW_ENG_19961005.0334/pipe.binary.gz",
+            dp_pipe = get_first_that_exists("/home/hltcoe/mgormley/working/pacaya2/exp/dp-agiga2_002/1st/pipe.binary.gz",
                                             os.path.abspath("./exp/dp-agiga2_021/1st_APW_ENG_19961005.0334_APW_ENG_19961005.0334_CONCRETE/pipe.binary.gz"))
             apr_defaults = AnnoPipelineRunner(threads=g.defaults.get("threads"), testPredOut="./test-pred.txt",
                                               concreteDepParseTool="Pacaya")
@@ -222,7 +222,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)                        
             # Filter to just English
-            exps = [x for x in exps if x.get("language") == "en" and x.get("feature_set").find("zhao") == -1]
+            exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
 
         elif self.expname == "srl-conll09-bjork":    

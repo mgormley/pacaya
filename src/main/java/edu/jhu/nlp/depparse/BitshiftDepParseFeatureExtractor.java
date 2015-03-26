@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.globalfac.LinkVar;
@@ -16,8 +17,8 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.IntAnnoSentence;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.GraFeTypedFactor;
+import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.HbFeTypedFactor;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.SibFeTypedFactor;
-import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Prm;
 import edu.jhu.util.cli.Opt;
 
@@ -28,6 +29,8 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         public int featureHashMod = 10000000;
         @Opt(description = "Whether to use MST style word-pair features")
         public boolean useMstFeats = false;
+        @Opt(description = "Whether to use only the basic MST style word-pair features")
+        public boolean basicOnly = false;
         @Opt(description = "Whether to use Carerras style 2nd-order features")
         public boolean useCarerrasFeats = false;
         @Opt(description = "Whether to use coarse POS tag features (TurboParser and MST features)")
@@ -63,12 +66,11 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
 
     private BitshiftDepParseFeatureExtractorPrm prm;
     private IntAnnoSentence isent;
-    private FeatureNames alphabet;
     
-    public BitshiftDepParseFeatureExtractor(BitshiftDepParseFeatureExtractorPrm prm, AnnoSentence sent, CorpusStatistics cs, FeatureNames alphabet) {
+    public BitshiftDepParseFeatureExtractor(BitshiftDepParseFeatureExtractorPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureConjoiner ofc) {
         this.prm = prm;
         this.isent = new IntAnnoSentence(sent, cs.store);
-        this.alphabet = alphabet;
+        ofc.takeNoteOfFeatureHashMod(prm.featureHashMod);
     }
 
     @Override
@@ -79,14 +81,7 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
     }
     
     @Override
-    public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
-        // Expand the alphabet to include every feature up to the hash mod.
-        // TODO: Remove this, it's a huge waste of memory.
-        int i=0;
-        while (alphabet.size() < prm.featureHashMod) {
-            alphabet.lookupIndex(i++);
-        }
-        
+    public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {        
         FeTypedFactor f = (FeTypedFactor) factor;
         Enum<?> ft = f.getFactorType();
         VarSet vars = f.getVars();
@@ -112,6 +107,9 @@ public class BitshiftDepParseFeatureExtractor implements FeatureExtractor {
         } else if (ft == DepParseFactorTemplate.GRANDPARENT) {
             GraFeTypedFactor f2 = (GraFeTypedFactor)f;
             BitshiftDepParseFeatures.addGrandparentFeats(isent, f2.g, f2.p, f2.c, feats, prm);
+        } else if (ft == DepParseFactorTemplate.HEAD_BIGRAM) {
+            HbFeTypedFactor f2 = (HbFeTypedFactor)f;
+            BitshiftDepParseFeatures.addTurboHeadBigramFeats(isent, f2.p, f2.c, f2.p_other, feats, prm);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

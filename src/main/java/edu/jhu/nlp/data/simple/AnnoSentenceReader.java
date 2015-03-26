@@ -45,7 +45,7 @@ public class AnnoSentenceReader {
         public ConcreteReaderPrm rePrm = new ConcreteReaderPrm();        
     }
     
-    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE, SEMEVAL_2010 };
+    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009, CONCRETE, SEMEVAL_2010, DEP_EDGE_MASK };
     
     public interface SASReader extends Iterable<AnnoSentence> {
         public void close();        

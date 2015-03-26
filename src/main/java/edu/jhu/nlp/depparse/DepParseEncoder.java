@@ -7,6 +7,7 @@ import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FeatureCache;
 import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -16,7 +17,6 @@ import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFeatureExtractorPrm;
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
-import edu.jhu.util.FeatureNames;
 
 /**
  * Encodes a dependency tree factor graph and variable assignment from the words and pruning mask
@@ -35,11 +35,11 @@ public class DepParseEncoder implements Encoder<AnnoSentence, int[]> {
     
     private DepParseEncoderPrm prm;
     private CorpusStatistics cs;
-    private FeatureNames feAlphabet;
+    private ObsFeatureConjoiner ofc;
     
-    public DepParseEncoder(DepParseEncoderPrm prm, CorpusStatistics cs, FeatureNames feAlphabet) {
+    public DepParseEncoder(DepParseEncoderPrm prm, CorpusStatistics cs, ObsFeatureConjoiner ofc) {
         this.cs = cs;
-        this.feAlphabet = feAlphabet;
+        this.ofc = ofc;
         this.prm = prm;
     }
 
@@ -55,8 +55,8 @@ public class DepParseEncoder implements Encoder<AnnoSentence, int[]> {
 
     private LFgExample getExample(AnnoSentence sent, int[] parents, boolean labeledExample) {
         FeatureExtractor fe = prm.dpFePrm.onlyFast ?
-                new BitshiftDepParseFeatureExtractor(prm.bsDpFePrm, sent, cs, feAlphabet) :
-                new DepParseFeatureExtractor(prm.dpFePrm, sent, cs, feAlphabet);
+                new BitshiftDepParseFeatureExtractor(prm.bsDpFePrm, sent, cs, ofc) :
+                new DepParseFeatureExtractor(prm.dpFePrm, sent, cs, ofc.getFeAlphabet());
         fe = new FeatureCache(fe);
         
         FactorGraph fg = new FactorGraph();

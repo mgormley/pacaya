@@ -352,7 +352,7 @@ public class BitshiftDepParseFeatures {
     
     public static void addArcFeats(IntAnnoSentence sent, int head, int modifier, BitshiftDepParseFeatureExtractorPrm prm, FeatureVector feats) {
         if (prm.useMstFeats) {
-            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, head, modifier, FeatureCollection.ARC, feats, false, prm.useCoarseTags, prm.featureHashMod);
+            BitshiftDepParseFeatures.addArcFactoredMSTFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm.basicOnly, prm.useCoarseTags, prm.featureHashMod);
         } else {
             BitshiftDepParseFeatures.addTurboWordPairFeats(sent, head, modifier, FeatureCollection.ARC, feats, prm);
         }
@@ -1275,9 +1275,9 @@ public class BitshiftDepParseFeatures {
         final boolean usePairFor2ndOrder = prm.usePairFor2ndOrder;
         final boolean usePairFor2ndOrderArbiSibl = prm.usePairFor2ndOrderArbiSibl;
 
-        // The sibling is the first child of the head. Encoded by setting the modifier to -1.
+        // Special case: The sibling is the first child of the head. Encoded by setting the modifier to -1.
         // UNUSED: boolean isFirstChild = consecutive && modifier < 0;
-        // The modifier is the last child of the head. Encoded by setting the sibling to -1.
+        // Special case: The modifier is the last child of the head. Encoded by setting the sibling to -1.
         // UNUSED: boolean isLastChild = consecutive && sibling < 0;
         
         if (usePairFor2ndOrder) {

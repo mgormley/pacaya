@@ -102,7 +102,7 @@ public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
      * @param removeAts The annotation layers to remove.
      * @return The filtered deep copy.
      */
-    public AnnoSentenceCollection getWithAtsRemoved(List<AT> removeAts) {
+    public AnnoSentenceCollection getWithAtsRemoved(Collection<AT> removeAts) {
         AnnoSentenceCollection newSents = new AnnoSentenceCollection();
         newSents.sourceSents = this.sourceSents;
         for (AnnoSentence sent : this) {

@@ -57,8 +57,9 @@ class PathDefinitions():
     
     def get_paths(self):
         p = Paths()
-        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en", "en-st"]
-        p.c07_lang_short_names = ["ar", "eu", "ca", "zh", "cs", "en", "el", "hu", "it", "tr"]
+        # CoNLL-X and CoNLL-2007 are ordered from smallest to largest.
+        p.cx_lang_short_names = ["tr", "sl", "ja", "da", "nl", "bg", "sv", "es", "pt", "de", "ar", "en", "en-st", "cs"]
+        p.c07_lang_short_names = ["eu", "tr", "zh", "el", "hu", "it", "en", "cs", "ca", "ar"]
         p.c09_lang_short_names = ["ca", "cs", "es", "de", "en", "zh"] 
 
         p.langs = {}        
@@ -160,22 +161,28 @@ class PathDefinitions():
         p.tag_map_zh_ctb6 = os.path.join(univ_pos_tags, "zh-ctb6.map")
         # ...for CoNLL-X Treebanks
         # The mapping for languages with multiple treebanks.
-        p.cx_tag_maps = {"de":"de-tiger.map", "ja":"ja-verbmobil", "tr":"tu-metusbanci.map", "en":"en-ptb.map", "en-st":"en-ptb.map"} 
+        p.cx_tag_maps = {"de":"de-tiger.map", "ja":"ja-verbmobil.map", "tr":"tu-metusbanci.map", "en":"en-ptb.map", "en-st":"en-ptb.map"} 
         for lang in p.cx_lang_short_names:
             if lang not in p.cx_tag_maps:
-                # Language must have an only one treebank.
-                globmaps = glob(os.path.join(univ_pos_tags, lang+"-*.map"))
-                assert len(globmaps) == 1, "CoNLL-X lang=%s globmaps=%s" % (lang, globmaps)
-                p.cx_tag_maps[lang] = globmaps[0]
+                file_pat = lang+"-*.map"
+            else:
+                file_pat = p.cx_tag_maps[lang]
+            # Language must have an only one treebank.
+            globmaps = glob(os.path.join(univ_pos_tags, file_pat))
+            assert len(globmaps) == 1, "CoNLL-X lang=%s globmaps=%s" % (lang, globmaps)
+            p.cx_tag_maps[lang] = globmaps[0]
         # ...for CoNLL-2007 Treebanks
         # The mapping for languages with multiple treebanks.
-        p.c07_tag_maps = {"zh":"zh-sinaca.map", "tr":"tu-metusbanci.map", "en":"en-ptb.map"} 
+        p.c07_tag_maps = {"zh":"zh-sinica.map", "tr":"tu-metusbanci.map", "en":"en-ptb.map"} 
         for lang in p.c07_lang_short_names:
             if lang not in p.c07_tag_maps:
-                # Language must have an only one treebank.
-                globmaps = glob(os.path.join(univ_pos_tags, lang+"-*.map"))
-                assert len(globmaps) == 1, "CoNLL-2007 lang=%s globmaps=%s" % (lang, globmaps)
-                p.c07_tag_maps[lang] = globmaps[0]
+                file_pat = lang+"-*.map"
+            else:
+                file_pat = p.c07_tag_maps[lang]
+            # Language must have an only one treebank.
+            globmaps = glob(os.path.join(univ_pos_tags, file_pat))
+            assert len(globmaps) == 1, "CoNLL-2007 lang=%s globmaps=%s" % (lang, globmaps)
+            p.c07_tag_maps[lang] = globmaps[0]
         
         # Concrete 3.8.0 samples
         p.concrete380 = get_first_that_exists("/export/common/data/processed/concrete/concrete-3.8.0-post-stanford",

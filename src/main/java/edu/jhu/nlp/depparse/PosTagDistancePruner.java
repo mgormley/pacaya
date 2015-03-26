@@ -126,6 +126,11 @@ public class PosTagDistancePruner implements Trainable, Annotator, Serializable 
                             }
                         }
                     }
+                    // Always keep a right-branching tree, so that we never prune all trees.
+                    for (int c = 0; c < tags.length; c++) {
+                        mask.setIsPruned(c-1, c, false);
+                    }
+                    
                     // Check that there still exists some singly-rooted spanning tree that wasn't pruned.
                     if (InsideOutsideDepParse.singleRoot && !mask.allowsSingleRootTrees()) {
                         log.warn("All single-root trees pruned");

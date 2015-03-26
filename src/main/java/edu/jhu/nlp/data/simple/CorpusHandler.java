@@ -2,10 +2,10 @@ package edu.jhu.nlp.data.simple;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ import edu.jhu.nlp.depparse.Projectivizer;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 
 public class CorpusHandler {
     private static final Logger log = LoggerFactory.getLogger(CorpusHandler.class);
@@ -155,6 +155,7 @@ public class CorpusHandler {
     }
     
     private void loadTrain() throws IOException {
+        if (!hasTrain()) { return; }
         // Read train data.
         AnnoSentenceReaderPrm prm = getDefaultReaderPrm();
         prm.name = "train";
@@ -182,7 +183,12 @@ public class CorpusHandler {
             log.info("Projectivizing training trees");
             new Projectivizer().projectivize(trainGoldSents);
         }
-        
+                
+        // Cache input train data.
+        trainInputSents = trainGoldSents.getWithAtsRemoved(getGoldOnlyAts());
+    }
+
+    public void writeTrainGold() throws IOException {
         if (trainGoldOut != null) {
             // Write gold train data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
@@ -190,9 +196,6 @@ public class CorpusHandler {
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(trainGoldOut, getTrainTypeOut(), trainGoldSents, new HashSet<AT>());
         }
-        
-        // Cache input train data.
-        trainInputSents = trainGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     /**
@@ -263,8 +266,10 @@ public class CorpusHandler {
         }
         if (hasTrain() && propTrainAsDev > 0) {
             loadTrainAsDev();
-        }
-        
+        }        
+    }
+
+    public void writeDevGold() throws IOException {
         if (devGoldSents != null && devGoldOut != null) {
             // Write gold dev data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
@@ -344,6 +349,7 @@ public class CorpusHandler {
     }
     
     private void loadTest() throws IOException {
+        if (!hasTest()) { return; }
         // Read test data.
         AnnoSentenceReaderPrm prm = getDefaultReaderPrm();        
         prm.name = "test";
@@ -355,7 +361,12 @@ public class CorpusHandler {
         // Cache gold test data.
         testGoldSents = reader.getData();
         testGoldSents = testGoldSents.getWithAtsRemoved(getRemoveAts());
+        
+        // Cache input test data.
+        testInputSents = testGoldSents.getWithAtsRemoved(getGoldOnlyAts());
+    }
 
+    public void writeTestGold() throws IOException {
         if (testGoldSents != null && testGoldOut != null) {
             // Write gold test data.
             AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
@@ -363,9 +374,6 @@ public class CorpusHandler {
             AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(testGoldOut, getTestTypeOut(), testGoldSents, new HashSet<AT>());
         }
-        
-        // Cache input test data.
-        testInputSents = testGoldSents.getWithAtsRemoved(getGoldOnlyAts());
     }
     
     private AnnoSentenceReaderPrm getDefaultReaderPrm() {
@@ -377,31 +385,31 @@ public class CorpusHandler {
     }
     
     /** Gets predicated annotations (included only in the gold data). */
-    public static List<AT> getPredAts() {
+    public static Set<AT> getPredAts() {
         return getAts(predAts);
     }
 
     /** Gets latent annotations (included only in the gold data). */
-    public static List<AT> getLatAts() {
+    public static Set<AT> getLatAts() {
         return getAts(latAts);
     }
 
     /** Gets the annotations removed from both gold and input data. */
-    public static List<AT> getRemoveAts() {
+    public static Set<AT> getRemoveAts() {
         return getAts(removeAts);
     }
 
     /** Gets predicated and latent annotations (included only in the gold data). */
-    public static List<AT> getGoldOnlyAts() {
-        return Lists.union(getPredAts(), getLatAts());
+    public static Set<AT> getGoldOnlyAts() {
+        return Sets.union(getPredAts(), getLatAts());
     }
     
-    public static List<AT> getAts(String atsStr) {
+    public static Set<AT> getAts(String atsStr) {
         if (atsStr == null) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }       
         String[] splits = atsStr.split(",");
-        ArrayList<AT> ats = new ArrayList<AT>();
+        HashSet<AT> ats = new HashSet<>();
         for (String s : splits) {
             ats.add(AT.valueOf(s));
         }

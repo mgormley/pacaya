@@ -3,6 +3,7 @@ package edu.jhu.nlp.depparse;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.nlp.CorpusStatistics;
@@ -13,7 +14,6 @@ import edu.jhu.nlp.depparse.BitshiftDepParseFeatureExtractor.BitshiftDepParseFea
 import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorGraphBuilderPrm;
 import edu.jhu.nlp.depparse.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.nlp.features.TemplateSets;
-import edu.jhu.util.FeatureNames;
 import edu.jhu.util.Timer;
 
 public class DepParseFactorGraphBuilderSpeedTest {
@@ -41,16 +41,17 @@ public class DepParseFactorGraphBuilderSpeedTest {
         return get1stOrderFg(sent, null, null, 0, true);
     }
     
-    public static UFgExample get1stOrderFg(AnnoSentence sent, CorpusStatistics cs, FeatureNames alphabet, int numParams, boolean onlyFast) {
+    public static UFgExample get1stOrderFg(AnnoSentence sent, CorpusStatistics cs, ObsFeatureConjoiner ofc, int numParams, boolean onlyFast) {
         FactorGraph fg = new FactorGraph();
         DepParseFeatureExtractorPrm fePrm = new DepParseFeatureExtractorPrm();        
         fePrm.featureHashMod = numParams;
         fePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         BitshiftDepParseFeatureExtractorPrm bsFePrm = new BitshiftDepParseFeatureExtractorPrm();
         bsFePrm.featureHashMod = numParams;
+        bsFePrm.useCoarseTags = true;
         FeatureExtractor fe = onlyFast?
-                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, alphabet) :
-                new DepParseFeatureExtractor(fePrm, sent, cs, alphabet);
+                new BitshiftDepParseFeatureExtractor(bsFePrm, sent, cs, ofc) :
+                new DepParseFeatureExtractor(fePrm, sent, cs, ofc.getFeAlphabet());
         
         DepParseFactorGraphBuilderPrm fgPrm = new DepParseFactorGraphBuilderPrm();
         fgPrm.useProjDepTreeFactor = true;

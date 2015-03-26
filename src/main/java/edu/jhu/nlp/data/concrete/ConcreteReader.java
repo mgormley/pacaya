@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,8 +82,10 @@ public class ConcreteReader {
 
     public AnnoSentenceCollection toSentences(File inFile) throws IOException {
     	AnnoSentenceCollection sents;
-        if (inFile.getName().endsWith(".zip")) {
-            sents = sentsFromZipFile(inFile);
+    	if (inFile.isDirectory()) {
+    	    sents = sentsFromDir(inFile);
+    	} else if (inFile.getName().endsWith(".zip")) {
+    	    sents = sentsFromZipFile(inFile);
         } else {
             sents = sentsFromCommFile(inFile);
         }
@@ -92,6 +93,20 @@ public class ConcreteReader {
         log.debug("Num overlapping entity mentions: " + numOverlapingMentions);        
         log.debug("Num situation mentions: " + numSituationMentions);
         return sents;
+    }
+
+    public AnnoSentenceCollection sentsFromDir(File inDir) throws IOException {
+        try {
+            List<File> commFiles = edu.jhu.util.files.Files.getMatchingFiles(inDir, ".+\\.comm$");
+            AnnoSentenceCollection annoSents = new AnnoSentenceCollection();
+            for (File commFile : commFiles) {
+                Communication comm = ser.fromPathString(commFile.getAbsolutePath());
+                addSentences(comm, annoSents);
+            }
+            return annoSents;
+        } catch (ConcreteException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public AnnoSentenceCollection sentsFromZipFile(File zipFile) throws IOException {

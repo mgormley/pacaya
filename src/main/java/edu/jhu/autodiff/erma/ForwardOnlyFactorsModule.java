@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.autodiff.AbstractModule;
+import edu.jhu.autodiff.MVec;
 import edu.jhu.autodiff.Module;
+import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.VarTensor;
@@ -16,19 +18,19 @@ import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
 
 /**
- * Module for delegating the creation of factors.
+ * Module for creating factors by querying only getLogUnormalizedScore().
  * 
  * @author mgormley
  */
-public class FactorsModule extends AbstractModule<Factors> implements Module<Factors> {
+class ForwardOnlyFactorsModule extends AbstractModule<Factors> implements Module<Factors> {
 
-    private static final Logger log = LoggerFactory.getLogger(FactorsModule.class);
+    private static final Logger log = LoggerFactory.getLogger(ForwardOnlyFactorsModule.class);
     
     private Module<MVecFgModel> modIn;
     private FactorGraph fg;
     private List<Module<?>> facMods;
     
-    public FactorsModule(Module<MVecFgModel> modIn, FactorGraph fg, Algebra s) {
+    public ForwardOnlyFactorsModule(Module<MVecFgModel> modIn, FactorGraph fg, Algebra s) {
         super(s);
         this.modIn = modIn;
         this.fg = fg;
@@ -39,13 +41,12 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
         // Get modules that create the factors.
         facMods = new ArrayList<>();
         for (int a = 0; a < fg.getNumFactors(); a++) {
-            Factor factor = fg.getFactor(a);
-            if (factor instanceof AutodiffFactor) {
-                AutodiffFactor fmf = (AutodiffFactor) factor;
-                Module<?> fm = fmf.getFactorModule(modIn, s);
-                facMods.add(fm);
+            Factor f = fg.getFactor(a);
+            if (f instanceof GlobalFactor) {
+                List<? extends Module<? extends MVec>> inputs = new ArrayList<>();
+                facMods.add(new ParamFreeGlobalFactorModule(s, (GlobalFactor)f, inputs));
             } else {
-                throw new RuntimeException("Every factor must implement the Module interface. Do so for the class " + factor.getClass());
+                facMods.add(new ParamFreeFactorModule(s, f));
             }
         }
         // Forward pass and create output.
@@ -53,21 +54,19 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
         y.f = new VarTensor[fg.getNumFactors()];
         for (int a = 0; a < y.f.length; a++) {
             Module<?> fm = facMods.get(a);
-            // Call forward on regular factors and global factors.
             Object o = fm.forward();
-            if (fg.getFactor(a) instanceof GlobalFactor) {
-                y.f[a] = null;
-            } else if (o instanceof VarTensor) {
+            if (o instanceof VarTensor) {
                 y.f[a] = (VarTensor) o;
                 assert !y.f[a].containsBadValues();
+            } else if (fg.getFactor(a) instanceof GlobalFactor) {
+                y.f[a] = null;
             } else {
                 throw new RuntimeException("Unexpected type returned by factor module: " + o.getClass());
             }
         }
-        yAdj = null;
         return y;
     }
-
+    
     @Override
     public Factors getOutputAdj() {
         if (yAdj == null) {
@@ -94,17 +93,39 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
 
     @Override
     public void backward() {
-        for (Module<?> fm : facMods) {
-            // Call backwards on both regular factors and global factors.
-            fm.backward();
-        }
+        throw new IllegalStateException("Operation not supported");
     }
 
     @Override
     public List<Module<MVecFgModel>> getInputs() {
-        // Note that ONLY the FgModel's module is considered the input. 
-        // The factor creation modules are internal to this module.
-        return Lists.getList(modIn);
+        return Lists.getList();
+    }
+    
+    private static class FactorToVarTensorModule extends AbstractModule<VarTensor> implements Module<VarTensor> {
+        
+        private Factor f;
+                
+        public FactorToVarTensorModule(Algebra s, Factor f) {
+            super(s);
+            this.f = f;
+        }
+
+        @Override
+        public VarTensor forward() {
+            y = BruteForceInferencer.safeNewVarTensor(s, f);
+            return y;
+        }
+
+        @Override
+        public void backward() {
+            throw new IllegalStateException("Operation not supported");
+        }
+
+        @Override
+        public List<? extends Module<? extends MVec>> getInputs() {
+            return Lists.getList();
+        }
+        
     }
 
 }

@@ -196,6 +196,39 @@ public class ErmaBpBackwardTest {
         
         testGradientByFiniteDifferences(fg, goldConfig, prm);
     }
+    
+    @Test
+    public void testErmaGradientWithGlobalExplicitFactor() {
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+        FactorGraph fg = fgv.fg;
+        
+        ExplicitFactor loop0 = new GlobalExplicitFactor(new VarSet(fgv.t0, fgv.t1, fgv.t2)); 
+        loop0.setValue(0, 2);
+        loop0.setValue(1, 3);
+        loop0.setValue(2, 5);
+        loop0.setValue(3, 7);
+        loop0.setValue(4, 11);
+        loop0.setValue(5, 15);
+        loop0.setValue(6, 19);
+        loop0.setValue(7, 23);
+        
+        fg.addFactor(loop0);
+        
+        VarConfig goldConfig = new VarConfig();
+        goldConfig.put(fgv.w0, 0);
+        goldConfig.put(fgv.w1, 1);
+        goldConfig.put(fgv.w2, 0);
+        goldConfig.put(fgv.t1, 1);
+        goldConfig.put(fgv.t2, 1);
+        
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        prm.normalizeMessages = true;
+        
+        testGradientByFiniteDifferences(fg, goldConfig, prm);
+    }
 
     @Test
     public void testErmaGradient1WordGlobalFactor() {

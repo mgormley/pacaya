@@ -1,5 +1,6 @@
 package edu.jhu.gm.model.globalfac;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,7 +33,6 @@ import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.nlp.data.DepTree;
 import edu.jhu.nlp.data.WallDepTreeNode;
 import edu.jhu.parse.dep.EdgeScores;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
@@ -303,8 +303,6 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
      */
     private Tensor getMsgs(VarTensor[] inMsgs, int tf, Algebra s) {
         EdgeScores es = new EdgeScores(n, s.zero());
-        DoubleArrays.fill(es.root, s.zero());
-        DoubleArrays.fill(es.child, s.zero());
         for (VarTensor inMsg : inMsgs) {
             LinkVar link = (LinkVar) inMsg.getVars().get(0);            
             double val = inMsg.getValue(tf);
@@ -413,7 +411,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
     @Override
     public Module<?> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
-        return new ParamFreeGlobalFactorModule(s, this);
+        return new ParamFreeGlobalFactorModule(s, this, new ArrayList<Module<MVec>>());
     }
 
 }

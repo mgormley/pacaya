@@ -86,11 +86,11 @@ import edu.jhu.nlp.joint.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.nlp.joint.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.nlp.joint.JointNlpEncoder.JointNlpFeatureExtractorPrm;
 import edu.jhu.nlp.joint.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
-import edu.jhu.nlp.relations.RelObsFe;
 import edu.jhu.nlp.relations.RelObsFe.RelObsFePrm;
 import edu.jhu.nlp.relations.RelationMunger;
+import edu.jhu.nlp.relations.RelationMunger.RelationDataPostproc;
+import edu.jhu.nlp.relations.RelationMunger.RelationDataPreproc;
 import edu.jhu.nlp.relations.RelationMunger.RelationMungerPrm;
-import edu.jhu.nlp.relations.RelationsEncoder;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.RoleStructure;
 import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorGraphBuilderPrm;
 import edu.jhu.nlp.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
@@ -107,7 +107,7 @@ import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 import edu.jhu.util.files.Files;
 import edu.jhu.util.report.Reporter;
 import edu.jhu.util.report.ReporterManager;
@@ -165,7 +165,11 @@ public class JointNlpRunner {
     public static File printModel = null;
     @Opt(hasArg = true, description = "File to which to serialize the entire pipeline.")
     public static File pipeOut = null;
-    
+
+    // Options for joint model.
+    @Opt(hasArg = true, description = "Whether to include the joint model in the pipeline.")
+    public static boolean jointModel = true;
+
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
     public static InitParams initParams = InitParams.UNIFORM;
@@ -219,7 +223,7 @@ public class JointNlpRunner {
     public static boolean predictSense = false;
     @Opt(hasArg = true, description = "Whether to predict predicate positions.")
     public static boolean predictPredPos = false;
-
+    
     // Options for joint factor graph structure.
     @Opt(hasArg = true, description = "Whether to include unary factors in the model.")
     public static boolean unaryFactors = false;
@@ -275,6 +279,8 @@ public class JointNlpRunner {
     public static boolean grandparentFactors = false;
     @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
     public static boolean arbitrarySiblingFactors = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order head-bigram factors in the model.")
+    public static boolean headBigramFactors = false;
     @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
     public static boolean excludeNonprojectiveGrandparents = true;
     
@@ -360,6 +366,8 @@ public class JointNlpRunner {
     public static double dpStartTemp = 10;
     @Opt(hasArg=true, description="The end temperature for the softmax MBR decoder for dependency parsing.")
     public static double dpEndTemp = .1;
+    @Opt(hasArg=true, description="Whether to use log scale for the temperature annealing.")
+    public static boolean dpUseLogScale = true;
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
     public static boolean dpAnnealMse = true;
     @Opt(hasArg=true, description="Whether to transition from MSE to the softmax MBR decoder with expected recall.")
@@ -396,21 +404,33 @@ public class JointNlpRunner {
         	throw new ParseException("Either --modelIn or --train must be specified.");
         }
         
+        // The annotation pipeline.
         AnnoPipeline anno = new AnnoPipeline();
+        // The evaluation pipeline.
         EvalPipeline eval = new EvalPipeline();
+        // The pre-processing pipeline for gold data.
+        AnnoPipeline prep = new AnnoPipeline();
         JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
         JointNlpAnnotator jointAnno = new JointNlpAnnotator(prm);
         if (modelIn != null) {
             jointAnno.loadModel(modelIn);
         }
         {
+            // Pre-processing.
             RelationMunger relMunger = new RelationMunger(parser.getInstanceFromParsedArgs(RelationMungerPrm.class));
             if (CorpusHandler.getPredAts().contains(AT.REL_LABELS)) {
-                anno.add(relMunger.getDataPreproc());
+                RelationDataPreproc dataPreproc = relMunger.getDataPreproc();
+                anno.add(dataPreproc);
+                prep.add(dataPreproc);
             }
+            // Annotation pipeline.
             anno.add(new EnsureStaticOptionsAreSet());
-            anno.add(new PrefixAnnotator(true));
-            anno.add(new StrictPosTagAnnotator(true));
+            Annotator pa = new PrefixAnnotator();
+            anno.add(pa);
+            prep.add(pa);
+            Annotator spta = new StrictPosTagAnnotator();
+            anno.add(spta);
+            prep.add(spta);
             // Add Brown clusters.
             if (brownClusters != null) {
                 anno.add(new BrownClusterTagger(getBrownCluterTaggerPrm(), brownClusters));
@@ -466,13 +486,19 @@ public class JointNlpRunner {
                 prm.buPrm.fgPrm.srlPrm.predictPredPos = false;
                 prm.buPrm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
             }
-            // Various NLP annotations.
-            anno.add(jointAnno);
+            if (jointModel) {
+                // Various NLP annotations.
+                anno.add(jointAnno);
+            }
+            // Post-processing.
             if (CorpusHandler.getPredAts().contains(AT.REL_LABELS) && !relMunger.getPrm().makeRelSingletons) {
-                anno.add(relMunger.getDataPostproc());
+                RelationDataPostproc dataPostproc = relMunger.getDataPostproc();
+                anno.add(dataPostproc);
+                prep.add(dataPostproc);
             }
         }
         {
+            // Evaluation pipeline.
             if (pruneByDist || pruneByModel) {
                 eval.add(new PruningEfficiency(dpSkipPunctuation));
                 eval.add(new OraclePruningAccuracy(dpSkipPunctuation));
@@ -496,50 +522,56 @@ public class JointNlpRunner {
             }
             eval.add(new ProportionAnnotated(CorpusHandler.getPredAts()));
         }
-
-        AnnoSentenceCollection devGold = null;
-        AnnoSentenceCollection devInput = null;
-        if (corpus.hasTrain()) {
-            String name = "train";            
+        
+        {
+            // Either of train or dev might be null.
             AnnoSentenceCollection trainGold = corpus.getTrainGold();
             AnnoSentenceCollection trainInput = corpus.getTrainInput();
-            // (Dev data might be null.)
-            devGold = corpus.getDevGold();
-            devInput = corpus.getDevInput();
-            
-            // Train a model. (The PipelineAnnotator also annotates all the input.)
-            anno.train(trainInput, trainGold, devInput, devGold);
-            
-            // Decode and evaluate the train data.
-            corpus.writeTrainPreds(trainInput);
-            eval.evaluate(trainInput, trainGold, name);
-            corpus.clearTrainCache();
-            
-            if (modelOut != null) {
-                jointAnno.saveModel(modelOut);
+            AnnoSentenceCollection devGold = corpus.getDevGold();
+            AnnoSentenceCollection devInput = corpus.getDevInput();
+
+            if (corpus.hasTrain()) {
+                // Preprocess the gold train data and write it out.
+                prep.annotate(trainGold);
+                corpus.writeTrainGold();
             }
-            if (printModel != null) {
-                jointAnno.printModel(printModel);
+            if (corpus.hasDev()) {
+                // Preprocess the gold dev data and write it out.
+                prep.annotate(devGold);
+                corpus.writeDevGold();
             }
-            if (pipeOut != null) {
-                log.info("Serializing pipeline to file: " + pipeOut);
-                Files.serialize(anno, pipeOut);
-            }
-        }
-        
-        if (corpus.hasDev()) {
-            // Write dev data predictions.
-            String name = "dev";
-            if (devInput == null) {
-                // Train did not yet annotate the dev data.
-                devInput = corpus.getDevInput();
+            
+            if (corpus.hasTrain()) {
+                // Train a model. (AnnoPipeline also annotates all the train and dev input.)
+                anno.train(trainInput, trainGold, devInput, devGold);
+                
+                // Save the model.
+                if (modelOut != null) {
+                    jointAnno.saveModel(modelOut);
+                }
+                if (printModel != null) {
+                    jointAnno.printModel(printModel);
+                }
+                if (pipeOut != null) {
+                    log.info("Serializing pipeline to file: " + pipeOut);
+                    Files.serialize(anno, pipeOut);
+                }
+            } else if (corpus.hasDev()) { // but not train
                 anno.annotate(devInput);
             }
-            corpus.writeDevPreds(devInput);
-            // Evaluate dev data.
-            devGold = corpus.getDevGold();
-            eval.evaluate(devInput, devGold, name);
-            corpus.clearDevCache();
+            
+            if (corpus.hasTrain()) {
+                // Decode and evaluate. the train data.
+                corpus.writeTrainPreds(trainInput);
+                eval.evaluate(trainInput, trainGold, "train");
+                corpus.clearTrainCache();
+            }
+            if (corpus.hasDev()) {
+                // Decode and evaluate the dev data.
+                corpus.writeDevPreds(devInput);
+                eval.evaluate(devInput, devGold, "dev");
+                corpus.clearDevCache();
+            }
         }
         
         if (corpus.hasTest()) {
@@ -550,6 +582,8 @@ public class JointNlpRunner {
             corpus.writeTestPreds(testInput);
             // Evaluate test data.
             AnnoSentenceCollection testGold = corpus.getTestGold();
+            prep.annotate(testGold);
+            corpus.writeTestGold();
             if (evalTest) {
                 eval.evaluate(testInput, testGold, name);
             } else {
@@ -619,6 +653,7 @@ public class JointNlpRunner {
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
         prm.fgPrm.dpPrm.arbitrarySiblingFactors = arbitrarySiblingFactors;
+        prm.fgPrm.dpPrm.headBigramFactors = headBigramFactors;
         prm.fgPrm.dpPrm.pruneEdges = pruneByDist || pruneByModel;
                 
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
@@ -822,11 +857,12 @@ public class JointNlpRunner {
         
         // TODO: add options for other loss functions.
         if (prm.trainer == Trainer.ERMA && 
-                CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
+                CorpusHandler.getPredAts().equals(Sets.getSet(AT.DEP_TREE))) {
             if (dpLoss == ErmaLoss.DP_DECODE_LOSS) {
                 DepParseDecodeLossFactory lossPrm = new DepParseDecodeLossFactory();
                 lossPrm.annealMse = dpAnnealMse;
                 lossPrm.startTemp = dpStartTemp;
+                lossPrm.useLogScale = dpUseLogScale;
                 lossPrm.endTemp = dpEndTemp;
                 prm.dlFactory = lossPrm;
             } else if (dpLoss == ErmaLoss.MSE) {
@@ -887,8 +923,8 @@ public class JointNlpRunner {
             }
             return bpPrm;
         } else if (inference == Inference.DP) {
-            if (CorpusHandler.getPredAts().size() == 1 && CorpusHandler.getPredAts().get(0) == AT.DEP_TREE
-                    && grandparentFactors && !arbitrarySiblingFactors) { 
+            if (CorpusHandler.getPredAts().equals(Sets.getSet(AT.DEP_TREE))
+                    && grandparentFactors && !arbitrarySiblingFactors && !headBigramFactors) { 
                 return new O2AllGraFgInferencerFactory(algebra.getAlgebra());
             } else {
                 throw new ParseException("DP inference only supported for dependency parsing with all grandparent factors.");

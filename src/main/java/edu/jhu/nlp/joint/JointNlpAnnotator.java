@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +45,7 @@ import edu.jhu.util.Prm;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Timer;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.collections.Sets;
 import edu.jhu.util.files.Files;
 
 /**
@@ -129,18 +129,20 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         if (devInput == null || devGold == null) { return null; }
         final JointNlpAnnotator anno = this;
         final Evaluator eval;
-        if (CorpusHandler.getPredAts().equals(Lists.getList(AT.DEP_TREE))) {
+        if (CorpusHandler.getPredAts().equals(Sets.getSet(AT.DEP_TREE))) {
             eval = new DepParseAccuracy(prm.dpSkipPunctuation);
-        } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL)) || 
-                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL_PRED_IDX, AT.SRL)) ||
-                CorpusHandler.getPredAts().equals(Lists.getList(AT.SRL, AT.SRL_PRED_IDX))
+        } else if (CorpusHandler.getPredAts().equals(Sets.getSet(AT.SRL)) || 
+                CorpusHandler.getPredAts().equals(Sets.getSet(AT.SRL_PRED_IDX, AT.SRL))
                 ) {
             SrlEvaluatorPrm evalPrm = new SrlEvaluatorPrm();
             evalPrm.evalSense = prm.buPrm.fgPrm.srlPrm.predictSense;
             evalPrm.evalPredicatePosition = prm.buPrm.fgPrm.srlPrm.predictPredPos;
             evalPrm.evalRoles = (prm.buPrm.fgPrm.srlPrm.roleStructure != RoleStructure.NO_ROLES);
             eval = new SrlEvaluator(evalPrm);
-        } else if (CorpusHandler.getPredAts().equals(Lists.getList(AT.REL_LABELS))) {
+        } else if (CorpusHandler.getPredAts().equals(Sets.getSet(AT.REL_LABELS)) ||
+                CorpusHandler.getPredAts().equals(Sets.getSet(AT.RELATIONS)) ||
+                CorpusHandler.getPredAts().equals(Sets.getSet(AT.REL_LABELS, AT.RELATIONS))
+                ) {
             eval = new RelationEvaluator();
         } else {
             log.warn("Validation function not implemented. Skipping.");

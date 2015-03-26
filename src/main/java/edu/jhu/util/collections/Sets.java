@@ -110,4 +110,10 @@ public class Sets {
         return new HashSet<T>(Lists.getList(values));
     }
     
+    public static <T> Set<T> union(Set<T> s1, Set<T> s2) {
+        HashSet<T> s12 = new HashSet<T>(s1);
+        s12.addAll(s2);
+        return s12;
+    }
+    
 }

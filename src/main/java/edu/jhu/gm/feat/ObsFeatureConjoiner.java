@@ -77,6 +77,8 @@ public class ObsFeatureConjoiner implements Serializable {
     private boolean initialized;
     /** Alphabet for standard (non-observation function) features. */
     private FeatureNames feAlphabet;
+    /** Maximum feature-hashing trick modulo value in use. */
+    private int featureHashModMax = 0;
     
     private ObsFeatureConjoinerPrm prm;
     
@@ -85,10 +87,6 @@ public class ObsFeatureConjoiner implements Serializable {
         initialized = false;
         this.templates = fts;
         this.feAlphabet = new FeatureNames();
-    }
-        
-    public FeatureNames getFeAlphabet() {
-        return feAlphabet;
     }
     
     public void init() {
@@ -161,6 +159,9 @@ public class ObsFeatureConjoiner implements Serializable {
                 }
             }
         }
+        // If we are using the feature hashing trick, we may want to further increase
+        // the number of model parameters.
+        numParams = Math.max(numParams, featureHashModMax);
         
         initialized = true;
     }
@@ -333,6 +334,18 @@ public class ObsFeatureConjoiner implements Serializable {
 
     public int getNumFeats(int ft, int c) {
         return indices[ft][c].length;
+    }
+    
+    public FeatureNames getFeAlphabet() {
+        return feAlphabet;
+    }
+    
+    public int getFeatureHashModMax() {
+        return featureHashModMax;
+    }
+
+    public void takeNoteOfFeatureHashMod(int featureHashMod) {
+        this.featureHashModMax = Math.max(featureHashModMax, featureHashMod);
     }
 
     public String toString() {

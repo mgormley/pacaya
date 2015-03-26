@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -171,7 +172,7 @@ public class CoNLLXToken {
 
     private static List<String> getFeats(String featsStr) {
         if (featsStr == null) {
-            return null;
+            return Collections.emptyList();
         }
         String[] splits = verticalBar.split(featsStr);
         return Arrays.asList(splits);
