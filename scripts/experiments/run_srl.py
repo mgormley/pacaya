@@ -222,7 +222,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)                        
             # Filter to just English
-            exps = [x for x in exps if x.get("language") == "en" and x.get("feature_set").find("zhao") == -1]
+            exps = [x for x in exps if x.get("language") == "en"]
             return self._get_pipeline_from_exps(exps)
 
         elif self.expname == "srl-conll09-bjork":    
