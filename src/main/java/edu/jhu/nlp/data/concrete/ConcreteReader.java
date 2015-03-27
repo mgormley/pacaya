@@ -405,7 +405,6 @@ public class ConcreteReader {
             Constituent c = cs.get(i);
             for (int id : c.getChildList()) {
                 int j = id2idx.get(id);
-                log.debug("i={} j={}", i, j);
                 trees[i].addChild(trees[j]);
             }
         }

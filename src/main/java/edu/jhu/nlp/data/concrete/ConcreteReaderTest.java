@@ -30,7 +30,7 @@ import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
 import edu.jhu.hlt.concrete.UUID;
-import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
+import edu.jhu.hlt.concrete.uuid.UUIDFactory;
 import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
@@ -38,20 +38,18 @@ import edu.jhu.util.collections.Lists;
 
 public class ConcreteReaderTest {
 
-    private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
-
     @Test
     public void testToolNames() throws Exception {
         // Test that we correctly get the second tool's annotations.
         ConcreteReaderPrm prm = new ConcreteReaderPrm();
-        prm.posTool = "ToolTwo";
-        prm.lemmaTool = "ToolTwo";
-        prm.chunkTool = "ToolTwo";
-        prm.nerTool = "ToolTwo";
-        prm.depParseTool = "ToolTwo";
-        prm.parseTool = "ToolTwo";
-        prm.nerTool = "ToolTwo";
-        prm.relationTool = "ToolTwo";
+        prm.posTool = "Two";
+        prm.lemmaTool = "Two";
+        prm.chunkTool = "Two";
+        prm.nerTool = "Two";
+        prm.depParseTool = "Two";
+        prm.parseTool = "Two";
+        prm.nerTool = "Two";
+        prm.relationTool = "Two";
         ConcreteReader r = new ConcreteReader(prm);
         AnnoSentenceCollection sents = r.sentsFromComm(createSimpleCommunication());
         assertEquals(1, sents.size());
@@ -262,7 +260,7 @@ public class ConcreteReaderTest {
     }
 
     private static UUID getUUID() {
-        return uuidFactory.getConcreteUUID();
+        return UUIDFactory.newUUID();
     }
     
 }

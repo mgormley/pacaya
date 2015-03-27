@@ -32,7 +32,7 @@ import edu.jhu.hlt.concrete.UUID;
 import edu.jhu.hlt.concrete.communications.SuperCommunication;
 import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
 import edu.jhu.hlt.concrete.util.ConcreteException;
-import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
+import edu.jhu.hlt.concrete.uuid.UUIDFactory;
 import edu.jhu.nlp.data.NerMention;
 import edu.jhu.nlp.data.NerMentions;
 import edu.jhu.nlp.data.RelationMention;
@@ -103,9 +103,7 @@ public class ConcreteWriter {
     public static final String SRL_TOOL = "Pacaya Semantic Role Labeler (SRL)";
     private static final String REL_TOOL = "Pacaya Relation Extractor";
     private static final String NER_TOOL = "Pacaya Named Entity Recognizer (NER)";
-    
-    private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
-    
+        
     private final long timestamp;     // time that every annotation that is processed will get
     private final ConcreteWriterPrm prm;
 
@@ -183,7 +181,7 @@ public class ConcreteWriter {
             throw new IllegalArgumentException("Parents length doesn't match depRels length");
         }
         DependencyParse p = new DependencyParse();
-        p.setUuid(uuidFactory.getConcreteUUID());
+        p.setUuid(getUUID());
         AnnotationMetadata meta = new AnnotationMetadata();
         meta.setTool(DEP_PARSE_TOOL);
         meta.setTimestamp(timestamp);
@@ -229,10 +227,10 @@ public class ConcreteWriter {
         } else {
             // make a SituationMention for every sentence / SRL
             EntityMentionSet ems = new EntityMentionSet();
-            ems.setUuid(uuidFactory.getConcreteUUID());
+            ems.setUuid(getUUID());
             ems.setMetadata(meta);
             SituationMentionSet sms = new SituationMentionSet();
-            sms.setUuid(uuidFactory.getConcreteUUID());
+            sms.setUuid(getUUID());
             sms.setMetadata(meta);
             sms.setMentionList(new ArrayList<SituationMention>());
             for(int i=0; i<sents.size(); i++) {
@@ -251,7 +249,7 @@ public class ConcreteWriter {
     
     private DependencyParse makeDependencyParse(SrlGraph srl, AnnoSentence from, AnnotationMetadata meta) {
         DependencyParse p = new DependencyParse();
-        p.setUuid(uuidFactory.getConcreteUUID());
+        p.setUuid(getUUID());
         p.setMetadata(meta);
         p.setDependencyList(new ArrayList<Dependency>());
         for(SrlPred pred : srl.getPreds()) {
@@ -286,7 +284,7 @@ public class ConcreteWriter {
                 
                 // make an EntityMention
                 EntityMention em = new EntityMention();
-                em.setUuid(uuidFactory.getConcreteUUID());
+                em.setUuid(getUUID());
                 em.setEntityType("UNKNOWN");
                 em.setPhraseType("OTHER");
                 em.setText(from.getWord(ai));
@@ -325,7 +323,7 @@ public class ConcreteWriter {
                         cSpan.setTokenIndexList(toIntegerList(aEm.getSpan()));
                         cSpan.setTokenizationId(cSent.getUuid());
                         EntityMention cEm = new EntityMention();
-                        cEm.setUuid(uuidFactory.getConcreteUUID());
+                        cEm.setUuid(getUUID());
                         cEm.setTokens(cSpan);
                         String type = aEm.getEntityType();
                         if (aEm.getEntitySubType() != null) {
@@ -345,7 +343,7 @@ public class ConcreteWriter {
             cMeta.setTool(NER_TOOL);
             cMeta.setTimestamp(timestamp);
             EntityMentionSet cEmSet = new EntityMentionSet();
-            cEmSet.setUuid(uuidFactory.getConcreteUUID());
+            cEmSet.setUuid(getUUID());
             cEmSet.setMetadata(cMeta);
             cEmSet.setMentionList(cEms);
         } else {
@@ -384,7 +382,7 @@ public class ConcreteWriter {
                             cArgs.add(cArg);
                         }
                         SituationMention cRel = new SituationMention();
-                        cRel.setUuid(uuidFactory.getConcreteUUID());
+                        cRel.setUuid(getUUID());
                         cRel.setArgumentList(cArgs);
                         String relation = aRel.getType();
                         if (aRel.getSubType() != null) {
@@ -400,7 +398,7 @@ public class ConcreteWriter {
             cMeta.setTool(REL_TOOL);
             cMeta.setTimestamp(timestamp);
             SituationMentionSet cRelSet = new SituationMentionSet();
-            cRelSet.setUuid(uuidFactory.getConcreteUUID());
+            cRelSet.setUuid(getUUID());
             cRelSet.setMetadata(cMeta);
             cRelSet.setMentionList(cRels);
             comm.addToSituationMentionSetList(cRelSet);
@@ -433,6 +431,10 @@ public class ConcreteWriter {
             }
         }
         return ts;
+    }
+
+    private UUID getUUID() {
+        return UUIDFactory.newUUID();
     }
 
 }
