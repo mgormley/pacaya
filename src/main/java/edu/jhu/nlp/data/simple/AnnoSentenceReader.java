@@ -78,7 +78,7 @@ public class AnnoSentenceReader {
         Object sourceSents = null;
         if (type == DatasetType.CONCRETE) {
             ConcreteReader cr = new ConcreteReader(prm.rePrm);
-            AnnoSentenceCollection csents = cr.toSentences(dataFile);
+            AnnoSentenceCollection csents = cr.sentsFromPath(dataFile);
             sourceSents = csents.getSourceSents();
             reader = new ListCloseableIterable(csents);
         } else {

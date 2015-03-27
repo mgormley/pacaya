@@ -1,14 +1,15 @@
 package edu.jhu.nlp.data.concrete;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -16,29 +17,26 @@ import org.junit.rules.TemporaryFolder;
 
 import edu.jhu.hlt.concrete.AnnotationMetadata;
 import edu.jhu.hlt.concrete.Communication;
-import edu.jhu.hlt.concrete.EntityMentionSet;
 import edu.jhu.hlt.concrete.Section;
 import edu.jhu.hlt.concrete.Sentence;
 import edu.jhu.hlt.concrete.TextSpan;
 import edu.jhu.hlt.concrete.Token;
-import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenList;
+import edu.jhu.hlt.concrete.Tokenization;
 import edu.jhu.hlt.concrete.TokenizationKind;
+import edu.jhu.hlt.concrete.UUID;
 import edu.jhu.hlt.concrete.serialization.CompactCommunicationSerializer;
-import edu.jhu.hlt.concrete.util.ConcreteUUIDFactory;
+import edu.jhu.hlt.concrete.uuid.UUIDFactory;
 import edu.jhu.nlp.data.concrete.ConcreteReader.ConcreteReaderPrm;
-import edu.jhu.nlp.data.concrete.ConcreteWriter;
 import edu.jhu.nlp.data.concrete.ConcreteWriter.ConcreteWriterPrm;
+import edu.jhu.nlp.data.conll.CoNLL09Sentence;
+import edu.jhu.nlp.data.conll.SrlGraphTest;
 import edu.jhu.nlp.data.simple.AnnoSentence;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
-import edu.jhu.nlp.data.conll.CoNLL09Sentence;
-import edu.jhu.nlp.data.conll.CoNLL09Token;
-import edu.jhu.nlp.data.conll.SrlGraphTest;
 
 public class ConcreteWriterTest {
 
-    private static ConcreteUUIDFactory uuidFactory = new ConcreteUUIDFactory();
     String concreteFilename = "/edu/jhu/nlp/data/concrete/agiga_dog-bites-man.concrete";
 
     @Rule
@@ -52,7 +50,7 @@ public class ConcreteWriterTest {
         File f = new File(getClass().getResource(concreteFilename).getFile());
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
 
-        AnnoSentenceCollection asc = reader.toSentences(f);
+        AnnoSentenceCollection asc = reader.sentsFromPath(f);
 
         for (AnnoSentence sent : asc) {
             System.out.println(sent);
@@ -75,7 +73,7 @@ public class ConcreteWriterTest {
 
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
         Communication commOne = ser.fromPathString(concreteFile.getAbsolutePath());
-        AnnoSentenceCollection sents = reader.toSentences(commOne);
+        AnnoSentenceCollection sents = reader.sentsFromComm(commOne);
 
         ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
         cwPrm.addAnnoTypes(Arrays.asList(AT.DEP_TREE, AT.SRL, AT.NER, AT.RELATIONS));
@@ -92,7 +90,7 @@ public class ConcreteWriterTest {
         // Convert Communication to AnnoSentenceCollection
         Communication simpleComm = createSimpleCommunication();
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
-        AnnoSentenceCollection sentences = reader.toSentences(simpleComm);
+        AnnoSentenceCollection sentences = reader.sentsFromComm(simpleComm);
 
         // Write Communication to disk
         CompactCommunicationSerializer ser = new CompactCommunicationSerializer();
@@ -114,13 +112,13 @@ public class ConcreteWriterTest {
         cw.write(sentences, new File("srlFile.concrete"));
     }
 
-    public Communication createSimpleCommunication() throws Exception {
+    public static Communication createSimpleCommunication() throws Exception {
         Communication comm = new Communication();
         comm.setId("Gore-y Landing");
         comm.setText("vice pres says jump");
         // 0123456789012345678
         comm.setType("Test");
-        comm.setUuid(uuidFactory.getConcreteUUID());
+        comm.setUuid(getUUID());
 
         AnnotationMetadata commMetadata = new AnnotationMetadata();
         commMetadata.setTimestamp(System.currentTimeMillis());
@@ -129,7 +127,7 @@ public class ConcreteWriterTest {
 
         Tokenization tokenization = new Tokenization();
         tokenization.setKind(TokenizationKind.TOKEN_LIST);
-        tokenization.setUuid(uuidFactory.getConcreteUUID());
+        tokenization.setUuid(getUUID());
 
         List<Token> listOfTokens = new ArrayList<Token>();
 
@@ -151,7 +149,7 @@ public class ConcreteWriterTest {
 
         Sentence sentence = new Sentence();
         sentence.setTokenization(tokenization);
-        sentence.setUuid(uuidFactory.getConcreteUUID());
+        sentence.setUuid(getUUID());
         TextSpan sentenceSpan = new TextSpan();
         sentenceSpan.setStart(0);
         sentenceSpan.setEnding(18);
@@ -160,7 +158,7 @@ public class ConcreteWriterTest {
         Section section = new Section();
         section.addToSentenceList(sentence);
         section.setKind("SectionKind");
-        section.setUuid(uuidFactory.getConcreteUUID());
+        section.setUuid(getUUID());
         TextSpan sectionSpan = new TextSpan();
         sectionSpan.setStart(0);
         sectionSpan.setEnding(18);
@@ -168,5 +166,9 @@ public class ConcreteWriterTest {
         comm.addToSectionList(section);
 
         return comm;
+    }
+
+    protected static UUID getUUID() {
+        return UUIDFactory.newUUID();
     }
 }
