@@ -19,6 +19,7 @@ import edu.jhu.nlp.data.concrete.ConcreteWriter;
 import edu.jhu.nlp.data.concrete.ConcreteWriter.ConcreteWriterPrm;
 import edu.jhu.nlp.data.simple.AnnoSentenceCollection;
 import edu.jhu.nlp.features.TemplateLanguage.AT;
+import edu.jhu.util.Prm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Threads;
 import edu.jhu.util.files.Files;
@@ -34,59 +35,59 @@ public class CommunicationAnnotator {
     
     public static enum InputType { FILE, RESOURCE };
     
+    public static class CommunicationAnnotatorPrm extends Prm {
+        public static final long serialVersionUID = 1L;
+        /** (REQUIRED) The path to the serialized pipeline. */
+        public String pipeIn;
+        /** (REQUIRED) Whether the path is a file or resource. */
+        public InputType inputType;
+        /** The number of threads for parallelizing across sentences. */
+        public int threads = 1;
+        /** The pseudo random number generator seed. */
+        public long seed = Prng.DEFAULT_SEED;
+        /** The reporting file. */
+        public File reportOut = null;
+        /** The concrete reader parameters. */
+        public ConcreteReaderPrm crPrm = new ConcreteReaderPrm();
+        /** The concrete writer parameters. (Output annotation types will be overwritten.)*/
+        public ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(CommunicationAnnotator.class);
-
-    // Parameters.
-    private String pipeIn;
-    private InputType inputType;
-    private boolean concreteSrlIsSyntax;
-    private int threads;
-    private long seed;
-    private File reportOut;
+    private CommunicationAnnotatorPrm prm;     // Parameters.    
+    private AnnoPipeline anno;    // Cached.    
     
-    // Cached.
-    private AnnoPipeline anno;    
-    
-    public CommunicationAnnotator(String pipeIn, InputType inputType, boolean concreteSrlIsSyntax, int threads, long seed, File reportOut) {
-        if (pipeIn == null) {
+    public CommunicationAnnotator(CommunicationAnnotatorPrm prm) {
+        if (prm.pipeIn == null) {
             throw new IllegalArgumentException("pipeIn must not be null");
         }
-        if (inputType == null) {
+        if (prm.inputType == null) {
             throw new IllegalArgumentException("inputType must not be null");
         }
-        this.pipeIn = pipeIn;
-        this.concreteSrlIsSyntax = concreteSrlIsSyntax;
-        this.threads = threads;
-        this.seed = seed;
-        this.reportOut = reportOut;
+        this.prm = prm;
     }
     
     public void init() {
-        ReporterManager.init(reportOut, true);
-        Prng.seed(seed);
-        Threads.initDefaultPool(threads);
-        if (inputType == InputType.FILE) { 
-            log.info("Reading the annotation pipeline from file: " + pipeIn);
-            this.anno = (AnnoPipeline) Files.deserialize(pipeIn);
+        ReporterManager.init(prm.reportOut, true);
+        Prng.seed(prm.seed);
+        Threads.initDefaultPool(prm.threads);
+        if (prm.inputType == InputType.FILE) { 
+            log.info("Reading the annotation pipeline from file: " + prm.pipeIn);
+            this.anno = (AnnoPipeline) Files.deserialize(prm.pipeIn);
         } else { // inputType == InputType.RESOURCE
-            log.info("Reading the annotation pipeline from resource: " + pipeIn);
-            this.anno = (AnnoPipeline) Files.deserializeResource(pipeIn);
+            log.info("Reading the annotation pipeline from resource: " + prm.pipeIn);
+            this.anno = (AnnoPipeline) Files.deserializeResource(prm.pipeIn);
         }
     }
 
-    public Communication annotate(Communication c) throws AnnotationException {
-        // Return a copy.
-        c = new Communication(c);
-        ConcreteReader cr = new ConcreteReader(new ConcreteReaderPrm());
+    public void annotate(Communication c) throws AnnotationException {
+        ConcreteReader cr = new ConcreteReader(prm.crPrm );
         AnnoSentenceCollection sents = cr.sentsFromComm(c);
         anno.annotate(sents);
-        Set<AT> addAnnoTypes = anno.getAnnoTypes();
-        ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();
-        cwPrm.srlIsSyntax = concreteSrlIsSyntax;
-        cwPrm.addAnnoTypes(anno.getAnnoTypes());
-        ConcreteWriter cw = new ConcreteWriter(cwPrm);
+        // Overwrite the output annotation types on cwPrm.
+        prm.cwPrm.addAnnoTypes(anno.getAnnoTypes());
+        ConcreteWriter cw = new ConcreteWriter(prm.cwPrm);
         cw.addAnnotations(sents, c);
-        return c;
     }
     
     public void close() {
