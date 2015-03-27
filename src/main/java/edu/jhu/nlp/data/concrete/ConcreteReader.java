@@ -65,7 +65,13 @@ public class ConcreteReader {
 
     public static class ConcreteReaderPrm extends Prm {
         private static final long serialVersionUID = 1L;
+        public String posTool = null;
+        public String lemmaTool = null;
+        public String chunkTool = null;
         public String depParseTool = "basic-deps"; 
+        public String parseTool = null;
+        public String nerTool = null;
+        public String relationTool = null;
     }
     
     private static final Logger log = LoggerFactory.getLogger(ConcreteReader.class);
@@ -80,7 +86,11 @@ public class ConcreteReader {
         this.prm = prm;
     }
 
-    public AnnoSentenceCollection toSentences(File inFile) throws IOException {
+    /**
+     * Determines the type of the path, reads (possibly multiple) Communications from it, and
+     * creates AnnoSentences from them.
+     */
+    public AnnoSentenceCollection sentsFromPath(File inFile) throws IOException {
     	AnnoSentenceCollection sents;
     	if (inFile.isDirectory()) {
     	    sents = sentsFromDir(inFile);
@@ -129,6 +139,8 @@ public class ConcreteReader {
     }
     
     // Adapted from ThriftIO.
+    // TODO: Move to Files? 
+    /** Reads an input stream into a correctly sized array of bytes. */
     private static byte[] toBytes(InputStream input) throws IOException {
         byte[] buffer = new byte[8192];
         int bytesRead;
@@ -142,14 +154,14 @@ public class ConcreteReader {
     public AnnoSentenceCollection sentsFromCommFile(File concreteFile) throws IOException {
         try {
             Communication communication = ser.fromPathString(concreteFile.getAbsolutePath());
-            AnnoSentenceCollection sents = toSentences(communication);
+            AnnoSentenceCollection sents = sentsFromComm(communication);
             return sents;
         } catch (ConcreteException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public AnnoSentenceCollection toSentences(Communication comm) {
+    public AnnoSentenceCollection sentsFromComm(Communication comm) {
         AnnoSentenceCollection annoSents = new AnnoSentenceCollection();
         addSentences(comm, annoSents);
         return annoSents;
@@ -170,10 +182,10 @@ public class ConcreteReader {
         }
 
         if (comm.getEntityMentionSetListSize() > 0) {
-            addEntityMentions(comm, tmpSents);
+            addNerMentionsFromEntityMentions(comm, tmpSents);
 
             if (comm.getSituationMentionSetListSize() > 0) {
-                addSituationMentions(comm, tmpSents);
+                addRelationsFromSituationMentions(comm, tmpSents);
             }
         }
         
@@ -186,8 +198,9 @@ public class ConcreteReader {
         ((ArrayList<Communication>)aSents.getSourceSents()).add(comm);
     }
 
-    private void addEntityMentions(Communication comm, List<AnnoSentence> tmpSents) {
-        if (comm.getEntityMentionSetListSize() == 0) {
+    private void addNerMentionsFromEntityMentions(Communication comm, List<AnnoSentence> tmpSents) {
+        EntityMentionSet cEms = ConcreteUtils.getFirstEntityMentionSetWithName(comm, prm.nerTool );
+        if (cEms == null) {
             return;
         }
         
@@ -198,8 +211,6 @@ public class ConcreteReader {
         
         Map<String, Integer> toksUuid2SentIdx = generateTokUuid2SentIdxMap(comm);
         
-        assert comm.getEntityMentionSetListSize() == 1;
-        EntityMentionSet cEms = comm.getEntityMentionSetList().get(0);
         for (EntityMention cEm : cEms.getMentionList()) {
             TokenRefSequence cEmToks = cEm.getTokens();
             Span span = getSpan(cEmToks);
@@ -232,9 +243,9 @@ public class ConcreteReader {
         numEntityMentions += cEms.getMentionList().size();
     }
 
-    private void addSituationMentions(Communication comm, List<AnnoSentence> tmpSents) {
-
-        if (comm.getSituationMentionSetListSize() == 0) {
+    private void addRelationsFromSituationMentions(Communication comm, List<AnnoSentence> tmpSents) {
+        SituationMentionSet cSms = ConcreteUtils.getFirstSituationMentionSetWithName(comm, prm.relationTool);
+        if (cSms == null) {
             return;
         }
         
@@ -244,9 +255,7 @@ public class ConcreteReader {
         
         Map<String, NerMention> emId2em = getUuid2ArgsMap(tmpSents);
         Map<String, Integer> emId2SentIdx = getUuid2SentIdxMap(tmpSents);
-                
-        assert comm.getSituationMentionSetListSize() == 1;
-        SituationMentionSet cSms = comm.getSituationMentionSetList().get(0);
+
         for (SituationMention cSm : cSms.getMentionList()) {
             if (!"STATE".equals(cSm.getSituationType())) {
                 throw new IllegalStateException("Expecting situations of type STATE. " + cSm.getSituationType());
@@ -270,7 +279,11 @@ public class ConcreteReader {
                 NerMention aEm = emId2em.get(cEmId.getUuidString());
                 aArgs.add(new Pair<String,NerMention>(role, aEm));
                 
-                int idx = emId2SentIdx.get(cEmId.getUuidString());                
+                Integer idxI = emId2SentIdx.get(cEmId.getUuidString());
+                if (idxI == null) {
+                    throw new IllegalStateException("Could not find entity in NerMentions with ID: " + cEmId.getUuidString());
+                }
+                int idx = idxI;
                 if (sentIdx != -1 && sentIdx != idx) {
                     throw new IllegalStateException("Multiple sentence indices for arguments: " + sentIdx + " " + idx);
                 }
@@ -342,9 +355,10 @@ public class ConcreteReader {
         }
         as.setWords(words);
 
-        TokenTagging posTags = TokenizationUtils.getFirstXTags(tokenization, TagTypes.POS.name());
-        TokenTagging lemmas = TokenizationUtils.getFirstXTags(tokenization, TagTypes.LEMMA.name());
-        TokenTagging chunks = TokenizationUtils.getFirstXTags(tokenization, "CHUNK");
+        // POS tags, Lemmas, and Chunks.
+        TokenTagging posTags = ConcreteUtils.getFirstXTagsWithName(tokenization, TagTypes.POS.name(), prm.posTool);
+        TokenTagging lemmas = ConcreteUtils.getFirstXTagsWithName(tokenization, TagTypes.LEMMA.name(), prm.lemmaTool);
+        TokenTagging chunks = ConcreteUtils.getFirstXTagsWithName(tokenization, "CHUNK", prm.chunkTool);
         as.setPosTags(getTagging(posTags));
         as.setLemmas(getTagging(lemmas));
         as.setChunks(getTagging(chunks));
@@ -353,14 +367,14 @@ public class ConcreteReader {
         if (tokenization.isSetDependencyParseList()) {
             int numWords = words.size();
             log.trace("Reading dependency parse with name {}", prm.depParseTool);
-            DependencyParse depParse = TokenizationUtils.getFirstDependencyParseWithName(tokenization, prm.depParseTool);
+            DependencyParse depParse = ConcreteUtils.getFirstDependencyParseWithName(tokenization, prm.depParseTool);
             int[] parents = getParents(depParse, numWords);
             as.setParents(parents);
         }
         
         // Constituency Parse
         if (tokenization.isSetParseList()) {
-            NaryTree tree = getParse(TokenizationUtils.getFirstParse(tokenization));
+            NaryTree tree = getParse(ConcreteUtils.getFirstParseWithName(tokenization, prm.parseTool ));
             as.setNaryTree(tree);
         }
         
@@ -391,6 +405,7 @@ public class ConcreteReader {
             Constituent c = cs.get(i);
             for (int id : c.getChildList()) {
                 int j = id2idx.get(id);
+                log.debug("i={} j={}", i, j);
                 trees[i].addChild(trees[j]);
             }
         }
@@ -478,7 +493,7 @@ public class ConcreteReader {
 
         System.out.println("Reading file: " + inputFile);
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
-        for (AnnoSentence sent : reader.toSentences(inputFile)) {
+        for (AnnoSentence sent : reader.sentsFromPath(inputFile)) {
             System.out.println(sent);
         }        
     }

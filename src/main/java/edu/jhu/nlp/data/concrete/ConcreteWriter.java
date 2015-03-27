@@ -140,7 +140,7 @@ public class ConcreteWriter {
 
     /** Adds the annotations from the {@link AnnoSentenceCollection} to the {@link Communication}. */
     public void addAnnotations(AnnoSentenceCollection sents, Communication comm) {
-        int numSents = TokenizationUtils.getNumSents(comm);
+        int numSents = ConcreteUtils.getNumSents(comm);
         if (numSents != sents.size()) {
             log.error(String.format("# sents in Communication = %d # sents in AnnoSentenceCollection = %d", numSents, sents.size()));
             log.error("The number of sentences in the Communication do not match the number in the AnnoSentenceCollection." +

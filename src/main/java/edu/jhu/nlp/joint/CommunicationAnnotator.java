@@ -78,7 +78,7 @@ public class CommunicationAnnotator {
         // Return a copy.
         c = new Communication(c);
         ConcreteReader cr = new ConcreteReader(new ConcreteReaderPrm());
-        AnnoSentenceCollection sents = cr.toSentences(c);
+        AnnoSentenceCollection sents = cr.sentsFromComm(c);
         anno.annotate(sents);
         Set<AT> addAnnoTypes = anno.getAnnoTypes();
         ConcreteWriterPrm cwPrm = new ConcreteWriterPrm();

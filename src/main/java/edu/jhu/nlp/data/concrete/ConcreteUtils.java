@@ -4,15 +4,16 @@ import java.util.List;
 
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.DependencyParse;
+import edu.jhu.hlt.concrete.EntityMentionSet;
 import edu.jhu.hlt.concrete.Parse;
 import edu.jhu.hlt.concrete.Section;
-import edu.jhu.hlt.concrete.Sentence;
+import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenTagging;
 import edu.jhu.hlt.concrete.Tokenization;
 
-public class TokenizationUtils {
+public class ConcreteUtils {
 
-    private TokenizationUtils() { }
+    private ConcreteUtils() { }
 
     public static TokenTagging getFirstXTags(Tokenization tokenization, String taggingType) {
         return getFirstXTagsWithName(tokenization, taggingType, null);
@@ -75,6 +76,32 @@ public class TokenizationUtils {
             n += section.getSentenceListSize();
         }
         return n;
+    }
+    
+    public static EntityMentionSet getFirstEntityMentionSetWithName(Communication comm, String toolName) {
+        List<EntityMentionSet> cEmsList = comm.getEntityMentionSetList();
+        if (cEmsList == null) {
+            return null;
+        }
+        for (EntityMentionSet cEms : cEmsList) {            
+            if (toolName == null || cEms.getMetadata().getTool().contains(toolName)) {
+                return cEms;
+            }
+        }
+        return null;
+    }
+    
+    public static SituationMentionSet getFirstSituationMentionSetWithName(Communication comm, String toolName) {
+        List<SituationMentionSet> cSmsList = comm.getSituationMentionSetList();
+        if (cSmsList == null) {
+            return null;
+        }
+        for (SituationMentionSet cSms : cSmsList) {            
+            if (toolName == null || cSms.getMetadata().getTool().contains(toolName)) {
+                return cSms;
+            }
+        }
+        return null;
     }
     
 }
