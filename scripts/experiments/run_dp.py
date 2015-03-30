@@ -335,8 +335,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             datasets = []
             for lang_short in ["en"]:
                 gl = g.langs[lang_short]
-                gl.cx_data.update(trainMaxNumSentences=3000)
-                datasets.append(gl.cx_data)
+                data = gl.cx_data
+                data.update(trainMaxNumSentences=3000)
+                data.update(pruneModel=data.get("prune_model_path"))
+                # Use dev as test
+                data.update(propTrainAsDev=0.1)
+                data.update(test=data.get("dev"))
+                data.remove("dev") 
+                datasets.append(data)
                 
             # Train the second order models.
             for data in datasets:
@@ -346,9 +352,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             bpMaxIterations = 1
                         else:
                             bpMaxIterations = 4
-                        data.update(pruneModel=data.get("prune_model_path"),
-                                    propTrainAsDev=0.1) # DEV DATA.
-                        data.remove("test") # NO TEST DATA, we're just tuning.
                         exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         if False: #trainer == g.erma_mse:
