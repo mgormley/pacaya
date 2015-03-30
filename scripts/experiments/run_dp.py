@@ -333,14 +333,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
             # Get the datasets.
             datasets = []
-            for lang_short in ["tr", "sl"]:
+            for lang_short in ["en"]:
                 gl = g.langs[lang_short]
+                gl.cx_data.update(trainMaxNumSentences=3000)
                 datasets.append(gl.cx_data)
                 
             # Train the second order models.
             for data in datasets:
-                for trainer in [g.erma_mse]: #, #g.cll]:
-                    for parser in pruned_parsers([g.first_order]): #, g.second_grand_asib]):
+                for trainer in [g.erma_mse, g.erma_dp_nomse, g.cll]:
+                    for parser in pruned_parsers([g.second_grand_asib]):
                         if parser.get("tagger_parser").startswith("1st"):
                             bpMaxIterations = 1
                         else:
@@ -350,8 +351,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         data.remove("test") # NO TEST DATA, we're just tuning.
                         exp = g.defaults + data + parser + trainer + SrlExpParams(bpMaxIterations=bpMaxIterations)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                        exp.add_prereq(root)
-                        if trainer != g.cll:
+                        if False: #trainer == g.erma_mse:
+                            # Add exp.
+                            exp.add_prereq(root)
                             # TUNE PARAMETERS HERE:
                             pairs = []
                             for s in [0.1, 0.01, 0.001]:
@@ -366,7 +368,21 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                     exp2 += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp2))
                                     exp2.add_prereq(exp)
                                     exp2.remove("modelOut") # Speedup.
+                        elif trainer == g.erma_dp_nomse:   
+                            # Don't add exp.                         
+                            # TUNE PARAMETERS HERE:
+                            pairs = []
+                            for s in [10000, 1000, 100, 10, 1, 0.1]:
+                                for e in [10, 1, 0.1, 0.01]:
+                                    if s >= e:
+                                        pairs.append((s,e))
+                            for dpStartTemp, dpEndTemp in pairs:
+                                for dpUseLogScale in [True, False]:
+                                    exp2 = exp + SrlExpParams(dpStartTemp=dpStartTemp, dpEndTemp=dpEndTemp, dpUseLogScale=dpUseLogScale)
+                                    exp2.add_prereq(root)
+                                    exp2.remove("modelOut") # Speedup.
                         else:
+                            exp.add_prereq(root)
                             exp.remove("modelOut") # Speedup.
                             
             if self.fast: root.dependents[0].dependents = root.dependents[0].dependents[:2]
