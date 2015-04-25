@@ -1,4 +1,4 @@
-package edu.jhu.parse.cky;
+package edu.jhu.gm.decode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -7,6 +7,10 @@ import edu.jhu.nlp.data.Sentence;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
 import edu.jhu.autodiff.Tensor;
+import edu.jhu.parse.cky.CkyPcfgParser;
+import edu.jhu.parse.cky.CnfGrammar;
+import edu.jhu.parse.cky.Rule;
+import edu.jhu.parse.cky.Scorer;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
@@ -19,7 +23,6 @@ import edu.jhu.util.Alphabet;
  * 
  * @author travis
  */
-// TODO: Consider moving this to edu.jhu.gm.decode package.
 public class ConstituencyTreeFactorParser {
 
     // TODO this can be faster if reset doesn't always allocate

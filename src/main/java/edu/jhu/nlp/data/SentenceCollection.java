@@ -34,14 +34,6 @@ public class SentenceCollection implements Iterable<Sentence> {
         add(sentence);
     }
     
-    SentenceCollection(DepTreebank treebank) {
-        this(treebank.getAlphabet());
-        for (DepTree tree : treebank) {
-            Sentence sentence = tree.getSentence(treebank.getAlphabet());
-            add(sentence);
-        }
-    }
-    
     public SentenceCollection(SentenceCollection sentences1, SentenceCollection sentences2) {
         this(sentences1.alphabet);
         if (sentences1.alphabet != sentences2.alphabet) {
@@ -80,7 +72,7 @@ public class SentenceCollection implements Iterable<Sentence> {
     }
 
     /**
-     * Vocabulary of the sentences including WALL_LABEL
+     * Vocabulary of the sentences.
      */
     public Set<String> getVocab() {
         Set<String> vocab = new HashSet<String>();
@@ -89,8 +81,6 @@ public class SentenceCollection implements Iterable<Sentence> {
                 vocab.add(label);
             }
         }
-        // Special case for Wall
-        vocab.add(WallDepTreeNode.WALL_LABEL);
         return vocab;
     }
 

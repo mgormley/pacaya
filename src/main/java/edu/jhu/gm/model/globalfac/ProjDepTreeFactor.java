@@ -30,9 +30,8 @@ import edu.jhu.gm.model.VarTensor;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.hypergraph.depparse.O1DpHypergraph;
-import edu.jhu.nlp.data.DepTree;
-import edu.jhu.nlp.data.WallDepTreeNode;
 import edu.jhu.parse.dep.EdgeScores;
+import edu.jhu.parse.dep.ParentsArray;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 import edu.jhu.util.semiring.Algebra;
@@ -110,8 +109,8 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         }
         // Add a variable for each variable being connected to the wall node.
         for (int j=0; j<n; j++) {
-            String name = String.format("Link_%d_%d", WallDepTreeNode.WALL_POSITION, j);
-            vars.add(new LinkVar(type, name, WallDepTreeNode.WALL_POSITION, j));
+            String name = String.format("Link_%d_%d", ParentsArray.WALL_POSITION, j);
+            vars.add(new LinkVar(type, name, ParentsArray.WALL_POSITION, j));
         }
         return vars;
     }
@@ -236,7 +235,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             return s.zero();
         }
         int[] parents = getParents(n, vc);
-        if (!DepTree.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
+        if (!ParentsArray.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
             log.trace("Tree is not a valid dependency tree.");
             return s.zero();
         }
