@@ -9,7 +9,7 @@ public class Gaussian {
 	private GaussianGenerator normal;
 
 	public Gaussian(double mean, double standardDeviation) {
-	    this.normal = new GaussianGenerator(mean, standardDeviation, Prng.curRandom);
+	    this.normal = new GaussianGenerator(mean, standardDeviation, Prng.getRandom());
 	}
 	
 	public double nextDouble() {

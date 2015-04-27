@@ -9,7 +9,7 @@ import java.io.ObjectOutputStream;
 
 import org.junit.Test;
 
-import edu.jhu.nlp.MutableInt;
+import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.sort.DoubleSort;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
@@ -44,12 +44,12 @@ public class FgModelTest {
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
                 assertEquals(0.0, v, 1e-13);
-                x.increment();
+                x.v++;
                 return 1.0;
             }
         });
         
-        assertEquals(numParams, x.get());
+        assertEquals(numParams, x.v);
         
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
@@ -102,8 +102,8 @@ public class FgModelTest {
         final MutableInt x = new MutableInt(0);
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
-                x.increment();
-                return x.get();
+                x.v++;
+                return x.v;
             }
         });
         
@@ -118,8 +118,8 @@ public class FgModelTest {
         final MutableInt y = new MutableInt(14);
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
-                assertEquals(y.get(), v, 1e-13);
-                y.decrement();
+                assertEquals(y.v, v, 1e-13);
+                y.v--;
                 return v;
             }
         });

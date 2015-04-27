@@ -11,7 +11,6 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var;
-import edu.jhu.nlp.srl.SrlFactorGraphBuilder;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingFeatureNames;
 import edu.jhu.util.FeatureNames;

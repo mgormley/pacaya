@@ -35,7 +35,7 @@ public class LabeledMultinomial<T> extends TreeMap<T, Double> implements Map<T, 
     }
 
     public T sampleFromMultinomial() {
-        return sampleFromMultinomial(Prng.javaRandom);
+        return sampleFromMultinomial(Prng.getRandom());
     }
 
     public T sampleFromMultinomial(Random random) {

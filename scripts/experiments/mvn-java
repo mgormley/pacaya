@@ -1,4 +1,0 @@
-# Runs java with the appropriate maven classpath.
-#
-mvn exec:exec -q -Dexec.executable="java" -Dexec.args="-cp %classpath $*"
-

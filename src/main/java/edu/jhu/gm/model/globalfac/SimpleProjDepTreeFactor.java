@@ -15,12 +15,11 @@ import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
-import edu.jhu.nlp.data.DepTree;
-import edu.jhu.nlp.data.WallDepTreeNode;
+import edu.jhu.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.parse.dep.DepIoChart;
 import edu.jhu.parse.dep.EdgeScores;
+import edu.jhu.parse.dep.ParentsArray;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
@@ -100,8 +99,8 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         }
         // Add a variable for each variable being connected to the wall node.
         for (int j=0; j<n; j++) {
-            String name = String.format("Link_%d_%d", WallDepTreeNode.WALL_POSITION, j);
-            vars.add(new LinkVar(type, name, WallDepTreeNode.WALL_POSITION, j));
+            String name = String.format("Link_%d_%d", ParentsArray.WALL_POSITION, j);
+            vars.add(new LinkVar(type, name, ParentsArray.WALL_POSITION, j));
         }
         return vars;
     }
@@ -428,7 +427,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
             return s.zero();
         }
         int[] parents = getParents(n, vc);
-        if (!DepTree.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
+        if (!ParentsArray.isDepTree(parents, true, InsideOutsideDepParse.singleRoot)) {
             log.warn("Tree is not a valid dependency tree.");
             return s.zero();
         }

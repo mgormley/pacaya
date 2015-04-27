@@ -45,13 +45,11 @@ import edu.jhu.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.train.CrfTrainer.Trainer;
 import edu.jhu.hlt.optimize.MalletLBFGS;
-import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.nlp.depparse.DepParseFactorGraphBuilder.DepParseFactorTemplate;
-import edu.jhu.nlp.srl.SrlFactorGraphBuilder.SrlFactorTemplate;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.JUnitUtils;
@@ -207,36 +205,7 @@ public class CrfTrainerTest {
         JUnitUtils.assertArrayEquals(new double[]{0.253, -0.253, -0.253, 0.253}, params2, 1e-3);
         //MSE: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
     }
-    
-    @Test 
-    public void testLogLinearModelDpDataErma() throws IOException {
-        FactorTemplateList fts = new FactorTemplateList();
-        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        FgExampleList data = ErmaObjectiveTest.getDpData(ofc, 5);
         
-        //double[] params = new double[]{-3., -2., -1.0};
-        double[] params = new double[ofc.getNumParams()];
-        
-        FgModel model = new FgModel(params.length);
-        
-        Regularizer r = new L2(100);
-
-        model.updateModelFromDoubles(params);
-        model = train(model, data, r, true);        
-        double[] params1 = FgModelTest.getParams(model);
-        
-        // ERMA should get the same answer as the CLL training in this case.
-        model.updateModelFromDoubles(params);
-        model = trainErma(model, data, r, true);  
-        double[] params2 = FgModelTest.getParams(model);
-        
-        System.out.println(DoubleArrays.toString( params1, "%.3f"));
-        System.out.println(DoubleArrays.toString( params2, "%.3f"));
-        
-        JUnitUtils.assertArrayEquals(new double[]{0.000, -0.000, -0.515, 0.374, 0.646, 0.710, -0.400}, params1, 1e-3);
-        JUnitUtils.assertArrayEquals(new double[]{-0.000, 0.000, -1.323, 0.471, 0.515, 0.495, -0.649}, params2, 1e-3);
-    }
-    
     @Test
     public void testTrainNoLatentVars() {
         // Boiler plate feature extraction code.
@@ -321,7 +290,11 @@ public class CrfTrainerTest {
         //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
         //JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, FgModelTest.getParams(model), 1e-2);
     }
-
+    
+    public enum MockTemplate {
+        UNARY, ROLE_UNARY
+    }
+    
     @Test
     public void testTrainWithGlobalFactor() {
         FactorTemplateList fts = new FactorTemplateList();  
@@ -343,16 +316,16 @@ public class CrfTrainerTest {
                 if (i != j) {
                     ExpFamFactor f;
                     if (i == -1) {
-                        f = new ObsFeExpFamFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.UNARY, ofc, obsFe);
+                        f = new ObsFeExpFamFactor(new VarSet(rootVars[j]), MockTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
                         //trainConfig.put(rootVars[j], 0);
                     } else {
-                        f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.UNARY, ofc, obsFe);
+                        f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), MockTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
                         childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));
-                        fg.addFactor(new ObsFeExpFamFactor(new VarSet(childRoles[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
+                        fg.addFactor(new ObsFeExpFamFactor(new VarSet(childRoles[i][j]), MockTemplate.ROLE_UNARY, ofc, obsFe));
                         
                         //trainConfig.put(childVars[i][j], 0);
                         trainConfig.put(childRoles[i][j], "A1");
