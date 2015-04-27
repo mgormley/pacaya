@@ -10,7 +10,7 @@ import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.IntArrayList;
-import edu.jhu.prim.util.Prng;
+import edu.jhu.prim.util.random.Prng;
 
 /**
  * This class is identical to <code>FullChartCell</code> except that it adds the

@@ -2,7 +2,7 @@ package edu.jhu.util.dist;
 
 import org.uncommons.maths.random.GaussianGenerator;
 
-import edu.jhu.prim.util.Prng;
+import edu.jhu.prim.util.random.Prng;
 
 public class Gaussian {
 

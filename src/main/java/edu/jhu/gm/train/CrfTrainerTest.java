@@ -51,7 +51,7 @@ import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.util.Prng;
+import edu.jhu.prim.util.random.Prng;
 import edu.jhu.util.FeatureNames;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;

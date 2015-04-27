@@ -12,8 +12,8 @@ import org.junit.Test;
 import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.sort.DoubleSort;
-import edu.jhu.prim.util.Prng;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
+import edu.jhu.prim.util.random.Prng;
 import edu.jhu.util.JUnitUtils;
 
 public class FgModelTest {

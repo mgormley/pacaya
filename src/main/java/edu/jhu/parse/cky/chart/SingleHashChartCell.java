@@ -6,7 +6,7 @@ import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.map.IntObjectHashMap;
-import edu.jhu.prim.util.Prng;
+import edu.jhu.prim.util.random.Prng;
 
 /**
  * Cell that stores every entry in a single hash table.

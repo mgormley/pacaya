@@ -5,7 +5,7 @@ import org.apache.commons.math3.util.FastMath;
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.util.Prng;
+import edu.jhu.prim.util.random.Prng;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
