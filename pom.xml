@@ -346,7 +346,7 @@
       <version>4.4.4</version>
     </dependency>
     <dependency>
-      <groupId>edu.jhu.hlt.optimize</groupId>
+      <groupId>edu.jhu.hlt.optimize-wrappers</groupId>
       <artifactId>optimize-wrappers</artifactId>
       <version>${pacaya.version}</version>
       <optional>true</optional>      
