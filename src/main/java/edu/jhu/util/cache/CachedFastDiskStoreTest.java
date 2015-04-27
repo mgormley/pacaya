@@ -8,8 +8,8 @@ import java.io.FileNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.jhu.prim.util.Timer;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Timer;
 
 public class CachedFastDiskStoreTest {
 

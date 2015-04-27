@@ -2,7 +2,7 @@ package edu.jhu.util.semiring;
 
 import org.junit.Test;
 
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 
 public class SemiringSpeedTest {
 

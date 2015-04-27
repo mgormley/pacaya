@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Timer;
 
 public class ProjectiveDependencyParserSpeedTest {
     

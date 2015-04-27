@@ -12,7 +12,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 
 /**
  * An unlabeled factor graph example. This class only stores the factor graph

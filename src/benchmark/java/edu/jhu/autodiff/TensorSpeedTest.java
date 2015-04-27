@@ -2,7 +2,7 @@ package edu.jhu.autodiff;
 
 import org.junit.Test;
 
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.RealAlgebra;
 

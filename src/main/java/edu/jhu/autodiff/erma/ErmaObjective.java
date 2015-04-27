@@ -12,7 +12,7 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.Accumulator;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 import edu.jhu.util.semiring.Algebra;
 
 public class ErmaObjective implements ExampleObjective {

@@ -17,7 +17,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarTensor;
 import edu.jhu.gm.model.globalfac.GlobalFactor;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
     

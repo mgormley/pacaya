@@ -5,8 +5,8 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.prim.util.Timer;
 import edu.jhu.util.Prm;
-import edu.jhu.util.Timer;
 
 /**
  * Factory for FgExamples.

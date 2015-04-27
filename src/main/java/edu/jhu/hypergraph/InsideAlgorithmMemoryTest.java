@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.junit.Test;
 
 import edu.jhu.prim.tuple.IntTuple;
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 
 public class InsideAlgorithmMemoryTest {
 

@@ -3,7 +3,7 @@ package edu.jhu.util.semiring;
 import org.junit.Test;
 
 import edu.jhu.autodiff.Tensor;
-import edu.jhu.util.Timer;
+import edu.jhu.prim.util.Timer;
 
 /**
  * Results:
