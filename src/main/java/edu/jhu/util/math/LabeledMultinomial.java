@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
 
-import edu.jhu.util.Prng;
+import edu.jhu.prim.util.Prng;
 
 public class LabeledMultinomial<T> extends TreeMap<T, Double> implements Map<T, Double> {
 

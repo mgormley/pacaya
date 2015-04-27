@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntSort;
+import edu.jhu.prim.util.Prng;
 import edu.jhu.util.Threads.TaskFactory;
 import edu.jhu.util.collections.Lists;
 

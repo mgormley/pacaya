@@ -31,10 +31,10 @@ import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
+import edu.jhu.prim.util.Prng;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
-import edu.jhu.util.Prng;
 import edu.jhu.util.semiring.Algebra;
 import edu.jhu.util.semiring.Algebras;
 

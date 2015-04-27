@@ -8,8 +8,8 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.Prng;
 import edu.jhu.prim.util.Timer;
-import edu.jhu.util.Prng;
 import edu.jhu.util.semiring.Algebras;
 
 /**

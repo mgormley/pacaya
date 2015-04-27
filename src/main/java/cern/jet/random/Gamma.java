@@ -8,7 +8,7 @@ It is provided "as is" without expressed or implied warranty.
 */
 package cern.jet.random;
 
-import edu.jhu.util.Prng;
+import edu.jhu.prim.util.Prng;
 
 /**
  * Gamma distribution; <A HREF="http://wwwinfo.cern.ch/asdoc/shortwrupsdir/g106/top.html"> math definition</A>,
