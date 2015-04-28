@@ -1,4 +1,4 @@
-package edu.jhu.util.semiring;
+package edu.jhu.pacaya.util.semiring;
 
 import org.junit.Test;
 

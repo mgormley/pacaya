@@ -1,4 +1,4 @@
-package edu.jhu.autodiff.erma;
+package edu.jhu.pacaya.autodiff.erma;
 
 import edu.jhu.pacaya.autodiff.erma.ErmaBp;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;

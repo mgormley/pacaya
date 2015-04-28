@@ -1,4 +1,4 @@
-package edu.jhu.autodiff;
+package edu.jhu.pacaya.autodiff;
 
 import org.junit.Test;
 

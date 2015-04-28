@@ -1,4 +1,4 @@
-package edu.jhu.gm.maxent;
+package edu.jhu.pacaya.gm.maxent;
 
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY;

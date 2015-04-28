@@ -1,4 +1,4 @@
-package edu.jhu.parse.dep;
+package edu.jhu.pacaya.parse.dep;
 
 import static org.junit.Assert.assertEquals;
 
