@@ -105,7 +105,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/src/benchmark/java</source>
+                <source>${project.basedir}/src/perf/java</source>
               </sources>
             </configuration>
           </execution>
