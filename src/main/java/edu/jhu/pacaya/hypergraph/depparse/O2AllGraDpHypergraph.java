@@ -42,11 +42,6 @@ public class O2AllGraDpHypergraph implements Hypergraph {
     private Algebra a;
     private boolean singleRoot;
     
-    public interface DependencyScorer {
-        double getScore(int p, int c, int g);
-        int getNumTokens();
-    }
-
     public O2AllGraDpHypergraph(DependencyScorer scorer, Algebra a, boolean singleRoot) {
         super();
         this.scorer = scorer;

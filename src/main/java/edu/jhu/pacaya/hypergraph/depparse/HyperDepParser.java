@@ -6,7 +6,6 @@ import edu.jhu.pacaya.hypergraph.Hypernode;
 import edu.jhu.pacaya.hypergraph.Hyperpotential;
 import edu.jhu.pacaya.hypergraph.HyperpotentialFoe;
 import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
-import edu.jhu.pacaya.hypergraph.depparse.O2AllGraDpHypergraph.DependencyScorer;
 import edu.jhu.pacaya.parse.dep.DepIoChart;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ProjTreeChart;

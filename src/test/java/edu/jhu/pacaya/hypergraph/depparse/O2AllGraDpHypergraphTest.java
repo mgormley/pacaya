@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -14,7 +13,6 @@ import edu.jhu.pacaya.hypergraph.Hyperalgo;
 import edu.jhu.pacaya.hypergraph.Hypernode;
 import edu.jhu.pacaya.hypergraph.Hyperpotential;
 import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
-import edu.jhu.pacaya.hypergraph.depparse.O2AllGraDpHypergraph.DependencyScorer;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
@@ -190,33 +188,6 @@ public class O2AllGraDpHypergraphTest extends AbstractHypergraphTest {
             }
         };
         return scorer;
-    }
-    
-    public static class ExplicitDependencyScorer implements DependencyScorer {
-
-        // Indexed by parent, child, other (i.e. sibling or grandparent)
-        private double[][][] scores;
-        private int n;
-                
-        public ExplicitDependencyScorer(double[][][] scores, int n) {
-            super();
-            this.scores = scores;
-            this.n = n;
-        }
-
-        @Override
-        public double getScore(int p, int c, int g) {
-            return scores[p][c][g];
-        }
-
-        @Override
-        public int getNumTokens() {
-            return n;
-        }
-        
-        public String toString() {
-            return Arrays.deepToString(scores);
-        }
     }
 
 }
