@@ -67,7 +67,7 @@ public class ModuleTestUtils {
          * Treats all the input modules as if they were concatenated into a long vector, and
          * computes the size of that vector.
          */
-        public static int getOutputSize(List<? extends Module<? extends MVec>> mods) {
+        public static int getOutputSize(List<? extends Module<?>> mods) {
             int totInDimension = 0;
             for (Module<?> mod : mods) {
                 totInDimension += mod.getOutput().size();
