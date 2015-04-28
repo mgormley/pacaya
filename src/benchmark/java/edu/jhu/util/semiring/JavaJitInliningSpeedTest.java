@@ -2,7 +2,11 @@ package edu.jhu.util.semiring;
 
 import org.junit.Test;
 
-import edu.jhu.autodiff.Tensor;
+import edu.jhu.pacaya.autodiff.Tensor;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Timer;
 
 /**

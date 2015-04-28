@@ -1,13 +1,15 @@
 package edu.jhu.gm.maxent;
 
-import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.maxent.LogLinearXY.LogLinearXYPrm;
-import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.VarTensor;
+import edu.jhu.pacaya.gm.feat.FeatureVector;
+import edu.jhu.pacaya.gm.maxent.LogLinearXY;
+import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
+import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
+import edu.jhu.pacaya.gm.model.FgModel;
+import edu.jhu.pacaya.gm.model.VarTensor;
+import edu.jhu.pacaya.util.hash.MurmurHash3;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.hash.MurmurHash3;
 
 public class LogLinearEDsSpeedTest {
 

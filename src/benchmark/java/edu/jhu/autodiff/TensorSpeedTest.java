@@ -2,9 +2,11 @@ package edu.jhu.autodiff;
 
 import org.junit.Test;
 
+import edu.jhu.pacaya.autodiff.DimIter;
+import edu.jhu.pacaya.autodiff.Tensor;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Timer;
-import edu.jhu.util.semiring.Algebra;
-import edu.jhu.util.semiring.RealAlgebra;
 
 
 public class TensorSpeedTest {

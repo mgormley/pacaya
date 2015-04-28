@@ -1,16 +1,17 @@
 package edu.jhu.autodiff.erma;
 
-import edu.jhu.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.model.ExplicitFactor;
-import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarSet;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.model.ExplicitFactor;
+import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.VarSet;
+import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.random.Prng;
-import edu.jhu.util.semiring.Algebras;
 
 /**
  * Results from 09/09/2014:
