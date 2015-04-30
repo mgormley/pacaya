@@ -279,7 +279,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8</version>
-      <!-- <scope>test</scope> -->
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>edu.jhu.prim</groupId>
@@ -362,7 +362,7 @@
       <groupId>edu.jhu.hlt.optimize-wrappers</groupId>
       <artifactId>optimize-wrappers</artifactId>
       <version>${pacaya.version}</version>
-      <optional>true</optional>      
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
