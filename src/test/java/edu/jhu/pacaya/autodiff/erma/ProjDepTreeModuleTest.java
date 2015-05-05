@@ -22,7 +22,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class ProjDepTreeModuleTest {
 
-    Algebra s = new RealAlgebra();
+    Algebra s = RealAlgebra.REAL_ALGEBRA;
     String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1    2  |  value\n"
             + "    0    0    0  |  0.144000\n"
@@ -53,12 +53,12 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testSimpleReal() {
-        helpSimple(new RealAlgebra());
+        helpSimple(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpSimple(new LogSignAlgebra());
+        helpSimple(LogSignAlgebra.LOG_SIGN_ALGEBRA);
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -140,12 +140,12 @@ public class ProjDepTreeModuleTest {
         
     @Test
     public void testGradByFiniteDiffsReal() {
-        helpGradByFinDiff(new RealAlgebra());
+        helpGradByFinDiff(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFinDiff(new LogSignAlgebra());
+        helpGradByFinDiff(LogSignAlgebra.LOG_SIGN_ALGEBRA);
     }
 
     private void helpGradByFinDiff(Algebra tmpS) {
@@ -179,7 +179,7 @@ public class ProjDepTreeModuleTest {
                 tmTrueIn.set(inVals[0], 0, 1);
                 tmFalseIn.set(inVals[1], 0, 1);
                 
-                ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, new LogSignAlgebra());
+                ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, LogSignAlgebra.LOG_SIGN_ALGEBRA);
                 
                 topo.forward();
                 System.out.println(topo.getOutput());

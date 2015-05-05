@@ -46,21 +46,21 @@ public class InsideOutsideDepParseTest {
             + "    1    1  |  24.2000\n"
             + "]";
     
-    Algebra s = new RealAlgebra();
+    Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Test
     public void testSimpleReal() {
-        helpForwardBackward(new RealAlgebra());        
+        helpForwardBackward(RealAlgebra.REAL_ALGEBRA);        
     }
 
     @Test
     public void testSimpleLog() {
-        helpForwardBackward(new LogSemiring());
+        helpForwardBackward(LogSemiring.LOG_SEMIRING);
     }
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpForwardBackward(new LogSignAlgebra());        
+        helpForwardBackward(LogSignAlgebra.LOG_SIGN_ALGEBRA);        
     }
 
     private void helpForwardBackward(Algebra tmpS) {

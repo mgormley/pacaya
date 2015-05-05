@@ -5,7 +5,7 @@ public class RealAlgebraTest extends AbstractAlgebraTest {
 
     @Override
     public Algebra getAlgebra() {
-        return new RealAlgebra();
+        return RealAlgebra.REAL_ALGEBRA;
     }
 
 }

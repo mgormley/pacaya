@@ -13,7 +13,7 @@ public class ClampFactor extends ExplicitFactor implements Factor {
         super(new VarSet(v));
         this.state = state;
 
-        Semiring s = new LogSemiring();
+        Semiring s = LogSemiring.LOG_SEMIRING;
         this.fill(s.zero());
         this.setValue(state, s.one());
     }

@@ -22,7 +22,7 @@ public class ExpectedRecallTest {
 
     private VarConfig goldConfig;
     private BeliefsIdentity id1;
-    private Algebra s = new RealAlgebra();
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Before
     public void setUp() {

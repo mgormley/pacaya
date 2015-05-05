@@ -25,7 +25,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class SoftmaxMbrDepParseTest {
 
-    Algebra s = new RealAlgebra();
+    Algebra s = RealAlgebra.REAL_ALGEBRA;
     
     String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1  |  value\n"
@@ -50,13 +50,13 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testSimpleReal() {
-        helpSimple(new LogSignAlgebra());              
-        //helpSimple(new RealAlgebra());
+        helpSimple(LogSignAlgebra.LOG_SIGN_ALGEBRA);              
+        //helpSimple(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test    
     public void testSimpleLogPosNeg() {    
-        helpSimple(new LogSignAlgebra());              
+        helpSimple(LogSignAlgebra.LOG_SIGN_ALGEBRA);              
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -97,7 +97,7 @@ public class SoftmaxMbrDepParseTest {
             + "]";
     @Test    
     public void testSimpleLogPosNeg2() {    
-        helpSimple2(new RealAlgebra());              
+        helpSimple2(RealAlgebra.REAL_ALGEBRA);              
     }
 
     private void helpSimple2(Algebra tmpS) {
@@ -134,12 +134,12 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testGradByFiniteDiffsReal() {   
-        helpGradByFiniteDiffs(new RealAlgebra());
+        helpGradByFiniteDiffs(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFiniteDiffs(new LogSignAlgebra());
+        helpGradByFiniteDiffs(LogSignAlgebra.LOG_SIGN_ALGEBRA);
     }
 
     private void helpGradByFiniteDiffs(Algebra tmpS) {

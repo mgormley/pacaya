@@ -23,7 +23,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class DepParseDecodeLossTest {
 
-    private Algebra s = new RealAlgebra();
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Test
     public void testTemperatureLinearScale() {

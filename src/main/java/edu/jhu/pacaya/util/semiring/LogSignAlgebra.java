@@ -21,6 +21,10 @@ public class LogSignAlgebra implements Semiring, Algebra {
     private static final long POSITIVE = 0;
     private static final long NEGATIVE = 1;
     
+    private LogSignAlgebra() { 
+        // Private constructor.
+    }
+    
     /** Converts a compacted number to its real value. */
     @Override
     public double toReal(double x) {

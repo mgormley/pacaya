@@ -8,6 +8,10 @@ public class LogSemiring implements Algebra {
     
     public static final LogSemiring LOG_SEMIRING = new LogSemiring();
 
+    private LogSemiring() { 
+        // Private constructor.
+    }
+    
     @Override
     public double plus(double x, double y) {
         return FastMath.logAdd(x, y);

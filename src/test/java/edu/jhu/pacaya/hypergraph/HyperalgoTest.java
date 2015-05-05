@@ -74,8 +74,8 @@ public class HyperalgoTest {
         expected.betaAdj = null;
         expected.weightAdj = null;
         
-        expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
-        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), null);
+        expected = forwardBackwardCheck(graph, expected, RealAlgebra.REAL_ALGEBRA, null);
+        forwardBackwardCheck(graph, expected, LogSignAlgebra.LOG_SIGN_ALGEBRA, null);
     }
        
     private static MemHypergraph getSimpleGraph() {
@@ -123,8 +123,8 @@ public class HyperalgoTest {
         expected.betaAdj = new double[]{0, 0, 0, -0.6666666666666667, -0.6666666666666667, -1.0};
         expected.weightAdj = new double[]{0, 0, 0, 0, 0, 0, 0, 0};
         
-        forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
-        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), null);
+        forwardBackwardCheck(graph, expected, RealAlgebra.REAL_ALGEBRA, null);
+        forwardBackwardCheck(graph, expected, LogSignAlgebra.LOG_SIGN_ALGEBRA, null);
     }
     
     private Scores forwardBackwardCheck(MemHypergraph graph, Scores expected, Algebra s, double[] marginalAdj) {
@@ -204,16 +204,16 @@ public class HyperalgoTest {
         expected.betaAdj = null;
         expected.weightAdj = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         
-        expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), null);
-        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), null);
+        expected = forwardBackwardCheck(graph, expected, RealAlgebra.REAL_ALGEBRA, null);
+        forwardBackwardCheck(graph, expected, LogSignAlgebra.LOG_SIGN_ALGEBRA, null);
         
         // Check that both semirings get the same answers when using random marginal adjoints.
         expected = new Scores();
         double[] marginalAdj = new double[graph.getNodes().size()];
         Arrays.fill(marginalAdj, 1.0);
         marginalAdj = Dirichlet.staticDraw(marginalAdj);
-        expected = forwardBackwardCheck(graph, expected, new RealAlgebra(), marginalAdj);
-        forwardBackwardCheck(graph, expected, new LogSignAlgebra(), marginalAdj);
+        expected = forwardBackwardCheck(graph, expected, RealAlgebra.REAL_ALGEBRA, marginalAdj);
+        forwardBackwardCheck(graph, expected, LogSignAlgebra.LOG_SIGN_ALGEBRA, marginalAdj);
     }
             
     private static MemHypergraph getCkyGraph() {

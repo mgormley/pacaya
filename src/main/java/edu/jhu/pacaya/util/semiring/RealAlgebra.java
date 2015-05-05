@@ -8,6 +8,10 @@ public class RealAlgebra implements Semiring, Algebra {
     
     public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra();
 
+    private RealAlgebra() {
+        // Private constructor.
+    }
+    
     @Override
     public double plus(double x, double y) {
         return x + y;

@@ -17,7 +17,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class TensorTest {
 
-    private Algebra s = new RealAlgebra();
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     private List<Algebra> two = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA);
     private List<Algebra> three = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSemiring.LOG_SEMIRING, LogSignAlgebra.LOG_SIGN_ALGEBRA);

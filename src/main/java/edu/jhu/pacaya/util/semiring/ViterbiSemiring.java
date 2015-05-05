@@ -2,8 +2,13 @@ package edu.jhu.pacaya.util.semiring;
 
 public class ViterbiSemiring implements Semiring {
 
+    private static final long serialVersionUID = 1L;
     public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring();
 
+    private ViterbiSemiring() {
+        // Private constructor.
+    }
+    
     @Override
     public double plus(double x, double y) {
         return Math.max(x, y);

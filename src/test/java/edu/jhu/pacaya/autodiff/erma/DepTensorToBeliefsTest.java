@@ -15,7 +15,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class DepTensorToBeliefsTest {
 
-    private Algebra s = new RealAlgebra();
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Test
     public void testSimple() {

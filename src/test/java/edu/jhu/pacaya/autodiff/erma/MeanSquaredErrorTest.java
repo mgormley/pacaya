@@ -22,7 +22,7 @@ public class MeanSquaredErrorTest {
     
     private VarConfig goldConfig;
     private BeliefsIdentity id1;
-    private Algebra s = new RealAlgebra();
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Before
     public void setUp() {
@@ -51,7 +51,7 @@ public class MeanSquaredErrorTest {
     
     @Test
     public void testSimple() {
-        Algebra s = new RealAlgebra();        
+        Algebra s = RealAlgebra.REAL_ALGEBRA;        
         MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);
         
         Tensor out = mse.forward();

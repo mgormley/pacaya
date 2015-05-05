@@ -52,8 +52,8 @@ public class AbstractModuleTest {
     
     /** Evaluation of a module which takes one tensor modules as input. */
     public static void evalTensor1(Tensor t1, Tensor expT1Adj, Tensor1Factory fact, Tensor expOut, double adjFill) {
-        evalTensor1(t1, expT1Adj, fact, expOut, adjFill, new RealAlgebra());
-        evalTensor1(t1, expT1Adj, fact, expOut, adjFill, new LogSignAlgebra());
+        evalTensor1(t1, expT1Adj, fact, expOut, adjFill, RealAlgebra.REAL_ALGEBRA);
+        evalTensor1(t1, expT1Adj, fact, expOut, adjFill, LogSignAlgebra.LOG_SIGN_ALGEBRA);
     }
 
     private static void evalTensor1(Tensor t1, Tensor expT1Adj, 
@@ -77,8 +77,8 @@ public class AbstractModuleTest {
 
     /** Evaluation of a module which takes two tensor modules as input. */
     public static void evalTensor2(Tensor t1, Tensor expT1Adj, Tensor t2, Tensor expT2Adj, Tensor2Factory fact, Tensor expOut, double adjFill) {
-        evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, new RealAlgebra());
-        evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, new LogSignAlgebra());
+        evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, RealAlgebra.REAL_ALGEBRA);
+        evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adjFill, LogSignAlgebra.LOG_SIGN_ALGEBRA);
     }
 
     /** Evaluation of a module which takes two tensor modules as input.

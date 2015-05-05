@@ -12,7 +12,7 @@ public class LogSemiringTest extends AbstractAlgebraTest {
 
     @Override
     public Algebra getAlgebra() {
-        return new LogSemiring();
+        return LogSemiring.LOG_SEMIRING;
     }
 
     @Override

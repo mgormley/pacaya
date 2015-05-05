@@ -2,6 +2,12 @@ package edu.jhu.pacaya.util.semiring;
 
 public class LogViterbiSemiring implements Semiring {
 
+    public static final LogViterbiSemiring LOG_VITERBI_SEMIRING = new LogViterbiSemiring();
+    
+    private LogViterbiSemiring() {
+        // Private constructor.
+    }
+    
     @Override
     public double plus(double x, double y) {
         return Math.max(x, y);

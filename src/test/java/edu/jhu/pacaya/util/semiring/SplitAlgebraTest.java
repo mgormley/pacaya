@@ -6,7 +6,7 @@ import org.junit.Test;
 
 public class SplitAlgebraTest extends AbstractAlgebraTest {
     
-    private SplitAlgebra s = new SplitAlgebra();
+    private SplitAlgebra s = SplitAlgebra.SPLIT_ALGEBRA;
     
     @Before
     public void setUp() {
@@ -16,7 +16,7 @@ public class SplitAlgebraTest extends AbstractAlgebraTest {
     
     @Override
     public Algebra getAlgebra() {
-        return new SplitAlgebra();
+        return SplitAlgebra.SPLIT_ALGEBRA;
     }
 
     @Test
