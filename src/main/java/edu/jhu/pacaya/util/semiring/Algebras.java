@@ -11,28 +11,17 @@ public class Algebras {
         // private constructor.
     }
     
-    // Algebras.
-    public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra(); 
-    public static final LogSignAlgebra LOG_SIGN_ALGEBRA = new LogSignAlgebra(); 
-    public static final Algebra SPLIT_ALGEBRA = new SplitAlgebra(); 
-    public static final Algebra SHIFTED_REAL_ALGEBRA = new ShiftedRealAlgebra(); 
-    
-    // Semirings.
-    public static final LogSemiring LOG_SEMIRING = new LogSemiring(); 
-    public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring(); 
-    public static final TropicalSemiring TROPICAL_SEMIRING = new TropicalSemiring();
-    
     // TODO: unit test.
     public static double convertAlgebra(double value, Algebra src, Algebra dst) {
         if (dst.equals(src)) {
             return value;
-        } else if (src.equals(Algebras.REAL_ALGEBRA)) {
+        } else if (src.equals(RealAlgebra.REAL_ALGEBRA)) {
             return dst.fromReal(value);
-        } else if (src.equals(Algebras.LOG_SEMIRING)) {
+        } else if (src.equals(LogSemiring.LOG_SEMIRING)) {
             return dst.fromLogProb(value);
-        } else if (dst.equals(Algebras.REAL_ALGEBRA)) {
+        } else if (dst.equals(RealAlgebra.REAL_ALGEBRA)) {
             return src.toReal(value);
-        } else if (dst.equals(Algebras.LOG_SEMIRING)) {
+        } else if (dst.equals(LogSemiring.LOG_SEMIRING)) {
             return src.toLogProb(value);
         } else {
             // We pivot through the real numbers, but this could cause a loss of

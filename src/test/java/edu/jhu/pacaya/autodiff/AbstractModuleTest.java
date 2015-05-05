@@ -8,9 +8,9 @@ import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.pacaya.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 import edu.jhu.prim.vector.IntDoubleVector;
 
 public class AbstractModuleTest {
@@ -47,8 +47,8 @@ public class AbstractModuleTest {
     /** Factory for a module which takes two tensor modules as input. */
     public interface Tensor2Factory extends TwoToOneFactory<Tensor, Tensor, Tensor> { }
 
-    private static final List<Algebra> test2Algebras = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
-    private static final List<Algebra> test3Algebras = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.SPLIT_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
+    private static final List<Algebra> test2Algebras = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+    private static final List<Algebra> test3Algebras = Lists.getList(RealAlgebra.REAL_ALGEBRA, SplitAlgebra.SPLIT_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA);
     
     /** Evaluation of a module which takes one tensor modules as input. */
     public static void evalTensor1(Tensor t1, Tensor expT1Adj, Tensor1Factory fact, Tensor expOut, double adjFill) {
@@ -125,7 +125,7 @@ public class AbstractModuleTest {
 
     /** Calls {@link #evalTensor1ByFiniteDiffs(Tensor1Factory, Module)} with one 3 dimensional input tensors. */
     public static void evalTensor1ByFiniteDiffs(Tensor1Factory fact) {
-        Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
+        Tensor t1 = TensorUtils.getVectorFromValues(RealAlgebra.REAL_ALGEBRA, 2, 3, 5);
         TensorIdentity in1 = new TensorIdentity(t1);
         evalTensor1ByFiniteDiffs(fact, in1);
     }
@@ -163,16 +163,16 @@ public class AbstractModuleTest {
      * input, and will be tested on multiple semirings.
      */
     private static <X extends MVec, Y extends MVec> void evalOneToOneByFiniteDiffsAbs(OneToOneFactory<X,Y> fact, Module<X> in1, VectorFactory vec) {        
-        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+        assert in1.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
         
         for (Algebra s : test2Algebras) {
             Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
             Module<Y> main = fact.getModule(in1Co);
-            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
+            Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.REAL_ALGEBRA);
             
             TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
-            double delta = s.equals(Algebras.SPLIT_ALGEBRA) ? 1e-2 : 1e-7;
+            double delta = s.equals(SplitAlgebra.SPLIT_ALGEBRA) ? 1e-2 : 1e-7;
             ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
         }
     }
@@ -181,8 +181,8 @@ public class AbstractModuleTest {
      * Calls {@link #evalTensor2ByFiniteDiffs(Tensor2Factory, Module, Module, VectorFactory)} with two 3 dimensional input tensors.
      */
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact) {
-        Tensor t1 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 2, 3, 5);
-        Tensor t2 = TensorUtils.getVectorFromValues(Algebras.REAL_ALGEBRA, 4, 6, 7);
+        Tensor t1 = TensorUtils.getVectorFromValues(RealAlgebra.REAL_ALGEBRA, 2, 3, 5);
+        Tensor t2 = TensorUtils.getVectorFromValues(RealAlgebra.REAL_ALGEBRA, 4, 6, 7);
         TensorIdentity in1 = new TensorIdentity(t1);
         TensorIdentity in2 = new TensorIdentity(t2);
         evalTensor2ByFiniteDiffs(fact, in1, in2);
@@ -224,18 +224,18 @@ public class AbstractModuleTest {
      */
     public static <W extends MVec, X extends MVec, Y extends MVec> void evalTwoToOneByFiniteDiffs(
             TwoToOneFactory<W, X, Y> fact, Module<W> in1, Module<X> in2, VectorFactory vec) {        
-        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
-        assert in2.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+        assert in1.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
+        assert in2.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
         
         for (Algebra s : test2Algebras) {
             Module<W> in1Co = new ConvertAlgebra<W>(in1, s);
             Module<X> in2Co = new ConvertAlgebra<X>(in2, s);
             Module<Y> main = fact.getModule(in1Co, in2Co);
-            Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
+            Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.REAL_ALGEBRA);
             
             TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
-            double delta = s.equals(Algebras.SPLIT_ALGEBRA) ? 1e-2 : 1e-8;
+            double delta = s.equals(SplitAlgebra.SPLIT_ALGEBRA) ? 1e-2 : 1e-8;
             ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
         }
     }
@@ -255,7 +255,7 @@ public class AbstractModuleTest {
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
     public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
             OneToOneFactory<X, Y> fact2, Module<X> in1, VectorFactory vec) {
-        assert in1.getAlgebra().equals(Algebras.REAL_ALGEBRA);
+        assert in1.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
                 
         for (Algebra s : test3Algebras) {
             System.out.println("Testing on Algebra: " + s);
@@ -265,13 +265,13 @@ public class AbstractModuleTest {
             for (OneToOneFactory<X,Y> fact : Lists.getList(fact1, fact2)) {
                 Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
                 Module<Y> main = fact.getModule(in1Co);
-                Module<Y> mainCo = new ConvertAlgebra<Y>(main, Algebras.REAL_ALGEBRA);
+                Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.REAL_ALGEBRA);
                 
                 TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
                 topos[i++] = topo;
             }
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topos[0].getInputs()));
-            double delta = s.equals(Algebras.SPLIT_ALGEBRA) ? 1e-2 : 1e-8;
+            double delta = s.equals(SplitAlgebra.SPLIT_ALGEBRA) ? 1e-2 : 1e-8;
             ModuleTestUtils.assertGradientEquals(topos[0], topos[1], x, 1e-5, delta);
         }
     }

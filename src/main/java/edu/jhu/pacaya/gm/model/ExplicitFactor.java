@@ -5,7 +5,7 @@ import edu.jhu.pacaya.autodiff.erma.AutodiffFactor;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.autodiff.erma.ParamFreeFactorModule;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
 /**
@@ -20,7 +20,7 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     private int id = -1;
     
     public ExplicitFactor(VarSet vars) {
-        super(Algebras.REAL_ALGEBRA, vars);
+        super(RealAlgebra.REAL_ALGEBRA, vars);
     }
     
     public ExplicitFactor(ExplicitFactor other) {

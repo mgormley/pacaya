@@ -3,14 +3,14 @@ package edu.jhu.pacaya.autodiff.erma;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.vector.IntDoubleVector;
 
 public class MVecFgModel implements MVec {
 
     private FgModel model;
     private IntDoubleVector params;
-    private final Algebra s = Algebras.REAL_ALGEBRA;
+    private final Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     public MVecFgModel(FgModel model) {
         this.model = model;

@@ -32,7 +32,7 @@ import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.util.random.Prng;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -41,7 +41,7 @@ import edu.jhu.prim.vector.IntDoubleVector;
 
 public class ErmaBpBackwardTest {
 
-    private static Algebra s = Algebras.REAL_ALGEBRA;
+    private static Algebra s = RealAlgebra.REAL_ALGEBRA;
     private static boolean logDomain = false;
     
     @Test
@@ -137,7 +137,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.REAL_ALGEBRA);
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
@@ -255,7 +255,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.REAL_ALGEBRA);
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
@@ -370,7 +370,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, Algebras.REAL_ALGEBRA);
+        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.REAL_ALGEBRA);
         effm.forward();
         
         // Test BP and Expected Recall together.

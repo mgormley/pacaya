@@ -22,8 +22,9 @@ import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ParentsArray;
 import edu.jhu.pacaya.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
@@ -108,7 +109,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
-        if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
+        if (!s.equals(RealAlgebra.REAL_ALGEBRA) && !s.equals(LogSemiring.LOG_SEMIRING)) {
             throw new IllegalStateException("OldProjDepTreeFactor only supports log and real semirings as input.");
         }
         
@@ -358,7 +359,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         EdgeScores ratios = getLogOddsRatios(inMsgs);
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = Algebras.LOG_SIGN_ALGEBRA;
+        Algebra s = LogSignAlgebra.LOG_SIGN_ALGEBRA;
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();
@@ -421,7 +422,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = Algebras.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.LOG_SEMIRING;
         if (!hasOneParentPerToken(n, vc)) {
             log.warn("Tree has more than one arc to root.");
             return s.zero();

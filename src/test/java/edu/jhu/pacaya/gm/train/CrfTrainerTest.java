@@ -53,7 +53,7 @@ import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
 import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.Lists;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.random.Prng;
 
@@ -392,7 +392,7 @@ public class CrfTrainerTest {
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
-        bpPrm.s = Algebras.REAL_ALGEBRA;
+        bpPrm.s = RealAlgebra.REAL_ALGEBRA;
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;

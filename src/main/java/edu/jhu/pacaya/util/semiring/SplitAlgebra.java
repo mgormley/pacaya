@@ -20,8 +20,11 @@ import edu.jhu.prim.Primitives;
  */
 public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger log = LoggerFactory.getLogger(SplitAlgebra.class);
-
+    
+    public static final Algebra SPLIT_ALGEBRA = new SplitAlgebra();
+    
     private static final int SHIFTER = 32;
     private static final long MASK_1 = 0xFFFFFFFFl;
     private static final long MASK_2 = ~MASK_1;

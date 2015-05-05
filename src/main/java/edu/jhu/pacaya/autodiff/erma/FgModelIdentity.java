@@ -7,7 +7,7 @@ import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.util.collections.Lists;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
  * This module is simply the identity function. 
@@ -16,9 +16,9 @@ import edu.jhu.pacaya.util.semiring.Algebras;
 public class FgModelIdentity extends AbstractModule<MVecFgModel> implements Module<MVecFgModel> {
 
     public FgModelIdentity(FgModel model) {
-        super(Algebras.REAL_ALGEBRA);
+        super(RealAlgebra.REAL_ALGEBRA);
         this.y = new MVecFgModel(model);
-        assert this.y.getAlgebra() == Algebras.REAL_ALGEBRA;
+        assert this.y.getAlgebra() == RealAlgebra.REAL_ALGEBRA;
     }
     
     @Override

@@ -10,6 +10,8 @@ import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
@@ -17,8 +19,8 @@ public class TensorTest {
 
     private Algebra s = new RealAlgebra();
 
-    private List<Algebra> two = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA);
-    private List<Algebra> three = Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SEMIRING, Algebras.LOG_SIGN_ALGEBRA);
+    private List<Algebra> two = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+    private List<Algebra> three = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSemiring.LOG_SEMIRING, LogSignAlgebra.LOG_SIGN_ALGEBRA);
     
     @Test
     public void testInitializedToZeros() {
@@ -30,9 +32,9 @@ public class TensorTest {
     
     @Test
     public void testGetSetAddSubWithIndices() {
-        testGetSetAddSubWithIndices(Algebras.REAL_ALGEBRA);
-        testGetSetAddSubWithIndices(Algebras.LOG_SIGN_ALGEBRA);
-        testGetSetAddSubWithIndices(Algebras.LOG_SEMIRING);
+        testGetSetAddSubWithIndices(RealAlgebra.REAL_ALGEBRA);
+        testGetSetAddSubWithIndices(LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        testGetSetAddSubWithIndices(LogSemiring.LOG_SEMIRING);
     }
     
     private void testGetSetAddSubWithIndices(Algebra s) {
@@ -96,9 +98,9 @@ public class TensorTest {
     
     @Test
     public void testValueOperations() {
-        testValueOperations(Algebras.REAL_ALGEBRA);
-        testValueOperations(Algebras.LOG_SIGN_ALGEBRA);
-        testValueOperations(Algebras.LOG_SEMIRING);
+        testValueOperations(RealAlgebra.REAL_ALGEBRA);
+        testValueOperations(LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        testValueOperations(LogSemiring.LOG_SEMIRING);
     }
     
     private void testValueOperations(Algebra s) {
@@ -123,9 +125,9 @@ public class TensorTest {
 
     @Test
     public void testFactorAddIdentical() {   
-        testFactorAddIdentical(Algebras.REAL_ALGEBRA);
-        testFactorAddIdentical(Algebras.LOG_SIGN_ALGEBRA);
-        testFactorAddIdentical(Algebras.LOG_SEMIRING);
+        testFactorAddIdentical(RealAlgebra.REAL_ALGEBRA);
+        testFactorAddIdentical(LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        testFactorAddIdentical(LogSemiring.LOG_SEMIRING);
     }
     
     private void testFactorAddIdentical(Algebra s) {   

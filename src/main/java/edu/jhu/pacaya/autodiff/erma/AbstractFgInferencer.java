@@ -6,7 +6,8 @@ import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public abstract class AbstractFgInferencer implements FgInferencer {
     
@@ -100,15 +101,15 @@ public abstract class AbstractFgInferencer implements FgInferencer {
     }   
 
     public static VarTensor ensureRealSemiring(VarTensor marg) {
-        if (!marg.getAlgebra().equals(Algebras.REAL_ALGEBRA)) {
-            marg = marg.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
+        if (!marg.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA)) {
+            marg = marg.copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA);
         }
         return marg;
     }
     
     public static VarTensor ensureLogSemiring(VarTensor marg) {
-        if (!marg.getAlgebra().equals(Algebras.LOG_SEMIRING)) {
-            marg = marg.copyAndConvertAlgebra(Algebras.LOG_SEMIRING);
+        if (!marg.getAlgebra().equals(LogSemiring.LOG_SEMIRING)) {
+            marg = marg.copyAndConvertAlgebra(LogSemiring.LOG_SEMIRING);
         }
         return marg;
     }

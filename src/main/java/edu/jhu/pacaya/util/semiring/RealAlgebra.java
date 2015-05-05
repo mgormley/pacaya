@@ -4,6 +4,10 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class RealAlgebra implements Semiring, Algebra {
 
+    private static final long serialVersionUID = 1L;
+    
+    public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra();
+
     @Override
     public double plus(double x, double y) {
         return x + y;

@@ -25,8 +25,8 @@ import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgIoChart;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 
@@ -158,7 +158,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
-        if (!s.equals(Algebras.REAL_ALGEBRA) && !s.equals(Algebras.LOG_SEMIRING)) {
+        if (!s.equals(RealAlgebra.REAL_ALGEBRA) && !s.equals(LogSemiring.LOG_SEMIRING)) {
             throw new IllegalStateException("ConstituencyTreeFactor only supports log and real semirings as input.");
         }
         
@@ -366,7 +366,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = Algebras.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.LOG_SEMIRING;
         boolean[][] chart = getChart(n, vc);
         if (chart == null || !isTree(n, chart)) {
             log.warn("Tree is not a valid constituency tree.");

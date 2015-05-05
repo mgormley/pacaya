@@ -4,6 +4,10 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class LogSemiring implements Algebra {
 
+    private static final long serialVersionUID = 1L;
+    
+    public static final LogSemiring LOG_SEMIRING = new LogSemiring();
+
     @Override
     public double plus(double x, double y) {
         return FastMath.logAdd(x, y);

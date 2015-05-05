@@ -10,12 +10,12 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
 public class IndexForVcTest {
 
-    private Algebra s = Algebras.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
     
     @Test
     public void testGetConfigArray1() {

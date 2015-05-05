@@ -2,6 +2,8 @@ package edu.jhu.pacaya.util.semiring;
 
 public class ViterbiSemiring implements Semiring {
 
+    public static final ViterbiSemiring VITERBI_SEMIRING = new ViterbiSemiring();
+
     @Override
     public double plus(double x, double y) {
         return Math.max(x, y);

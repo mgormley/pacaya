@@ -1,12 +1,11 @@
 package edu.jhu.pacaya.hypergraph.depparse;
 
 import edu.jhu.pacaya.hypergraph.AbstractHypergraphTest;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class O1DpHypergraphTest extends AbstractHypergraphTest {
 
-    RealAlgebra s = Algebras.REAL_ALGEBRA;
+    RealAlgebra s = RealAlgebra.REAL_ALGEBRA;
 
     protected O1DpHypergraph getHypergraph() {
         double[] root = new double[] {1, 2, 3}; 

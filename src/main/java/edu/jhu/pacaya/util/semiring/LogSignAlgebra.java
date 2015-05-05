@@ -4,6 +4,10 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class LogSignAlgebra implements Semiring, Algebra {
 
+    private static final long serialVersionUID = 1L;
+    
+    public static final LogSignAlgebra LOG_SIGN_ALGEBRA = new LogSignAlgebra();
+
     // We choose the least significant digit of the mantissa as our sign bit.
     // This bit is chosen for two reasons: (1) the various bit representations
     // of NaN, +inf, and -inf seem to use only the most significant bits of the 

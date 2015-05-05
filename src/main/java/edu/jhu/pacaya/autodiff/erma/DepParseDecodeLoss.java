@@ -10,8 +10,8 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.math.FastMath;
 
 /**
@@ -36,7 +36,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             double temperature = getTemperature(curIter, maxIter);
-            TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(Algebras.REAL_ALGEBRA, temperature)); 
+            TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(RealAlgebra.REAL_ALGEBRA, temperature)); 
                     
             if (annealMse) {
                 double prop = (double) curIter / maxIter;

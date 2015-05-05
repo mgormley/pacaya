@@ -20,14 +20,15 @@ import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.FactorGraph.FgNode;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
 public class ConsecutiveSiblingsFactorTest {
 
     @Test
     public void testGetScore() throws Exception {
-        Algebra s = Algebras.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
         int n = 7;
 
         // 1-indexed by head, modifier, sibling.
@@ -74,7 +75,7 @@ public class ConsecutiveSiblingsFactorTest {
         final ConsecutiveSiblingsFactor cs = getDefaultCs();
         FgModel model = new FgModel(100); // TODO: Correctly set number of parameters.
         FgModelIdentity id1 = new FgModelIdentity(model); 
-        Module<?> m = cs.getFactorModule(id1, Algebras.REAL_ALGEBRA);
+        Module<?> m = cs.getFactorModule(id1, RealAlgebra.REAL_ALGEBRA);
         Object o = m.forward();
         assertTrue(o instanceof LazyVarTensor);
         // We do not check that it correctly back propagates into the scores, since the lazy var
@@ -83,7 +84,7 @@ public class ConsecutiveSiblingsFactorTest {
 
     @Test
     public void testCreateMessages() throws Exception {
-        Algebra s = Algebras.LOG_SEMIRING;
+        Algebra s = LogSemiring.LOG_SEMIRING;
         int n = 4;
         ConsecutiveSiblingsFactor f = getDefaultCs(getDefaultScores(s, n));
         
@@ -166,7 +167,7 @@ public class ConsecutiveSiblingsFactorTest {
     
     @Test
     public void testGetCreateMessagesModule() throws Exception {
-        Algebra s = Algebras.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
         FgModel model = new FgModel(100); // TODO: Correctly set number of parameters.
         FgModelIdentity mid1 = new FgModelIdentity(model);         
         final ConsecutiveSiblingsFactor cs = getDefaultCs();
@@ -203,7 +204,7 @@ public class ConsecutiveSiblingsFactorTest {
     }
 
     private static ConsecutiveSiblingsFactor getDefaultCs() {
-        return getDefaultCs(getDefaultScores(Algebras.REAL_ALGEBRA, 4));
+        return getDefaultCs(getDefaultScores(RealAlgebra.REAL_ALGEBRA, 4));
     }
     
     private static Tensor getDefaultScores(Algebra s, int n) {

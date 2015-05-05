@@ -13,7 +13,7 @@ import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.iter.IntIncrIter;
 import edu.jhu.prim.iter.IntIter;
 
@@ -217,9 +217,9 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
             VarTensor factorMarginal = new VarTensor(yAdj);
             factorMarginal.prod(y);
             // addExpectedFeatureCounts() currently only supports the real semiring
-            assert modIn.getAlgebra().equals(Algebras.REAL_ALGEBRA);
-            factorMarginal = factorMarginal.copyAndConvertAlgebra(Algebras.REAL_ALGEBRA);
-            f.addExpectedFeatureCounts(modelAdj, factorMarginal, Algebras.REAL_ALGEBRA.one());
+            assert modIn.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
+            factorMarginal = factorMarginal.copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA);
+            f.addExpectedFeatureCounts(modelAdj, factorMarginal, RealAlgebra.REAL_ALGEBRA.one());
         }
 
         @Override

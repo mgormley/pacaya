@@ -40,7 +40,8 @@ import edu.jhu.pacaya.util.Prm;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.files.Files;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.list.DoubleArrayList;
 
 /**
@@ -90,7 +91,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         @Override
         public Algebra getAlgebra() {
             if (s == null) {
-                return logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+                return logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
             } else {
                 return s;
             }

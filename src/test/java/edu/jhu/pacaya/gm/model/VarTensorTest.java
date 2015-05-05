@@ -6,12 +6,13 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 
 public class VarTensorTest {
 
-    private Algebra s = Algebras.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
     
     @Test
     public void testValueOperations() {
@@ -209,7 +210,7 @@ public class VarTensorTest {
         f1.setValue(4, 4);
         f1.setValue(5, 5);
         
-        VarTensor f2 = f1.copyAndConvertAlgebra(Algebras.LOG_SEMIRING);
+        VarTensor f2 = f1.copyAndConvertAlgebra(LogSemiring.LOG_SEMIRING);
 
         double[] expected = new double[]{0.0, 1/15., 2/15., 3/15., 4/15., 5/15.};
         
@@ -231,7 +232,7 @@ public class VarTensorTest {
         f1.setValue(1, 0);
         f1.setValue(2, 0);
         
-        VarTensor f2 = f1.copyAndConvertAlgebra(Algebras.LOG_SEMIRING);
+        VarTensor f2 = f1.copyAndConvertAlgebra(LogSemiring.LOG_SEMIRING);
 
         double[] expected = new double[]{1/3., 1/3., 1/3.};
         

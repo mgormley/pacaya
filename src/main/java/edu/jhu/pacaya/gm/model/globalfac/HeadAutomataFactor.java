@@ -26,6 +26,7 @@ import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
  * Global factor which adds consecutive sibling factors following Smith & Eisner (2008).
@@ -139,7 +140,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
             return this;
         } else if (clmpVarConfig.size() == vars.size()) {
             // All clamped.
-            return new HeadAutomataFactor(head, isRight, new LinkVar[]{}, new Tensor(Algebras.REAL_ALGEBRA, 0, 0, 0));
+            return new HeadAutomataFactor(head, isRight, new LinkVar[]{}, new Tensor(RealAlgebra.REAL_ALGEBRA, 0, 0, 0));
         } else {
             // Some clamped.
             throw new IllegalStateException("Unable to clamp these variables.");
@@ -155,7 +156,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = Algebras.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.LOG_SEMIRING;
         Tensor scores = scoresIn.getOutput();
         double logScore = s.one();
         int maxDist = varsByDist.length;

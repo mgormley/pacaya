@@ -12,7 +12,7 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class MseMarginalEvaluatorTest {
 
@@ -27,7 +27,7 @@ public class MseMarginalEvaluatorTest {
         }
         
         public VarTensor getMarginals(Var var) {
-            VarTensor marg = new VarTensor(Algebras.REAL_ALGEBRA, new VarSet(var));
+            VarTensor marg = new VarTensor(RealAlgebra.REAL_ALGEBRA, new VarSet(var));
             if (var == v1) {
                 marg.setValue(0, 0.4);
                 marg.setValue(1, 0.6);

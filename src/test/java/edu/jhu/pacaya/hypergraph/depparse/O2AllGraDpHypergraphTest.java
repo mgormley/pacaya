@@ -13,13 +13,12 @@ import edu.jhu.pacaya.hypergraph.Hyperalgo;
 import edu.jhu.pacaya.hypergraph.Hypernode;
 import edu.jhu.pacaya.hypergraph.Hyperpotential;
 import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 
 public class O2AllGraDpHypergraphTest extends AbstractHypergraphTest {
 
-    RealAlgebra s = Algebras.REAL_ALGEBRA;
+    RealAlgebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Test
     public void testInsideOutsideSingleRoot1Word() {

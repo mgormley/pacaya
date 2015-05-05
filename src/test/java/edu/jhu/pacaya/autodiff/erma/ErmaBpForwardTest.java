@@ -28,7 +28,11 @@ import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.pacaya.util.semiring.ShiftedRealAlgebra;
+import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 
 
 public class ErmaBpForwardTest {
@@ -181,7 +185,7 @@ public class ErmaBpForwardTest {
     }
 
     private void testOnSimpleHelper(boolean logDomain) throws IOException {
-        Algebra s = logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+        Algebra s = logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
         
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
@@ -206,11 +210,11 @@ public class ErmaBpForwardTest {
     public void testMultipleSemiringsOnSimple() throws IOException {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
 
-        ErmaBp bpReal = runHelper(fg, Algebras.REAL_ALGEBRA);
-        ErmaBp bpSplit = runHelper(fg, Algebras.SPLIT_ALGEBRA);
-        ErmaBp bpShift = runHelper(fg, Algebras.SHIFTED_REAL_ALGEBRA);
-        ErmaBp bpLog = runHelper(fg, Algebras.LOG_SEMIRING);
-        ErmaBp bpLogSign = runHelper(fg, Algebras.LOG_SIGN_ALGEBRA);
+        ErmaBp bpReal = runHelper(fg, RealAlgebra.REAL_ALGEBRA);
+        ErmaBp bpSplit = runHelper(fg, SplitAlgebra.SPLIT_ALGEBRA);
+        ErmaBp bpShift = runHelper(fg, ShiftedRealAlgebra.SHIFTED_REAL_ALGEBRA);
+        ErmaBp bpLog = runHelper(fg, LogSemiring.LOG_SEMIRING);
+        ErmaBp bpLogSign = runHelper(fg, LogSignAlgebra.LOG_SIGN_ALGEBRA);
         
         assertEqualMarginals(fg, bpReal, bpSplit, 1e-4);
         assertEqualMarginals(fg, bpReal, bpShift, 1e-13);
@@ -410,7 +414,7 @@ public class ErmaBpForwardTest {
         
         fg.addFactor(gf);
 
-        Algebra s = Algebras.LOG_SEMIRING;
+        Algebra s = LogSemiring.LOG_SEMIRING;
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBp bp = runDefaultBpForAcyclic(true, fg);

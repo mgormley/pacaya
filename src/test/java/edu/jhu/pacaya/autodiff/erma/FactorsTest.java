@@ -9,13 +9,13 @@ import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class FactorsTest {
 
     @Test
     public void testSize() {
-        Algebra s = Algebras.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
         VarTensor[] fsArr = new VarTensor[2];
         fsArr[0] = new VarTensor(s, new VarSet(new Var(VarType.PREDICTED, 2, "v1", null)));
         fsArr[1] = new VarTensor(s, new VarSet(new Var(VarType.PREDICTED, 3, "v2", null)));

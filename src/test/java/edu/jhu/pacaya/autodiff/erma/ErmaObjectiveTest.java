@@ -23,15 +23,16 @@ import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 
 public class ErmaObjectiveTest {
     
     @Test
     public void testSimpleGradient() {
-        testSimpleGradient(Algebras.REAL_ALGEBRA);
-        testSimpleGradient(Algebras.LOG_SIGN_ALGEBRA);
+        testSimpleGradient(RealAlgebra.REAL_ALGEBRA);
+        testSimpleGradient(LogSignAlgebra.LOG_SIGN_ALGEBRA);
     }
     
     private void testSimpleGradient(Algebra s) {

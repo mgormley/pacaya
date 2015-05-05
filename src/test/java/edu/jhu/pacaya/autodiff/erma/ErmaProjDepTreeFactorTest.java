@@ -29,7 +29,8 @@ import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
@@ -502,10 +503,10 @@ public class ErmaProjDepTreeFactorTest {
     
     @Test
     public void testErmaCompareMessagesWithExplicitTreeFactor() {
-        compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(Algebras.REAL_ALGEBRA, true, true);
-        compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(Algebras.LOG_SIGN_ALGEBRA, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, false);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.LOG_SIGN_ALGEBRA, true, false);
+        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.LOG_SIGN_ALGEBRA, true, true);
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {

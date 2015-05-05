@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Timer;
@@ -293,8 +292,8 @@ public class JavaJitInliningSpeedTest {
     @Test
     public void testSpeedOfTensorAddSemiringIndirect() {
         System.out.println("testSpeedOfTensorAddSemiringIndirect");
-        RealAlgebra s1 = Algebras.REAL_ALGEBRA; //new RealAlgebra();
-        LogSemiring s2 = Algebras.LOG_SEMIRING; //new LogSemiring();
+        RealAlgebra s1 = RealAlgebra.REAL_ALGEBRA; //new RealAlgebra();
+        LogSemiring s2 = LogSemiring.LOG_SEMIRING; //new LogSemiring();
         runSpeedTestSemiringIndirect(s1, s2);
     }
 

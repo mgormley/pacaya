@@ -27,7 +27,8 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class CrfObjectiveTest {
 
@@ -47,8 +48,8 @@ public class CrfObjectiveTest {
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBF() {	// brute force
-		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(Algebras.REAL_ALGEBRA));
-		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(Algebras.LOG_SEMIRING));
+		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(RealAlgebra.REAL_ALGEBRA));
+		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(LogSemiring.LOG_SEMIRING));
 	}
 		
 	/**

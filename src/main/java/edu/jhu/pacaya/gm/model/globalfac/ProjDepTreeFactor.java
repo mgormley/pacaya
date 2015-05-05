@@ -34,8 +34,8 @@ import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ParentsArray;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.prim.tuple.Pair;
 
 /**
@@ -164,7 +164,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         // Construct the circuit.
         TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
         TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
-        Algebra tmpS = (isForward) ? Algebras.LOG_SEMIRING : Algebras.LOG_SIGN_ALGEBRA;
+        Algebra tmpS = (isForward) ? LogSemiring.LOG_SEMIRING : LogSignAlgebra.LOG_SIGN_ALGEBRA;
         ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();
         
@@ -229,7 +229,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = Algebras.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.LOG_SEMIRING;
         if (!hasOneParentPerToken(n, vc)) {
             log.trace("Tree has more than one arc to root.");
             return s.zero();
@@ -357,7 +357,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         EdgeScores ratios = getLogOddsRatios(inMsgs);
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = Algebras.LOG_SIGN_ALGEBRA;
+        Algebra s = LogSignAlgebra.LOG_SIGN_ALGEBRA;
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();

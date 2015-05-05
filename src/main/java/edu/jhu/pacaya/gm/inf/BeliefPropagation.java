@@ -22,7 +22,8 @@ import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.Prm;
 import edu.jhu.pacaya.util.files.Files;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Timer;
 
 /**
@@ -62,7 +63,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         @Override
         public Algebra getAlgebra() {
             if (s == null) {
-                return logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+                return logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
             } else {
                 return s;
             }

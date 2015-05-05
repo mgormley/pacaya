@@ -7,7 +7,9 @@ package edu.jhu.pacaya.util.semiring;
  * @author mgormley
  */
 public class ShiftedRealAlgebra extends AbstractToFromRealAlgebra {
-
+    
+    private static final long serialVersionUID = 1L;
+    public static final Algebra SHIFTED_REAL_ALGEBRA = new ShiftedRealAlgebra();    
     private double addend;
     
     public ShiftedRealAlgebra() {

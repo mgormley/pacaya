@@ -8,11 +8,11 @@ import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class ElemAddTest {
 
-    private Algebra s = Algebras.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.REAL_ALGEBRA;
     
     @Test
     public void testForwardAndBackward() {

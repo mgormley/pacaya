@@ -7,7 +7,8 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
  * Inference by brute force summation.
@@ -43,7 +44,7 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
         @Override
         public Algebra getAlgebra() {
             if (s == null) {
-                return logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA;
+                return logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
             } else {
                 return s;
             }
@@ -58,7 +59,7 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
     
     //@Deprecated
     public BruteForceInferencer(FactorGraph fg, boolean logDomain) {
-        this(fg, logDomain ? Algebras.LOG_SEMIRING : Algebras.REAL_ALGEBRA);
+        this(fg, logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA);
     }
 
     public BruteForceInferencer(FactorGraph fg, Algebra s) {

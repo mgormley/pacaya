@@ -9,7 +9,7 @@ import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.random.Prng;
 
@@ -53,7 +53,7 @@ public class ErmaBpSpeedTest {
     public static void runBp(FactorGraph fg, int t) {
         ErmaBpPrm prm = new ErmaBpPrm();
         //prm.s = Algebras.LOG_SIGN_ALGEBRA;
-        prm.s = Algebras.REAL_ALGEBRA;
+        prm.s = RealAlgebra.REAL_ALGEBRA;
         prm.maxIterations = 1;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.schedule = BpScheduleType.TREE_LIKE;

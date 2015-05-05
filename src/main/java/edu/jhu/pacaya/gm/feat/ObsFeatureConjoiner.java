@@ -28,7 +28,7 @@ import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.gm.util.ArrayIter3D;
 import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.Prm;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.map.IntDoubleEntry;
@@ -176,7 +176,7 @@ public class ObsFeatureConjoiner implements Serializable {
         
         @Override
         public VarTensor getMarginalsForFactorId(int factorId) { 
-            return new VarTensor(Algebras.REAL_ALGEBRA, fg.getFactor(factorId).getVars()); 
+            return new VarTensor(RealAlgebra.REAL_ALGEBRA, fg.getFactor(factorId).getVars()); 
         }
         
         @Override

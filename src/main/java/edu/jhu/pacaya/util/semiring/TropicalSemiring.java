@@ -2,6 +2,8 @@ package edu.jhu.pacaya.util.semiring;
 
 public class TropicalSemiring implements Semiring {
 
+    public static final TropicalSemiring TROPICAL_SEMIRING = new TropicalSemiring();
+
     @Override
     public double plus(double x, double y) {
         return Math.min(x, y);

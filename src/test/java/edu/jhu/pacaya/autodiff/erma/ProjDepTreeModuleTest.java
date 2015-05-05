@@ -16,7 +16,6 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -83,7 +82,7 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testForwardAndBackward() {
-        for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (final Algebra tmpS : Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA)) {
             Tensor t1 = new Tensor(s, 2, 2);
             t1.set(0.5, 0, 0);
             t1.set(0.5, 0, 1);
@@ -134,8 +133,8 @@ public class ProjDepTreeModuleTest {
                 }
             };
             
-            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, Algebras.REAL_ALGEBRA);
-            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, Algebras.LOG_SIGN_ALGEBRA);
+            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, RealAlgebra.REAL_ALGEBRA);
+            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, LogSignAlgebra.LOG_SIGN_ALGEBRA);
         }
     }
         
@@ -202,7 +201,7 @@ public class ProjDepTreeModuleTest {
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.
-        for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (final Algebra tmpS : Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA)) {
             Tensor t1 = new Tensor(s, 3,3);
             TensorIdentity id1 = new TensorIdentity(t1);
             Tensor t2 = new Tensor(s, 3,3);

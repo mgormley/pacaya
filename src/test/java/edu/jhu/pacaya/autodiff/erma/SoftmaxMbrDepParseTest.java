@@ -17,7 +17,6 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
@@ -164,7 +163,7 @@ public class SoftmaxMbrDepParseTest {
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.
-        for (final Algebra tmpS : Lists.getList(Algebras.REAL_ALGEBRA, Algebras.LOG_SIGN_ALGEBRA)) {
+        for (final Algebra tmpS : Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA)) {
             Tensor t1 = new Tensor(s, 4,4);
             TensorIdentity id1 = new TensorIdentity(t1);
             TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 2));
