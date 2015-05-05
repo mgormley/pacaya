@@ -28,7 +28,7 @@ public interface Algebra extends Semiring {
     double fromReal(double real);
     double toLogProb(double nonReal);
     double fromLogProb(double logProb);
-        
+    
     /* ----- Introspection ----- */    
     boolean isNaN(double x);
     

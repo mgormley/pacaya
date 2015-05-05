@@ -37,10 +37,10 @@ public class ProjTreeChart {
     
     final DepParseType type;
     
-    public ProjTreeChart(int n, DepParseType type) {
+    public ProjTreeChart(int nplus, DepParseType type) {
         this.type = type;
-        scores = new double[n][n][2][2];
-        bps = new int[n][n][2][2];
+        scores = new double[nplus][nplus][2][2];
+        bps = new int[nplus][nplus][2][2];
         
         // Initialize chart to negative infinities.
         DoubleArrays.fill(scores, Double.NEGATIVE_INFINITY);

@@ -126,9 +126,9 @@ public class ProjectiveDependencyParser {
         final ProjTreeChart outChart = new ProjTreeChart(n+1, DepParseType.INSIDE);
         
         double[][] scores = EdgeScores.combine(fracRoot, fracChild);
-        log.debug("Inside:");
+        log.trace("Inside:");
         insideAlgorithm(scores, inChart, singleRoot);
-        log.debug("Outside:");
+        log.trace("Outside:");
         outsideAlgorithm(scores, inChart, outChart, singleRoot);
         
         return new DepIoChart(inChart, outChart);
