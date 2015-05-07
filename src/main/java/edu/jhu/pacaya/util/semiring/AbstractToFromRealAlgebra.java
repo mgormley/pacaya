@@ -11,6 +11,8 @@ import edu.jhu.prim.util.math.FastMath;
  */
 public abstract class AbstractToFromRealAlgebra implements Semiring, Algebra {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public abstract double toReal(double nonReal);
 
