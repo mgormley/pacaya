@@ -127,7 +127,7 @@ public class ErmaBpForwardTest {
     @Test
     public void testThreeConnectedComponents() {
         
-        boolean logDomain = true;
+        boolean logDomain = false;
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
