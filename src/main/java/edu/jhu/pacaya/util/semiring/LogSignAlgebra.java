@@ -201,19 +201,7 @@ public class LogSignAlgebra implements Semiring, Algebra {
 
     @Override
     public boolean eq(double x, double y, double delta) {
-        if (x == y) {
-            // This case is needed for infinity equality.
-            return true;
-        }
-        long sx = sign(x);
-        long sy = sign(y);
-        double lx = natlog(x);
-        double ly = natlog(y);
-        if (sx == sy) {
-            return Math.abs(lx - ly) < delta;
-        } else {
-            return Math.abs(lx + ly) < delta;
-        }
+        throw new RuntimeException("not yet implemented");
     }
 
     @Override
