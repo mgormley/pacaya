@@ -31,7 +31,7 @@ public class LogSemiringTest extends AbstractAlgebraTest {
         };
         double x = -11.11;
         try {
-            compute(lambda, x, sLog);
+            compute(lambda, x, sThis);
             fail();
         } catch (Exception e) {
             // pass
@@ -53,71 +53,71 @@ public class LogSemiringTest extends AbstractAlgebraTest {
         double x, y;
         x = 1;
         y = 1;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         
         // Swap the relative scales of x and y and test again
         y = 11.11;
         x = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         if (supportsNegatives()) {
             y = -11.11;
             x = 44.44;
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
             y = 11.11;
             x = -44.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
             y = -11.11;
             x = -44.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         }
 
         // Test numbers whose abs is equal.
         double abs = 13.1313;
         y = abs;
         x = abs;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         if (supportsNegatives()) {
             y = abs;
             x = -abs;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict); 
             y = -abs;
             x = abs;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict); 
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict); 
             y = -abs;
             x = -abs;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         }
         
         // Swap the relative scales of x and y and test again
         y = 0.11;
         x = 0.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         if (supportsNegatives()) {
             y = -0.11;
             x = 0.44;
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
             y = 0.11;
             x = -0.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
             y = -0.11;
             x = -0.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         }
 
         // Test with one value as an infinity.
         x = Double.POSITIVE_INFINITY;
         y = 44.44;        
-        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         if (supportsNegatives()) {
             x = Double.NEGATIVE_INFINITY;
             y = 44.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);  
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);  
             x = Double.POSITIVE_INFINITY;
             y = -44.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);    
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);    
             x = Double.NEGATIVE_INFINITY;
             y = -44.44;        
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaStrict);
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaStrict);
         }
                 
         for (int i=0; i<NUM_RANDS; i++) {
@@ -132,7 +132,7 @@ public class LogSemiringTest extends AbstractAlgebraTest {
                 x = y;
                 y = tmp;
             }
-            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), deltaLoose);  
+            assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sThis), deltaLoose);  
         }
     }
 
