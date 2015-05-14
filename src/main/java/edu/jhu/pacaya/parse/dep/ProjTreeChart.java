@@ -27,13 +27,13 @@ public class ProjTreeChart {
     // For incomplete constituents chart[s][t][d][INCOMPLETE] indicates that
     // s is the parent of t if (d == RIGHT) or that t is the parent of s if
     // (d==LEFT). That is the direction, d, indicates which side is the dependent.
-    final double[][][][] scores;
+    private final double[][][][] scores;
 
     // Backpointers, indexed just like the chart.
     //
     // The value at bps[s][t][d][c] will be the split point (r) for the
     // maximum chart entry.
-    final int[][][][] bps;
+    private final int[][][][] bps;
     
     final DepParseType type;
     
@@ -54,8 +54,16 @@ public class ProjTreeChart {
         return scores[s][t][d][ic];
     }
     
+    public final void setScore(int s, int t, int d, int ic, double val) {
+        scores[s][t][d][ic] = val;
+    }
+    
     public final int getBp(int s, int t, int d, int ic) {
         return bps[s][t][d][ic];
+    }
+    
+    public final int getNplus() {
+        return scores.length;
     }
     
     public final void updateCell(int s, int t, int d, int ic, double score, int r) {

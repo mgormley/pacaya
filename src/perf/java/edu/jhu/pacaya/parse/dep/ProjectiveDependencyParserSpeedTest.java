@@ -57,9 +57,9 @@ public class ProjectiveDependencyParserSpeedTest {
     /**
      * Output: (round 2)
      * sum: 2001819.430589211
-     * Total time: 5551.0
-     * Sentences per second: 1801.477211313277
-     * Tokens per second: 54044.316339398305  <<<< 
+     * Total time: 5118.0
+     * Sentences per second: 1953.8882375928097
+     * Tokens per second: 58616.64712778429  <<<< 
      */
     @Test
     public void testParseSpeed2() {
