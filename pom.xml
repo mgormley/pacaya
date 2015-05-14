@@ -349,16 +349,6 @@
     </dependency>
      -->
     <dependency>
-      <groupId>edu.jhu.hlt</groupId>
-      <artifactId>concrete-core</artifactId>
-      <version>4.4</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.jhu.hlt</groupId>
-      <artifactId>concrete-util</artifactId>
-      <version>4.4.4</version>
-    </dependency>
-    <dependency>
       <groupId>edu.jhu.hlt.optimize-wrappers</groupId>
       <artifactId>optimize-wrappers</artifactId>
       <version>${pacaya.version}</version>
