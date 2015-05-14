@@ -127,7 +127,7 @@ public class ErmaBpForwardTest {
     @Test
     public void testThreeConnectedComponents() {
         
-        boolean logDomain = true;
+        boolean logDomain = false;
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
@@ -277,7 +277,7 @@ public class ErmaBpForwardTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(true, 0, 6);
+        testConvergenceHelper(true, 1e-13, 6);
         testConvergenceHelper(false, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
         testConvergenceHelper(true, 1e-3, 5);
@@ -323,19 +323,28 @@ public class ErmaBpForwardTest {
     
     @Test
     public void testCanHandleProbHardFactors() {
-        //TODO: ErmaBp doesn't currently do factor belief caching. 
-        // testCanHandleHardFactorsHelper(true, false);
         testCanHandleHardFactorsHelper(false, false);
+        testCanHandleHardFactorsHelper(true, false);
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
-        //TODO: ErmaBp doesn't currently do factor belief caching. 
-        // testCanHandleHardFactorsHelper(true, true);
         testCanHandleHardFactorsHelper(false, true);
+        testCanHandleHardFactorsHelper(true, true);
     }    
     
-    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {     
+    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {  
+        ErmaBpPrm prm = new ErmaBpPrm();
+        prm.maxIterations = 1;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.logDomain = logDomain;
+        if (cacheFactorBeliefs) {
+            prm.minFacNbsForCache = 0;
+        } else {
+            prm.minFacNbsForCache = Integer.MAX_VALUE;
+        }
+        
         Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
         Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
         
@@ -344,37 +353,34 @@ public class ErmaBpForwardTest {
             VarConfig vCfg = xor.getVars().getVarConfig(cfg);
             int v0 = vCfg.getState(x0);
             int v1 = vCfg.getState(x1);
-            if(v0 != v1)
+            if(v0 != v1) {
                 xor.setValue(cfg, 0d);
-            else
+            } else {
                 xor.setValue(cfg, 1d);
+            }
         }
         xor.convertRealToLog();
         
         FactorGraph fg = new FactorGraph();
-        fg.addVar(x0);
-        fg.addVar(x1);
         fg.addFactor(xor);
         
-        // should have uniform mass
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        ErmaBpPrm prm = new ErmaBpPrm();
-        prm.maxIterations = 10;
-        prm.logDomain = logDomain;
-        //TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
-        ErmaBp bp = new ErmaBp(fg, prm);
-        bp.run();
-        System.out.println(bp.isConverged());
-        assertEqualMarginals(fg, bf, bp);
+        {
+            // should have uniform mass
+            BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+            bf.run();
+            ErmaBp bp = new ErmaBp(fg, prm);
+            bp.run();
+            System.out.println(bp.isConverged());
+            assertEqualMarginals(fg, bf, bp);
+            
+            VarTensor x0_marg = bp.getMarginals(x0);
+            assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
+            assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
+            VarTensor x1_marg = bp.getMarginals(x1);
+            assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
+            assertEquals(0.5d, x1_marg.getValue(1), 1e-6);                
+        }
         
-        VarTensor x0_marg = bp.getMarginals(x0);
-        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
-        VarTensor x1_marg = bp.getMarginals(x1);
-        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
-                
         // check again once we've added some unary factors on x0 and x1
         ExplicitFactor f0 = new ExplicitFactor(new VarSet(x0));
         f0.setValue(0, 3d);
@@ -382,18 +388,26 @@ public class ErmaBpForwardTest {
         f0.convertRealToLog();
         fg.addFactor(f0);
         
-        ExplicitFactor f1 = new ExplicitFactor(new VarSet(x0));
-        f1.setValue(0, 5d);
+        ExplicitFactor f1 = new ExplicitFactor(new VarSet(x1));
+        f1.setValue(0, 4d);
         f1.setValue(1, 1d);
         f1.convertRealToLog();
         fg.addFactor(f1);
         
-        bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        bp = new ErmaBp(fg, prm);
-        bp.run();
-        System.out.println(bp.isConverged());
-        assertEqualMarginals(fg, bf, bp);
+        {
+            BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+            bf.run();
+            ErmaBp bp = new ErmaBp(fg, prm);
+            bp.run();
+            System.out.println(bp.isConverged());
+            System.out.println(bf.getMarginals(x0));
+            System.out.println(bp.getMarginals(x0));
+            System.out.println(bf.getMarginals(x1));
+            System.out.println(bp.getMarginals(x1));
+            assertEquals(3, fg.getFactors().size());
+            assertTrue(fg.isUndirectedTree(fg.getVarNode(0)));
+            assertEqualMarginals(fg, bf, bp);
+        }
     }    
     
     @Test
