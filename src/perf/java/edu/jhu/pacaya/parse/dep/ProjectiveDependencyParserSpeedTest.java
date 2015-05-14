@@ -57,9 +57,9 @@ public class ProjectiveDependencyParserSpeedTest {
     /**
      * Output: (round 2)
      * sum: 2001819.430589211
-     * Total time: 5118.0
-     * Sentences per second: 1953.8882375928097
-     * Tokens per second: 58616.64712778429  <<<< 
+     * Total time: 1623.0
+     * Sentences per second: 6161.429451632779
+     * Tokens per second: 184842.88354898337  <<<< 
      */
     @Test
     public void testParseSpeed2() {
@@ -123,7 +123,7 @@ public class ProjectiveDependencyParserSpeedTest {
      */
     @Test
     public void testInsideOutsideSpeed() {
-        FastMath.useLogAddTable = false;
+        FastMath.useLogAddTable = true;
 
         int rounds = 2;
         int trials = 1000;
