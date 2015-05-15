@@ -17,6 +17,7 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.Toposort.Deps;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.collections.Sets;
+import edu.jhu.prim.util.random.Prng;
 
 public class ToposortTest {
 
@@ -83,12 +84,14 @@ public class ToposortTest {
     
     @Test
     public void testTopoSortWithInputs() {
+        Prng.seed(1l);
         // valid sorts:
         List<String> valid = Arrays.asList(new String[] { 
                 "[11, 2, 8, 9, 10, ROOT]",
                 "[11, 2, 10, 8, 9, ROOT]",
                 "[8, 11, 9, 2, 10, ROOT]",
                 "[11, 8, 9, 10, 2, ROOT]",
+                "[11, 10, 8, 9, 2, ROOT]",
         });
         
         for (int i : Lists.getList(0, 1, 2)) {
