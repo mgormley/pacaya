@@ -397,6 +397,7 @@ public class CrfTrainerTest {
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
+        prm.bFactory = bpPrm;
         prm.dlFactory = new MeanSquaredErrorFactory();
         //prm.dlFactory = new ExpectedRecallFactory();
         prm.trainer = Trainer.ERMA;
