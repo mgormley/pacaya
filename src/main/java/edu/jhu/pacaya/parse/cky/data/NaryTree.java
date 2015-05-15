@@ -40,8 +40,10 @@ public class NaryTree {
         this.children = children;
         this.isLexical = isLexical;
         this.parent = null;
-        for (NaryTree child : children) {
-            child.parent = this;
+        if (children != null) {
+            for (NaryTree child : children) {
+                child.parent = this;
+            }
         }
     }
 
