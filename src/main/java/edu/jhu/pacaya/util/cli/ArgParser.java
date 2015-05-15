@@ -157,7 +157,7 @@ public class ArgParser {
                     String value = apacheOpt.hasArg() ? cmd.getOptionValue(apacheOpt.getLongOpt()) : "true";
                     if (Modifier.isStatic(field.getModifiers())) {
                         // For static fields, set the value directly to the field.
-                        setStaticField(field, cmd.getOptionValue(apacheOpt.getLongOpt()));
+                        setStaticField(field, value);
                     } else {
                         // For non-static fields, cache the value for later use by getInstanceFromParsedArgs(). 
                         fieldValueMap.put(field, value);
