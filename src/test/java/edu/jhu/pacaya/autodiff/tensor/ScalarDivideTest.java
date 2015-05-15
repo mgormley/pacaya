@@ -13,6 +13,7 @@ import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.prim.util.random.Prng;
 
 public class ScalarDivideTest {
 
@@ -68,6 +69,7 @@ public class ScalarDivideTest {
 
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
+        Prng.seed(1l);
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
                 return new ScalarDivide(m1, m2, 1);
