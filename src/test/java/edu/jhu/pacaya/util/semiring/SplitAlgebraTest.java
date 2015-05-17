@@ -18,6 +18,12 @@ public class SplitAlgebraTest extends AbstractAlgebraTest {
     public Algebra getAlgebra() {
         return SplitAlgebra.SPLIT_ALGEBRA;
     }
+    
+    @Override
+    protected double getStdDevForRand() {
+        // The default of 1000 gives numbers which can't be safely converted to floats.
+        return 10;
+    }
 
     @Test
     public void testNegOne() {
