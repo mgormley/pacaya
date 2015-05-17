@@ -3,6 +3,7 @@ package edu.jhu.pacaya.gm.model.globalfac;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.Module;
@@ -13,17 +14,16 @@ import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgNode;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
+@Ignore
 public class HeadAutomataFactorTest {
 
     @Test
