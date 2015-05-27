@@ -3,6 +3,7 @@ package edu.jhu.pacaya.gm.model.globalfac;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.Module;
@@ -13,12 +14,10 @@ import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgNode;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -82,6 +81,7 @@ public class ConsecutiveSiblingsFactorTest {
         // tensor will never be used in subsequent modules.
     }
 
+    @Ignore("not implemented")
     @Test
     public void testCreateMessages() throws Exception {
         Algebra s = LogSemiring.LOG_SEMIRING;
@@ -153,6 +153,7 @@ public class ConsecutiveSiblingsFactorTest {
         return inMsgs;
     }
     
+    @Ignore("not implemented")
     @Test
     public void testCreateMessagesInInference() throws Exception {
         // Create a 5 word sentence.
@@ -165,6 +166,7 @@ public class ConsecutiveSiblingsFactorTest {
         throw new RuntimeException("not yet implemented");
     }
     
+    @Ignore("not implemented")
     @Test
     public void testGetCreateMessagesModule() throws Exception {
         Algebra s = RealAlgebra.REAL_ALGEBRA;
