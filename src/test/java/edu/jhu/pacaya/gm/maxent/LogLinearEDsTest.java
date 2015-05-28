@@ -4,12 +4,16 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective;
 import edu.jhu.pacaya.gm.train.CrfObjective;
 import edu.jhu.pacaya.gm.train.CrfObjectiveTest;
+import edu.jhu.pacaya.gm.train.SumBatchObjective;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.prim.arrays.DoubleArrays;
 
@@ -66,14 +70,14 @@ public class LogLinearEDsTest {
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
 
-        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
+        LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
         CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
-        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
+        SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
         double ll = obj.getValue(model.getParams());
         System.out.println(ll);
-        assertEquals(-95.531 / (30.+15.+10.+5.), ll, 1e-3);
+        assertEquals(-95.531, ll, 1e-3);
         
         // Test observed feature counts.
         FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
@@ -88,7 +92,6 @@ public class LogLinearEDsTest {
         // Test gradient.        
         double[] gradient = obj.getGradient(model.getParams()).toNativeArray();       
         double[] expectedGradient = new double[]{-12.154447609345993, -12.847824678672943};
-        DoubleArrays.scale(expectedGradient, 1.0 / (30.+15.+10.+5.));
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
 
@@ -100,10 +103,9 @@ public class LogLinearEDsTest {
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
         
-        //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
+        LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
         CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
-        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1); // Note: this test uses Avg not Sum.
         
         assertEquals(2, exs.getAlphabet().size());
 
@@ -137,10 +139,9 @@ public class LogLinearEDsTest {
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
         
-        //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
+        LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
         CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
-        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
+        SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());
 
@@ -162,6 +163,14 @@ public class LogLinearEDsTest {
         // Test gradient.         
         double[] gradient = obj.getGradient(model.getParams()).toNativeArray();       
         JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
+    }
+    
+    public static LogLinearXYPrm getDefaultLogLinearXYPrm() {
+        LogLinearXYPrm prm = new LogLinearXYPrm();
+        prm.crfPrm.batchOptimizer = null;
+        prm.crfPrm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
+        prm.crfPrm.regularizer = new L2(0.0);
+        return prm;
     }
     
 }

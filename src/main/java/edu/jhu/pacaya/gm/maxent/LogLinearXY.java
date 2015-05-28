@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
@@ -24,13 +23,14 @@ import edu.jhu.pacaya.gm.model.ExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.train.CrfTrainer;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.prim.tuple.Pair;
 
 /**
@@ -43,13 +43,9 @@ public class LogLinearXY {
     private static final Logger log = LoggerFactory.getLogger(LogLinearXY.class);
 
     public static class LogLinearXYPrm {
-        /** Variance of L2 regularizer. */
-        public double l2Variance = -1;
         public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public LogLinearXYPrm() {
-            crfPrm.infFactory = new BruteForceInferencerPrm(true);
-            //crfPrm.batchMaximizer = new SGD(new SGDPrm());
-            //crfPrm.maximizer = null;
+            crfPrm.infFactory = new BruteForceInferencerPrm(LogSemiring.LOG_SEMIRING);
         }
     }
     
@@ -72,10 +68,7 @@ public class LogLinearXY {
     public FgModel train(LogLinearXYData data) {
         Alphabet<String> alphabet = data.getFeatAlphabet();
         FgExampleList list = getData(data);
-        log.info("Number of train instances: " + list.size());
-        
-        prm.crfPrm.regularizer = new L2(prm.l2Variance);
-        
+        log.info("Number of train instances: " + list.size());                
         log.info("Number of model parameters: " + alphabet.size());
         FgModel model = new FgModel(alphabet.size(), new StringIterable(alphabet.getObjects()));
         CrfTrainer trainer = new CrfTrainer(prm.crfPrm);
