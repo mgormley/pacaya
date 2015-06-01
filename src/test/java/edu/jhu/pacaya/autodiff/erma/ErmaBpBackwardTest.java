@@ -401,21 +401,17 @@ public class ErmaBpBackwardTest {
     }
 
     private static void testGradientByFiniteDifferences(ErmaErFn fn) {
-        Prng.seed(12345);
         int numParams = fn.getNumDimensions();
         IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         System.out.println("theta0 = " + theta0);
-        Prng.seed(System.currentTimeMillis());
         
         ModuleTestUtils.assertGradientCorrectByFd(fn, theta0, 1e-5, 1e-7);
     }
     
     private static IntDoubleVector testGradientBySpsaApprox(ErmaErFn fn) {
-        Prng.seed(12345);
         int numParams = fn.getNumDimensions();
         IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         System.out.println("theta0 = " + theta0);
-        Prng.seed(System.currentTimeMillis());
         
         IntDoubleVector gradFd0 = StochasticGradientApproximation.estimateGradientSpsa(fn, theta0, 1000);      
         IntDoubleVector gradFd1 = StochasticGradientApproximation.estimateGradientSpsa(fn, theta0, 1000);      
