@@ -1,6 +1,8 @@
 package edu.jhu.pacaya.autodiff;
 
 import org.apache.commons.math3.util.FastMath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.pacaya.util.dist.Gaussian;
@@ -17,6 +19,8 @@ import edu.jhu.prim.vector.IntDoubleVector;
  */
 public class StochasticGradientApproximation {
     
+    private static final Logger log = LoggerFactory.getLogger(StochasticGradientApproximation.class);
+
     private StochasticGradientApproximation() { }
 
     /**
@@ -36,6 +40,9 @@ public class StochasticGradientApproximation {
             IntDoubleVector d = new IntDoubleDenseVector(numParams);
             d.set(j, 1);
             double dotFd = getGradDotDirApprox(fn, x, d, epsilon);
+            if (Double.isNaN(dotFd)) {
+                log.warn("Hit NaN");
+            }
             gradFd.set(j, dotFd);
         }
         return gradFd;
