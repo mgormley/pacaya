@@ -17,29 +17,32 @@ import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
 public class BeliefPropagationTest {
 	    
     @Test
     public void testOnOneVarProb() {
-        boolean logDomain = false;
-        testOneVarHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testOneVarHelper(s);
     }
     
     @Test
     public void testOnOneVarLogProb() {
-        boolean logDomain = true;
-        testOneVarHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;
+        testOneVarHelper(s);
     }
 
-    private void testOneVarHelper(boolean logDomain) {
+    private void testOneVarHelper(Algebra s) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
 
@@ -54,12 +57,12 @@ public class BeliefPropagationTest {
             ((VarTensor)f).convertRealToLog();
         }
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
@@ -71,17 +74,17 @@ public class BeliefPropagationTest {
     
     @Test
     public void testTwoVars() {
-        runTwoVars(false, null);
-        runTwoVars(true, null);
+        runTwoVars(RealAlgebra.REAL_ALGEBRA, null);
+        runTwoVars(LogSemiring.LOG_SEMIRING, null);
     }
 
     @Test
     public void testDumpingOfBeliefsForDebugging() {
-        runTwoVars(false, Paths.get("./tmp/bpDump"));
+        runTwoVars(RealAlgebra.REAL_ALGEBRA, Paths.get("./tmp/bpDump"));
         // No assertions, just make sure we don't fail.
     }
 
-    private void runTwoVars(boolean logDomain, Path dumpDir) {
+    private void runTwoVars(Algebra s, Path dumpDir) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
@@ -104,12 +107,12 @@ public class BeliefPropagationTest {
             ((VarTensor)f).convertRealToLog();
         }
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.dumpDir = dumpDir;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
@@ -120,16 +123,16 @@ public class BeliefPropagationTest {
     @Test
     public void testThreeConnectedComponents() {
         
-        boolean logDomain = true;
+        Algebra s = LogSemiring.LOG_SEMIRING;
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         // Don't normalize the messages, so that the partition function is the
@@ -175,44 +178,44 @@ public class BeliefPropagationTest {
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
-        boolean logDomain = false;
-        testOnSimpleHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testOnSimpleHelper(s);
     }
     
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
-        boolean logDomain = true;        
-        testOnSimpleHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;        
+        testOnSimpleHelper(s);
     }
 
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
-        boolean logDomain = false;
-        testOnChainHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testOnChainHelper(s);
     }
 
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
-        boolean logDomain = true;        
-        testOnChainHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;        
+        testOnChainHelper(s);
     }
 
-    private void testOnSimpleHelper(boolean logDomain) throws IOException {
+    private void testOnSimpleHelper(Algebra s) throws IOException {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.normalizeMessages = true;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
-        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
+        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, s);
 
         // TODO: unfortunately, loopy BP does very poorly on this simple example
         // and does not converge to the correct marginals. Hence we use a (very
@@ -220,14 +223,14 @@ public class BeliefPropagationTest {
         assertEqualMarginals(fg, bf, bp, 2);
     }
 
-    private void testOnChainHelper(boolean logDomain) {
+    private void testOnChainHelper(Algebra s) {
         FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         
@@ -248,22 +251,22 @@ public class BeliefPropagationTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(false, 0, 6);
-        testConvergenceHelper(true, 0, 6);
+        testConvergenceHelper(RealAlgebra.REAL_ALGEBRA, 0, 6);
+        testConvergenceHelper(LogSemiring.LOG_SEMIRING, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
-        testConvergenceHelper(false, 1e-3, 5);
-        testConvergenceHelper(true, 1e-3, 5);
+        testConvergenceHelper(RealAlgebra.REAL_ALGEBRA, 1e-3, 5);
+        testConvergenceHelper(LogSemiring.LOG_SEMIRING, 1e-3, 5);
     }
 
-    private void testConvergenceHelper(boolean logDomain, double convergenceThreshold, int expectedConvergenceIterations) {
+    private void testConvergenceHelper(Algebra s, double convergenceThreshold, int expectedConvergenceIterations) {
         FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
 
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.normalizeMessages = true;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.convergenceThreshold = convergenceThreshold;        
@@ -295,17 +298,17 @@ public class BeliefPropagationTest {
 
     @Test
     public void testCanHandleProbHardFactors() {
-        testCanHandleHardFactorsHelper(false, false);
-        testCanHandleHardFactorsHelper(true, false);
+        testCanHandleHardFactorsHelper(false, RealAlgebra.REAL_ALGEBRA);
+        testCanHandleHardFactorsHelper(true, RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
-        testCanHandleHardFactorsHelper(false, true);
-        testCanHandleHardFactorsHelper(true, true);
+        testCanHandleHardFactorsHelper(false, LogSemiring.LOG_SEMIRING);
+        testCanHandleHardFactorsHelper(true, LogSemiring.LOG_SEMIRING);
     }
     
-    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {     
+    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     
         Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
         Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
         
@@ -327,11 +330,11 @@ public class BeliefPropagationTest {
         fg.addFactor(xor);
         
         // should have uniform mass
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.cacheFactorBeliefs = cacheFactorBeliefs;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
@@ -358,7 +361,7 @@ public class BeliefPropagationTest {
         f1.convertRealToLog();
         fg.addFactor(f1);
         
-        bf = new BruteForceInferencer(fg, logDomain);
+        bf = new BruteForceInferencer(fg, s);
         bf.run();
         bp = new BeliefPropagation(fg, prm);
         bp.run();

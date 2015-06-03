@@ -15,18 +15,19 @@ import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
-import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
+import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
@@ -35,14 +36,14 @@ public class CrfObjectiveTest {
 	@Test
 	public void testLogLikelihoodBelowZeroBPLogDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-		bpPrm.logDomain = true;
+		bpPrm.s = LogSemiring.LOG_SEMIRING;
 		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBPProbDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-		bpPrm.logDomain = false;
+		bpPrm.s = RealAlgebra.REAL_ALGEBRA;
 		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
@@ -112,9 +113,9 @@ public class CrfObjectiveTest {
         return new AvgBatchObjective(exObj, model, 1);
     }
 
-    public static FgInferencerFactory getInfFactory(boolean logDomain) {
+    public static FgInferencerFactory getInfFactory(Algebra s) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = logDomain;
+        bpPrm.s = s;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

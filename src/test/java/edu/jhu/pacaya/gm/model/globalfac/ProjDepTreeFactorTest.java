@@ -10,24 +10,27 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BeliefPropagationTest;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.Messages;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
@@ -104,47 +107,47 @@ public class ProjDepTreeFactorTest {
     
     @Test
     public void testPartitionFunctionWithoutUnaryFactorsProb() {
-        partitionFunctionWithoutUnaryFactors(false);       
+        partitionFunctionWithoutUnaryFactors(RealAlgebra.REAL_ALGEBRA);       
     }
     
     @Test
     public void testPartitionFunctionWithoutUnaryFactorsLogProb() {
-        partitionFunctionWithoutUnaryFactors(true);
+        partitionFunctionWithoutUnaryFactors(LogSemiring.LOG_SEMIRING);
     }
     
-    public void partitionFunctionWithoutUnaryFactors(boolean logDomain) {
-        assertEquals(1, getNumberOfTreesByBruteForce(1, logDomain), 1e-13);
-        assertEquals(2, getNumberOfTreesByBruteForce(2, logDomain), 1e-13);
-        assertEquals(7, getNumberOfTreesByBruteForce(3, logDomain), 1e-13);
-        //Slow: assertEquals(30, getNumberOfTreesByBruteForce(4, logDomain), 1e-13);
+    public void partitionFunctionWithoutUnaryFactors(Algebra s) {
+        assertEquals(1, getNumberOfTreesByBruteForce(1, s), 1e-13);
+        assertEquals(2, getNumberOfTreesByBruteForce(2, s), 1e-13);
+        assertEquals(7, getNumberOfTreesByBruteForce(3, s), 1e-13);
+        //Slow: assertEquals(30, getNumberOfTreesByBruteForce(4, s), 1e-13);
         
-        assertEquals(1, getNumberOfTreesByBp(1, logDomain), 1e-13);
-        assertEquals(2, getNumberOfTreesByBp(2, logDomain), 1e-13);
-        assertEquals(7, getNumberOfTreesByBp(3, logDomain), 1e-13);
-        assertEquals(30, getNumberOfTreesByBp(4, logDomain), 1e-13); // TODO: is this correct
-        assertEquals(143, getNumberOfTreesByBp(5, logDomain), 1e-13); 
-        assertEquals(728, getNumberOfTreesByBp(6, logDomain), 1e-13);
+        assertEquals(1, getNumberOfTreesByBp(1, s), 1e-13);
+        assertEquals(2, getNumberOfTreesByBp(2, s), 1e-13);
+        assertEquals(7, getNumberOfTreesByBp(3, s), 1e-13);
+        assertEquals(30, getNumberOfTreesByBp(4, s), 1e-13); // TODO: is this correct
+        assertEquals(143, getNumberOfTreesByBp(5, s), 1e-13); 
+        assertEquals(728, getNumberOfTreesByBp(6, s), 1e-13);
         
-        assertEquals(1, getNumberOfTreesByLoopyBp(1, logDomain), 1e-13);
-        assertEquals(2, getNumberOfTreesByLoopyBp(2, logDomain), 1e-13);
-        assertEquals(7, getNumberOfTreesByLoopyBp(3, logDomain), 1e-13);
-        assertEquals(30, getNumberOfTreesByLoopyBp(4, logDomain), 1e-13); 
-        assertEquals(143, getNumberOfTreesByLoopyBp(5, logDomain), 1e-10); 
-        assertEquals(728, getNumberOfTreesByLoopyBp(6, logDomain), 1e-10);
+        assertEquals(1, getNumberOfTreesByLoopyBp(1, s), 1e-13);
+        assertEquals(2, getNumberOfTreesByLoopyBp(2, s), 1e-13);
+        assertEquals(7, getNumberOfTreesByLoopyBp(3, s), 1e-13);
+        assertEquals(30, getNumberOfTreesByLoopyBp(4, s), 1e-13); 
+        assertEquals(143, getNumberOfTreesByLoopyBp(5, s), 1e-10); 
+        assertEquals(728, getNumberOfTreesByLoopyBp(6, s), 1e-10);
     }
 
-    private double getNumberOfTreesByBruteForce(int n, boolean logDomain) {
+    private double getNumberOfTreesByBruteForce(int n, Algebra s) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
         treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         return bf.getPartition();
     }    
 
-    private double getNumberOfTreesByBp(int n, boolean logDomain) {
+    private double getNumberOfTreesByBp(int n, Algebra s) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
         treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
@@ -152,7 +155,7 @@ public class ProjDepTreeFactorTest {
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = false;
@@ -162,7 +165,7 @@ public class ProjDepTreeFactorTest {
     }
     
 
-    private double getNumberOfTreesByLoopyBp(int n, boolean logDomain) {
+    private double getNumberOfTreesByLoopyBp(int n, Algebra s) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
         treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
@@ -170,7 +173,7 @@ public class ProjDepTreeFactorTest {
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = true;
@@ -181,15 +184,15 @@ public class ProjDepTreeFactorTest {
     
     @Test
     public void testMarginalsAndPartitionFunction() {
-        boolean logDomain;
-        logDomain = false;        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, false, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
-        logDomain = true;        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, false, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
+        Algebra s;
+        s = RealAlgebra.REAL_ALGEBRA;        
+        inferAndCheckMarginalsAndPartitionFunction(s, false, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, true); 
+        s = LogSemiring.LOG_SEMIRING;        
+        inferAndCheckMarginalsAndPartitionFunction(s, false, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, true); 
     }
 
     public static class FgAndLinks {
@@ -205,15 +208,15 @@ public class ProjDepTreeFactorTest {
         }        
     }
         
-    private void inferAndCheckMarginalsAndPartitionFunction(boolean logDomain, boolean normalizeMessages, boolean useBetheFreeEnergy) {
-        FgAndLinks fgl = getFgl(logDomain);
+    private void inferAndCheckMarginalsAndPartitionFunction(Algebra s, boolean normalizeMessages, boolean useBetheFreeEnergy) {
+        FgAndLinks fgl = getFgl();
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();        
-        prm.logDomain = logDomain;
+        prm.s = s;
         if (useBetheFreeEnergy) {
             prm.maxIterations = 20;
             prm.updateOrder = BpUpdateOrder.PARALLEL;
@@ -264,20 +267,20 @@ public class ProjDepTreeFactorTest {
         assertEquals(45+28+20+84+162+216+96, bp.getPartition(), 1e-3);
         
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
     public void testMarginalsAndPartitionWithAdditionalVariable() {
-        testPartitionWithAdditionalVariableHelper(false, false);
-        testPartitionWithAdditionalVariableHelper(true, false);
-        testPartitionWithAdditionalVariableHelper(true, true);
-        testPartitionWithAdditionalVariableHelper(false, true);
+        testPartitionWithAdditionalVariableHelper(RealAlgebra.REAL_ALGEBRA, false);
+        testPartitionWithAdditionalVariableHelper(LogSemiring.LOG_SEMIRING, false);
+        testPartitionWithAdditionalVariableHelper(LogSemiring.LOG_SEMIRING, true);
+        testPartitionWithAdditionalVariableHelper(RealAlgebra.REAL_ALGEBRA, true);
     }
     
-    public void testPartitionWithAdditionalVariableHelper(boolean logDomain, boolean normalizeMessages) {
+    public void testPartitionWithAdditionalVariableHelper(Algebra s, boolean normalizeMessages) {
         double[] root = new double[] {1, 2}; 
         double[][] child = new double[][]{ {0, 3}, {4, 0} };   
         
@@ -300,7 +303,7 @@ public class ProjDepTreeFactorTest {
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = normalizeMessages;
@@ -334,14 +337,14 @@ public class ProjDepTreeFactorTest {
         assertEquals((8*2 + 8*5)/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
     public void testPartitionWithAllOnesAndLatentRoleVar() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.REAL_ALGEBRA;        
 
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
@@ -370,7 +373,7 @@ public class ProjDepTreeFactorTest {
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = false;
@@ -413,14 +416,14 @@ public class ProjDepTreeFactorTest {
         assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
     
     @Test
     public void testMarginalsAndPartitionWithAllOnes() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.REAL_ALGEBRA;        
 
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
@@ -433,7 +436,7 @@ public class ProjDepTreeFactorTest {
                 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = true;
@@ -463,7 +466,7 @@ public class ProjDepTreeFactorTest {
             for (Var v : fg.getVars()) {
                 double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
                 System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-                assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
+                assertEquals(Z, s == LogSemiring.LOG_SEMIRING ? FastMath.exp(partition) : partition, 1e-3);
             }
         }
         // Check expected counts.
@@ -472,7 +475,7 @@ public class ProjDepTreeFactorTest {
         assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
@@ -481,25 +484,25 @@ public class ProjDepTreeFactorTest {
     // Currently, the values in get2WordSentFactorGraph() are scaled to avoid the floating point error.
     @Test
     public void testBpCompareMessagesWithExplicitTreeFactor() {
-        compareBpMessagesWithExplicitTreeFactor(false, true, false);
-        compareBpMessagesWithExplicitTreeFactor(false, true, true);
-        compareBpMessagesWithExplicitTreeFactor(true, true, false);
-        compareBpMessagesWithExplicitTreeFactor(true, true, true);
+        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, false);
+        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, true);
+        compareBpMessagesWithExplicitTreeFactor(LogSemiring.LOG_SEMIRING, true, false);
+        compareBpMessagesWithExplicitTreeFactor(LogSemiring.LOG_SEMIRING, true, true);
     }
 
-    public void compareBpMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+    public void compareBpMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
-        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
+        FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
         BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
         bpExpl.run();
         //printMessages(fgExpl, bpExpl);
         
-        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
+        FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
         BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
         bpDp.run();
         //printMessages(fgDp, bpDp);
@@ -513,23 +516,23 @@ public class ProjDepTreeFactorTest {
     
     @Test
     public void testErmaCompareMessagesWithExplicitTreeFactor() {
-        compareErmaMessagesWithExplicitTreeFactor(false, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(false, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, false);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, true);
     }
 
-    public void compareErmaMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+    public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
-        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
+        FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
         ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
         bpExpl.forward();
         //printMessages(fgExpl, bpExpl);
         
-        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
+        FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
         ErmaBp bpDp = new ErmaBp(fgDp, prm);
         bpDp.forward();
         //printMessages(fgDp, bpDp);
@@ -643,26 +646,26 @@ public class ProjDepTreeFactorTest {
         // Below, we check both the case of an explicit tree factor and the ProjDepTreeFactor class.
         // 
         // Check that we can correctly compute the partition in the non-loopy setting.
-        comparePartitionWithBruteForce(true, true, true, false, false);
-        comparePartitionWithBruteForce(true, true, false, false, false);
+        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, true, false, false);
+        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, false, false, false);
         // Check that we can correctly compute the partition in the loopy setting.
-        comparePartitionWithBruteForce(true, true, true, true, false);
-        comparePartitionWithBruteForce(true, true, false, true, false);
+        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, true, true, false);
+        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, false, true, false);
     }
     
     @Test
     public void testComparePartitionWithBruteForceInfiniteEdgeWeight() {
         // Check the case of a negative infinity edge weight
-        comparePartitionWithBruteForce(true, true, false, false, true);
+        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, false, false, true);
     }
 
-    public void comparePartitionWithBruteForce(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
-        FactorGraph fg = get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight);
+    public void comparePartitionWithBruteForce(Algebra s, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+        FactorGraph fg = get2WordSentFactorGraph(useExplicitTreeFactor, makeLoopy, negInfEdgeWeight);
         
         System.out.println(fg.getFactors());
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 20;
         prm.normalizeMessages = normalizeMessages;
@@ -674,7 +677,7 @@ public class ProjDepTreeFactorTest {
         printBeliefs(fg, bp);
         
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         printBeliefs(fg, bf);
 
@@ -684,29 +687,29 @@ public class ProjDepTreeFactorTest {
     
     @Test
     public void testBackwardPass2WordGlobalFactor() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.REAL_ALGEBRA;        
         double[] root = new double[]{ 1.0, 1.0 };
         double[][] child = new double[][]{ { 0.0, 1.0 }, { 1.0, 0.0 } };
-        testBackwardPassGlobalFactor(logDomain, root, child);
+        testBackwardPassGlobalFactor(s, root, child);
     }
     
     @Test
     public void testBackwardPass2WordGlobalFactorWithPruning() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.REAL_ALGEBRA;        
         double[] root = new double[]{ 1.0, 1.0 };
         // We prune the edge from 1 --> 0.
         double[][] child = new double[][]{ { 0.0, 1.0 }, { 0.0, 0.0 } };
-        testBackwardPassGlobalFactor(logDomain, root, child);
+        testBackwardPassGlobalFactor(s, root, child);
     }
 
-    private void testBackwardPassGlobalFactor(boolean logDomain, double[] root, double[][] child) {
+    private void testBackwardPassGlobalFactor(Algebra s, double[] root, double[][] child) {
         FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
         
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.maxIterations = 2;
@@ -730,15 +733,15 @@ public class ProjDepTreeFactorTest {
         }
     }
 
-    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
-        return get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, false);
+    public static FactorGraph get2WordSentFactorGraph(boolean useExplicitTreeFactor, boolean makeLoopy) {
+        return get2WordSentFactorGraph(useExplicitTreeFactor, makeLoopy, false);
     }
     
-    public static FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
-        return get2WordSentFgAndLinks(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight).fg;
+    public static FactorGraph get2WordSentFactorGraph(boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+        return get2WordSentFgAndLinks(useExplicitTreeFactor, makeLoopy, negInfEdgeWeight).fg;
     }
     
-    public static FgAndLinks get2WordSentFgAndLinks(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+    public static FgAndLinks get2WordSentFgAndLinks(boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
@@ -840,7 +843,7 @@ public class ProjDepTreeFactorTest {
         return marg.getValue(LinkVar.TRUE);
     }
 
-    public static FgAndLinks getFgl(boolean logDomain) {
+    public static FgAndLinks getFgl() {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };        
         return getFgl(root, child);

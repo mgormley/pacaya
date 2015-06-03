@@ -73,7 +73,7 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
     @Override
     public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
         VarTensor df = super.getClamped(clmpVarConfig);
-        return new ClampedObsCjExpFamFactor(df, templateKey, clmpVarConfig, this);
+        return new ClampedObsCjExpFamFactor(df, clmpVarConfig, this);
     }
     
     static class ClampedObsCjExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
@@ -83,23 +83,15 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         private ObsCjExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedObsCjExpFamFactor(VarTensor clmpDf, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
-            super(clmpDf, templateKey, unclmpFactor.ofc);
+        public ClampedObsCjExpFamFactor(VarTensor clmpDf, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
+            super(clmpDf, null, unclmpFactor.ofc);
             this.unclmpFactor = unclmpFactor;  
             VarSet unclmpVarSet = unclmpFactor.getVars();
-            if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {
-                // Only store the unclampedVarSet if it does not contain OBSERVED variables.
-                // This corresponds to only storing the VarSet if this is a factor graph 
-                // containing only latent variables.
-                //
-                // TODO: Switch this to an option.
-                //
-                // If this is the numerator then we must clamp the predicted
-                // variables to determine the correct set of model
-                // parameters.
-                iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
-                clmpConfigId = clmpVarConfig.getConfigIndex();
-            }
+            // If this is the numerator then we must clamp the predicted
+            // variables to determine the correct set of model
+            // parameters.
+            iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
+            clmpConfigId = clmpVarConfig.getConfigIndex();
         }
 
         @Override
@@ -113,7 +105,21 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
             // Pass through to the unclamped factor.
             return unclmpFactor.getObsFeatures();
         }
+
+        @Override
+        public Object getTemplateKey() {
+            return unclmpFactor.getTemplateKey();
+        }
         
+        @Override
+        public int getTemplateId() {
+            return unclmpFactor.getTemplateId();
+        }
+        
+        @Override
+        public void setTemplateId(int templateId) {
+            throw new IllegalStateException("The template ID of clamped factors should never be set. It inherits the value from its parent.");
+        } 
     }
 
     @Override

@@ -84,9 +84,6 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
         margs = new ArrayList<VarTensor>();
         varMargMap = new HashMap<Var,Double>();
 
-        // Add in the observed variables.
-        mbrVarConfig.put(ex.getObsConfig());
-
         // Get the MBR configuration of all the latent and predicted
         // variables.        
         if (prm.loss == Loss.L1 || prm.loss == Loss.MSE) {

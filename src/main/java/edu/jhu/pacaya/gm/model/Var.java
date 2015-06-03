@@ -17,8 +17,6 @@ public class Var implements Comparable<Var>, Serializable {
     public static final int UNINITIALIZED_NODE_ID = -1;
     
     public enum VarType {
-        /** Observed variables will always be observed at training and test time. */
-        OBSERVED,
         /** Latent variables will never be observed at training or at test time. */
         LATENT, 
         /** Predicated variables are observed at training time, but not at test time. */

@@ -15,22 +15,16 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
  */
 public abstract class SlowFeatureExtractor implements FeatureExtractor {
 
-    public VarConfig obsConfig;
-
     public SlowFeatureExtractor() {
     }
 
     @Override
-    public void init(UFgExample ex) {
-        this.obsConfig = ex.getObsConfig();
-    }
+    public void init(UFgExample ex) { }
     
     @Override
     public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
         VarSet vars = factor.getVars();
-        VarSet latPredVars = new VarSet(VarSet.getVarsOfType(vars, VarType.PREDICTED), VarSet.getVarsOfType(vars, VarType.LATENT));
-        VarConfig varConfig = latPredVars.getVarConfig(configId);
-        varConfig = new VarConfig(obsConfig, varConfig);
+        VarConfig varConfig = vars.getVarConfig(configId);
         return calcFeatureVector(factor, varConfig);
     }
     

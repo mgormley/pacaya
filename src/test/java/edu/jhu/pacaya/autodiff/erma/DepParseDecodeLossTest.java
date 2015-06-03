@@ -63,7 +63,7 @@ public class DepParseDecodeLossTest {
     @Test
     public void testDecodeLossWith3WordGlobalFactor() {
         // Get factor graph.
-        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(false);
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl();
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;

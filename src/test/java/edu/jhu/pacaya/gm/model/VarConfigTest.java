@@ -14,9 +14,9 @@ public class VarConfigTest {
     @Test
     public void testGetState() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -31,9 +31,9 @@ public class VarConfigTest {
     @Test
     public void testGetIntersection() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -50,9 +50,9 @@ public class VarConfigTest {
     @Test
     public void testGetConfigIndex() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -66,11 +66,11 @@ public class VarConfigTest {
     @Test
     public void testGetConfigIndexOfSubset() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
-        Var w3 = new Var(VarType.OBSERVED, 3, "w3", null);
-        Var w4 = new Var(VarType.OBSERVED, 6, "w4", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
+        Var w3 = new Var(VarType.PREDICTED, 3, "w3", null);
+        Var w4 = new Var(VarType.PREDICTED, 6, "w4", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -86,9 +86,9 @@ public class VarConfigTest {
 
     @Test
     public void testGetConfigIndex2() {
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 0);
@@ -120,9 +120,9 @@ public class VarConfigTest {
     @Test
     public void testGetConfigIndex3() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);

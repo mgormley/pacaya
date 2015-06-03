@@ -231,7 +231,7 @@ public class ObsFeatureConjoiner implements Serializable {
             LFgExample ex = data.get(i);
             // Create a "no-op" inferencer, which returns arbitrary marginals.
             NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
-            for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
+            for (int a=0; a<ex.getFgLatPred().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     // For each observation function extractor.
@@ -270,7 +270,7 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
+            for (int a=0; a<ex.getFgLatPred().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     int t = templates.getTemplateId((TemplateFactor) f);

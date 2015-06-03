@@ -12,6 +12,9 @@ import edu.jhu.pacaya.gm.model.FactorGraphTest;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.JUnitUtils;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 
@@ -20,27 +23,27 @@ public class BruteForceInferencerTest {
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
-        boolean logDomain = false;
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
         FactorGraph fg = getLinearChainGraph();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnLinearChainGraph(fg, bf);
     }
     
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
-        boolean logDomain = true;
+        Algebra s = LogSemiring.LOG_SEMIRING;
         FactorGraph fg = getLinearChainGraph();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnLinearChainGraph(fg, bf);
     }
 
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
-        boolean logDomain = false;
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
         FactorGraph fg = readSimpleFg();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnSimpleGraph(fg, bf);
     }
 
@@ -48,9 +51,9 @@ public class BruteForceInferencerTest {
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
-        boolean logDomain = true;
+        Algebra s = LogSemiring.LOG_SEMIRING;
         FactorGraph fg = readSimpleFg();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnSimpleGraph(fg, bf);
     }
 

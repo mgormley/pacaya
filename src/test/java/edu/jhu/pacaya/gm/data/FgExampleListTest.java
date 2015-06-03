@@ -6,7 +6,7 @@ import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphTest;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
-import edu.jhu.pacaya.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
+import edu.jhu.pacaya.gm.train.SimpleVCObsFeatureExtractor;
 
 public class FgExampleListTest {
 

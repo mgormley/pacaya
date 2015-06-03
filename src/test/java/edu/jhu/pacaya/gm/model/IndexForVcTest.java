@@ -136,6 +136,6 @@ public class IndexForVcTest {
         for (int i=0; i<numStates; i++) {
             stateNames.add("state" + i);
         }
-        return new Var(VarType.OBSERVED, numStates, "var"+id, stateNames);
+        return new Var(VarType.PREDICTED, numStates, "var"+id, stateNames);
     }
 }

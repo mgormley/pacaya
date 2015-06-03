@@ -213,7 +213,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             return this;
         } else if (clmpVarConfig.size() == vars.size()) {
             // All clamped.
-            return new ProjDepTreeFactor(0, VarType.OBSERVED);
+            return new ProjDepTreeFactor(0, VarType.PREDICTED);
         } else {
             // Some clamped.
             throw new IllegalStateException("Unable to clamp these variables.");

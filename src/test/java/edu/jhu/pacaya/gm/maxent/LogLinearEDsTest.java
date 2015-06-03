@@ -15,6 +15,9 @@ import edu.jhu.pacaya.gm.train.CrfObjective;
 import edu.jhu.pacaya.gm.train.CrfObjectiveTest;
 import edu.jhu.pacaya.gm.train.SumBatchObjective;
 import edu.jhu.pacaya.util.JUnitUtils;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 
 public class LogLinearEDsTest {
@@ -24,42 +27,42 @@ public class LogLinearEDsTest {
     @Test
     public void testLogLinearModelShapesLogProbs() {
         // Test with inference in the log-domain.
-        boolean logDomain = true;        
-        testLogLinearModelShapesHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;        
+        testLogLinearModelShapesHelper(s);
     }
     
     @Test
     public void testLogLinearModelShapesProbs() {
         // Test with inference in the prob-domain.
-        boolean logDomain = false;        
-        testLogLinearModelShapesHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;        
+        testLogLinearModelShapesHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesTwoExamplesLogProbs() {
-        boolean logDomain = true;
-        testLogLinearModelShapesTwoExamplesHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;
+        testLogLinearModelShapesTwoExamplesHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesTwoExamplesProbs() {
-        boolean logDomain = false;
-        testLogLinearModelShapesTwoExamplesHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testLogLinearModelShapesTwoExamplesHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesOneExampleLogProbs() {
-        boolean logDomain = true;
-        testLogLinearModelShapesOneExampleHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;
+        testLogLinearModelShapesOneExampleHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesOneExampleProbs() {
-        boolean logDomain = false;
-        testLogLinearModelShapesOneExampleHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testLogLinearModelShapesOneExampleHelper(s);
     }
 
-    private void testLogLinearModelShapesHelper(boolean logDomain) {
+    private void testLogLinearModelShapesHelper(Algebra s) {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(30, "circle", "solid");
         exs.addEx(15, "circle");
@@ -71,7 +74,7 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
 
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(s));
         SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
@@ -95,7 +98,7 @@ public class LogLinearEDsTest {
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
 
-    private void testLogLinearModelShapesTwoExamplesHelper(boolean logDomain) {
+    private void testLogLinearModelShapesTwoExamplesHelper(Algebra s) {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(1, "circle");
         exs.addEx(1, "solid");
@@ -104,7 +107,7 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(s));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1); // Note: this test uses Avg not Sum.
         
         assertEquals(2, exs.getAlphabet().size());
@@ -131,7 +134,7 @@ public class LogLinearEDsTest {
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
     
-    private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
+    private void testLogLinearModelShapesOneExampleHelper(Algebra s) {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(1, "circle");
         exs.addEx(0, "solid");
@@ -140,7 +143,7 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(s));
         SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());

@@ -21,7 +21,6 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class FactorsModuleTest {
 
-    boolean logDomain = false;
     Algebra s = RealAlgebra.REAL_ALGEBRA;
         
     private final FgModel model;
