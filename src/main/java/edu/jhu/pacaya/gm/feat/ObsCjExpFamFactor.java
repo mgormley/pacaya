@@ -73,7 +73,7 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
     @Override
     public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
         VarTensor df = super.getClamped(clmpVarConfig);
-        return new ClampedObsCjExpFamFactor(df, templateKey, clmpVarConfig, this);
+        return new ClampedObsCjExpFamFactor(df, clmpVarConfig, this);
     }
     
     static class ClampedObsCjExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
@@ -83,8 +83,8 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         private ObsCjExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedObsCjExpFamFactor(VarTensor clmpDf, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
-            super(clmpDf, templateKey, unclmpFactor.ofc);
+        public ClampedObsCjExpFamFactor(VarTensor clmpDf, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
+            super(clmpDf, null, unclmpFactor.ofc);
             this.unclmpFactor = unclmpFactor;  
             VarSet unclmpVarSet = unclmpFactor.getVars();
             // If this is the numerator then we must clamp the predicted
@@ -105,7 +105,21 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
             // Pass through to the unclamped factor.
             return unclmpFactor.getObsFeatures();
         }
+
+        @Override
+        public Object getTemplateKey() {
+            return unclmpFactor.getTemplateKey();
+        }
         
+        @Override
+        public int getTemplateId() {
+            return unclmpFactor.getTemplateId();
+        }
+        
+        @Override
+        public void setTemplateId(int templateId) {
+            throw new IllegalStateException("The template ID of clamped factors should never be set. It inherits the value from its parent.");
+        } 
     }
 
     @Override

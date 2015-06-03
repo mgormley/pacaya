@@ -33,21 +33,21 @@ public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable 
     
     // TODO: Figure out how to remove these "initializing" constructors.
     // TODO: Maybe convert to factory methods.
-    public UnlabeledFgExample(FactorGraph fg, VarConfig obsConfig, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
-        this(fg, obsConfig);        
+    public UnlabeledFgExample(FactorGraph fg, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
+        this(fg);        
         // Initialize the observation function.
         obsFe.init(this, fts);
         // Update the factor templates.
         fts.lookupTemplateIds(this.getFgLatPred());
         fts.getTemplateIds(this.getFgLatPred());
     }
-    public UnlabeledFgExample(FactorGraph fg, VarConfig obsConfig, FeatureExtractor fe) {
-        this(fg, obsConfig);        
+    public UnlabeledFgExample(FactorGraph fg, FeatureExtractor fe) {
+        this(fg);        
         // Initialize the feature extractor.
         fe.init(this);        
     }
     
-    public UnlabeledFgExample(FactorGraph fg, VarConfig obsConfig) {
+    public UnlabeledFgExample(FactorGraph fg) {
         this.fgLatPred = fg;
         
         // Does this factor graph contain latent variables?

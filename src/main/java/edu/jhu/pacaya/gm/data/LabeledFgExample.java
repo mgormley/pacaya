@@ -45,7 +45,6 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
         obsFe.init(this, fts);
         // Update the factor templates.
         fts.lookupTemplateIds(this.getFgLatPred());
-        fts.getTemplateIds(this.getFgLat());
         fts.getTemplateIds(this.getFgLatPred());
     }
     public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
@@ -61,17 +60,9 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
      * @param goldConfig The gold assignment to the variables.
      */
     public LabeledFgExample(FactorGraph fg, VarConfig goldConfig) {
-        super(fg, new VarConfig());
+        super(fg);
         checkGoldConfig(fg, goldConfig);
         this.goldConfig = goldConfig;
-
-        fgClampTimer.start();
-        // Get a copy of the factor graph where the observed and predicted variables are clamped.
-        List<Var> predictedVars = VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED);
-        VarConfig predConfig = goldConfig.getIntersection(predictedVars);
-        fgLat = fgLatPred.getClamped(predConfig);
-        assert (fg.getNumFactors() <= fgLat.getNumFactors());
-        fgClampTimer.stop();
     }
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {
@@ -90,6 +81,15 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
      * to their values from the training example.
      */
     public FactorGraph getFgLat() {
+        if (fgLat == null) {
+            fgClampTimer.start();
+            // Get a copy of the factor graph where the observed and predicted variables are clamped.
+            List<Var> predictedVars = VarSet.getVarsOfType(fgLatPred.getVars(), VarType.PREDICTED);
+            VarConfig predConfig = goldConfig.getIntersection(predictedVars);
+            fgLat = fgLatPred.getClamped(predConfig);
+            assert (fgLatPred.getNumFactors() <= fgLat.getNumFactors());
+            fgClampTimer.stop();
+        }
         return fgLat;
     }
     
