@@ -25,6 +25,7 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
+import edu.jhu.pacaya.gm.train.CrfObjective;
 import edu.jhu.pacaya.gm.util.ArrayIter3D;
 import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.Prm;
@@ -229,10 +230,11 @@ public class ObsFeatureConjoiner implements Serializable {
                 log.debug("Processing example: " + i);
             }
             LFgExample ex = data.get(i);
+            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
             // Create a "no-op" inferencer, which returns arbitrary marginals.
             NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
             for (int a=0; a<ex.getFgLatPred().getNumFactors(); a++) {
-                Factor f = ex.getFgLat().getFactor(a);
+                Factor f = fgLat.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     // For each observation function extractor.
                     int t = templates.getTemplateId((TemplateFactor) f);
@@ -270,8 +272,9 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
+            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
             for (int a=0; a<ex.getFgLatPred().getNumFactors(); a++) {
-                Factor f = ex.getFgLat().getFactor(a);
+                Factor f = fgLat.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     int t = templates.getTemplateId((TemplateFactor) f);
                     if (t != -1) {

@@ -1,5 +1,7 @@
 package edu.jhu.pacaya.gm.train;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +15,11 @@ import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.IFgModel;
+import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
+import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.prim.util.Timer;
@@ -29,6 +34,9 @@ public class CrfObjective implements ExampleObjective {
     private FgInferencerFactory infFactory;
     private boolean useMseForValue;
     
+
+    // Timer: clamp the factor graph.
+    private Timer fgClampTimer = new Timer();   
     // Timer: update the model.
     private Timer updTimer = new Timer();
     // Timer: run inference.
@@ -67,14 +75,18 @@ public class CrfObjective implements ExampleObjective {
         LFgExample ex = data.get(i);
         Timer t = new Timer();
 
+        // Create a new factor graph with the predicted variables clamped.
+        t.reset(); t.start();
+        FactorGraph fgLat = getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
+        t.stop(); fgClampTimer.add(t);
+
         // Update the inferences with the current model parameters.
         // (This is usually where feature extraction happens.)
         t.reset(); t.start();
-        FactorGraph fgLat = ex.getFgLat();
         FactorGraph fgLatPred = ex.getFgLatPred();
         fgLat.updateFromModel(model);
         fgLatPred.updateFromModel(model);
-        t.stop(); updTimer.add(t);        
+        t.stop(); updTimer.add(t);
         
         // Get the inferencers.
         t.reset(); t.start();
@@ -117,6 +129,21 @@ public class CrfObjective implements ExampleObjective {
         t0.stop(); tot.add(t0);
     }
     
+    /**
+     * Get a copy of the factor graph where the predicted variables are clamped.
+     * 
+     * @param fgLatPred The original factor graph.
+     * @param goldConfig The assignment to the predicted variables.
+     * @return The clamped factor graph.
+     */
+    public static FactorGraph getFgLat(FactorGraph fgLatPred, VarConfig goldConfig) {
+        List<Var> predictedVars = VarSet.getVarsOfType(fgLatPred.getVars(), VarType.PREDICTED);
+        VarConfig predConfig = goldConfig.getIntersection(predictedVars);
+        FactorGraph fgLat = fgLatPred.getClamped(predConfig);
+        assert (fgLatPred.getNumFactors() <= fgLat.getNumFactors());
+        return fgLat;
+    }
+
     /**
      * Gets the mean-squared error of the i'th example for the given model parameters.
      * 
@@ -237,7 +264,7 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FactorGraph fgLat = ex.getFgLat();
+            FactorGraph fgLat = getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
             fgLat.updateFromModel(model);
             FgInferencer infLat = infFactory.getInferencer(fgLat);
             infLat.run();
@@ -274,13 +301,13 @@ public class CrfObjective implements ExampleObjective {
 
     public void report() {
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
-                    updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+            log.trace(String.format("Timers avg (ms): clamp=%.1f model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                    fgClampTimer.avgMs(), updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
         }
-        double sum = updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
+        double sum = fgClampTimer.totMs() + updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
         double mult = 100.0 / sum;
-        log.debug(String.format("Timers: model=%.1f%% inf=%.1f%% val=%.1f%% grad=%.1f%% avg(ms)=%.1f max(ms)=%.1f stddev(ms)=%.1f", 
-                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult,
+        log.debug(String.format("Timers: clamp=%.1f model=%.1f%% inf=%.1f%% val=%.1f%% grad=%.1f%% avg(ms)=%.1f max(ms)=%.1f stddev(ms)=%.1f", 
+                fgClampTimer.totMs()*mult, updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult,
                 tot.avgMs(), tot.maxSplitMs(), tot.stdDevMs()));
     }
 }
