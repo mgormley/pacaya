@@ -94,17 +94,17 @@ public class CrfObjective implements ExampleObjective {
             t.reset(); t.start();
             if (useMseForValue) {
                 // Add the negative MSE
-                ac.value += -getMseLoss(ex, infLatPred);                
+                ac.value += -getMseLoss(infLatPred, ex.getGoldConfig(), ex.getWeight());
             } else {
                 // Add the conditional log-likelihood
-                ac.value += getValue(ex, fgLat, infLat, fgLatPred, infLatPred, i);
+                ac.value += getValue(fgLat, infLat, fgLatPred, infLatPred, i, ex.getGoldConfig(), ex.getWeight());
             }
             t.stop(); valTimer.add(t);
         }
         if (ac.accumGradient) {
             // Compute the gradient for this example.
             t.reset(); t.start();
-            addGradient(ex, ac.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
+            addGradient(fgLat, infLat, fgLatPred, infLatPred, ex.getWeight(), ac.getGradient());
             t.stop(); gradTimer.add(t);
         }
         if (ac.accumWeight) {
@@ -116,10 +116,18 @@ public class CrfObjective implements ExampleObjective {
         }
         t0.stop(); tot.add(t0);
     }
-
-    private double getMseLoss(LFgExample ex, FgInferencer infLatPred) {
+    
+    /**
+     * Gets the mean-squared error of the i'th example for the given model parameters.
+     * 
+     * @param infLatPred The inferencer for fgLatPred.
+     * @param goldConfig The assignment to the predicted variables.
+     * @param weight The weight of this training example.
+     * @return The weighted MSE.
+     */
+    private static double getMseLoss(FgInferencer infLatPred, VarConfig goldConfig, double weight) {
         MseMarginalEvaluator mse = new MseMarginalEvaluator();
-        return mse.evaluate(ex.getGoldConfig(), infLatPred);
+        return mse.evaluate(goldConfig, infLatPred) * weight;
     }
 
     /**
@@ -136,8 +144,11 @@ public class CrfObjective implements ExampleObjective {
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
      * @param i The data example.
+     * @param goldConfig The assignment to the predicted variables.
+     * @param weight The weight of this training example.
+     * @return The weighted CLL.
      */      
-    public double getValue(LFgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
+    public static double getValue(FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i, VarConfig goldConfig, double weight) {        
         // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = infLat.getLogPartition();
         
@@ -154,27 +165,27 @@ public class CrfObjective implements ExampleObjective {
                 GlobalFactor gf = (GlobalFactor)f;
                 if (isNumeratorClamped) {
                     // These are the factors which do not include any latent variables. 
-                    VarConfig goldConfig = ex.getGoldConfig().getIntersection(fgLatPred.getFactor(a).getVars());
-                    numerator += gf.getLogUnormalizedScore(goldConfig);
+                    VarConfig facConfig = goldConfig.getIntersection(fgLatPred.getFactor(a).getVars());
+                    numerator += gf.getLogUnormalizedScore(facConfig);
                     numFullyClamped++;
                     
                     if (isDenominatorClamped) {
                         // These are the factors which do not include any latent or predicted variables.
                         // This is a bit of an edge case, but required for correctness.
-                        denominator += gf.getLogUnormalizedScore(goldConfig);
+                        denominator += gf.getLogUnormalizedScore(facConfig);
                     }
                 }
             } else {
                 if (isNumeratorClamped) {
                     // These are the factors which do not include any latent variables. 
-                    int goldConfig = ex.getGoldConfig().getConfigIndexOfSubset(f.getVars());
-                    numerator += f.getLogUnormalizedScore(goldConfig);
+                    int facConfig = goldConfig.getConfigIndexOfSubset(f.getVars());
+                    numerator += f.getLogUnormalizedScore(facConfig);
                     numFullyClamped++;
 
                     if (isDenominatorClamped) {
                         // These are the factors which do not include any latent or predicted variables.
                         // This is a bit of an edge case, but required for correctness.
-                        denominator += f.getLogUnormalizedScore(goldConfig);
+                        denominator += f.getLogUnormalizedScore(facConfig);
                     }
                 }
             }
@@ -190,38 +201,36 @@ public class CrfObjective implements ExampleObjective {
             // has not yet converged.
             log.warn("Log-likelihood for example "+i+" should be <= 0: " + ll);
         }
-        return ll * ex.getWeight();
+        return ll * weight;
     }
     
     /**
      * Adds the gradient of the marginal conditional log-likelihood for a particular example to the gradient vector.
-     * @param gradient The gradient vector to which this example's contribution
-     *            is added.
      * @param fgLat The factor graph with the predicted and observed variables clamped. 
      * @param infLat The inferencer for fgLat.
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
-     * @param i The data example.
+     * @param weight The weight of the training example.
+     * @param gradient The OUTPUT gradient vector to which this example's contribution
+     *            is added.
      */
-    public void addGradient(LFgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
+    private static void addGradient(FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, double weight, IFgModel gradient) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
-        addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), gradient);
+        addExpectedFeatureCounts(fgLat, infLat, 1.0 * weight, gradient);
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0 * ex.getWeight(), gradient);
+        addExpectedFeatureCounts(fgLatPred, infLatPred, -1.0 * weight, gradient);
     }
 
     /** 
      * Computes the expected feature counts for a factor graph, and adds them to the gradient after scaling them.
-     * @param ex 
+     *
+     * @param fg The factor graph.
      * @param inferencer The inferencer for a clamped factor graph, which has already been run.
      * @param multiplier The value which the expected features will be multiplied by.
      * @param gradient The OUTPUT gradient vector to which the scaled expected features will be added.
-     * @param factorId The id of the factor.
-     * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, LFgExample ex, FgInferencer inferencer, double multiplier,
-            IFgModel gradient) {
+    private static void addExpectedFeatureCounts(FactorGraph fg, FgInferencer inferencer, double multiplier, IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
@@ -245,7 +254,7 @@ public class CrfObjective implements ExampleObjective {
             fgLat.updateFromModel(model);
             FgInferencer infLat = infFactory.getInferencer(fgLat);
             infLat.run();
-            addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), feats);
+            addExpectedFeatureCounts(fgLat, infLat, 1.0 * ex.getWeight(), feats);
         }
         double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
@@ -263,7 +272,7 @@ public class CrfObjective implements ExampleObjective {
             fgLatPred.updateFromModel(model);
             FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
             infLatPred.run();
-            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0 * ex.getWeight(), feats);
+            addExpectedFeatureCounts(fgLatPred, infLatPred, 1.0 * ex.getWeight(), feats);
         }
         double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
