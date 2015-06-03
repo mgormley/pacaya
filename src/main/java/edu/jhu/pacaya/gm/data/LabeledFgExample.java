@@ -14,6 +14,7 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.prim.util.Timer;
 
 /**
  * Factor graph example. This class facilitates creation of the clamped factor
@@ -35,7 +36,7 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
     private VarConfig goldConfig;
     /** The weight of this example for use in training. */
     private double weight = 1.0;
-    
+        
     // TODO: Figure out how to remove these "initializing" constructors.
     // TODO: Maybe convert to factory methods.
     public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
@@ -45,7 +46,7 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
         // Update the factor templates.
         fts.lookupTemplateIds(this.getFgLatPred());
         fts.getTemplateIds(this.getFgLat());
-        fts.getTemplateIds(this.getOriginalFactorGraph());
+        fts.getTemplateIds(this.getFgLatPred());
     }
     public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
         this(fg, goldConfig);        
@@ -60,19 +61,16 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
      * @param goldConfig The gold assignment to the variables.
      */
     public LabeledFgExample(FactorGraph fg, VarConfig goldConfig) {
-        super(fg, goldConfig.getIntersection(VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED)));
+        super(fg, new VarConfig());
         checkGoldConfig(fg, goldConfig);
-        this.fg = fg;
         this.goldConfig = goldConfig;
+
         fgClampTimer.start();
-        
         // Get a copy of the factor graph where the observed and predicted variables are clamped.
         List<Var> predictedVars = VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED);
         VarConfig predConfig = goldConfig.getIntersection(predictedVars);
         fgLat = fgLatPred.getClamped(predConfig);
-
         assert (fg.getNumFactors() <= fgLat.getNumFactors());
-        
         fgClampTimer.stop();
     }
 
@@ -80,8 +78,7 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
         for (Var var : fg.getVars()) {
             // Latent variables don't need to be specified in the gold variable assignment.
             if (var.getType() != VarType.LATENT && goldConfig.getState(var, -1) == -1) {
-                int numNonLat = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED).size()
-                        + VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED).size();
+                int numNonLat = VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED).size();
                 log.error(String.format("Missing vars. #non-latent=%d #assign=%d", numNonLat, goldConfig.size()));
                 throw new IllegalStateException("Vars missing from train configuration: " + var);
             }
@@ -103,13 +100,13 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
 
     /** Gets the gold configuration of the predicted variables ONLY for the given factor. */ 
     public VarConfig getGoldConfigPred(int factorId) {
-        VarSet vars = fg.getFactor(factorId).getVars();
+        VarSet vars = fgLatPred.getFactor(factorId).getVars();
         return goldConfig.getIntersection(VarSet.getVarsOfType(vars, VarType.PREDICTED));
     }
     
     /** Gets the gold configuration index of the predicted variables for the given factor. */
     public int getGoldConfigIdxPred(int factorId) {
-        VarSet vars = VarSet.getVarsOfType(fg.getFactor(factorId).getVars(), VarType.PREDICTED);
+        VarSet vars = VarSet.getVarsOfType(fgLatPred.getFactor(factorId).getVars(), VarType.PREDICTED);
         return goldConfig.getConfigIndexOfSubset(vars);
     }
 

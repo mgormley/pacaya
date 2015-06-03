@@ -82,7 +82,7 @@ public class ObsFeatureConjoinerTest {
         }
         
         @Override
-        public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
+        public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
             FeatureVector fv = new FeatureVector();
             FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
 

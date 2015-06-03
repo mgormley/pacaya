@@ -350,7 +350,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
             return this;
         } else if (clmpVarConfig.size() == vars.size()) {
             // All clamped.
-            return new ConstituencyTreeFactor(0, VarType.OBSERVED);
+            return new ConstituencyTreeFactor(0, VarType.PREDICTED);
         } else {
             // Some clamped.
             throw new IllegalStateException("Unable to clamp these variables.");

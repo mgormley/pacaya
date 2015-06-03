@@ -87,19 +87,11 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
             super(clmpDf, templateKey, unclmpFactor.ofc);
             this.unclmpFactor = unclmpFactor;  
             VarSet unclmpVarSet = unclmpFactor.getVars();
-            if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {
-                // Only store the unclampedVarSet if it does not contain OBSERVED variables.
-                // This corresponds to only storing the VarSet if this is a factor graph 
-                // containing only latent variables.
-                //
-                // TODO: Switch this to an option.
-                //
-                // If this is the numerator then we must clamp the predicted
-                // variables to determine the correct set of model
-                // parameters.
-                iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
-                clmpConfigId = clmpVarConfig.getConfigIndex();
-            }
+            // If this is the numerator then we must clamp the predicted
+            // variables to determine the correct set of model
+            // parameters.
+            iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
+            clmpConfigId = clmpVarConfig.getConfigIndex();
         }
 
         @Override

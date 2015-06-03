@@ -1,10 +1,8 @@
 package edu.jhu.pacaya.gm.train;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,12 +19,9 @@ import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
-import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
-import edu.jhu.pacaya.gm.feat.SlowFeatureExtractor;
-import edu.jhu.pacaya.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
@@ -38,7 +33,7 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FeExpFamFactor;
+import edu.jhu.pacaya.gm.model.FactorGraphTest;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.FgModelTest;
 import edu.jhu.pacaya.gm.model.Var;
@@ -50,7 +45,6 @@ import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
-import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -59,96 +53,11 @@ import edu.jhu.prim.util.random.Prng;
 
 public class CrfTrainerTest {
 
-    /**
-     * Constructs features for each factor graph configuration by creating a
-     * sorted list of all the variable states and concatenating them together.
-     * 
-     * For testing only.
-     * 
-     * @author mgormley
-     */
-    public static class SimpleVCFeatureExtractor extends SlowFeatureExtractor {
-
-        protected FeatureNames alphabet;
-
-        public SimpleVCFeatureExtractor(FeatureNames alphabet) {
-            super();
-            this.alphabet = alphabet;          
-        }
-        
-        // Just concatenates all the state names together (in-order).
-        @Override
-        public FeatureVector calcFeatureVector(FeExpFamFactor factor, VarConfig varConfig) {
-            FeatureVector fv = new FeatureVector();
-
-            if (varConfig.size() > 0) {
-                String[] strs = new String[varConfig.getVars().size()];
-                int i=0;
-                for (Var v : varConfig.getVars()) {
-                    strs[i] = varConfig.getStateName(v);
-                    i++;
-                }
-                Arrays.sort(strs);
-                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
-                fv.set(featIdx, 1.0);
-            }
-            
-            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
-            alphabet.setIsBias(featIdx);
-            fv.set(featIdx, 1.0);
-            
-            return fv;
-        }
-    }
-    
     @Before
     public void setUp() {
         Prng.seed(123456789101112l);
     }
     
-    /**
-     * Constructs features for each factor graph configuration by creating a
-     * sorted list of all the variable states and concatenating them together.
-     * 
-     * For testing only.
-     * 
-     * @author mgormley
-     */
-    public static class SimpleVCObsFeatureExtractor extends SlowObsFeatureExtractor {
-
-        protected FactorTemplateList fts;
-
-        public SimpleVCObsFeatureExtractor(FactorTemplateList fts) {
-            super();
-            this.fts = fts;
-        }
-        
-        // Just concatenates all the state names together (in-order).
-        @Override
-        public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
-            FeatureVector fv = new FeatureVector();
-            FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
-
-            if (varConfig.size() > 0) {
-                String[] strs = new String[varConfig.getVars().size()];
-                int i=0;
-                for (Var v : varConfig.getVars()) {
-                    strs[i] = varConfig.getStateName(v);
-                    i++;
-                }
-                Arrays.sort(strs);
-                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
-                fv.set(featIdx, 1.0);
-            }
-            
-            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
-            alphabet.setIsBias(featIdx);
-            fv.set(featIdx, 1.0);
-            
-            return fv;
-        }
-    }
-
     @Test 
     public void testLogLinearModelShapes() {
         LogLinearEDs exs = new LogLinearEDs();
@@ -240,8 +149,7 @@ public class CrfTrainerTest {
         System.out.println(model);
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
-        JUnitUtils.assertArrayEquals(new double[]{-0.10, -0.10, 0.10, 0.10, -3.15, -3.15, -3.29, -3.29, 5.30, 5.30, 1.14, 1.14}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{3.32, -5.43, 1.05, 1.05, -7.09, -7.26, 10.45, 3.89}, FgModelTest.getParams(model), 1e-2);
         
         // OLD WAY:
         //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
@@ -283,12 +191,7 @@ public class CrfTrainerTest {
         
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=latent-emit, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
-        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.01, 0.01, 0.01, 0.01, -0.01, -0.01, -0.01, -0.01, -3.08, -3.08, -3.33, -3.33, 5.25, 5.25, 1.16, 1.16}, FgModelTest.getParams(model), 1e-2);
-          
-        // OLD PARAMS:
-        //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
-        //JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{0.35, -0.35, 0.35, -0.35, 0.14, 0.14, -0.14, -0.14, -6.26, -7.31, 11.09, 2.48}, FgModelTest.getParams(model), 1e-2);
     }
     
     public enum MockTemplate {
@@ -353,7 +256,7 @@ public class CrfTrainerTest {
 
     }
     
-    private static FgModel train(FgModel model, FgExampleList data) {
+    public static FgModel train(FgModel model, FgExampleList data) {
         return train(model, data, null, false);
     }
     
@@ -377,8 +280,8 @@ public class CrfTrainerTest {
             prm.batchOptimizer = new SGD(optPrm);
             prm.optimizer = null;
         } else {
-            prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
             prm.batchOptimizer = null;
+            prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         }
         prm.regularizer = r;
         
@@ -412,6 +315,7 @@ public class CrfTrainerTest {
             prm.batchOptimizer = new SGD(optPrm);
             prm.optimizer = null;
         } else {
+            prm.batchOptimizer = null;
             prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         }
         prm.regularizer = r;
@@ -421,14 +325,17 @@ public class CrfTrainerTest {
         return model;
     }
 
+    /**
+     * This method differs from {@link FactorGraphTest}'s version in that it uses a feature extractor.
+     */
     public static FgAndVars getLinearChainFgWithVars(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
 
         FactorGraph fg = new FactorGraph();
 
         // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
+        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
+        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
         
         // Create three tags.
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
@@ -488,9 +395,9 @@ public class CrfTrainerTest {
         FactorGraph fg = new FactorGraph();
 
         // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
+        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
+        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
 
         // Create latent classes.
         Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));

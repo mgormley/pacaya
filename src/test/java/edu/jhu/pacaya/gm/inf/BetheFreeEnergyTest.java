@@ -55,11 +55,6 @@ public class BetheFreeEnergyTest {
     public static FactorGraph getLinearChainGraph() {
         FactorGraph fg = new FactorGraph();
 
-        // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", null);
-        
         // Create three tags.
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);

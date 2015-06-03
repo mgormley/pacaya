@@ -29,9 +29,6 @@ public class FactorTemplate implements Serializable {
     
     public FactorTemplate(VarSet vars, FeatureNames alphabet, Object key) {
         super();
-        if (VarSet.getVarsOfType(vars, VarType.OBSERVED).size() != 0) {
-            throw new IllegalStateException("Only predicted and latent variables may participate in a feature template.");
-        }
         this.numConfigs = vars.calcNumConfigs();
         this.alphabet = alphabet;
         this.key = key;

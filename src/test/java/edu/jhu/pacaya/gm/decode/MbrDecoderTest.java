@@ -20,7 +20,7 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
+import edu.jhu.pacaya.gm.train.SimpleVCObsFeatureExtractor;
 import edu.jhu.pacaya.util.collections.Lists;
 
 public class MbrDecoderTest {
