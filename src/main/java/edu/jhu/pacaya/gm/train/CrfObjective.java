@@ -155,12 +155,11 @@ public class CrfObjective implements ExampleObjective {
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
         double denominator = infLatPred.getLogPartition();
 
-        // "Multiply" in all the fully clamped factors to the numerator and denominator. 
+        // "Multiply" in all the fully clamped factors to the numerator. 
         int numFullyClamped = 0;
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
             boolean isNumeratorClamped = fgLat.getFactor(a).getVars().size() == 0;
-            boolean isDenominatorClamped = fgLatPred.getFactor(a).getVars().size() == 0;
             if (f instanceof GlobalFactor) {
                 GlobalFactor gf = (GlobalFactor)f;
                 if (isNumeratorClamped) {
@@ -168,12 +167,6 @@ public class CrfObjective implements ExampleObjective {
                     VarConfig facConfig = goldConfig.getIntersection(fgLatPred.getFactor(a).getVars());
                     numerator += gf.getLogUnormalizedScore(facConfig);
                     numFullyClamped++;
-                    
-                    if (isDenominatorClamped) {
-                        // These are the factors which do not include any latent or predicted variables.
-                        // This is a bit of an edge case, but required for correctness.
-                        denominator += gf.getLogUnormalizedScore(facConfig);
-                    }
                 }
             } else {
                 if (isNumeratorClamped) {
@@ -181,12 +174,6 @@ public class CrfObjective implements ExampleObjective {
                     int facConfig = goldConfig.getConfigIndexOfSubset(f.getVars());
                     numerator += f.getLogUnormalizedScore(facConfig);
                     numFullyClamped++;
-
-                    if (isDenominatorClamped) {
-                        // These are the factors which do not include any latent or predicted variables.
-                        // This is a bit of an edge case, but required for correctness.
-                        denominator += f.getLogUnormalizedScore(facConfig);
-                    }
                 }
             }
         }
