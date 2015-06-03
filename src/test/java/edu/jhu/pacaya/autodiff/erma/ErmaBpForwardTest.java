@@ -39,17 +39,16 @@ public class ErmaBpForwardTest {
 	
     @Test
     public void testOnOneVarProb() {
-        boolean logDomain = false;
-        testOneVarHelper(logDomain);
+        testOneVarHelper(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test
     public void testOnOneVarLogProb() {
-        boolean logDomain = true;
-        testOneVarHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;
+        testOneVarHelper(s);
     }
 
-    private void testOneVarHelper(boolean logDomain) {
+    private void testOneVarHelper(Algebra s) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
 
@@ -64,12 +63,12 @@ public class ErmaBpForwardTest {
             ((VarTensor)f).convertRealToLog();
         }
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
 
@@ -78,17 +77,17 @@ public class ErmaBpForwardTest {
     
     @Test
     public void testTwoVars() {
-        runTwoVars(false, null);
-        runTwoVars(true, null);
+        runTwoVars(RealAlgebra.REAL_ALGEBRA, null);
+        runTwoVars(LogSemiring.LOG_SEMIRING, null);
     }
 
     @Test
     public void testDumpingOfBeliefsForDebugging() {
-        runTwoVars(false, Paths.get("./tmp/bpDump"));
+        runTwoVars(RealAlgebra.REAL_ALGEBRA, Paths.get("./tmp/bpDump"));
         // No assertions, just make sure we don't fail.
     }
 
-    private void runTwoVars(boolean logDomain, Path dumpDir) {
+    private void runTwoVars(Algebra s, Path dumpDir) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
@@ -111,12 +110,12 @@ public class ErmaBpForwardTest {
             ((VarTensor)f).convertRealToLog();
         }
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.dumpDir = dumpDir;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
@@ -127,14 +126,14 @@ public class ErmaBpForwardTest {
     @Test
     public void testThreeConnectedComponents() {
         
-        boolean logDomain = true;
+        Algebra s = LogSemiring.LOG_SEMIRING;
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBp bp = runDefaultBpForAcyclic(logDomain, fg);
+        ErmaBp bp = runDefaultBpForAcyclic(s, fg);
 
         assertEqualMarginals(fg, bf, bp);
     }
@@ -173,22 +172,20 @@ public class ErmaBpForwardTest {
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
-        boolean logDomain = false;
-        testOnSimpleHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testOnSimpleHelper(s);
     }
     
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
-        boolean logDomain = true;        
-        testOnSimpleHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;        
+        testOnSimpleHelper(s);
     }
 
-    private void testOnSimpleHelper(boolean logDomain) throws IOException {
-        Algebra s = logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
-        
+    private void testOnSimpleHelper(Algebra s) throws IOException {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
         ErmaBpPrm prm = new ErmaBpPrm();
@@ -198,7 +195,7 @@ public class ErmaBpForwardTest {
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
 
-        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
+        //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, s);
 
         // TODO: unfortunately, loopy BP does very poorly on this simple example
         // and does not converge to the correct marginals. Hence we use a (very
@@ -237,33 +234,33 @@ public class ErmaBpForwardTest {
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
-        boolean logDomain = false;
-        testOnChainHelper(logDomain);
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        testOnChainHelper(s);
     }
 
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
-        boolean logDomain = true;        
-        testOnChainHelper(logDomain);
+        Algebra s = LogSemiring.LOG_SEMIRING;        
+        testOnChainHelper(s);
     }
 
-    private void testOnChainHelper(boolean logDomain) {
+    private void testOnChainHelper(Algebra s) {
         FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBp bp = runDefaultBpForAcyclic(logDomain, fg);
+        ErmaBp bp = runDefaultBpForAcyclic(s, fg);
 
         BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
                     
         assertEqualMarginals(fg, bf, bp);
     }
 
-    protected ErmaBp runDefaultBpForAcyclic(boolean logDomain, FactorGraph fg) {
+    protected ErmaBp runDefaultBpForAcyclic(Algebra s, FactorGraph fg) {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         // Don't normalize the messages, so that the partition function is the
@@ -277,22 +274,22 @@ public class ErmaBpForwardTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(true, 0, 6);
-        testConvergenceHelper(false, 0, 6);
+        testConvergenceHelper(LogSemiring.LOG_SEMIRING, 0, 6);
+        testConvergenceHelper(RealAlgebra.REAL_ALGEBRA, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
-        testConvergenceHelper(true, 1e-3, 5);
-        testConvergenceHelper(false, 1e-3, 5);
+        testConvergenceHelper(LogSemiring.LOG_SEMIRING, 1e-3, 5);
+        testConvergenceHelper(RealAlgebra.REAL_ALGEBRA, 1e-3, 5);
     }
 
-    private void testConvergenceHelper(boolean logDomain, double convergenceThreshold, int expectedConvergenceIterations) {
+    private void testConvergenceHelper(Algebra s, double convergenceThreshold, int expectedConvergenceIterations) {
         FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
 
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.normalizeMessages = true;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.convergenceThreshold = convergenceThreshold;        
@@ -324,18 +321,18 @@ public class ErmaBpForwardTest {
     @Test
     public void testCanHandleProbHardFactors() {
         //TODO: ErmaBp doesn't currently do factor belief caching. 
-        // testCanHandleHardFactorsHelper(true, false);
-        testCanHandleHardFactorsHelper(false, false);
+        // testCanHandleHardFactorsHelper(true, RealAlgebra.REAL_ALGEBRA);
+        testCanHandleHardFactorsHelper(false, RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
         //TODO: ErmaBp doesn't currently do factor belief caching. 
-        // testCanHandleHardFactorsHelper(true, true);
-        testCanHandleHardFactorsHelper(false, true);
+        // testCanHandleHardFactorsHelper(true, LogSemiring.LOG_SEMIRING);
+        testCanHandleHardFactorsHelper(false, LogSemiring.LOG_SEMIRING);
     }    
     
-    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, boolean logDomain) {     
+    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     
         Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
         Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
         
@@ -357,11 +354,11 @@ public class ErmaBpForwardTest {
         fg.addFactor(xor);
         
         // should have uniform mass
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         //TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
@@ -388,7 +385,7 @@ public class ErmaBpForwardTest {
         f1.convertRealToLog();
         fg.addFactor(f1);
         
-        bf = new BruteForceInferencer(fg, logDomain);
+        bf = new BruteForceInferencer(fg, s);
         bf.run();
         bp = new ErmaBp(fg, prm);
         bp.run();
@@ -417,7 +414,7 @@ public class ErmaBpForwardTest {
         Algebra s = LogSemiring.LOG_SEMIRING;
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        ErmaBp bp = runDefaultBpForAcyclic(true, fg);
+        ErmaBp bp = runDefaultBpForAcyclic(s, fg);
         System.out.println(bp.isConverged());
         assertEqualMarginals(fg, bf, bp);
     }

@@ -44,7 +44,6 @@ import edu.jhu.prim.vector.IntDoubleVector;
 public class ErmaBpBackwardTest {
 
     private static Algebra s = RealAlgebra.REAL_ALGEBRA;
-    private static boolean logDomain = false;
     
     @Before
     public void setUp() {
@@ -66,7 +65,7 @@ public class ErmaBpBackwardTest {
                 
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         ErmaBp bp = new ErmaBp(fg, prm);
         bp.forward();        
         bp.getOutputAdj().varBeliefs[0].setValue(0, 1.0);
@@ -198,7 +197,7 @@ public class ErmaBpBackwardTest {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.normalizeMessages = true;
         
         testGradientByFiniteDifferences(fg, goldConfig, prm);
@@ -231,7 +230,7 @@ public class ErmaBpBackwardTest {
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 10;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.normalizeMessages = true;
         
         testGradientByFiniteDifferences(fg, goldConfig, prm);
@@ -256,7 +255,7 @@ public class ErmaBpBackwardTest {
     @Test
     public void testErmaGradient2WordGlobalFactorVsExplicit() {
         boolean useExplicit = false;
-        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(logDomain, useExplicit, false, false);
+        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(useExplicit, false, false);
         final FactorGraph fg = fgl.fg;
         
         // Inputs        
@@ -314,7 +313,7 @@ public class ErmaBpBackwardTest {
     }
 
     private ErmaErFn getErmaFnFor2WordSent(boolean useExplicit) {
-        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(logDomain, useExplicit, false, false);
+        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(useExplicit, false, false);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
@@ -347,7 +346,7 @@ public class ErmaBpBackwardTest {
     
     @Test
     public void testErmaGradient3WordGlobalFactor() {
-        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(logDomain);
+        FgAndLinks fgl = ProjDepTreeFactorTest.getFgl();
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
@@ -461,7 +460,7 @@ public class ErmaBpBackwardTest {
             prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
             prm.schedule = BpScheduleType.TREE_LIKE;
             prm.maxIterations = 1;
-            prm.logDomain = logDomain;
+            prm.s = s;
             prm.normalizeMessages = true;
             return prm;
         }

@@ -10,20 +10,22 @@ import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
-import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.pacaya.gm.model.VarSet;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class BetheFreeEnergyTest {
 
     @Test
     public void testPrintBfeOnChain() {
-        boolean logDomain = false;
+        Algebra s = RealAlgebra.REAL_ALGEBRA;
         
         FactorGraph fg = getLinearChainGraph();
 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         //prm.schedule = BpScheduleType.TREE_LIKE;
         //prm.updateOrder = BpUpdateOrder.SEQUENTIAL;        
         prm.updateOrder = BpUpdateOrder.PARALLEL;
@@ -34,7 +36,7 @@ public class BetheFreeEnergyTest {
         bp.run();
         System.out.println("BFE:" + bp.getBetheFreeEnergy());
 
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
                 
         assertEquals(bf.getPartition(), bp.getPartition(), 1e-13);

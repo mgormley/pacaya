@@ -16,6 +16,10 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
+import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 @Ignore("Needs to be updated with Travis' latest version")
 public class ConstituencyTreeFactorTest {
@@ -24,18 +28,18 @@ public class ConstituencyTreeFactorTest {
     public void testBpVsBruteForce() {
         
         for(int n : Arrays.asList(2, 3, 4)) {
-            for(boolean logDomain : Arrays.asList(false, true)) {
+            for(Algebra s : Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSemiring.LOG_SEMIRING)) {
 
                 ConstituencyTreeFactor ctFact = new ConstituencyTreeFactor(n, VarType.PREDICTED);
                 FactorGraph fg = new FactorGraph();
                 fg.addFactor(ctFact);
 
                 BeliefPropagationPrm prm = new BeliefPropagationPrm();
-                prm.logDomain = logDomain;
+                prm.s = s;
                 BeliefPropagation bp = new BeliefPropagation(fg, prm);
                 bp.run();
 
-                BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+                BruteForceInferencer bf = new BruteForceInferencer(fg, s);
                 bf.run();
 
                 for(int i=0; i<n; i++)  {
@@ -72,7 +76,7 @@ public class ConstituencyTreeFactorTest {
         fg.addFactor(likesSpan);
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.logDomain = true;
+        prm.s = LogSemiring.LOG_SEMIRING;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         

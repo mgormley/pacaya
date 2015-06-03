@@ -162,7 +162,7 @@ public class LogLinearXY {
     
     private BeliefPropagationPrm getBpPrm() {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = true;
+        bpPrm.s = LogSemiring.LOG_SEMIRING;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

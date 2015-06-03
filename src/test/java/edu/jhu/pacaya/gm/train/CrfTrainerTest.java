@@ -47,6 +47,7 @@ import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.random.Prng;
@@ -262,7 +263,7 @@ public class CrfTrainerTest {
     
     public static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = true;
+        bpPrm.s = LogSemiring.LOG_SEMIRING;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
@@ -292,7 +293,6 @@ public class CrfTrainerTest {
     
     public static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
-        bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

@@ -59,8 +59,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
-        public boolean logDomain = true;
-        public Algebra s = null;
+        public Algebra s = LogSemiring.LOG_SEMIRING;
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;
         /** The maximum message residual for convergence testing. */
@@ -90,11 +89,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
         @Override
         public Algebra getAlgebra() {
-            if (s == null) {
-                return logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
-            } else {
-                return s;
-            }
+            return s;
         }
         
     }
