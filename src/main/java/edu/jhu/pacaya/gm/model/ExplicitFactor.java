@@ -48,7 +48,7 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
         return getLogUnormalizedScore(vc.getConfigIndex());
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+    public void addExpectedPartials(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         // No op since this type of factor doesn't have any features.
     }
 

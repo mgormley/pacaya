@@ -105,11 +105,11 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);        
-        addExpectedFeatureCounts(counts, factorMarginal, multiplier);
+        addExpectedPartials(counts, factorMarginal, multiplier);
     }
 
     @Override
-    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+    public void addExpectedPartials(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
         if (numConfigs == 0) {
             // If there are no variables in this factor, we still need to get the cached features.
@@ -211,7 +211,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
             // addExpectedFeatureCounts() currently only supports the real semiring
             assert modIn.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
             factorMarginal = factorMarginal.copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA);
-            f.addExpectedFeatureCounts(modelAdj, factorMarginal, RealAlgebra.REAL_ALGEBRA.one());
+            f.addExpectedPartials(modelAdj, factorMarginal, RealAlgebra.REAL_ALGEBRA.one());
         }
 
         @Override

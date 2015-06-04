@@ -73,7 +73,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
     }
 
     @Override
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+    public void addExpectedPartials(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         // No-op since this factor has no FEATURES.
     }
 

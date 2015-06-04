@@ -245,10 +245,10 @@ public class ObsFeatureConjoiner implements Serializable {
                     // For each standard factor.  
                     f = ex.getFgLatPred().getFactor(a);
                     if (f instanceof GlobalFactor) {
-                        ((GlobalFactor) f).addExpectedFeatureCounts(counts, 0, inferencer, a);
+                        ((GlobalFactor) f).addExpectedPartials(counts, 0, inferencer, a);
                     } else {
                         VarTensor marg = inferencer.getMarginalsForFactorId(a);
-                        f.addExpectedFeatureCounts(counts, marg, 0);
+                        f.addExpectedPartials(counts, marg, 0);
                     }
                     
                 }

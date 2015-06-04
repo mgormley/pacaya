@@ -152,7 +152,7 @@ public class CrfObjective implements ExampleObjective {
      * @param weight The weight of this training example.
      * @return The weighted MSE.
      */
-    private static double getMseLoss(FgInferencer infLatPred, VarConfig goldConfig, double weight) {
+    public static double getMseLoss(FgInferencer infLatPred, VarConfig goldConfig, double weight) {
         MseMarginalEvaluator mse = new MseMarginalEvaluator();
         return mse.evaluate(goldConfig, infLatPred) * weight;
     }
@@ -228,31 +228,32 @@ public class CrfObjective implements ExampleObjective {
      * @param gradient The OUTPUT gradient vector to which this example's contribution
      *            is added.
      */
-    private static void addGradient(FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, double weight, IFgModel gradient) {        
+    public static void addGradient(FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, double weight, IFgModel gradient) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
-        addExpectedFeatureCounts(fgLat, infLat, 1.0 * weight, gradient);
-        
+        addExpectedPartials(fgLat, infLat, 1.0 * weight, gradient);
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        addExpectedFeatureCounts(fgLatPred, infLatPred, -1.0 * weight, gradient);
+        addExpectedPartials(fgLatPred, infLatPred, -1.0 * weight, gradient);
     }
 
-    /** 
-     * Computes the expected feature counts for a factor graph, and adds them to the gradient after scaling them.
+    /**
+     * Computes the expected partials (i.e. feature counts for exponential family factors) for a
+     * factor graph, and adds them to the gradient after scaling them.
      *
      * @param fg The factor graph.
      * @param inferencer The inferencer for a clamped factor graph, which has already been run.
-     * @param multiplier The value which the expected features will be multiplied by.
-     * @param gradient The OUTPUT gradient vector to which the scaled expected features will be added.
+     * @param multiplier The value which the expected partials will be multiplied by.
+     * @param gradient The OUTPUT gradient vector to which the scaled expected partials will be
+     *            added.
      */
-    private static void addExpectedFeatureCounts(FactorGraph fg, FgInferencer inferencer, double multiplier, IFgModel gradient) {
+    private static void addExpectedPartials(FactorGraph fg, FgInferencer inferencer, double multiplier, IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
             if (f instanceof GlobalFactor) {
-                ((GlobalFactor) f).addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
+                ((GlobalFactor) f).addExpectedPartials(gradient, multiplier, inferencer, factorId);
             } else {
                 VarTensor marg = inferencer.getMarginalsForFactorId(factorId);
-                f.addExpectedFeatureCounts(gradient, marg, multiplier);
+                f.addExpectedPartials(gradient, marg, multiplier);
             }
         }
     }
@@ -268,7 +269,7 @@ public class CrfObjective implements ExampleObjective {
             fgLat.updateFromModel(model);
             FgInferencer infLat = infFactory.getInferencer(fgLat);
             infLat.run();
-            addExpectedFeatureCounts(fgLat, infLat, 1.0 * ex.getWeight(), feats);
+            addExpectedPartials(fgLat, infLat, 1.0 * ex.getWeight(), feats);
         }
         double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
@@ -286,7 +287,7 @@ public class CrfObjective implements ExampleObjective {
             fgLatPred.updateFromModel(model);
             FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
             infLatPred.run();
-            addExpectedFeatureCounts(fgLatPred, infLatPred, 1.0 * ex.getWeight(), feats);
+            addExpectedPartials(fgLatPred, infLatPred, 1.0 * ex.getWeight(), feats);
         }
         double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
