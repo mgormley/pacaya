@@ -172,6 +172,7 @@ public class ErmaBpBackwardTest {
         AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm);
     }
     
+    // TODO: This test is really slow: ~20 seconds.
     @Test
     public void testErmaGradientLinearChainWithLoops() {
         FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
@@ -195,8 +196,9 @@ public class ErmaBpBackwardTest {
         goldConfig.put(fgv.t2, 1);
         
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.updateOrder = BpUpdateOrder.PARALLEL;
-        prm.maxIterations = 10;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.maxIterations = 2;
         prm.s = s;
         prm.normalizeMessages = true;
         
