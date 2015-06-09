@@ -89,8 +89,16 @@ public class ObsFeatureConjoiner implements Serializable {
         this.templates = fts;
         this.feAlphabet = new FeatureNames();
     }
-            
+    
+    /** The case of data == null should only be allowed in testing. */
     public void init(FgExampleList data) {
+        if (data == null && !prm.includeUnsupportedFeatures) {
+            throw new IllegalArgumentException("Data can only be null if unsupported features are not included.");
+        }
+        if (data == null && prm.featCountCutoff > 0) {
+            throw new IllegalArgumentException("Data can only be null if there is no feature count cutoff.");
+        }
+        
         // Ensure the FactorTemplateList is initialized, and maybe count features along the way.
         if (templates.isGrowing() && data != null) {
             log.info("Growing feature template list by iterating over examples");

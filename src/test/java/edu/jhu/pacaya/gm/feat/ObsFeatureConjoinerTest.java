@@ -21,7 +21,10 @@ public class ObsFeatureConjoinerTest {
     @Test
     public void testNumParams() {
         FactorTemplateList fts = getFtl();
-        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
+        prm.featCountCutoff = -1;
+        prm.includeUnsupportedFeatures = true;
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         ofc.init(null);
         assertEquals((3*2)*2 + 2*1, ofc.getNumParams());
     }
