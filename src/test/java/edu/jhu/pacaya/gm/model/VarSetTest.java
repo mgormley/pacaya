@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
+import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class VarSetTest {
@@ -166,6 +167,31 @@ public class VarSetTest {
             stateNames.add("state" + i);
         }
         return new Var(VarType.PREDICTED, numStates, "var"+id, stateNames);
+    }
+
+    @Test
+    public void testGetVarConfigAsArrayInt() throws Exception {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        VarSet vars1 = new VarSet();
+        vars1.add(v0);
+        vars1.add(v1);
+        
+        // Double check that they are ordered as we expect.
+        assertEquals(v0, vars1.get(0));
+        assertEquals(v1, vars1.get(1));
+        
+        for (int c=0; c<vars1.calcNumConfigs(); c++) {
+            System.out.println(Arrays.toString(vars1.getVarConfigAsArray(c)));
+        }
+        
+        JUnitUtils.assertArrayEquals(new int[]{0,0}, vars1.getVarConfigAsArray(0));
+        JUnitUtils.assertArrayEquals(new int[]{0,1}, vars1.getVarConfigAsArray(1));
+        JUnitUtils.assertArrayEquals(new int[]{0,2}, vars1.getVarConfigAsArray(2));
+        JUnitUtils.assertArrayEquals(new int[]{1,0}, vars1.getVarConfigAsArray(3));
+        JUnitUtils.assertArrayEquals(new int[]{1,1}, vars1.getVarConfigAsArray(4));
+        JUnitUtils.assertArrayEquals(new int[]{1,2}, vars1.getVarConfigAsArray(5));
+        
     }
     
 }

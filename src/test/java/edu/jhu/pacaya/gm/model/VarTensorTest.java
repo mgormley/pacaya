@@ -242,6 +242,28 @@ public class VarTensorTest {
         DoubleArrays.log(expected);
         f2.normalize();        
         JUnitUtils.assertArrayEquals(expected, f2.getValues(), 1e-13);        
+    }
+
+    @Test
+    public void testTensorGetVsVarSetConfig() throws Exception {
+        Var v0 = VarSetTest.getVar(0, 2);
+        Var v1 = VarSetTest.getVar(1, 3);
+        VarSet vars1 = new VarSet();
+        vars1.add(v0);
+        vars1.add(v1);
+        VarTensor f1 = new VarTensor(s, vars1);
+        JUnitUtils.assertArrayEquals(new int[]{2, 3}, f1.getDims());
+        for (int c=0; c<f1.size(); c++) {
+            f1.setValue(c, c);
+        }
+        int c = 0;
+        for (int a=0; a<2; a++) {
+            for (int b=0; b<3; b++) {
+                assertEquals(f1.getValue(c), f1.get(a, b), 1e-13);
+                JUnitUtils.assertArrayEquals(new int[]{a, b}, vars1.getVarConfigAsArray(c));
+                c++;
+            }
+        }
     }    
 
 }
