@@ -29,6 +29,11 @@ public class IndexForVc extends IndexFor {
         }
     }
     
+    @Override
+    public int[] getState() {
+        throw new RuntimeException("not implemented");
+    }    
+    
     /**
      * Iterates over all the configurations of indexVars where the subset of
      * variables in config have been clamped to their given values. The
@@ -69,7 +74,8 @@ public class IndexForVc extends IndexFor {
     public static int getConfigIndex(VarSet vars, VarConfig config) {
         int configIndex = 0;
         int numStatesProd = 1;
-        for (Var var : vars) {
+        for (int v=vars.size()-1; v >= 0; v--) {
+            Var var = vars.get(v);
             int state = config.getState(var, 0);
             configIndex += state * numStatesProd;
             numStatesProd *= var.getNumStates();

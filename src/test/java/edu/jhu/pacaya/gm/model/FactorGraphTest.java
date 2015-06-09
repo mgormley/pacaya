@@ -113,13 +113,13 @@ public class FactorGraphTest {
         
         tran0.fill(1);
         tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.3);
-        tran0.setValue(2, 0.4);
+        tran0.setValue(1, 0.4);
+        tran0.setValue(2, 0.3);
         tran0.setValue(3, 0.5);
         tran1.fill(1);
         tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.3);
-        tran1.setValue(2, 1.4);
+        tran1.setValue(1, 1.4);
+        tran1.setValue(2, 1.3);
         tran1.setValue(3, 1.5);
                 
         fg.addFactor(emit0);
@@ -194,16 +194,16 @@ public class FactorGraphTest {
         // Transition factors.
         ExplicitFactor tran0 = new ExplicitFactor(new VarSet(t0, t1)); 
         ExplicitFactor tran1 = new ExplicitFactor(new VarSet(t1, t2)); 
-        
+
         tran0.fill(1);
         tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.3);
-        tran0.setValue(2, 0.4);
+        tran0.setValue(1, 0.4);
+        tran0.setValue(2, 0.3);
         tran0.setValue(3, 0.5);
         tran1.fill(1);
         tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.3);
-        tran1.setValue(2, 1.4);
+        tran1.setValue(1, 1.4);
+        tran1.setValue(2, 1.3);
         tran1.setValue(3, 1.5);
                 
         fg.addFactor(emit0);

@@ -150,7 +150,7 @@ public class CrfTrainerTest {
         System.out.println(model);
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{3.32, -5.43, 1.05, 1.05, -7.09, -7.26, 10.45, 3.89}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89}, FgModelTest.getParams(model), 1e-2);
         
         // OLD WAY:
         //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
@@ -192,7 +192,7 @@ public class CrfTrainerTest {
         
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{0.35, -0.35, 0.35, -0.35, 0.14, 0.14, -0.14, -0.14, -6.26, -7.31, 11.09, 2.48}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{0.35, 0.35, -0.35, -0.35, 0.14, -0.14, 0.14, -0.14, -6.26, 11.09, -7.31, 2.48}, FgModelTest.getParams(model), 1e-2);
     }
     
     public enum MockTemplate {
@@ -360,13 +360,13 @@ public class CrfTrainerTest {
         
         tran0.fill(1);
         tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.3);
-        tran0.setValue(2, 0.4);
+        tran0.setValue(1, 0.4);
+        tran0.setValue(2, 0.3);
         tran0.setValue(3, 0.5);
         tran1.fill(1);
         tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.3);
-        tran1.setValue(2, 1.4);
+        tran1.setValue(1, 1.4);
+        tran1.setValue(2, 1.3);
         tran1.setValue(3, 1.5);
                 
         fg.addFactor(emit0);
@@ -436,18 +436,18 @@ public class CrfTrainerTest {
         // Transition factors.
         ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
         ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
-        
+
         tran0.fill(1);
         tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.3);
-        tran0.setValue(2, 0.4);
+        tran0.setValue(1, 0.4);
+        tran0.setValue(2, 0.3);
         tran0.setValue(3, 0.5);
         tran1.fill(1);
         tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.3);
-        tran1.setValue(2, 1.4);
+        tran1.setValue(1, 1.4);
+        tran1.setValue(2, 1.3);
         tran1.setValue(3, 1.5);
-                
+        
         fg.addFactor(emit0);
         fg.addFactor(emit1);
         fg.addFactor(emit2);

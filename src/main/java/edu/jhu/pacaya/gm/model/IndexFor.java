@@ -53,23 +53,24 @@ public class IndexFor implements IntIter {
         _ranges = new int[forVars.size()];
         _sum = new long[forVars.size()];
 
+        for (int ii = 0; ii < indexVars.size(); ii++) {
+            Var i = indexVars.get(ii);
+            sum *= i.getNumStates();
+        }
         int cur = 0;
-        
-        Iterator<Var> jIter = forVars.iterator();
-        Iterator<Var> iIter = indexVars.iterator();
-                
-        Var j = jIter.hasNext() ? jIter.next() : null;
-        for(Var i = iIter.hasNext() ? iIter.next() : null; 
-            i != null; 
-            i = iIter.hasNext() ? iIter.next() : null) {
-            for( ; j != null && j.compareTo(i) <= 0; j = jIter.hasNext() ? jIter.next() : null) {
+        int jj = 0;
+        for (int ii = 0; ii < indexVars.size(); ii++) {
+            Var i = indexVars.get(ii);
+            sum /= i.getNumStates();
+            for ( ; jj < forVars.size() && forVars.get(jj).compareTo(i) <= 0; jj++) {
+                Var j = forVars.get(jj);
                 _ranges[cur] = j.getNumStates();
                 _sum[cur] = (i.equals(j)) ? sum : 0;
                 cur++;
             }
-            sum *= i.getNumStates();
         }
-        for( ; j != null; j = jIter.hasNext() ? jIter.next() : null) {
+        for ( ; jj < forVars.size(); jj++) {
+            Var j = forVars.get(jj);
             _ranges[cur] = j.getNumStates();
             _sum[cur] = 0l;
             cur++;
@@ -90,18 +91,18 @@ public class IndexFor implements IntIter {
         int curIndex = _index;
         // Compute the next index.
         if( _index >= 0 ) {
-            int i = 0;
+            int i = _state.length - 1;
 
-            while( i < _state.length ) {
+            while( i >= 0 ) {
                 _index += _sum[i];
                 if( ++_state[i] < _ranges[i] )
                     break;
                 _index -= _sum[i] * _ranges[i];
                 _state[i] = 0;
-                i++;
+                i--;
             }
 
-            if( i == _state.length )
+            if( i == -1 )
                 _index = -1;
         }
         // Return the current index.

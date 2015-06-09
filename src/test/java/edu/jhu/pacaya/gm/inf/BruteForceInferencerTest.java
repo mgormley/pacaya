@@ -38,16 +38,51 @@ public class BruteForceInferencerTest {
         testInfOnLinearChainGraph(fg, bf);
     }
 
+    /**
+     * 
+        VarTensor [
+             A     B     C  |  value
+            YY   Yes   Yes  |  0.800000
+            YY   Yes    No  |  0.200000
+            YY    No   Yes  |  0.500000
+            YY    No    No  |  0.500000
+            NN   Yes   Yes  |  0.600000
+            NN   Yes    No  |  0.400000
+            NN    No   Yes  |  0.100000
+            NN    No    No  |  0.900000
+        ]
+        VarTensor [
+             A     B  |  value
+            YY   Yes  |  0.600000
+            YY    No  |  0.400000
+            NN   Yes  |  0.150000
+            NN    No  |  0.850000
+        ]
+             * Current  joint: 
+        VarTensor [
+             A     B     C  |  value
+            YY   Yes   Yes  |  0.480000
+            YY   Yes    No  |  0.120000
+            YY    No   Yes  |  0.200000
+            YY    No    No  |  0.200000
+            NN   Yes   Yes  |  0.0900000
+            NN   Yes    No  |  0.0600000
+            NN    No   Yes  |  0.0850000
+            NN    No    No  |  0.765000
+        ]
+     * @throws IOException
+     */
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
         Algebra s = RealAlgebra.REAL_ALGEBRA;
         FactorGraph fg = readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+        bf.run();
+        System.out.println("joint:\n" + bf.getJointFactor());
         testInfOnSimpleGraph(fg, bf);
     }
 
-    // TODO: This test passes when run by itself, but fails when run together with other tests!
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
@@ -72,15 +107,15 @@ public class BruteForceInferencerTest {
         JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), 1e-2);
         
         marg = bp.getMarginals(fg.getFactor(3));
-        goldMarg = new double[] { 0.013146806000337095, 0.1774818810045508, 0.06607112759143771, 0.7433001854036744 };
+        goldMarg = new double[] { 0.013146806000337095, 0.06607112759143771, 0.1774818810045508, 0.7433001854036744 };
         JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), 1e-4);
         marg = bp.getLogMarginals(fg.getFactor(3));
         goldMarg = DoubleArrays.getLog(goldMarg);
         JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), 1e-4);
-        
+
         double goldPartition = 0.5932;
         assertEquals(goldPartition, bp.getPartition(), 1e-2);
-        assertEquals(FastMath.log(goldPartition), bp.getLogPartition(), 1e-2);
+        assertEquals(FastMath.log(goldPartition), bp.getLogPartition(), 1e-2);        
     }
     
     public static void testInfOnSimpleGraph(FactorGraph fg, FgInferencer bp) {
@@ -120,7 +155,7 @@ public class BruteForceInferencerTest {
         
         assertEquals(new VarSet(fg.getVar(0), fg.getVar(1)), fg.getFactor(1).getVars());
         marg = bp.getMarginals(fg.getFactor(1));
-        goldMarg = new double[] { 0.3, 0.075, 0.2, 0.425 };
+        goldMarg = new double[] { 0.3, 0.2, 0.075, 0.425 };
         JUnitUtils.assertArrayEquals(goldMarg, marg.getValues(), 1e-3);
         marg = bp.getLogMarginals(fg.getFactor(1));
         goldMarg = DoubleArrays.getLog(goldMarg);

@@ -416,7 +416,7 @@ public class ErmaBpForwardTest {
         bf.run();
         ErmaBp bp = runDefaultBpForAcyclic(s, fg);
         System.out.println(bp.isConverged());
-        assertEqualMarginals(fg, bf, bp);
+        assertEqualMarginals(fg, bf, bp, 1e-12);
     }
 
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,

@@ -293,8 +293,8 @@ public class SimpleProjDepTreeFactorTest {
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar, childVars[0][1]));
         roleFac.setValue(0, 2);
-        roleFac.setValue(1, 3);
-        roleFac.setValue(2, 5);
+        roleFac.setValue(1, 5);
+        roleFac.setValue(2, 3);
         roleFac.setValue(3, 7);
         System.out.println(roleFac);
         roleFac.convertRealToLog();

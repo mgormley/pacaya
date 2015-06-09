@@ -51,7 +51,8 @@ public class VarConfig implements Serializable {
     public int getConfigIndexOfSubset(VarSet vars) {
         int configIndex = 0;
         int numStatesProd = 1;
-        for (Var var : vars) {
+        for (int v=vars.size()-1; v >= 0; v--) {
+            Var var = vars.get(v);
             int state = config.get(var);
             configIndex += state * numStatesProd;
             numStatesProd *= var.getNumStates();

@@ -237,9 +237,16 @@ public class VarTensor extends Tensor implements Serializable {
         for (int c=0; c<vars.calcNumConfigs(); c++) {
             if (!sparse || values[c] != 0.0) {
                 int[] states = vars.getVarConfigAsArray(c);
-                for (int state : states) {
-                    // TODO: use string names for states if available.
-                    sb.append(String.format("%6d", state));
+                for (int i=0; i<states.length; i++) {
+                    int state = states[i];
+                    Var v = vars.get(i);
+                    if (v.getStateNames() != null) {
+                        // Use string names for states if available.
+                        sb.append(String.format("%6s", v.getStateNames().get(state)));    
+                    } else {
+                        sb.append(String.format("%6d", state));
+                    }
+                    
                 }
                 sb.append(String.format("  |  %g\n", values[c]));
             }

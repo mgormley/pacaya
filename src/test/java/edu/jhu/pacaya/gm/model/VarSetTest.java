@@ -92,7 +92,7 @@ public class VarSetTest {
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*3*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14}, configs);
+        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, configs);
     }
 
     @Test
@@ -113,7 +113,7 @@ public class VarSetTest {
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*3*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 1, 0, 1, 0, 1, 2, 3, 2, 3, 2, 3, 4, 5, 4, 5, 4, 5, 6, 7, 6, 7, 6, 7, 8, 9, 8, 9, 8, 9}, configs);
+        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 5, 6, 7, 8, 9, 5, 6, 7, 8, 9}, configs);
     }
     
     @Test
@@ -134,7 +134,7 @@ public class VarSetTest {
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*3*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5}, configs);
+        Assert.assertArrayEquals(new int[]{0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5}, configs);
     }
     
     @Test
@@ -158,13 +158,13 @@ public class VarSetTest {
         int[] configs = vars1.getConfigArr(vars2);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 1, 6, 7, 12, 13, 18, 19, 24, 25}, configs);
+        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 15, 16, 17, 18, 19}, configs);
     }
     
     public static Var getVar(int id, int numStates) {
         ArrayList<String> stateNames = new ArrayList<String>();
         for (int i=0; i<numStates; i++) {
-            stateNames.add("state" + i);
+            stateNames.add("v" + i);
         }
         return new Var(VarType.PREDICTED, numStates, "var"+id, stateNames);
     }
