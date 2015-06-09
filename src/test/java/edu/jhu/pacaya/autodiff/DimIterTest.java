@@ -1,12 +1,12 @@
 package edu.jhu.pacaya.autodiff;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
+
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class DimIterTest {
 
@@ -49,6 +49,21 @@ public class DimIterTest {
             fail("Exception should have been thrown.");
         } catch(Exception e) {
             // pass
+        }
+    }
+    
+    @Test
+    public void testForTensor() {
+        Tensor t = new Tensor(RealAlgebra.REAL_ALGEBRA, 5, 2, 3);
+        for (int c=0; c<t.size(); c++) {
+            t.setValue(c, c);
+        }
+        DimIter iter = new DimIter(t.getDims());
+        int c = 0; 
+        while (iter.hasNext()) {
+            int[] idxs = iter.next();
+            assertEquals(t.getValue(c), t.get(idxs), 1e-13);
+            c++;
         }
     }
 
