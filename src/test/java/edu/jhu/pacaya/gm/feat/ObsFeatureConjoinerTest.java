@@ -22,7 +22,7 @@ public class ObsFeatureConjoinerTest {
     public void testNumParams() {
         FactorTemplateList fts = getFtl();
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        ofc.init();
+        ofc.init(null);
         assertEquals((3*2)*2 + 2*1, ofc.getNumParams());
     }
 

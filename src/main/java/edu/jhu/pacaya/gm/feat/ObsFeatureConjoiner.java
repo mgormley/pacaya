@@ -89,19 +89,7 @@ public class ObsFeatureConjoiner implements Serializable {
         this.templates = fts;
         this.feAlphabet = new FeatureNames();
     }
-    
-    public void init() {
-        if (!prm.includeUnsupportedFeatures) {
-            log.warn("Enabling includeUnsupportedFeatures");
-            prm.includeUnsupportedFeatures = true;
-        }
-        if (prm.featCountCutoff >= 1) {
-            log.warn("Disabling featCountCutoff");
-            prm.featCountCutoff = -1;
-        }
-        init(null);
-    }
-        
+            
     public void init(FgExampleList data) {
         // Ensure the FactorTemplateList is initialized, and maybe count features along the way.
         if (templates.isGrowing() && data != null) {
