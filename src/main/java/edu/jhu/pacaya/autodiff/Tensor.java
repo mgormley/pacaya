@@ -134,7 +134,7 @@ public class Tensor implements MVec {
                 strides[i] = dims[i+1]*strides[i+1];
             }
         }
-        return strides;      
+        return strides;
     }
 
     /** Checks that the indices are valid. */

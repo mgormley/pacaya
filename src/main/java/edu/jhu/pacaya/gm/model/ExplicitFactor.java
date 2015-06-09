@@ -66,5 +66,5 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     public Module<VarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
         return new ParamFreeFactorModule(s, this);
     }
-
+    
 }

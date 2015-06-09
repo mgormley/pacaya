@@ -153,6 +153,16 @@ public class FactorGraphTest {
         public Var t0;
         public Var t1;
         public Var t2;
+        
+        // Emission factors. 
+        public ExplicitFactor emit0;
+        public ExplicitFactor emit1;
+        public ExplicitFactor emit2;
+        
+        // Transition factors.
+        public ExplicitFactor tran0;
+        public ExplicitFactor tran1;
+        
     }
 
     public static FgAndVars getLinearChainFgWithVars() {
@@ -214,6 +224,11 @@ public class FactorGraphTest {
         fgv.t0 = t0;
         fgv.t1 = t1;
         fgv.t2 = t2;
+        fgv.emit0 = emit0;
+        fgv.emit1 = emit1;
+        fgv.emit2 = emit2;
+        fgv.tran0 = tran0;
+        fgv.tran1 = tran1;
         return fgv;
     }
     

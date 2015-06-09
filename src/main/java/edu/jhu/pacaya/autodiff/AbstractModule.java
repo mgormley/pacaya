@@ -9,6 +9,10 @@ public abstract class AbstractModule<T extends MVec> implements Module<T> {
     // The output adjoint will be represented in this abstract algebra.
     protected Algebra s;
     
+    /** 
+     * Constructor.
+     * @param s The algebra of the output and output adjoint.
+     */
     public AbstractModule(Algebra s) {
         this.s = s;
     }
