@@ -46,16 +46,16 @@ public class VTProdTest {
         VarTensor joint = prod.forward();
         System.out.println(joint);
         assertEquals(0.006, joint.get(0,0,0,0), 1e-13);
-        assertEquals(0.054, joint.get(0,0,0,1), 1e-13);
-        assertEquals(0.014, joint.get(0,0,1,0), 1e-13);
-        assertEquals(0.126, joint.get(0,0,1,1), 1e-13);
+        assertEquals(0.028, joint.get(0,0,0,1), 1e-13);
+        assertEquals(0.081, joint.get(0,0,1,0), 1e-13);
+        assertEquals(0.315, joint.get(0,0,1,1), 1e-13);
         prod.getOutputAdj().fill(1.0);
         prod.backward();
         System.out.println(modIn.getOutputAdj());
-        assertEquals(0.2, modIn.getOutputAdj().getValue(0), 1e-13);
-        assertEquals(0.2, modIn.getOutputAdj().getValue(1), 1e-13);
-        assertEquals(0.3, modIn.getOutputAdj().getValue(2), 1e-13);
-        assertEquals(0.3, modIn.getOutputAdj().getValue(3), 1e-13);
+        assertEquals(0.34, modIn.getOutputAdj().getValue(0), 1e-13);
+        assertEquals(0.44, modIn.getOutputAdj().getValue(1), 1e-13);
+        assertEquals(0.34, modIn.getOutputAdj().getValue(2), 1e-13);
+        assertEquals(0.44, modIn.getOutputAdj().getValue(3), 1e-13);
     }
 
     @Test
