@@ -1,9 +1,9 @@
 package edu.jhu.pacaya.autodiff.erma;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.pacaya.autodiff.AbstractMutableModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
@@ -38,7 +38,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
 
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
-        MVecArrayIdentity<VarTensor> modIn = new MVecArrayIdentity<VarTensor>(new MVecArray<VarTensor>(inMsgs));
+        Identity<MVecArray<VarTensor>> modIn = new Identity<MVecArray<VarTensor>>(new MVecArray<VarTensor>(inMsgs));
         MutableModule<MVecArray<VarTensor>> modOut = getCreateMessagesModule(modIn, null);
         modOut.setOutput(new MVecArray<VarTensor>(outMsgs));
         modOut.forward();

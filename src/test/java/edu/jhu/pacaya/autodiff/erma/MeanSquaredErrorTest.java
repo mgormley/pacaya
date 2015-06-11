@@ -6,14 +6,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -21,7 +22,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 public class MeanSquaredErrorTest {
     
     private VarConfig goldConfig;
-    private BeliefsIdentity id1;
+    private Identity<Beliefs> id1;
     private Algebra s = RealAlgebra.REAL_ALGEBRA;
 
     @Before
@@ -46,7 +47,7 @@ public class MeanSquaredErrorTest {
         b.varBeliefs[1].setValue(0, 0.4);
         b.varBeliefs[1].setValue(1, 0.6); // Gold value
         
-        id1 = new BeliefsIdentity(b);
+        id1 = new Identity<Beliefs>(b);
     }
     
     @Test

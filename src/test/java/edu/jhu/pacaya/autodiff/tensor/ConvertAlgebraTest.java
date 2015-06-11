@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.TopoOrder;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
@@ -30,7 +30,7 @@ public class ConvertAlgebraTest {
         for (Algebra inS : algebras3) {
             for (Algebra outS : algebras3) {
                 Tensor t1 = TensorUtils.getVectorFromReals(inS, 2, 3, 5);
-                TensorIdentity id1 = new TensorIdentity(t1);
+                Identity<Tensor> id1 = new Identity<Tensor>(t1);
                 ConvertAlgebra<Tensor> ea = new ConvertAlgebra<Tensor>(id1, outS);
 
                 Tensor out = ea.forward();
@@ -56,7 +56,7 @@ public class ConvertAlgebraTest {
         for (Algebra inS : algebras2) {
             for (Algebra outS : algebras2) {
                 Tensor t1 = TensorUtils.getVectorFromValues(inS, inS.fromReal(2), inS.fromReal(3), inS.fromReal(5));
-                TensorIdentity id1 = new TensorIdentity(t1);
+                Identity<Tensor> id1 = new Identity<Tensor>(t1);
                 ConvertAlgebra<Tensor> ea = new ConvertAlgebra<Tensor>(id1, outS);
                 ConvertAlgebra<Tensor> ea2 = new ConvertAlgebra<Tensor>(ea, inS);
                 

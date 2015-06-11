@@ -1,14 +1,14 @@
 package edu.jhu.pacaya.autodiff.erma;
 
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
 import edu.jhu.pacaya.autodiff.TopoOrder;
 import edu.jhu.pacaya.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.pacaya.autodiff.tensor.ElemLinear;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -36,7 +36,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             double temperature = getTemperature(curIter, maxIter);
-            TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(RealAlgebra.REAL_ALGEBRA, temperature)); 
+            Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(RealAlgebra.REAL_ALGEBRA, temperature)); 
                     
             if (annealMse) {
                 double prop = (double) curIter / maxIter;

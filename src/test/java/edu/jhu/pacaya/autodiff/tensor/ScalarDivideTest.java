@@ -8,7 +8,7 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -44,8 +44,8 @@ public class ScalarDivideTest {
     public void testForwardAndBackward() {
         Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
         Tensor t2 = TensorUtils.getVectorFromValues(s, 4, 6, 7);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity id2 = new TensorIdentity(t2);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        Identity<Tensor> id2 = new Identity<Tensor>(t2);
         ScalarDivide ea = new ScalarDivide(id1, id2, 1);
 
         Tensor out = ea.forward();

@@ -6,16 +6,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractMutableModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
 import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.pacaya.autodiff.erma.LazyVarTensor;
-import edu.jhu.pacaya.autodiff.erma.MVecArrayIdentity;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.autodiff.erma.ParamFreeGlobalFactorModule;
 import edu.jhu.pacaya.gm.model.Factor;
@@ -63,7 +62,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
      * @param scores Tensor representing the scores (1-indexed by head, modifier, sibling)
      */
     public HeadAutomataFactor(int head, boolean isRight, LinkVar[] varsByDist, Tensor scores) {
-        this(head, isRight, varsByDist, new TensorIdentity(scores));
+        this(head, isRight, varsByDist, new Identity<Tensor>(scores));
     }
     
     public HeadAutomataFactor(int head, boolean isRight, LinkVar[] varsByDist, Module<Tensor> scoresIn) {    
@@ -87,7 +86,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
     // TODO: This could be put in an abstract class.
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
-        MVecArrayIdentity<VarTensor> modIn = new MVecArrayIdentity<VarTensor>(new MVecArray<VarTensor>(inMsgs));
+        Identity<MVecArray<VarTensor>> modIn = new Identity<MVecArray<VarTensor>>(new MVecArray<VarTensor>(inMsgs));
         MutableModule<MVecArray<VarTensor>> modOut = getCreateMessagesModule(modIn, null);
         modOut.setOutput(new MVecArray<VarTensor>(outMsgs));
         modOut.forward();

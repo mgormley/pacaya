@@ -8,7 +8,7 @@ import edu.jhu.pacaya.util.collections.Lists;
  * This module is simply the identity function. 
  * @author mgormley
  */
-public class Identity<T extends MVec> extends AbstractModule<T> implements Module<T> {
+public class Identity<T extends MVec> extends AbstractMutableModule<T> implements Module<T>, MutableModule<T> {
 
     public Identity(T y) {
         super(y.getAlgebra());

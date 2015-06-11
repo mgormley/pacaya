@@ -15,7 +15,7 @@ import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.pacaya.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
@@ -162,8 +162,8 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         Tensor tmFalseIn = getMsgs(inMsgs, LinkVar.FALSE, s);
         
         // Construct the circuit.
-        TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
-        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
+        Identity<Tensor> mTrueIn = new Identity<Tensor>(tmTrueIn);
+        Identity<Tensor> mFalseIn = new Identity<Tensor>(tmFalseIn);        
         Algebra tmpS = (isForward) ? LogSemiring.LOG_SEMIRING : LogSignAlgebra.LOG_SIGN_ALGEBRA;
         ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();

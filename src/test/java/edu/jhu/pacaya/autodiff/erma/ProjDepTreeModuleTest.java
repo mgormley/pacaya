@@ -11,7 +11,7 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.pacaya.util.collections.Lists;
@@ -67,8 +67,8 @@ public class ProjDepTreeModuleTest {
         t1.fill(0.6);
         t2.fill(0.4);
         
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity id2 = new TensorIdentity(t2);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        Identity<Tensor> id2 = new Identity<Tensor>(t2);
         ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, tmpS);
         
         Tensor out = topo.forward();
@@ -150,9 +150,9 @@ public class ProjDepTreeModuleTest {
 
     private void helpGradByFinDiff(Algebra tmpS) {
         Tensor t1 = new Tensor(s, 3,3);
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         Tensor t2 = new Tensor(s, 3,3);
-        TensorIdentity id2 = new TensorIdentity(t2);
+        Identity<Tensor> id2 = new Identity<Tensor>(t2);
         ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, tmpS);
         
         // Fill the tensors with 1.0 so that initial forward pass doesn't throw an error on the zeros. 
@@ -170,9 +170,9 @@ public class ProjDepTreeModuleTest {
             for (double[] inVals : Lists.getList(new double[]{.5, .5}, new double[]{0, 1})) {
                 System.out.println("inVals: " + Arrays.toString(inVals) + " adjVal: " + adjVal);
                 Tensor tmTrueIn = new Tensor(s, 3,3);
-                TensorIdentity id1 = new TensorIdentity(tmTrueIn);
+                Identity<Tensor> id1 = new Identity<Tensor>(tmTrueIn);
                 Tensor tmFalseIn = new Tensor(s, 3,3);
-                TensorIdentity id2 = new TensorIdentity(tmFalseIn);
+                Identity<Tensor> id2 = new Identity<Tensor>(tmFalseIn);
         
                 tmTrueIn.fill(0.5);
                 tmFalseIn.fill(0.5);
@@ -203,9 +203,9 @@ public class ProjDepTreeModuleTest {
         // Loop over possible internal algebras.
         for (final Algebra tmpS : Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA)) {
             Tensor t1 = new Tensor(s, 3,3);
-            TensorIdentity id1 = new TensorIdentity(t1);
+            Identity<Tensor> id1 = new Identity<Tensor>(t1);
             Tensor t2 = new Tensor(s, 3,3);
-            TensorIdentity id2 = new TensorIdentity(t2);
+            Identity<Tensor> id2 = new Identity<Tensor>(t2);
             Tensor2Factory fact = new Tensor2Factory() {
                 public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
                     return new ProjDepTreeModule(m1, m2, tmpS);

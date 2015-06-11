@@ -58,7 +58,7 @@ public class AbstractModuleTest {
 
     private static void evalTensor1(Tensor t1, Tensor expT1Adj, 
             Tensor1Factory fact, Tensor expOut, double adjFill, Algebra tmpS) {
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         ConvertAlgebra<Tensor> id1Co = new ConvertAlgebra<Tensor>(id1, tmpS);
         Module<Tensor> ea = fact.getModule(id1Co);
         ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, t1.getAlgebra());
@@ -98,9 +98,9 @@ public class AbstractModuleTest {
             Tensor2Factory fact, Tensor expOut, Tensor adj, Algebra tmpS) {
         Tensor.checkSameAlgebra(t1, t2);
         
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         ConvertAlgebra<Tensor> id1Co = new ConvertAlgebra<Tensor>(id1, tmpS);
-        TensorIdentity id2 = new TensorIdentity(t2);
+        Identity<Tensor> id2 = new Identity<Tensor>(t2);
         ConvertAlgebra<Tensor> id2Co = new ConvertAlgebra<Tensor>(id2, tmpS);
         Module<Tensor> main = fact.getModule(id1Co, id2Co);
         ConvertAlgebra<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, t1.getAlgebra());
@@ -126,7 +126,7 @@ public class AbstractModuleTest {
     /** Calls {@link #evalTensor1ByFiniteDiffs(Tensor1Factory, Module)} with one 3 dimensional input tensors. */
     public static void evalTensor1ByFiniteDiffs(Tensor1Factory fact) {
         Tensor t1 = TensorUtils.getVectorFromValues(RealAlgebra.REAL_ALGEBRA, 2, 3, 5);
-        TensorIdentity in1 = new TensorIdentity(t1);
+        Identity<Tensor> in1 = new Identity<Tensor>(t1);
         evalTensor1ByFiniteDiffs(fact, in1);
     }
 
@@ -183,8 +183,8 @@ public class AbstractModuleTest {
     public static void evalTensor2ByFiniteDiffs(Tensor2Factory fact) {
         Tensor t1 = TensorUtils.getVectorFromValues(RealAlgebra.REAL_ALGEBRA, 2, 3, 5);
         Tensor t2 = TensorUtils.getVectorFromValues(RealAlgebra.REAL_ALGEBRA, 4, 6, 7);
-        TensorIdentity in1 = new TensorIdentity(t1);
-        TensorIdentity in2 = new TensorIdentity(t2);
+        Identity<Tensor> in1 = new Identity<Tensor>(t1);
+        Identity<Tensor> in2 = new Identity<Tensor>(t2);
         evalTensor2ByFiniteDiffs(fact, in1, in2);
     }
         

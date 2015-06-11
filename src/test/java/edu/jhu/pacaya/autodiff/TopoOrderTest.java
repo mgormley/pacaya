@@ -23,7 +23,7 @@ public class TopoOrderTest {
     public void testSimple() {        
         Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
 
-        TensorIdentity id1 = new TensorIdentity(t1);        
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);        
         Sum s = new Sum(id1);        
         ScalarAdd add = new ScalarAdd(id1, s, 0);
       
@@ -50,8 +50,8 @@ public class TopoOrderTest {
     @Test
     public void testGetInputs() {
         // Input.
-        TensorIdentity id1 = new TensorIdentity(TensorUtils.getVectorFromValues(s, 2, 3, 5));
-        TensorIdentity id2 = new TensorIdentity(TensorUtils.getVectorFromValues(s, 4, 6, 7));
+        Identity<Tensor> id1 = new Identity<Tensor>(TensorUtils.getVectorFromValues(s, 2, 3, 5));
+        Identity<Tensor> id2 = new Identity<Tensor>(TensorUtils.getVectorFromValues(s, 4, 6, 7));
         
         // TopoOrder
         Sum s = new Sum(id1);
@@ -67,7 +67,7 @@ public class TopoOrderTest {
     @Test
     public void testGradByFiniteDiffs() {
         Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         Sum s = new Sum(id1);
         ScalarAdd add = new ScalarAdd(id1, s, 0);
         Exp exp = new Exp(add);

@@ -11,11 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.CachingBpSchedule;
@@ -26,22 +29,19 @@ import edu.jhu.pacaya.gm.inf.MpSchedule;
 import edu.jhu.pacaya.gm.inf.NoGlobalFactorsMpSchedule;
 import edu.jhu.pacaya.gm.inf.ParallelMpSchedule;
 import edu.jhu.pacaya.gm.inf.RandomMpSchedule;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
+import edu.jhu.pacaya.gm.model.FactorGraph.FgNode;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgNode;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.Prm;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.files.Files;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
-import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.list.DoubleArrayList;
 
 /**
@@ -324,7 +324,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         FgNode node = fg.getNode(globalFac);
         VarTensor[] inMsgs = getMsgs(node, msgs, CUR_MSG, IN_MSG);
         VarTensor[] outMsgs = getMsgs(node, msgs, NEW_MSG, OUT_MSG);
-        MVecArrayIdentity<VarTensor> modIn = new MVecArrayIdentity<VarTensor>(new MVecArray<VarTensor>(inMsgs));
+        Identity<MVecArray<VarTensor>> modIn = new Identity<MVecArray<VarTensor>>(new MVecArray<VarTensor>(inMsgs));
         Module<?> fmIn = fm.getOutput().getFactorModule(globalFac.getId());
         MutableModule<MVecArray<VarTensor>> modOut = globalFac.getCreateMessagesModule(modIn, fmIn);
         modOut.setOutput(new MVecArray<VarTensor>(outMsgs));

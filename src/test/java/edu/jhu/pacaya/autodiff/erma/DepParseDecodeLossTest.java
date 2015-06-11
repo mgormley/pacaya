@@ -8,7 +8,7 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.TwoToOneFactory;
 import edu.jhu.pacaya.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -87,8 +87,8 @@ public class DepParseDecodeLossTest {
             b.varBeliefs[v] = new VarTensor(s, new VarSet(fg.getVar(v)), 0.5);
         }
         
-        BeliefsIdentity id1 = new BeliefsIdentity(b);
-        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 3));
+        Identity<Beliefs> id1 = new Identity<Beliefs>(b);
+        Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, 3));
         DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, temp);
         
         ModuleTestUtils.assertGradientCorrectByFd(dl, 1e-8, 1e-5);      
