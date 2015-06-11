@@ -10,11 +10,11 @@ import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.collections.Lists;
 
-class VTProd extends AbstractModule<VarTensor> implements Module<VarTensor> {
+public class VTProd extends AbstractModule<VarTensor> implements Module<VarTensor> {
 
-    private Module<MVecArray<VarTensor>> modIn;
+    private Module<? extends MVecArray<VarTensor>> modIn;
 
-    public VTProd(Module<MVecArray<VarTensor>> modIn) {
+    public VTProd(Module<? extends MVecArray<VarTensor>> modIn) {
         super(modIn.getAlgebra());
         this.modIn = modIn;
     }

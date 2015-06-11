@@ -89,7 +89,7 @@ public class MarginalLikelihood extends AbstractModule<Scalar> implements Module
                 Factors factorsAdj = fmLatPred.getOutputAdj();
                 VarTensor fAdj = factorsAdj.f[a];
                 assert fAdj.getAlgebra() == LogSemiring.LOG_SEMIRING;
-                //fAdj.elemAdd(infLat.getLogMarginalsForFactorId(a));
+                //TODO: fAdj.elemAdd(infLat.getLogMarginalsForFactorId(a));
                 fAdj.elemSubtract(infLatPred.getLogMarginalsForFactorId(a));
             }
         }

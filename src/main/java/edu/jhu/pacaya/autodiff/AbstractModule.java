@@ -45,7 +45,7 @@ public abstract class AbstractModule<T extends MVec> implements Module<T> {
         return this.getClass() + " [y=" + y + ", yAdj=" + yAdj + "]";
     }
 
-    public static <T extends MVec> void checkEqualAlgebras(Module<T> m1, Module<T> m2) {
+    public static <T extends MVec, Y extends MVec> void checkEqualAlgebras(Module<T> m1, Module<Y> m2) {
         if (m1.getAlgebra().getClass() != m2.getAlgebra().getClass()) {
             throw new IllegalArgumentException("Algebras must be the same");
         }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.jhu.hlt.optimize.MalletLBFGS;
@@ -33,6 +34,13 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class CrfObjectiveTest {
 
+    @Ignore("not implemented")
+    @Test
+    public void testGetLogLikelihood() {
+        // TODO: Test the getValue method returns what we expect.
+        //FactorGraph fg = FactorGraphTest.getLinearChainGraph();
+    }
+    
 	@Test
 	public void testLogLikelihoodBelowZeroBPLogDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
@@ -122,5 +130,5 @@ public class CrfObjectiveTest {
         bpPrm.maxIterations = 1;        
         return bpPrm;
     }
-    
+
 }

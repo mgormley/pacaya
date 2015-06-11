@@ -4,6 +4,7 @@ import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 
+// TODO: Remove this class and always use a 1D Tensor instead.
 public class Scalar implements MVec {
 
     private Algebra s;
