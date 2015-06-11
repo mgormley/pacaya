@@ -17,7 +17,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class TopoOrderTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
 
     @Test
     public void testSimple() {        

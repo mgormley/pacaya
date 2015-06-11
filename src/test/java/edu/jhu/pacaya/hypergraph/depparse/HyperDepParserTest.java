@@ -228,9 +228,9 @@ public class HyperDepParserTest {
     
     @Test
     public void testInsideFirstOrderExpectSingleRoot1() {
-        helpTestInsideFirstOrderExpectSingleRoot(RealAlgebra.REAL_ALGEBRA);
-        helpTestInsideFirstOrderExpectSingleRoot(LogSemiring.LOG_SEMIRING);
-        helpTestInsideFirstOrderExpectSingleRoot(LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        helpTestInsideFirstOrderExpectSingleRoot(RealAlgebra.SINGLETON);
+        helpTestInsideFirstOrderExpectSingleRoot(LogSemiring.SINGLETON);
+        helpTestInsideFirstOrderExpectSingleRoot(LogSignAlgebra.SINGLETON);
     }
 
     private void helpTestInsideFirstOrderExpectSingleRoot(Algebra s) {

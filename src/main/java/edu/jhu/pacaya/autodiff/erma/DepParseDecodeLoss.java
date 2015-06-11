@@ -36,7 +36,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             double temperature = getTemperature(curIter, maxIter);
-            Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(RealAlgebra.REAL_ALGEBRA, temperature)); 
+            Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(RealAlgebra.SINGLETON, temperature)); 
                     
             if (annealMse) {
                 double prop = (double) curIter / maxIter;
@@ -77,7 +77,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
     private static TopoOrder<Tensor> build(Module<Beliefs> inf, VarConfig goldConfig, Module<Tensor> temperature) {
         // Decoding.
         DepTensorFromBeliefs b2d = new DepTensorFromBeliefs(inf);
-        SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        SoftmaxMbrDepParse mbr = new SoftmaxMbrDepParse(b2d, temperature, LogSignAlgebra.SINGLETON);
         DepTensorToBeliefs d2b = new DepTensorToBeliefs(mbr, inf);
 
         // Loss.

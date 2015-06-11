@@ -23,7 +23,7 @@ public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
     private static final long serialVersionUID = 1L;
     private static final Logger log = LoggerFactory.getLogger(SplitAlgebra.class);
     
-    public static final SplitAlgebra SPLIT_ALGEBRA = new SplitAlgebra();
+    public static final SplitAlgebra SINGLETON = new SplitAlgebra();
     
     private static final int SHIFTER = 32;
     private static final long MASK_1 = 0xFFFFFFFFl;
@@ -36,8 +36,8 @@ public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
     
     /** Constructs an algebra which will detect whether two separately stored algebras are correctly tracking each other. */
     private SplitAlgebra() {
-        this.a1 = RealAlgebra.REAL_ALGEBRA;
-        this.a2 = new ShiftedRealAlgebra();
+        this.a1 = RealAlgebra.SINGLETON;
+        this.a2 = new ShiftedRealAlgebra(3.0);
         this.format = "%12.6e";
         // Machine epsilon for a 32-bit number is 1.19e-07.
         this.delta = 1.19e-05;

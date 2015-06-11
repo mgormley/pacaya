@@ -54,7 +54,7 @@ public class DimIterTest {
     
     @Test
     public void testForTensor() {
-        Tensor t = new Tensor(RealAlgebra.REAL_ALGEBRA, 5, 2, 3);
+        Tensor t = new Tensor(RealAlgebra.SINGLETON, 5, 2, 3);
         for (int c=0; c<t.size(); c++) {
             t.setValue(c, c);
         }

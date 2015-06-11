@@ -76,7 +76,7 @@ public class HyperDepParser {
 
     private static DepIoChart insideOutside(double[] fracRoot, double[][] fracChild, boolean singleRoot) {
         // Currently we only support this semiring since DepParseChart assumes log probs.
-        LogSemiring semiring = LogSemiring.LOG_SEMIRING;
+        LogSemiring semiring = LogSemiring.SINGLETON;
         //LogPosNegSemiring semiring = new LogPosNegSemiring();
         //Semirings.fromLogProb(fracRoot, semiring);
         //Semirings.fromLogProb(fracChild, semiring);
@@ -118,7 +118,7 @@ public class HyperDepParser {
      * @return The parse chart.
      */
     public static Pair<O1DpHypergraph, Scores> insideSingleRootEntropyFoe(double[] fracRoot, double[][] fracChild) {
-        final Algebra semiring = LogSignAlgebra.LOG_SIGN_ALGEBRA;         
+        final Algebra semiring = LogSignAlgebra.SINGLETON;         
         return insideSingleRootEntropyFoe(fracRoot, fracChild, semiring);
     }
 

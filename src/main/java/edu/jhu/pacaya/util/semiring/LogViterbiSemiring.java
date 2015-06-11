@@ -2,7 +2,7 @@ package edu.jhu.pacaya.util.semiring;
 
 public class LogViterbiSemiring implements Semiring {
 
-    public static final LogViterbiSemiring LOG_VITERBI_SEMIRING = new LogViterbiSemiring();
+    public static final LogViterbiSemiring SINGLETON = new LogViterbiSemiring();
     
     private LogViterbiSemiring() {
         // Private constructor.

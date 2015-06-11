@@ -173,7 +173,7 @@ public class ObsFeatureConjoiner implements Serializable {
         
         @Override
         public VarTensor getMarginalsForFactorId(int factorId) { 
-            return new VarTensor(RealAlgebra.REAL_ALGEBRA, fg.getFactor(factorId).getVars()); 
+            return new VarTensor(RealAlgebra.SINGLETON, fg.getFactor(factorId).getVars()); 
         }
         
         @Override

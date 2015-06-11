@@ -39,12 +39,12 @@ public class ErmaBpForwardTest {
 	
     @Test
     public void testOnOneVarProb() {
-        testOneVarHelper(RealAlgebra.REAL_ALGEBRA);
+        testOneVarHelper(RealAlgebra.SINGLETON);
     }
     
     @Test
     public void testOnOneVarLogProb() {
-        Algebra s = LogSemiring.LOG_SEMIRING;
+        Algebra s = LogSemiring.SINGLETON;
         testOneVarHelper(s);
     }
 
@@ -77,13 +77,13 @@ public class ErmaBpForwardTest {
     
     @Test
     public void testTwoVars() {
-        runTwoVars(RealAlgebra.REAL_ALGEBRA, null);
-        runTwoVars(LogSemiring.LOG_SEMIRING, null);
+        runTwoVars(RealAlgebra.SINGLETON, null);
+        runTwoVars(LogSemiring.SINGLETON, null);
     }
 
     @Test
     public void testDumpingOfBeliefsForDebugging() {
-        runTwoVars(RealAlgebra.REAL_ALGEBRA, Paths.get("./tmp/bpDump"));
+        runTwoVars(RealAlgebra.SINGLETON, Paths.get("./tmp/bpDump"));
         // No assertions, just make sure we don't fail.
     }
 
@@ -126,7 +126,7 @@ public class ErmaBpForwardTest {
     @Test
     public void testThreeConnectedComponents() {
         
-        Algebra s = LogSemiring.LOG_SEMIRING;
+        Algebra s = LogSemiring.SINGLETON;
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
@@ -172,14 +172,14 @@ public class ErmaBpForwardTest {
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
-        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.SINGLETON;
         testOnSimpleHelper(s);
     }
     
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
-        Algebra s = LogSemiring.LOG_SEMIRING;        
+        Algebra s = LogSemiring.SINGLETON;        
         testOnSimpleHelper(s);
     }
 
@@ -207,11 +207,11 @@ public class ErmaBpForwardTest {
     public void testMultipleSemiringsOnSimple() throws IOException {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
 
-        ErmaBp bpReal = runHelper(fg, RealAlgebra.REAL_ALGEBRA);
-        ErmaBp bpSplit = runHelper(fg, SplitAlgebra.SPLIT_ALGEBRA);
-        ErmaBp bpShift = runHelper(fg, ShiftedRealAlgebra.SHIFTED_REAL_ALGEBRA);
-        ErmaBp bpLog = runHelper(fg, LogSemiring.LOG_SEMIRING);
-        ErmaBp bpLogSign = runHelper(fg, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        ErmaBp bpReal = runHelper(fg, RealAlgebra.SINGLETON);
+        ErmaBp bpSplit = runHelper(fg, SplitAlgebra.SINGLETON);
+        ErmaBp bpShift = runHelper(fg, ShiftedRealAlgebra.SINGLETON);
+        ErmaBp bpLog = runHelper(fg, LogSemiring.SINGLETON);
+        ErmaBp bpLogSign = runHelper(fg, LogSignAlgebra.SINGLETON);
         
         assertEqualMarginals(fg, bpReal, bpSplit, 1e-4);
         assertEqualMarginals(fg, bpReal, bpShift, 1e-13);
@@ -234,14 +234,14 @@ public class ErmaBpForwardTest {
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
-        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.SINGLETON;
         testOnChainHelper(s);
     }
 
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
-        Algebra s = LogSemiring.LOG_SEMIRING;        
+        Algebra s = LogSemiring.SINGLETON;        
         testOnChainHelper(s);
     }
 
@@ -274,11 +274,11 @@ public class ErmaBpForwardTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(LogSemiring.LOG_SEMIRING, 0, 6);
-        testConvergenceHelper(RealAlgebra.REAL_ALGEBRA, 0, 6);
+        testConvergenceHelper(LogSemiring.SINGLETON, 0, 6);
+        testConvergenceHelper(RealAlgebra.SINGLETON, 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
-        testConvergenceHelper(LogSemiring.LOG_SEMIRING, 1e-3, 5);
-        testConvergenceHelper(RealAlgebra.REAL_ALGEBRA, 1e-3, 5);
+        testConvergenceHelper(LogSemiring.SINGLETON, 1e-3, 5);
+        testConvergenceHelper(RealAlgebra.SINGLETON, 1e-3, 5);
     }
 
     private void testConvergenceHelper(Algebra s, double convergenceThreshold, int expectedConvergenceIterations) {
@@ -322,14 +322,14 @@ public class ErmaBpForwardTest {
     public void testCanHandleProbHardFactors() {
         //TODO: ErmaBp doesn't currently do factor belief caching. 
         // testCanHandleHardFactorsHelper(true, RealAlgebra.REAL_ALGEBRA);
-        testCanHandleHardFactorsHelper(false, RealAlgebra.REAL_ALGEBRA);
+        testCanHandleHardFactorsHelper(false, RealAlgebra.SINGLETON);
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
         //TODO: ErmaBp doesn't currently do factor belief caching. 
         // testCanHandleHardFactorsHelper(true, LogSemiring.LOG_SEMIRING);
-        testCanHandleHardFactorsHelper(false, LogSemiring.LOG_SEMIRING);
+        testCanHandleHardFactorsHelper(false, LogSemiring.SINGLETON);
     }    
     
     public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     
@@ -411,7 +411,7 @@ public class ErmaBpForwardTest {
         
         fg.addFactor(gf);
 
-        Algebra s = LogSemiring.LOG_SEMIRING;
+        Algebra s = LogSemiring.SINGLETON;
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBp bp = runDefaultBpForAcyclic(s, fg);

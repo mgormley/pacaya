@@ -106,12 +106,12 @@ public class SimpleProjDepTreeFactorTest {
     
     @Test
     public void testPartitionFunctionWithoutUnaryFactorsProb() {
-        partitionFunctionWithoutUnaryFactors(RealAlgebra.REAL_ALGEBRA);       
+        partitionFunctionWithoutUnaryFactors(RealAlgebra.SINGLETON);       
     }
     
     @Test
     public void testPartitionFunctionWithoutUnaryFactorsLogProb() {
-        partitionFunctionWithoutUnaryFactors(LogSemiring.LOG_SEMIRING);
+        partitionFunctionWithoutUnaryFactors(LogSemiring.SINGLETON);
     }
     
     public void partitionFunctionWithoutUnaryFactors(Algebra s) {
@@ -184,11 +184,11 @@ public class SimpleProjDepTreeFactorTest {
     @Test
     public void testMarginalsAndPartitionFunction() {
         Algebra s;
-        s = RealAlgebra.REAL_ALGEBRA;        
+        s = RealAlgebra.SINGLETON;        
         inferAndCheckMarginalsAndPartitionFunction(s, false, false);        
         inferAndCheckMarginalsAndPartitionFunction(s, true, false);        
         inferAndCheckMarginalsAndPartitionFunction(s, true, true); 
-        s = LogSemiring.LOG_SEMIRING;        
+        s = LogSemiring.SINGLETON;        
         inferAndCheckMarginalsAndPartitionFunction(s, false, false);        
         inferAndCheckMarginalsAndPartitionFunction(s, true, false);        
         inferAndCheckMarginalsAndPartitionFunction(s, true, true); 
@@ -273,10 +273,10 @@ public class SimpleProjDepTreeFactorTest {
 
     @Test
     public void testMarginalsAndPartitionWithAdditionalVariable() {
-        testPartitionWithAdditionalVariableHelper(RealAlgebra.REAL_ALGEBRA, false);
-        testPartitionWithAdditionalVariableHelper(LogSemiring.LOG_SEMIRING, false);
-        testPartitionWithAdditionalVariableHelper(LogSemiring.LOG_SEMIRING, true);
-        testPartitionWithAdditionalVariableHelper(RealAlgebra.REAL_ALGEBRA, true);
+        testPartitionWithAdditionalVariableHelper(RealAlgebra.SINGLETON, false);
+        testPartitionWithAdditionalVariableHelper(LogSemiring.SINGLETON, false);
+        testPartitionWithAdditionalVariableHelper(LogSemiring.SINGLETON, true);
+        testPartitionWithAdditionalVariableHelper(RealAlgebra.SINGLETON, true);
     }
     
     public void testPartitionWithAdditionalVariableHelper(Algebra s, boolean normalizeMessages) {
@@ -343,7 +343,7 @@ public class SimpleProjDepTreeFactorTest {
 
     @Test
     public void testPartitionWithAllOnesAndLatentRoleVar() {
-        Algebra s = RealAlgebra.REAL_ALGEBRA;        
+        Algebra s = RealAlgebra.SINGLETON;        
 
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
@@ -422,7 +422,7 @@ public class SimpleProjDepTreeFactorTest {
     
     @Test
     public void testMarginalsAndPartitionWithAllOnes() {
-        Algebra s = RealAlgebra.REAL_ALGEBRA;        
+        Algebra s = RealAlgebra.SINGLETON;        
 
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
@@ -465,7 +465,7 @@ public class SimpleProjDepTreeFactorTest {
             for (Var v : fg.getVars()) {
                 double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
                 System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-                assertEquals(Z, s == LogSemiring.LOG_SEMIRING ? FastMath.exp(partition) : partition, 1e-3);
+                assertEquals(Z, s == LogSemiring.SINGLETON ? FastMath.exp(partition) : partition, 1e-3);
             }
         }
         // Check expected counts.
@@ -483,10 +483,10 @@ public class SimpleProjDepTreeFactorTest {
     // Currently, the values in get2WordSentFactorGraph() are scaled to avoid the floating point error.
     @Test
     public void testBpCompareMessagesWithExplicitTreeFactor() {
-        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, false);
-        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, true);
-        compareBpMessagesWithExplicitTreeFactor(LogSemiring.LOG_SEMIRING, true, false);
-        compareBpMessagesWithExplicitTreeFactor(LogSemiring.LOG_SEMIRING, true, true);
+        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.SINGLETON, true, false);
+        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.SINGLETON, true, true);
+        compareBpMessagesWithExplicitTreeFactor(LogSemiring.SINGLETON, true, false);
+        compareBpMessagesWithExplicitTreeFactor(LogSemiring.SINGLETON, true, true);
     }
 
     public void compareBpMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
@@ -597,17 +597,17 @@ public class SimpleProjDepTreeFactorTest {
         // Below, we check both the case of an explicit tree factor and the OldProjDepTreeFactor class.
         // 
         // Check that we can correctly compute the partition in the non-loopy setting.
-        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, true, false, false);
-        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, false, false, false);
+        comparePartitionWithBruteForce(LogSemiring.SINGLETON, true, true, false, false);
+        comparePartitionWithBruteForce(LogSemiring.SINGLETON, true, false, false, false);
         // Check that we can correctly compute the partition in the loopy setting.
-        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, true, true, false);
-        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, false, true, false);
+        comparePartitionWithBruteForce(LogSemiring.SINGLETON, true, true, true, false);
+        comparePartitionWithBruteForce(LogSemiring.SINGLETON, true, false, true, false);
     }
     
     @Test
     public void testComparePartitionWithBruteForceInfiniteEdgeWeight() {
         // Check the case of a negative infinity edge weight
-        comparePartitionWithBruteForce(LogSemiring.LOG_SEMIRING, true, false, false, true);
+        comparePartitionWithBruteForce(LogSemiring.SINGLETON, true, false, false, true);
     }
 
     public void comparePartitionWithBruteForce(Algebra s, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {

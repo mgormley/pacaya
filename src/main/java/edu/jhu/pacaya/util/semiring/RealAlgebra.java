@@ -6,7 +6,7 @@ public class RealAlgebra implements Semiring, Algebra {
 
     private static final long serialVersionUID = 1L;
     
-    public static final RealAlgebra REAL_ALGEBRA = new RealAlgebra();
+    public static final RealAlgebra SINGLETON = new RealAlgebra();
 
     private RealAlgebra() {
         // Private constructor.

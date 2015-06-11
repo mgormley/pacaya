@@ -16,7 +16,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class SelectTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
 
     @Test
     public void testForwardAndBackward() {

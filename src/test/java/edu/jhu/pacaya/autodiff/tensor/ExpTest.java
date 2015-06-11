@@ -13,7 +13,7 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class ExpTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
 
     @Test
     public void testSimple() {

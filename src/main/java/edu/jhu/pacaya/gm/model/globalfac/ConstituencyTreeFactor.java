@@ -158,7 +158,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
-        if (!s.equals(RealAlgebra.REAL_ALGEBRA) && !s.equals(LogSemiring.LOG_SEMIRING)) {
+        if (!s.equals(RealAlgebra.SINGLETON) && !s.equals(LogSemiring.SINGLETON)) {
             throw new IllegalStateException("ConstituencyTreeFactor only supports log and real semirings as input.");
         }
         
@@ -366,7 +366,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.SINGLETON;
         boolean[][] chart = getChart(n, vc);
         if (chart == null || !isTree(n, chart)) {
             log.warn("Tree is not a valid constituency tree.");

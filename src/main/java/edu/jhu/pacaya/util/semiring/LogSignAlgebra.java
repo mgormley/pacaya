@@ -6,7 +6,7 @@ public class LogSignAlgebra implements Semiring, Algebra {
 
     private static final long serialVersionUID = 1L;
     
-    public static final LogSignAlgebra LOG_SIGN_ALGEBRA = new LogSignAlgebra();
+    public static final LogSignAlgebra SINGLETON = new LogSignAlgebra();
 
     // We choose the least significant digit of the mantissa as our sign bit.
     // This bit is chosen for two reasons: (1) the various bit representations

@@ -19,7 +19,7 @@ public class BetheFreeEnergyTest {
 
     @Test
     public void testPrintBfeOnChain() {
-        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.SINGLETON;
         
         FactorGraph fg = getLinearChainGraph();
 

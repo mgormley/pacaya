@@ -12,7 +12,7 @@ public class FgModelIdentity extends Identity<MVecFgModel> {
 
     public FgModelIdentity(FgModel model) {
         super(new MVecFgModel(model));
-        assert this.y.getAlgebra() == RealAlgebra.REAL_ALGEBRA;
+        assert this.y.getAlgebra() == RealAlgebra.SINGLETON;
     }
     
 }

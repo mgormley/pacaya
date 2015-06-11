@@ -40,7 +40,7 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
      * @param temperature Tensor containing the temperature in its first entry.
      */
     public SoftmaxMbrDepParse(Module<Tensor> margIn, Module<Tensor> temperature) {
-        this(margIn, temperature, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        this(margIn, temperature, LogSignAlgebra.SINGLETON);
     }
     
     /**
@@ -82,8 +82,8 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
             Module<Tensor> m = (Module<Tensor>) mm;
             System.out.println("Module: " + m.getClass());
             System.out.println("Algebra: " + m.getAlgebra().getClass());
-            System.out.println("Output (reals): " + m.getOutput().copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA));
-            System.out.println("OutputAdj (reals): " + m.getOutputAdj().copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA));
+            System.out.println("Output (reals): " + m.getOutput().copyAndConvertAlgebra(RealAlgebra.SINGLETON));
+            System.out.println("OutputAdj (reals): " + m.getOutputAdj().copyAndConvertAlgebra(RealAlgebra.SINGLETON));
             System.out.println("");
         }
     }

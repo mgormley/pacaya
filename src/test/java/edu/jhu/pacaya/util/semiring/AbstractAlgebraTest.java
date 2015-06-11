@@ -21,7 +21,7 @@ public abstract class AbstractAlgebraTest {
 
     protected static final int NUM_RANDS = 100;
     protected Algebra sLog = getAlgebra();
-    protected RealAlgebra sReal = RealAlgebra.REAL_ALGEBRA;
+    protected RealAlgebra sReal = RealAlgebra.SINGLETON;
     protected double deltaStrict = 1e-13;
     protected double deltaLoose = 1e-5;
             

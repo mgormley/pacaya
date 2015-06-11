@@ -17,7 +17,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class IndexForVcTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
 
     Var v0 = getVar(0, 2);
     Var v1 = getVar(1, 3);

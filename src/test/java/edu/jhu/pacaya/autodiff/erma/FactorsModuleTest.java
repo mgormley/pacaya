@@ -21,7 +21,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class FactorsModuleTest {
 
-    Algebra s = RealAlgebra.REAL_ALGEBRA;
+    Algebra s = RealAlgebra.SINGLETON;
         
     private final FgModel model;
     private final FactorGraph fg;

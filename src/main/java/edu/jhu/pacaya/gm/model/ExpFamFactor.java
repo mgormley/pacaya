@@ -209,9 +209,9 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
             VarTensor factorMarginal = new VarTensor(yAdj);
             factorMarginal.prod(y);
             // addExpectedFeatureCounts() currently only supports the real semiring
-            assert modIn.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
-            factorMarginal = factorMarginal.copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA);
-            f.addExpectedPartials(modelAdj, factorMarginal, RealAlgebra.REAL_ALGEBRA.one());
+            assert modIn.getAlgebra().equals(RealAlgebra.SINGLETON);
+            factorMarginal = factorMarginal.copyAndConvertAlgebra(RealAlgebra.SINGLETON);
+            f.addExpectedPartials(modelAdj, factorMarginal, RealAlgebra.SINGLETON.one());
         }
 
         @Override

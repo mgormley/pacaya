@@ -6,7 +6,7 @@ public class LogSemiring implements Algebra {
 
     private static final long serialVersionUID = 1L;
     
-    public static final LogSemiring LOG_SEMIRING = new LogSemiring();
+    public static final LogSemiring SINGLETON = new LogSemiring();
 
     private LogSemiring() { 
         // Private constructor.

@@ -164,7 +164,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         // Construct the circuit.
         Identity<Tensor> mTrueIn = new Identity<Tensor>(tmTrueIn);
         Identity<Tensor> mFalseIn = new Identity<Tensor>(tmFalseIn);        
-        Algebra tmpS = (isForward) ? LogSemiring.LOG_SEMIRING : LogSignAlgebra.LOG_SIGN_ALGEBRA;
+        Algebra tmpS = (isForward) ? LogSemiring.SINGLETON : LogSignAlgebra.SINGLETON;
         ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();
         
@@ -229,7 +229,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.SINGLETON;
         if (!hasOneParentPerToken(n, vc)) {
             log.trace("Tree has more than one arc to root.");
             return s.zero();
@@ -357,7 +357,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         EdgeScores ratios = getLogOddsRatios(inMsgs);
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = LogSignAlgebra.LOG_SIGN_ALGEBRA;
+        Algebra s = LogSignAlgebra.SINGLETON;
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();

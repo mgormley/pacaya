@@ -17,7 +17,7 @@ import edu.jhu.prim.util.random.Prng;
 
 public class ElemDivideTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
 
     @Test
     public void testForwardAndBackward() {

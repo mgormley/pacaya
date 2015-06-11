@@ -53,7 +53,7 @@ public class ErmaBpSpeedTest {
     public static void runBp(FactorGraph fg, int t) {
         ErmaBpPrm prm = new ErmaBpPrm();
         //prm.s = Algebras.LOG_SIGN_ALGEBRA;
-        prm.s = RealAlgebra.REAL_ALGEBRA;
+        prm.s = RealAlgebra.SINGLETON;
         prm.maxIterations = 1;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.schedule = BpScheduleType.TREE_LIKE;

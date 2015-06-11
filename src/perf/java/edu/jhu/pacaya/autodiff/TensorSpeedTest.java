@@ -11,7 +11,7 @@ import edu.jhu.prim.util.Timer;
 
 public class TensorSpeedTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
     
     @Test
     public void testSpeedOfIndexOperations() {

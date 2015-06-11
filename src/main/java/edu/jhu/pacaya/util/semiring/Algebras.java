@@ -15,13 +15,13 @@ public class Algebras {
     public static double convertAlgebra(double value, Algebra src, Algebra dst) {
         if (dst.equals(src)) {
             return value;
-        } else if (src.equals(RealAlgebra.REAL_ALGEBRA)) {
+        } else if (src.equals(RealAlgebra.SINGLETON)) {
             return dst.fromReal(value);
-        } else if (src.equals(LogSemiring.LOG_SEMIRING)) {
+        } else if (src.equals(LogSemiring.SINGLETON)) {
             return dst.fromLogProb(value);
-        } else if (dst.equals(RealAlgebra.REAL_ALGEBRA)) {
+        } else if (dst.equals(RealAlgebra.SINGLETON)) {
             return src.toReal(value);
-        } else if (dst.equals(LogSemiring.LOG_SEMIRING)) {
+        } else if (dst.equals(LogSemiring.SINGLETON)) {
             return src.toLogProb(value);
         } else {
             // We pivot through the real numbers, but this could cause a loss of

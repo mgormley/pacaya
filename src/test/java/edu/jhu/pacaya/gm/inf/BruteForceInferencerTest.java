@@ -23,7 +23,7 @@ public class BruteForceInferencerTest {
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
-        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.SINGLETON;
         FactorGraph fg = getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnLinearChainGraph(fg, bf);
@@ -32,7 +32,7 @@ public class BruteForceInferencerTest {
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
-        Algebra s = LogSemiring.LOG_SEMIRING;
+        Algebra s = LogSemiring.SINGLETON;
         FactorGraph fg = getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnLinearChainGraph(fg, bf);
@@ -75,7 +75,7 @@ public class BruteForceInferencerTest {
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
-        Algebra s = RealAlgebra.REAL_ALGEBRA;
+        Algebra s = RealAlgebra.SINGLETON;
         FactorGraph fg = readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
@@ -86,7 +86,7 @@ public class BruteForceInferencerTest {
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
-        Algebra s = LogSemiring.LOG_SEMIRING;
+        Algebra s = LogSemiring.SINGLETON;
         FactorGraph fg = readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         testInfOnSimpleGraph(fg, bf);

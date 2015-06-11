@@ -263,7 +263,7 @@ public class CrfTrainerTest {
     
     public static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.s = LogSemiring.LOG_SEMIRING;
+        bpPrm.s = LogSemiring.SINGLETON;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
@@ -296,7 +296,7 @@ public class CrfTrainerTest {
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
-        bpPrm.s = RealAlgebra.REAL_ALGEBRA;
+        bpPrm.s = RealAlgebra.SINGLETON;
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;

@@ -17,10 +17,10 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class TensorTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.SINGLETON;
 
-    private List<Algebra> two = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA);
-    private List<Algebra> three = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSemiring.LOG_SEMIRING, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+    private List<Algebra> two = Lists.getList(RealAlgebra.SINGLETON, LogSignAlgebra.SINGLETON);
+    private List<Algebra> three = Lists.getList(RealAlgebra.SINGLETON, LogSemiring.SINGLETON, LogSignAlgebra.SINGLETON);
     
     @Test
     public void testInitializedToZeros() {
@@ -32,9 +32,9 @@ public class TensorTest {
     
     @Test
     public void testGetSetAddSubWithIndices() {
-        testGetSetAddSubWithIndices(RealAlgebra.REAL_ALGEBRA);
-        testGetSetAddSubWithIndices(LogSignAlgebra.LOG_SIGN_ALGEBRA);
-        testGetSetAddSubWithIndices(LogSemiring.LOG_SEMIRING);
+        testGetSetAddSubWithIndices(RealAlgebra.SINGLETON);
+        testGetSetAddSubWithIndices(LogSignAlgebra.SINGLETON);
+        testGetSetAddSubWithIndices(LogSemiring.SINGLETON);
     }
     
     private void testGetSetAddSubWithIndices(Algebra s) {
@@ -98,9 +98,9 @@ public class TensorTest {
     
     @Test
     public void testValueOperations() {
-        testValueOperations(RealAlgebra.REAL_ALGEBRA);
-        testValueOperations(LogSignAlgebra.LOG_SIGN_ALGEBRA);
-        testValueOperations(LogSemiring.LOG_SEMIRING);
+        testValueOperations(RealAlgebra.SINGLETON);
+        testValueOperations(LogSignAlgebra.SINGLETON);
+        testValueOperations(LogSemiring.SINGLETON);
     }
     
     private void testValueOperations(Algebra s) {
@@ -125,9 +125,9 @@ public class TensorTest {
 
     @Test
     public void testFactorAddIdentical() {   
-        testFactorAddIdentical(RealAlgebra.REAL_ALGEBRA);
-        testFactorAddIdentical(LogSignAlgebra.LOG_SIGN_ALGEBRA);
-        testFactorAddIdentical(LogSemiring.LOG_SEMIRING);
+        testFactorAddIdentical(RealAlgebra.SINGLETON);
+        testFactorAddIdentical(LogSignAlgebra.SINGLETON);
+        testFactorAddIdentical(LogSemiring.SINGLETON);
     }
     
     private void testFactorAddIdentical(Algebra s) {   

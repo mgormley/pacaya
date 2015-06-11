@@ -22,8 +22,8 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class ConvertAlgebraTest {
     
-    public static List<Algebra> algebras3 = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSemiring.LOG_SEMIRING, LogSignAlgebra.LOG_SIGN_ALGEBRA);
-    public static List<Algebra> algebras2 = Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+    public static List<Algebra> algebras3 = Lists.getList(RealAlgebra.SINGLETON, LogSemiring.SINGLETON, LogSignAlgebra.SINGLETON);
+    public static List<Algebra> algebras2 = Lists.getList(RealAlgebra.SINGLETON, LogSignAlgebra.SINGLETON);
 
     @Test
     public void testForwardAndBackward() {

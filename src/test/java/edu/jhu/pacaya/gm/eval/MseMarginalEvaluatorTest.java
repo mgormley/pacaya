@@ -23,11 +23,11 @@ public class MseMarginalEvaluatorTest {
     private static class MockFgInferencer extends BruteForceInferencer {
 
         public MockFgInferencer() {
-            super(null, RealAlgebra.REAL_ALGEBRA);
+            super(null, RealAlgebra.SINGLETON);
         }
         
         public VarTensor getMarginals(Var var) {
-            VarTensor marg = new VarTensor(RealAlgebra.REAL_ALGEBRA, new VarSet(var));
+            VarTensor marg = new VarTensor(RealAlgebra.SINGLETON, new VarSet(var));
             if (var == v1) {
                 marg.setValue(0, 0.4);
                 marg.setValue(1, 0.6);

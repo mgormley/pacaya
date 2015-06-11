@@ -124,7 +124,7 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
             return this;
         } else if (clmpVarConfig.size() == vars.size()) {
             // All clamped.
-            return new ConsecutiveSiblingsFactor(new LinkVar[]{}, new LinkVar[][]{{}}, new Tensor(RealAlgebra.REAL_ALGEBRA, 0, 0, 0));
+            return new ConsecutiveSiblingsFactor(new LinkVar[]{}, new LinkVar[][]{{}}, new Tensor(RealAlgebra.SINGLETON, 0, 0, 0));
         } else {
             // Some clamped.
             throw new IllegalStateException("Unable to clamp these variables.");
@@ -140,7 +140,7 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.SINGLETON;
         Tensor scores = scoresIn.getOutput();
         double logScore = s.one();
         for (int p = 0; p <= n; p++) {

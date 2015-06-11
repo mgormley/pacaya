@@ -20,7 +20,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class DepTensorFromBeliefsTest {
 
-    private static Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private static Algebra s = RealAlgebra.SINGLETON;
 
     @Test
     public void testGuessNumWords() {

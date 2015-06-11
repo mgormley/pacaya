@@ -10,7 +10,7 @@ public class LogSignAlgebraTest extends AbstractAlgebraTest {
     
     @Override
     public Algebra getAlgebra() {
-        return LogSignAlgebra.LOG_SIGN_ALGEBRA;
+        return LogSignAlgebra.SINGLETON;
     }
     
     /**

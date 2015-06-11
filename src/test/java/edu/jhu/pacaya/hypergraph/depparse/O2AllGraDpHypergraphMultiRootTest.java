@@ -5,7 +5,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class O2AllGraDpHypergraphMultiRootTest extends AbstractHypergraphTest {
 
-    RealAlgebra s = RealAlgebra.REAL_ALGEBRA;
+    RealAlgebra s = RealAlgebra.SINGLETON;
 
     protected O2AllGraDpHypergraph getHypergraph() {
         return new O2AllGraDpHypergraph(O2AllGraDpHypergraphTest.getScorer(), s, false);
