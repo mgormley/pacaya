@@ -18,7 +18,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 
 public class O2AllGraDpHypergraphTest extends AbstractHypergraphTest {
 
-    RealAlgebra s = RealAlgebra.SINGLETON;
+    RealAlgebra s = RealAlgebra.getInstance();
 
     @Test
     public void testInsideOutsideSingleRoot1Word() {

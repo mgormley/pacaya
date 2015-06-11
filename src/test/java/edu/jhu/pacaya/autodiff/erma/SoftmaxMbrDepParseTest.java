@@ -25,7 +25,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class SoftmaxMbrDepParseTest {
 
-    Algebra s = RealAlgebra.SINGLETON;
+    Algebra s = RealAlgebra.getInstance();
     
     String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1  |  value\n"
@@ -50,13 +50,13 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testSimpleReal() {
-        helpSimple(LogSignAlgebra.SINGLETON);              
+        helpSimple(LogSignAlgebra.getInstance());              
         //helpSimple(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test    
     public void testSimpleLogPosNeg() {    
-        helpSimple(LogSignAlgebra.SINGLETON);              
+        helpSimple(LogSignAlgebra.getInstance());              
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -97,7 +97,7 @@ public class SoftmaxMbrDepParseTest {
             + "]";
     @Test    
     public void testSimpleLogPosNeg2() {    
-        helpSimple2(RealAlgebra.SINGLETON);              
+        helpSimple2(RealAlgebra.getInstance());              
     }
 
     private void helpSimple2(Algebra tmpS) {
@@ -134,12 +134,12 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testGradByFiniteDiffsReal() {   
-        helpGradByFiniteDiffs(RealAlgebra.SINGLETON);
+        helpGradByFiniteDiffs(RealAlgebra.getInstance());
     }
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFiniteDiffs(LogSignAlgebra.SINGLETON);
+        helpGradByFiniteDiffs(LogSignAlgebra.getInstance());
     }
 
     private void helpGradByFiniteDiffs(Algebra tmpS) {
@@ -163,7 +163,7 @@ public class SoftmaxMbrDepParseTest {
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.
-        for (final Algebra tmpS : Lists.getList(RealAlgebra.SINGLETON, LogSignAlgebra.SINGLETON)) {
+        for (final Algebra tmpS : Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
             Tensor t1 = new Tensor(s, 4,4);
             Identity<Tensor> id1 = new Identity<Tensor>(t1);
             Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, 2));

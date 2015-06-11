@@ -4,12 +4,15 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class LogSemiring implements Algebra {
 
-    private static final long serialVersionUID = 1L;
-    
-    public static final LogSemiring SINGLETON = new LogSemiring();
+    private static final long serialVersionUID = 1L;    
+    private static final LogSemiring SINGLETON = new LogSemiring();
 
     private LogSemiring() { 
         // Private constructor.
+    }
+    
+    public static LogSemiring getInstance() {
+        return SINGLETON;
     }
     
     @Override

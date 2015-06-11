@@ -31,8 +31,8 @@ public class ErmaObjectiveTest {
     
     @Test
     public void testSimpleGradient() {
-        testSimpleGradient(RealAlgebra.SINGLETON);
-        testSimpleGradient(LogSignAlgebra.SINGLETON);
+        testSimpleGradient(RealAlgebra.getInstance());
+        testSimpleGradient(LogSignAlgebra.getInstance());
     }
     
     private void testSimpleGradient(Algebra s) {

@@ -32,13 +32,13 @@ public class BeliefPropagationTest {
 	    
     @Test
     public void testOnOneVarProb() {
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         testOneVarHelper(s);
     }
     
     @Test
     public void testOnOneVarLogProb() {
-        Algebra s = LogSemiring.SINGLETON;
+        Algebra s = LogSemiring.getInstance();
         testOneVarHelper(s);
     }
 
@@ -74,13 +74,13 @@ public class BeliefPropagationTest {
     
     @Test
     public void testTwoVars() {
-        runTwoVars(RealAlgebra.SINGLETON, null);
-        runTwoVars(LogSemiring.SINGLETON, null);
+        runTwoVars(RealAlgebra.getInstance(), null);
+        runTwoVars(LogSemiring.getInstance(), null);
     }
 
     @Test
     public void testDumpingOfBeliefsForDebugging() {
-        runTwoVars(RealAlgebra.SINGLETON, Paths.get("./tmp/bpDump"));
+        runTwoVars(RealAlgebra.getInstance(), Paths.get("./tmp/bpDump"));
         // No assertions, just make sure we don't fail.
     }
 
@@ -123,7 +123,7 @@ public class BeliefPropagationTest {
     @Test
     public void testThreeConnectedComponents() {
         
-        Algebra s = LogSemiring.SINGLETON;
+        Algebra s = LogSemiring.getInstance();
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
         
@@ -178,28 +178,28 @@ public class BeliefPropagationTest {
     @Test
     public void testOnSimpleProb() throws IOException {
         // Test in the probability domain.
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         testOnSimpleHelper(s);
     }
     
     @Test
     public void testOnSimpleLogProb() throws IOException {
         // Test in the log-probability domain.
-        Algebra s = LogSemiring.SINGLETON;        
+        Algebra s = LogSemiring.getInstance();        
         testOnSimpleHelper(s);
     }
 
     @Test
     public void testOnChainProb() {
         // Test in the probability domain.
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         testOnChainHelper(s);
     }
 
     @Test
     public void testOnChainLogProb() {
         // Test in the log-probability domain.
-        Algebra s = LogSemiring.SINGLETON;        
+        Algebra s = LogSemiring.getInstance();        
         testOnChainHelper(s);
     }
 
@@ -251,11 +251,11 @@ public class BeliefPropagationTest {
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
-        testConvergenceHelper(RealAlgebra.SINGLETON, 0, 6);
-        testConvergenceHelper(LogSemiring.SINGLETON, 0, 6);
+        testConvergenceHelper(RealAlgebra.getInstance(), 0, 6);
+        testConvergenceHelper(LogSemiring.getInstance(), 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
-        testConvergenceHelper(RealAlgebra.SINGLETON, 1e-3, 5);
-        testConvergenceHelper(LogSemiring.SINGLETON, 1e-3, 5);
+        testConvergenceHelper(RealAlgebra.getInstance(), 1e-3, 5);
+        testConvergenceHelper(LogSemiring.getInstance(), 1e-3, 5);
     }
 
     private void testConvergenceHelper(Algebra s, double convergenceThreshold, int expectedConvergenceIterations) {
@@ -298,14 +298,14 @@ public class BeliefPropagationTest {
 
     @Test
     public void testCanHandleProbHardFactors() {
-        testCanHandleHardFactorsHelper(false, RealAlgebra.SINGLETON);
-        testCanHandleHardFactorsHelper(true, RealAlgebra.SINGLETON);
+        testCanHandleHardFactorsHelper(false, RealAlgebra.getInstance());
+        testCanHandleHardFactorsHelper(true, RealAlgebra.getInstance());
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
-        testCanHandleHardFactorsHelper(false, LogSemiring.SINGLETON);
-        testCanHandleHardFactorsHelper(true, LogSemiring.SINGLETON);
+        testCanHandleHardFactorsHelper(false, LogSemiring.getInstance());
+        testCanHandleHardFactorsHelper(true, LogSemiring.getInstance());
     }
     
     public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     

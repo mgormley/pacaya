@@ -17,7 +17,7 @@ import edu.jhu.prim.util.random.Prng;
 
 public class ScalarDivideTest {
 
-    private Algebra s = RealAlgebra.SINGLETON;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testSimple() {

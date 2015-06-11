@@ -55,7 +55,7 @@ public class TensorUtils {
 
     /** Gets a tensor in the s semiring, where the input values are assumed to be in the reals. */
     public static Tensor getVectorFromReals(Algebra s, double... values) {
-        Tensor t0 = getVectorFromValues(RealAlgebra.SINGLETON, values);
+        Tensor t0 = getVectorFromValues(RealAlgebra.getInstance(), values);
         return t0.copyAndConvertAlgebra(s);
     }
 

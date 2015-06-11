@@ -45,7 +45,7 @@ public class LogLinearXY {
     public static class LogLinearXYPrm {
         public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public LogLinearXYPrm() {
-            crfPrm.infFactory = new BruteForceInferencerPrm(LogSemiring.SINGLETON);
+            crfPrm.infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         }
     }
     
@@ -162,7 +162,7 @@ public class LogLinearXY {
     
     private BeliefPropagationPrm getBpPrm() {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.s = LogSemiring.SINGLETON;
+        bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

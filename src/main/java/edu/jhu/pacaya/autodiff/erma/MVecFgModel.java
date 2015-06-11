@@ -10,7 +10,7 @@ public class MVecFgModel implements MVec {
 
     private FgModel model;
     private IntDoubleVector params;
-    private final Algebra s = RealAlgebra.SINGLETON;
+    private final Algebra s = RealAlgebra.getInstance();
 
     public MVecFgModel(FgModel model) {
         this.model = model;

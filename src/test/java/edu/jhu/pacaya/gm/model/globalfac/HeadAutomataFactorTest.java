@@ -28,7 +28,7 @@ public class HeadAutomataFactorTest {
 
     @Test
     public void testGetScore() throws Exception {
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         int n = 7;
 
         // 1-indexed by head, modifier, sibling.
@@ -86,7 +86,7 @@ public class HeadAutomataFactorTest {
         final HeadAutomataFactor cs = getDefaultCs();
         FgModel model = new FgModel(100); // TODO: Correctly set number of parameters.
         FgModelIdentity id1 = new FgModelIdentity(model); 
-        Module<?> m = cs.getFactorModule(id1, RealAlgebra.SINGLETON);
+        Module<?> m = cs.getFactorModule(id1, RealAlgebra.getInstance());
         Object o = m.forward();
         assertTrue(o instanceof LazyVarTensor);
         // We do not check that it correctly back propagates into the scores, since the lazy var
@@ -95,7 +95,7 @@ public class HeadAutomataFactorTest {
 
     @Test
     public void testCreateMessages() throws Exception {
-        Algebra s = LogSemiring.SINGLETON;
+        Algebra s = LogSemiring.getInstance();
         int n = 4;
         HeadAutomataFactor f = getDefaultFactor(getDefaultScores(s, n));
         
@@ -189,7 +189,7 @@ public class HeadAutomataFactorTest {
     
     @Test
     public void testGetCreateMessagesModuleByFiniteDiffs() throws Exception {
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         FgModel model = new FgModel(100); // TODO: Correctly set number of parameters.
         FgModelIdentity mid1 = new FgModelIdentity(model);         
         final HeadAutomataFactor cs = getDefaultCs();
@@ -226,7 +226,7 @@ public class HeadAutomataFactorTest {
     }
 
     private static HeadAutomataFactor getDefaultCs() {
-        return getDefaultFactor(getDefaultScores(RealAlgebra.SINGLETON, 4));
+        return getDefaultFactor(getDefaultScores(RealAlgebra.getInstance(), 4));
     }
     
     private static Tensor getDefaultScores(Algebra s, int n) {

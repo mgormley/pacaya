@@ -23,7 +23,7 @@ public class ExpectedRecallTest {
 
     private VarConfig goldConfig;
     private Identity<Beliefs> id1;
-    private Algebra s = RealAlgebra.SINGLETON;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Before
     public void setUp() {

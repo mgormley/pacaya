@@ -52,7 +52,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
     private static int oddsRatioCount = 0;
     
     public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn) {
-        this(mTrueIn, mFalseIn, LogSignAlgebra.SINGLETON);
+        this(mTrueIn, mFalseIn, LogSignAlgebra.getInstance());
     }
     
     public ProjDepTreeModule(Module<Tensor> mTrueIn, Module<Tensor> mFalseIn, Algebra tmpS) {

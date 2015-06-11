@@ -28,11 +28,11 @@ public class BayesNetReaderTest {
         
         System.out.println(fg);
         for (Factor f : fg.getFactors()) {
-            VarTensor vt = BruteForceInferencer.safeNewVarTensor(RealAlgebra.SINGLETON, f);
+            VarTensor vt = BruteForceInferencer.safeNewVarTensor(RealAlgebra.getInstance(), f);
             System.out.println(vt);
         }
-        VarTensor vt0 = BruteForceInferencer.safeNewVarTensor(RealAlgebra.SINGLETON, fg.getFactors().get(0));
-        VarTensor vt1 = BruteForceInferencer.safeNewVarTensor(RealAlgebra.SINGLETON, fg.getFactors().get(1));
+        VarTensor vt0 = BruteForceInferencer.safeNewVarTensor(RealAlgebra.getInstance(), fg.getFactors().get(0));
+        VarTensor vt1 = BruteForceInferencer.safeNewVarTensor(RealAlgebra.getInstance(), fg.getFactors().get(1));
         
         // Check that the variables are named correctly.
         assertEquals("A", vt0.getVars().get(0).getName());

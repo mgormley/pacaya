@@ -46,21 +46,21 @@ public class InsideOutsideDepParseTest {
             + "    1    1  |  24.2000\n"
             + "]";
     
-    Algebra s = RealAlgebra.SINGLETON;
+    Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testSimpleReal() {
-        helpForwardBackward(RealAlgebra.SINGLETON);        
+        helpForwardBackward(RealAlgebra.getInstance());        
     }
 
     @Test
     public void testSimpleLog() {
-        helpForwardBackward(LogSemiring.SINGLETON);
+        helpForwardBackward(LogSemiring.getInstance());
     }
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpForwardBackward(LogSignAlgebra.SINGLETON);        
+        helpForwardBackward(LogSignAlgebra.getInstance());        
     }
 
     private void helpForwardBackward(Algebra tmpS) {

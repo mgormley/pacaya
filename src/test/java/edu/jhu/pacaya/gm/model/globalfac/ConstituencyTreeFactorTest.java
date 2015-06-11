@@ -28,7 +28,7 @@ public class ConstituencyTreeFactorTest {
     public void testBpVsBruteForce() {
         
         for(int n : Arrays.asList(2, 3, 4)) {
-            for(Algebra s : Lists.getList(RealAlgebra.SINGLETON, LogSemiring.SINGLETON)) {
+            for(Algebra s : Lists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance())) {
 
                 ConstituencyTreeFactor ctFact = new ConstituencyTreeFactor(n, VarType.PREDICTED);
                 FactorGraph fg = new FactorGraph();
@@ -76,7 +76,7 @@ public class ConstituencyTreeFactorTest {
         fg.addFactor(likesSpan);
         
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.s = LogSemiring.SINGLETON;
+        prm.s = LogSemiring.getInstance();
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         

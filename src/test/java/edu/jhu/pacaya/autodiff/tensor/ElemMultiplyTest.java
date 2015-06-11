@@ -12,7 +12,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class ElemMultiplyTest {
 
-    private Algebra s = RealAlgebra.SINGLETON;
+    private Algebra s = RealAlgebra.getInstance();
     
     @Test
     public void testForwardAndBackward() {

@@ -9,11 +9,15 @@ package edu.jhu.pacaya.util.semiring;
 public class ShiftedRealAlgebra extends AbstractToFromRealAlgebra {
     
     private static final long serialVersionUID = 1L;
-    public static final Algebra SINGLETON = new ShiftedRealAlgebra(3.0);    
+    private static final ShiftedRealAlgebra SINGLETON = new ShiftedRealAlgebra(3.0);    
     private double addend;
     
     public ShiftedRealAlgebra(double addend) {
         this.addend = addend;
+    }
+    
+    public static ShiftedRealAlgebra getInstance() {
+        return SINGLETON;
     }
     
     @Override

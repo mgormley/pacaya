@@ -109,7 +109,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
-        if (!s.equals(RealAlgebra.SINGLETON) && !s.equals(LogSemiring.SINGLETON)) {
+        if (!s.equals(RealAlgebra.getInstance()) && !s.equals(LogSemiring.getInstance())) {
             throw new IllegalStateException("OldProjDepTreeFactor only supports log and real semirings as input.");
         }
         
@@ -359,7 +359,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         EdgeScores ratios = getLogOddsRatios(inMsgs);
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = LogSignAlgebra.SINGLETON;
+        Algebra s = LogSignAlgebra.getInstance();
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();
@@ -422,7 +422,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.SINGLETON;
+        LogSemiring s = LogSemiring.getInstance();
         if (!hasOneParentPerToken(n, vc)) {
             log.warn("Tree has more than one arc to root.");
             return s.zero();

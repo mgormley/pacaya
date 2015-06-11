@@ -43,7 +43,7 @@ import edu.jhu.prim.vector.IntDoubleVector;
 
 public class ErmaBpBackwardTest {
 
-    private static Algebra s = RealAlgebra.SINGLETON;
+    private static Algebra s = RealAlgebra.getInstance();
     
     @Before
     public void setUp() {
@@ -143,7 +143,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.SINGLETON);
+        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.getInstance());
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
@@ -263,7 +263,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.SINGLETON);
+        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.getInstance());
         effm.forward();
         
         // SEQUENTIAL TREE_LIKE
@@ -379,7 +379,7 @@ public class ErmaBpBackwardTest {
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
         // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.SINGLETON);
+        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.getInstance());
         effm.forward();
         
         // Test BP and Expected Recall together.

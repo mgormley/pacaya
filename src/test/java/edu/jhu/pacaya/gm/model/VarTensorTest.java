@@ -14,7 +14,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 
 public class VarTensorTest {
 
-    private Algebra s = RealAlgebra.SINGLETON;
+    private Algebra s = RealAlgebra.getInstance();
     
     @Test
     public void testProdNoVars() {
@@ -23,8 +23,8 @@ public class VarTensorTest {
         Var v2 = VarSetTest.getVar(0, 5);
         Var v3 = VarSetTest.getVar(0, 7);
         
-        VarTensor f1 = new VarTensor(RealAlgebra.SINGLETON, new VarSet());
-        VarTensor f2 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v1, v2, v3));
+        VarTensor f1 = new VarTensor(RealAlgebra.getInstance(), new VarSet());
+        VarTensor f2 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v1, v2, v3));
         for (int c=0; c<f1.size(); c++) {
             f2.setValue(c, 2*c);
         }
@@ -41,8 +41,8 @@ public class VarTensorTest {
         Var v2 = VarSetTest.getVar(0, 5);
         Var v3 = VarSetTest.getVar(0, 7);
         
-        VarTensor f1 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v1, v2, v3));
-        VarTensor f2 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v1, v2, v3));
+        VarTensor f1 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v1, v2, v3));
+        VarTensor f2 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v1, v2, v3));
         for (int c=0; c<f1.size(); c++) {
             f1.setValue(c, c);
             f2.setValue(c, 2*c);
@@ -60,8 +60,8 @@ public class VarTensorTest {
         Var v2 = VarSetTest.getVar(0, 5);
         Var v3 = VarSetTest.getVar(0, 7);
         
-        VarTensor f1 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v1, v2, v3));
-        VarTensor f2 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v2));
+        VarTensor f1 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v1, v2, v3));
+        VarTensor f2 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v2));
         for (int a=0; a<2; a++) {
             for (int b=0; b<3; b++) {
                 for (int c=0; c<5; c++) {
@@ -96,8 +96,8 @@ public class VarTensorTest {
         Var v2 = VarSetTest.getVar(0, 5);
         Var v3 = VarSetTest.getVar(0, 7);
         
-        VarTensor f1 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v1, v3));
-        VarTensor f2 = new VarTensor(RealAlgebra.SINGLETON, new VarSet(v0, v2));
+        VarTensor f1 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v1, v3));
+        VarTensor f2 = new VarTensor(RealAlgebra.getInstance(), new VarSet(v0, v2));
         for (int a=0; a<2; a++) {
             for (int b=0; b<3; b++) {
                 for (int d=0; d<7; d++) {
@@ -340,7 +340,7 @@ public class VarTensorTest {
         f1.setValue(4, 4);
         f1.setValue(5, 5);
         
-        VarTensor f2 = f1.copyAndConvertAlgebra(LogSemiring.SINGLETON);
+        VarTensor f2 = f1.copyAndConvertAlgebra(LogSemiring.getInstance());
 
         double[] expected = new double[]{0.0, 1/15., 2/15., 3/15., 4/15., 5/15.};
         
@@ -362,7 +362,7 @@ public class VarTensorTest {
         f1.setValue(1, 0);
         f1.setValue(2, 0);
         
-        VarTensor f2 = f1.copyAndConvertAlgebra(LogSemiring.SINGLETON);
+        VarTensor f2 = f1.copyAndConvertAlgebra(LogSemiring.getInstance());
 
         double[] expected = new double[]{1/3., 1/3., 1/3.};
         

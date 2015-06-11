@@ -27,38 +27,38 @@ public class LogLinearEDsTest {
     @Test
     public void testLogLinearModelShapesLogProbs() {
         // Test with inference in the log-domain.
-        Algebra s = LogSemiring.SINGLETON;        
+        Algebra s = LogSemiring.getInstance();        
         testLogLinearModelShapesHelper(s);
     }
     
     @Test
     public void testLogLinearModelShapesProbs() {
         // Test with inference in the prob-domain.
-        Algebra s = RealAlgebra.SINGLETON;        
+        Algebra s = RealAlgebra.getInstance();        
         testLogLinearModelShapesHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesTwoExamplesLogProbs() {
-        Algebra s = LogSemiring.SINGLETON;
+        Algebra s = LogSemiring.getInstance();
         testLogLinearModelShapesTwoExamplesHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesTwoExamplesProbs() {
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         testLogLinearModelShapesTwoExamplesHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesOneExampleLogProbs() {
-        Algebra s = LogSemiring.SINGLETON;
+        Algebra s = LogSemiring.getInstance();
         testLogLinearModelShapesOneExampleHelper(s);
     }
 
     @Test
     public void testLogLinearModelShapesOneExampleProbs() {
-        Algebra s = RealAlgebra.SINGLETON;
+        Algebra s = RealAlgebra.getInstance();
         testLogLinearModelShapesOneExampleHelper(s);
     }
 

@@ -22,7 +22,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class ProjDepTreeModuleTest {
 
-    Algebra s = RealAlgebra.SINGLETON;
+    Algebra s = RealAlgebra.getInstance();
     String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1    2  |  value\n"
             + "    0    0    0  |  0.144000\n"
@@ -53,12 +53,12 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testSimpleReal() {
-        helpSimple(RealAlgebra.SINGLETON);
+        helpSimple(RealAlgebra.getInstance());
     }
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpSimple(LogSignAlgebra.SINGLETON);
+        helpSimple(LogSignAlgebra.getInstance());
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -82,7 +82,7 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testForwardAndBackward() {
-        for (final Algebra tmpS : Lists.getList(RealAlgebra.SINGLETON, LogSignAlgebra.SINGLETON)) {
+        for (final Algebra tmpS : Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
             Tensor t1 = new Tensor(s, 2, 2);
             t1.set(0.5, 0, 0);
             t1.set(0.5, 0, 1);
@@ -133,19 +133,19 @@ public class ProjDepTreeModuleTest {
                 }
             };
             
-            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, RealAlgebra.SINGLETON);
-            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, LogSignAlgebra.SINGLETON);
+            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, RealAlgebra.getInstance());
+            AbstractModuleTest.evalTensor2OneAlgebra(t1, expT1Adj, t2, expT2Adj, fact, expOut, adj, LogSignAlgebra.getInstance());
         }
     }
         
     @Test
     public void testGradByFiniteDiffsReal() {
-        helpGradByFinDiff(RealAlgebra.SINGLETON);
+        helpGradByFinDiff(RealAlgebra.getInstance());
     }
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFinDiff(LogSignAlgebra.SINGLETON);
+        helpGradByFinDiff(LogSignAlgebra.getInstance());
     }
 
     private void helpGradByFinDiff(Algebra tmpS) {
@@ -179,7 +179,7 @@ public class ProjDepTreeModuleTest {
                 tmTrueIn.set(inVals[0], 0, 1);
                 tmFalseIn.set(inVals[1], 0, 1);
                 
-                ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, LogSignAlgebra.SINGLETON);
+                ProjDepTreeModule topo = new ProjDepTreeModule(id1, id2, LogSignAlgebra.getInstance());
                 
                 topo.forward();
                 System.out.println(topo.getOutput());
@@ -201,7 +201,7 @@ public class ProjDepTreeModuleTest {
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.
-        for (final Algebra tmpS : Lists.getList(RealAlgebra.SINGLETON, LogSignAlgebra.SINGLETON)) {
+        for (final Algebra tmpS : Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
             Tensor t1 = new Tensor(s, 3,3);
             Identity<Tensor> id1 = new Identity<Tensor>(t1);
             Tensor t2 = new Tensor(s, 3,3);

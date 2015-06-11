@@ -29,7 +29,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class MarginalLikelihoodTest {
 
-    Algebra s = RealAlgebra.SINGLETON;
+    Algebra s = RealAlgebra.getInstance();
         
     private FgModel model;
     private FactorGraph fg;
@@ -93,7 +93,7 @@ public class MarginalLikelihoodTest {
         // This tests ONLY the real semiring, since that is the only supported semiring.
         //model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
-        FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.SINGLETON);
+        FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig, 1.0);
         ModuleTestUtils.assertGradientCorrectByFd(cll, 1e-5, 1e-8);
     }

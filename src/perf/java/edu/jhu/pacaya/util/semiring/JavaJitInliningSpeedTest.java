@@ -245,8 +245,8 @@ public class JavaJitInliningSpeedTest {
             Timer t = new Timer();
             t.start();        
             for (int trial=0; trial<numTrials; trial++) {
-                Tensor t1 = new Tensor(RealAlgebra.SINGLETON, size);
-                Tensor t2 = new Tensor(RealAlgebra.SINGLETON, size);
+                Tensor t1 = new Tensor(RealAlgebra.getInstance(), size);
+                Tensor t2 = new Tensor(RealAlgebra.getInstance(), size);
                 {
                     double[] vals1 = t1.getValues();
                     double[] vals2 = t2.getValues();
@@ -254,8 +254,8 @@ public class JavaJitInliningSpeedTest {
                         vals1[i] = vals1[i] * vals2[i];
                     }
                 }
-                Tensor t3 = new Tensor(LogSemiring.SINGLETON, size);
-                Tensor t4 = new Tensor(LogSemiring.SINGLETON, size);
+                Tensor t3 = new Tensor(LogSemiring.getInstance(), size);
+                Tensor t4 = new Tensor(LogSemiring.getInstance(), size);
                 {
                     double[] vals1 = t3.getValues();
                     double[] vals2 = t4.getValues();
@@ -277,11 +277,11 @@ public class JavaJitInliningSpeedTest {
             Timer t = new Timer();
             t.start();        
             for (int trial=0; trial<numTrials; trial++) {
-                Tensor t1 = new Tensor(RealAlgebra.SINGLETON, size);
-                Tensor t2 = new Tensor(RealAlgebra.SINGLETON, size);
+                Tensor t1 = new Tensor(RealAlgebra.getInstance(), size);
+                Tensor t2 = new Tensor(RealAlgebra.getInstance(), size);
                 t1.elemMultiply(t2);
-                Tensor t3 = new Tensor(LogSemiring.SINGLETON, size);
-                Tensor t4 = new Tensor(LogSemiring.SINGLETON, size);
+                Tensor t3 = new Tensor(LogSemiring.getInstance(), size);
+                Tensor t4 = new Tensor(LogSemiring.getInstance(), size);
                 t3.elemMultiply(t4);
             }
             t.stop();            
@@ -292,8 +292,8 @@ public class JavaJitInliningSpeedTest {
     @Test
     public void testSpeedOfTensorAddSemiringIndirect() {
         System.out.println("testSpeedOfTensorAddSemiringIndirect");
-        RealAlgebra s1 = RealAlgebra.SINGLETON; //RealAlgebra.REAL_ALGEBRA;
-        LogSemiring s2 = LogSemiring.SINGLETON; //LogSemiring.LOG_SEMIRING;
+        RealAlgebra s1 = RealAlgebra.getInstance(); //RealAlgebra.REAL_ALGEBRA;
+        LogSemiring s2 = LogSemiring.getInstance(); //LogSemiring.LOG_SEMIRING;
         runSpeedTestSemiringIndirect(s1, s2);
     }
 

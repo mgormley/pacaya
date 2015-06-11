@@ -2,10 +2,15 @@ package edu.jhu.pacaya.util.semiring;
 
 public class LogViterbiSemiring implements Semiring {
 
-    public static final LogViterbiSemiring SINGLETON = new LogViterbiSemiring();
+    private static final long serialVersionUID = 1L;
+    private static final LogViterbiSemiring SINGLETON = new LogViterbiSemiring();
     
     private LogViterbiSemiring() {
         // Private constructor.
+    }
+    
+    public static LogViterbiSemiring getInstance() {
+        return SINGLETON;
     }
     
     @Override

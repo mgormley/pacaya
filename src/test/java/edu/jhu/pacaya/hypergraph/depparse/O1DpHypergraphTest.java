@@ -5,7 +5,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class O1DpHypergraphTest extends AbstractHypergraphTest {
 
-    RealAlgebra s = RealAlgebra.SINGLETON;
+    RealAlgebra s = RealAlgebra.getInstance();
 
     protected O1DpHypergraph getHypergraph() {
         double[] root = new double[] {1, 2, 3}; 

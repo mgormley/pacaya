@@ -44,21 +44,21 @@ public class CrfObjectiveTest {
 	@Test
 	public void testLogLikelihoodBelowZeroBPLogDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-		bpPrm.s = LogSemiring.SINGLETON;
+		bpPrm.s = LogSemiring.getInstance();
 		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBPProbDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-		bpPrm.s = RealAlgebra.SINGLETON;
+		bpPrm.s = RealAlgebra.getInstance();
 		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBF() {	// brute force
-		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(RealAlgebra.SINGLETON));
-		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(LogSemiring.SINGLETON));
+		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(RealAlgebra.getInstance()));
+		checkLogLikelihoodBelowZero(new BruteForceInferencerPrm(LogSemiring.getInstance()));
 	}
 		
 	/**

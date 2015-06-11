@@ -39,7 +39,7 @@ public class MarginalLikelihood extends AbstractModule<Scalar> implements Module
     
     // TODO: Switch from FgInferencerFactory to BeliefsFactory.
     public MarginalLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig, double weight) {
-        super(LogSemiring.SINGLETON);
+        super(LogSemiring.getInstance());
         this.mid = mid;
         this.fgLatPred = fg;
         this.infFactory = infFactory;
@@ -82,13 +82,13 @@ public class MarginalLikelihood extends AbstractModule<Scalar> implements Module
             Factor fLatPred = fgLatPred.getFactor(a);
             Factor fLat = fgLat.getFactor(a);
             if (fLatPred instanceof GlobalFactor) {
-                assert mid.getAlgebra() == RealAlgebra.SINGLETON;
+                assert mid.getAlgebra() == RealAlgebra.getInstance();
                 ((GlobalFactor) fLat).addExpectedPartials(gradient, 1.0 * weight, infLat, a);
                 ((GlobalFactor) fLatPred).addExpectedPartials(gradient, -1.0 * weight, infLatPred, a);
             } else {
                 Factors factorsAdj = fmLatPred.getOutputAdj();
                 VarTensor fAdj = factorsAdj.f[a];
-                assert fAdj.getAlgebra() == LogSemiring.SINGLETON;
+                assert fAdj.getAlgebra() == LogSemiring.getInstance();
                 //TODO: fAdj.elemAdd(infLat.getLogMarginalsForFactorId(a));
                 fAdj.elemSubtract(infLatPred.getLogMarginalsForFactorId(a));
             }

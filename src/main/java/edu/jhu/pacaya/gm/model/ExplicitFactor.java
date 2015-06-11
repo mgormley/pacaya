@@ -20,7 +20,7 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     private int id = -1;
     
     public ExplicitFactor(VarSet vars) {
-        super(RealAlgebra.SINGLETON, vars);
+        super(RealAlgebra.getInstance(), vars);
     }
     
     public ExplicitFactor(ExplicitFactor other) {

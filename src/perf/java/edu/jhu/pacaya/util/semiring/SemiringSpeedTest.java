@@ -10,7 +10,7 @@ public class SemiringSpeedTest {
 
     @Test
     public void testRealSemiringSpeed() {
-        Semiring s = RealAlgebra.SINGLETON;
+        Semiring s = RealAlgebra.getInstance();
         
         int numTrials = 10;
         int numOps = 100000000;

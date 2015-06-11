@@ -42,7 +42,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         public int maxIterations = 100;
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
-        public Algebra s = LogSemiring.SINGLETON;
+        public Algebra s = LogSemiring.getInstance();
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;        
         public boolean cacheFactorBeliefs = false;

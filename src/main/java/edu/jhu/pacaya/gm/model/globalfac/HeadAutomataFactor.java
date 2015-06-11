@@ -139,7 +139,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
             return this;
         } else if (clmpVarConfig.size() == vars.size()) {
             // All clamped.
-            return new HeadAutomataFactor(head, isRight, new LinkVar[]{}, new Tensor(RealAlgebra.SINGLETON, 0, 0, 0));
+            return new HeadAutomataFactor(head, isRight, new LinkVar[]{}, new Tensor(RealAlgebra.getInstance(), 0, 0, 0));
         } else {
             // Some clamped.
             throw new IllegalStateException("Unable to clamp these variables.");
@@ -155,7 +155,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.SINGLETON;
+        LogSemiring s = LogSemiring.getInstance();
         Tensor scores = scoresIn.getOutput();
         double logScore = s.one();
         int maxDist = varsByDist.length;

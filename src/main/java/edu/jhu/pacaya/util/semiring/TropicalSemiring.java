@@ -3,10 +3,14 @@ package edu.jhu.pacaya.util.semiring;
 public class TropicalSemiring implements Semiring {
 
     private static final long serialVersionUID = 1L;
-    public static final TropicalSemiring SINGLETON = new TropicalSemiring();
+    private static final TropicalSemiring SINGLETON = new TropicalSemiring();
 
     private TropicalSemiring() {
         // Private constructor.
+    }
+    
+    public static TropicalSemiring getInstance() {
+        return SINGLETON;
     }
     
     @Override

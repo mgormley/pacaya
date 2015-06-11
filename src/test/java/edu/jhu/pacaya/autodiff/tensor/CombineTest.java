@@ -16,7 +16,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class CombineTest {
 
-    private Algebra s = RealAlgebra.SINGLETON;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testForwardAndBackward() {
