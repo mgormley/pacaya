@@ -39,8 +39,8 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
         // Initialize the observation function.
         obsFe.init(this, fts);
         // Update the factor templates.
-        fts.lookupTemplateIds(this.getFgLatPred());
-        fts.getTemplateIds(this.getFgLatPred());
+        fts.lookupTemplateIds(this.getFactorGraph());
+        fts.getTemplateIds(this.getFactorGraph());
     }
     public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
         this(fg, goldConfig);        

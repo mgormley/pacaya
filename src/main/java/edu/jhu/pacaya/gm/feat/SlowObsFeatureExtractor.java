@@ -19,7 +19,7 @@ public abstract class SlowObsFeatureExtractor implements ObsFeatureExtractor {
     
     @Override
     public void init(UFgExample ex, FactorTemplateList fts) {
-        this.fg = ex.getFgLatPred();
+        this.fg = ex.getFactorGraph();
         this.fts = fts;
     }
     

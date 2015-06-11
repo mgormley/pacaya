@@ -69,7 +69,7 @@ public class ErmaObjective implements ExampleObjective {
         final Timer t = new Timer();
         
         final LFgExample ex = data.get(i);
-        final FactorGraph fg = ex.getFgLatPred();
+        final FactorGraph fg = ex.getFactorGraph();
         final VarConfig goldConfig = ex.getGoldConfig();
         
         // Get the modules.

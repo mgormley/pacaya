@@ -21,7 +21,7 @@ public class ObsFeatureCache implements ObsFeatureExtractor, Serializable {
 
     @Override
     public void init(UFgExample ex, FactorTemplateList fts) {
-        this.feats = new FeatureVector[ex.getFgLatPred().getNumFactors()];
+        this.feats = new FeatureVector[ex.getFactorGraph().getNumFactors()];
         this.featExtractor.init(ex, fts);
     }
 

@@ -93,7 +93,7 @@ public class LogLinearXY {
         decoder.decode(model, ex);
         List<VarTensor> marginals = decoder.getVarMarginals();
         VarConfig vc = decoder.getMbrVarConfig();
-        String stateName = vc.getStateName(ex.getFgLatPred().getVar(0));
+        String stateName = vc.getStateName(ex.getFactorGraph().getVar(0));
         if (marginals.size() != 1) {
             throw new IllegalStateException("Example is not from a LogLinearData factory");
         }

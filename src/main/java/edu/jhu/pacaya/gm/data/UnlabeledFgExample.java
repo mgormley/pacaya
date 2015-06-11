@@ -35,8 +35,8 @@ public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable 
         // Initialize the observation function.
         obsFe.init(this, fts);
         // Update the factor templates.
-        fts.lookupTemplateIds(this.getFgLatPred());
-        fts.getTemplateIds(this.getFgLatPred());
+        fts.lookupTemplateIds(this.getFactorGraph());
+        fts.getTemplateIds(this.getFactorGraph());
     }
     public UnlabeledFgExample(FactorGraph fg, FeatureExtractor fe) {
         this(fg);        
@@ -58,7 +58,7 @@ public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable 
     }
 
     /** Gets the original input factor graph. */
-    public FactorGraph getFgLatPred() {
+    public FactorGraph getFactorGraph() {
         return fgLatPred;
     }
 

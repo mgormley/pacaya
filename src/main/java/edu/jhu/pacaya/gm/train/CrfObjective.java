@@ -77,13 +77,13 @@ public class CrfObjective implements ExampleObjective {
 
         // Create a new factor graph with the predicted variables clamped.
         t.reset(); t.start();
-        FactorGraph fgLat = getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
+        FactorGraph fgLat = getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
         t.stop(); fgClampTimer.add(t);
 
         // Update the inferences with the current model parameters.
         // (This is usually where feature extraction happens.)
         t.reset(); t.start();
-        FactorGraph fgLatPred = ex.getFgLatPred();
+        FactorGraph fgLatPred = ex.getFactorGraph();
         fgLat.updateFromModel(model);
         fgLatPred.updateFromModel(model);
         t.stop(); updTimer.add(t);
@@ -265,7 +265,7 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FactorGraph fgLat = getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
+            FactorGraph fgLat = getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
             fgLat.updateFromModel(model);
             FgInferencer infLat = infFactory.getInferencer(fgLat);
             infLat.run();
@@ -283,7 +283,7 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FactorGraph fgLatPred = ex.getFgLatPred();
+            FactorGraph fgLatPred = ex.getFactorGraph();
             fgLatPred.updateFromModel(model);
             FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
             infLatPred.run();

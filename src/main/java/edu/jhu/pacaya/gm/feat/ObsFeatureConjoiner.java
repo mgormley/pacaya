@@ -226,10 +226,10 @@ public class ObsFeatureConjoiner implements Serializable {
                 log.debug("Processing example: " + i);
             }
             LFgExample ex = data.get(i);
-            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
+            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
             // Create a "no-op" inferencer, which returns arbitrary marginals.
-            NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
-            for (int a=0; a<ex.getFgLatPred().getNumFactors(); a++) {
+            NoOpInferencer inferencer = new NoOpInferencer(ex.getFactorGraph());   
+            for (int a=0; a<ex.getFactorGraph().getNumFactors(); a++) {
                 Factor f = fgLat.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     // For each observation function extractor.
@@ -239,7 +239,7 @@ public class ObsFeatureConjoiner implements Serializable {
                     }
                 } else {
                     // For each standard factor.  
-                    f = ex.getFgLatPred().getFactor(a);
+                    f = ex.getFactorGraph().getFactor(a);
                     if (f instanceof GlobalFactor) {
                         ((GlobalFactor) f).addExpectedPartials(counts, 0, inferencer, a);
                     } else {
@@ -268,8 +268,8 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFgLatPred(), ex.getGoldConfig());
-            for (int a=0; a<ex.getFgLatPred().getNumFactors(); a++) {
+            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
+            for (int a=0; a<ex.getFactorGraph().getNumFactors(); a++) {
                 Factor f = fgLat.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     int t = templates.getTemplateId((TemplateFactor) f);
@@ -283,7 +283,7 @@ public class ObsFeatureConjoiner implements Serializable {
                         } else {
                             // We must clamp the predicted variables and loop over the latent ones.
                             VarConfig predVc = ex.getGoldConfigPred(a);
-                            IntIter iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(a).getVars(), predVc);
+                            IntIter iter = IndexForVc.getConfigIter(ex.getFactorGraph().getFactor(a).getVars(), predVc);
                             
                             int numConfigs = f.getVars().calcNumConfigs();
                             for (int c=0; c<numConfigs; c++) {            

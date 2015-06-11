@@ -26,7 +26,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     public int getNumFactors() {
         int numFactors = 0;
         for (LFgExample ex : this) {
-            numFactors += ex.getFgLatPred().getNumFactors();
+            numFactors += ex.getFactorGraph().getNumFactors();
         }
         return numFactors;
     }
@@ -34,7 +34,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     public int getNumVars() {
         int numVars = 0;
         for (LFgExample ex : this) {
-            numVars += ex.getFgLatPred().getNumVars();
+            numVars += ex.getFactorGraph().getNumVars();
         }
         return numVars;
     }

@@ -13,7 +13,7 @@ import edu.jhu.pacaya.gm.model.FactorGraph;
 public interface UFgExample extends Serializable {
 
     /** Gets the original input factor graph. */
-    public FactorGraph getFgLatPred();
+    public FactorGraph getFactorGraph();
 
     /** Returns true iff this factor graph contains latent variables. */
     public boolean hasLatentVars();
