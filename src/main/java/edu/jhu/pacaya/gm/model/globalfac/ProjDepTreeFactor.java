@@ -9,13 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractMutableModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
-import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.pacaya.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
@@ -23,10 +22,10 @@ import edu.jhu.pacaya.autodiff.erma.ParamFreeGlobalFactorModule;
 import edu.jhu.pacaya.autodiff.erma.ProjDepTreeModule;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.depparse.HyperDepParser;
 import edu.jhu.pacaya.hypergraph.depparse.O1DpHypergraph;
@@ -345,7 +344,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     }
     
     @Override
-    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+    public Module<Tensor> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
         throw new RuntimeException("not implemented");
     }
 

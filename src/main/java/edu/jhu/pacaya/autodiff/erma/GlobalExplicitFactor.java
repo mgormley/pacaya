@@ -8,7 +8,7 @@ import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
-import edu.jhu.pacaya.autodiff.Scalar;
+import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
@@ -83,7 +83,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
     }
 
     @Override
-    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+    public Module<Tensor> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
         throw new RuntimeException("Not implemented");
     }
 

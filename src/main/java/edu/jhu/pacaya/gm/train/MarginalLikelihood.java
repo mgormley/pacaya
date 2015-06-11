@@ -6,6 +6,7 @@ import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Scalar;
+import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.erma.Factors;
 import edu.jhu.pacaya.autodiff.erma.FactorsModule;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
@@ -22,7 +23,7 @@ import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
-public class MarginalLikelihood extends AbstractModule<Scalar> implements Module<Scalar> {
+public class MarginalLikelihood extends AbstractModule<Tensor> implements Module<Tensor> {
 
     private FgInferencerFactory infFactory;
     private Module<MVecFgModel> mid;
@@ -48,7 +49,7 @@ public class MarginalLikelihood extends AbstractModule<Scalar> implements Module
     }
 
     @Override
-    public Scalar forward() {
+    public Tensor forward() {
         // Compute the potential tables.
         // TODO: Use these cached factors.
         fmLatPred = new FactorsModule(mid, fgLatPred, s);
@@ -68,7 +69,7 @@ public class MarginalLikelihood extends AbstractModule<Scalar> implements Module
         
         // Compute the conditional log-likelihood for this example.
         double ll = CrfObjective.getValue(fgLat, infLat, fgLatPred, infLatPred, -1, goldConfig, weight);
-        y = new Scalar(ll);
+        y = Scalar.getInstance(s, ll);
         return y;
     }
 
