@@ -19,7 +19,9 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
@@ -37,7 +39,8 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
     private FactorGraph fgLat;
     private FgInferencer infLatPred;
     private FgInferencer infLat;
-    
+    private Algebra facS = LogSignAlgebra.getInstance();
+
     // TODO: Switch from FgInferencerFactory to BeliefsFactory.
     public MarginalLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig, double weight) {
         super(LogSemiring.getInstance());
@@ -52,10 +55,10 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
     public Tensor forward() {
         // Compute the potential tables.
         // TODO: Use these cached factors.
-        fmLatPred = new FactorsModule(mid, fgLatPred, s);
+        fmLatPred = new FactorsModule(mid, fgLatPred, facS);
         fmLatPred.forward();
         fgLat = CrfObjective.getFgLat(fgLatPred, goldConfig);        
-        fmLat = new FactorsModule(mid, fgLat, s);
+        fmLat = new FactorsModule(mid, fgLat, facS);
         fmLat.forward();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
@@ -89,9 +92,12 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
             } else {
                 Factors factorsAdj = fmLatPred.getOutputAdj();
                 VarTensor fAdj = factorsAdj.f[a];
-                assert fAdj.getAlgebra() == LogSemiring.getInstance();
-                //TODO: fAdj.elemAdd(infLat.getLogMarginalsForFactorId(a));
-                fAdj.elemSubtract(infLatPred.getLogMarginalsForFactorId(a));
+                VarTensor margLat = infLat.getLogMarginalsForFactorId(a);
+                VarTensor margLatPred = infLatPred.getLogMarginalsForFactorId(a);
+                assert margLat.getAlgebra().equals(LogSemiring.getInstance());
+                assert margLatPred.getAlgebra().equals(LogSemiring.getInstance());
+                fAdj.elemAdd(margLat.copyAndConvertAlgebra(facS));
+                fAdj.elemSubtract(margLatPred.copyAndConvertAlgebra(facS));
             }
         }
         CrfObjective.addGradient(fgLat, infLat, fgLatPred, infLatPred, weight, gradient);
