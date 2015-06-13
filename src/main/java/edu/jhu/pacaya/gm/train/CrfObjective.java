@@ -206,8 +206,8 @@ public class CrfObjective implements ExampleObjective {
         }
         
         double ll = numerator - denominator;
-        log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
-        log.trace(String.format("numFullyClamped=%d numFactors=%d", numFullyClamped, fgLatPred.getFactors().size()));
+        log.debug(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
+        log.debug(String.format("numFullyClamped=%d numFactors=%d", numFullyClamped, fgLatPred.getFactors().size()));
         
         if (ll > MAX_LOG_LIKELIHOOD) {
             // Note: this can occur if the graph is loopy because the

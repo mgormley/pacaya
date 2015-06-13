@@ -1,17 +1,18 @@
 package edu.jhu.pacaya.gm.train;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
@@ -23,6 +24,8 @@ import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FactorGraphTest;
+import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -34,11 +37,32 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class CrfObjectiveTest {
 
-    @Ignore("not implemented")
     @Test
     public void testGetLogLikelihood() {
-        // TODO: Test the getValue method returns what we expect.
-        //FactorGraph fg = FactorGraphTest.getLinearChainGraph();
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();   
+        double expectedValue = -3.341;
+        checkExpectedLikelihood(fgv, expectedValue);
+    }
+
+    @Test
+    public void testGetLogLikelihoodLatentVars() {
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVarsLatent();   
+        double expectedValue = -1.865;
+        checkExpectedLikelihood(fgv, expectedValue);
+    }
+
+    private static void checkExpectedLikelihood(FgAndVars fgv, double expectedValue) {
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
+        data.add(new LabeledFgExample(fgv.fg, fgv.goldConfig));
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        bpPrm.schedule = BpScheduleType.TREE_LIKE;
+        bpPrm.maxIterations = 1;
+        CrfObjective obj = new CrfObjective(data, bpPrm);
+        Accumulator ac = new Accumulator();
+        ac.accumValue = true;
+        obj.accum(new FgModel(0), 0, ac );
+        assertEquals(expectedValue, ac.value, 1e-3);
     }
     
 	@Test
