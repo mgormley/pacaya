@@ -155,48 +155,6 @@ public class ProjDepTreeModule implements Module<Tensor> {
         return getOutput();
     }
 
-    /** Special case: all edges are clamped to a specific value.
-     * 
-     *  We only implement the forward pass for this case.
-     * @param tmTrueIn 
-     * @param tmFalseIn 
-     */
-    protected Tensor forwardAllEdgesClamped(Tensor tmFalseIn, Tensor tmTrueIn) {
-        // Compute the product of all non-zero incoming messages.
-        Algebra s = tmFalseIn.getAlgebra();
-        double prod = s.one();
-        for (int c=0; c<tmFalseIn.size(); c++) {            
-            if (tmFalseIn.getValue(c) != s.zero()) {
-                prod = s.times(prod, tmFalseIn.getValue(c));
-            } else {
-                prod = s.times(prod, tmTrueIn.getValue(c));
-            }
-        }
-        log.debug("prod: {}", prod);
-        // For each outgoing message, return zero or the product dividing out the non-zero message.
-        Tensor out = new Tensor(s, 2, tmFalseIn.getDim(0), tmFalseIn.getDim(1));
-        for (int i=0; i<out.getDim(1); i++) {
-            for (int j=0; j<out.getDim(2); j++) {
-                if (tmFalseIn.get(i,j) != s.zero()) {
-                    out.set(s.divide(prod, tmFalseIn.get(i,j)), 0, i, j);
-                    out.set(s.zero(), 1, i, j);
-                } else if (tmTrueIn.get(i,j) != s.zero()) {
-                    out.set(s.zero(), 0, i, j);
-                    out.set(s.divide(prod, tmTrueIn.get(i,j)), 1, i, j);
-                } else {
-                    out.set(s.zero(), 0, i, j);
-                    out.set(s.zero(), 1, i, j);
-                }
-                log.debug("out[0][{}][{}] = {}", i, j, out.get(0, i, j));
-                log.debug("out[1][{}][{}] = {}", i, j, out.get(1, i, j));
-                assert !s.isNaN(out.get(0, i,j));
-                assert !s.isNaN(out.get(1, i,j));
-            }
-        }
-        comb = new Identity<Tensor>(out);
-        return out;
-    }
-
     @Override
     public void backward() {
         // Backward pass.
@@ -231,6 +189,48 @@ public class ProjDepTreeModule implements Module<Tensor> {
     @Override
     public List<Module<Tensor>> getInputs() {
         return Lists.getList(mTrueIn, mFalseIn);
+    }
+
+    /** Special case: all edges are clamped to a specific value.
+     * 
+     *  We only implement the forward pass for this case.
+     * @param tmTrueIn 
+     * @param tmFalseIn 
+     */
+    private Tensor forwardAllEdgesClamped(Tensor tmFalseIn, Tensor tmTrueIn) {
+        // Compute the product of all non-zero incoming messages.
+        Algebra s = tmFalseIn.getAlgebra();
+        double prod = s.one();
+        for (int c=0; c<tmFalseIn.size(); c++) {            
+            if (tmFalseIn.getValue(c) != s.zero()) {
+                prod = s.times(prod, tmFalseIn.getValue(c));
+            } else {
+                prod = s.times(prod, tmTrueIn.getValue(c));
+            }
+        }
+        log.trace("prod: {}", prod);
+        // For each outgoing message, return zero or the product dividing out the non-zero message.
+        Tensor out = new Tensor(s, 2, tmFalseIn.getDim(0), tmFalseIn.getDim(1));
+        for (int i=0; i<out.getDim(1); i++) {
+            for (int j=0; j<out.getDim(2); j++) {
+                if (tmFalseIn.get(i,j) != s.zero()) {
+                    out.set(s.divide(prod, tmFalseIn.get(i,j)), 0, i, j);
+                    out.set(s.zero(), 1, i, j);
+                } else if (tmTrueIn.get(i,j) != s.zero()) {
+                    out.set(s.zero(), 0, i, j);
+                    out.set(s.divide(prod, tmTrueIn.get(i,j)), 1, i, j);
+                } else {
+                    out.set(s.zero(), 0, i, j);
+                    out.set(s.zero(), 1, i, j);
+                }
+                log.trace("out[0][{}][{}] = {}", i, j, out.get(0, i, j));
+                log.trace("out[1][{}][{}] = {}", i, j, out.get(1, i, j));
+                assert !s.isNaN(out.get(0, i,j));
+                assert !s.isNaN(out.get(1, i,j));
+            }
+        }
+        comb = new Identity<Tensor>(out);
+        return out;
     }
 
     private void checkAndFixPartition(Module<Tensor> bTrue, Module<Tensor> module) {
@@ -302,11 +302,11 @@ public class ProjDepTreeModule implements Module<Tensor> {
         Algebra s = tmFalseIn.getAlgebra();
         for (int c=0; c<tmFalseIn.size(); c++) {
             if (!(tmFalseIn.getValue(c) == s.zero() || tmTrueIn.getValue(c) == s.zero())) {
-                log.debug("Case 1: Not all edges clamped");
+                log.trace("Case 1: Not all edges clamped");
                 return false;
             }
         }
-        log.debug("Case 2: All edges clamped");
+        log.trace("Case 2: All edges clamped");
         return true;
     }
 
