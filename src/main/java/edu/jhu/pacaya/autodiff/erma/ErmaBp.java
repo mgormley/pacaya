@@ -799,7 +799,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // TODO: This method almost always overflows when s is the REAL semiring.
 
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL && prm.schedule == BpScheduleType.TREE_LIKE
-                && prm.normalizeMessages == false && fg.hasTreeComponents()) {
+                && prm.normalizeMessages == false && fg.hasTreeComponents() && false) {
             // Special case which only works on non-loopy graphs with the two pass schedule and 
             // no renormalization of messages.
             // 

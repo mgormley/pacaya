@@ -72,7 +72,12 @@ public class ProjDepTreeModule implements Module<Tensor> {
             Tensor tmTrueIn = mTrueIn.getOutput();
             Tensor tmFalseIn = mFalseIn.getOutput();
             n = tmTrueIn.getDims()[1];
-            requireNoZeros(tmFalseIn);
+            if (ProjDepTreeModule.allEdgesClamped(tmFalseIn, tmTrueIn)) {
+                return forwardAllEdgesClamped(tmFalseIn, tmTrueIn);
+            }
+            if (containsZeros(tmFalseIn)) {
+                throw new IllegalStateException("Hard constraints turning ON an edge are not supported.");                
+            }
         }
         
         // Internally we use a different algebra to avoid numerical precision problems.
@@ -147,6 +152,43 @@ public class ProjDepTreeModule implements Module<Tensor> {
         assert !tmTrueOut.containsNaN() && !tmFalseOut.containsNaN();
         
         return getOutput();
+    }
+
+    /** Special case: all edges are clamped to a specific value.
+     * 
+     *  We only implement the forward pass for this case.
+     * @param tmTrueIn 
+     * @param tmFalseIn 
+     */
+    protected Tensor forwardAllEdgesClamped(Tensor tmFalseIn, Tensor tmTrueIn) {
+        // Compute the product of all non-zero incoming messages.
+        Algebra s = tmFalseIn.getAlgebra();
+        double prod = 1.0;
+        for (int c=0; c<tmFalseIn.size(); c++) {            
+            if (tmFalseIn.getValue(c) != s.zero()) {
+                prod *= tmFalseIn.getValue(c);
+            } else {
+                prod *= tmTrueIn.getValue(c);
+            }
+        }
+        // For each outgoing message, return zero or the product dividing out the non-zero message.
+        Tensor out = new Tensor(s, 2, tmFalseIn.getDim(0), tmFalseIn.getDim(1));
+        for (int i=0; i<out.getDim(1); i++) {
+            for (int j=0; j<out.getDim(2); j++) {
+                if (tmFalseIn.get(i,j) != s.zero()) {
+                    out.set(prod / tmFalseIn.get(i,j), 0, i, j);
+                    out.set(0.0, 1, i, j);
+                } else {
+                    out.set(0.0, 0, i, j);
+                    out.set(prod / tmTrueIn.get(i,j), 1, i, j);
+                }
+            }
+        }
+//        comb = new Combine(mFalseIn, mTrueIn);
+//        topoOrder = Lists.getList(comb);
+//        Tensor out = comb.forward();
+//        out.fill(outS.one());
+        return out;
     }
 
     @Override
@@ -232,23 +274,34 @@ public class ProjDepTreeModule implements Module<Tensor> {
             }
         }
     }
-
-    private static void requireNoZeros(Tensor tmFalseIn) {
-        Algebra s = tmFalseIn.getAlgebra();
-        int[] dims = tmFalseIn.getDims();
-        assert dims.length == 2;
-        for (int i=0; i<dims[0]; i++) {
-            for (int j=0; j<dims[1]; j++) {
-                if ( tmFalseIn.get(i,j) == s.zero()) {
-                    throw new IllegalStateException("Hard constraints turning ON an edge are not supported.");
-                }
-            }
-        }
-    }
     
     @Override
     public Algebra getAlgebra() {
         return outS;
+    }
+
+    // TODO: Move to a Tensor util class.
+    /** Returns true if the tensor contains zeros. */
+    public static boolean containsZeros(Tensor tmFalseIn) {        
+        Algebra s = tmFalseIn.getAlgebra();
+        for (int c=0; c<tmFalseIn.size(); c++) {
+            if (tmFalseIn.getValue(c) == s.zero()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean allEdgesClamped(Tensor tmFalseIn, Tensor tmTrueIn) {
+        Algebra s = tmFalseIn.getAlgebra();
+        for (int c=0; c<tmFalseIn.size(); c++) {
+            if (!(tmFalseIn.getValue(c) == s.zero() || tmTrueIn.getValue(c) == s.zero())) {
+                log.debug("Case 1: Not all edges clamped");
+                return false;
+            }
+        }
+        log.debug("Case 2: All edges clamped");
+        return true;
     }
 
 }
