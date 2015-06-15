@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.tensor.Combine;
@@ -163,31 +164,36 @@ public class ProjDepTreeModule implements Module<Tensor> {
     protected Tensor forwardAllEdgesClamped(Tensor tmFalseIn, Tensor tmTrueIn) {
         // Compute the product of all non-zero incoming messages.
         Algebra s = tmFalseIn.getAlgebra();
-        double prod = 1.0;
+        double prod = s.one();
         for (int c=0; c<tmFalseIn.size(); c++) {            
             if (tmFalseIn.getValue(c) != s.zero()) {
-                prod *= tmFalseIn.getValue(c);
+                prod = s.times(prod, tmFalseIn.getValue(c));
             } else {
-                prod *= tmTrueIn.getValue(c);
+                prod = s.times(prod, tmTrueIn.getValue(c));
             }
         }
+        log.debug("prod: {}", prod);
         // For each outgoing message, return zero or the product dividing out the non-zero message.
         Tensor out = new Tensor(s, 2, tmFalseIn.getDim(0), tmFalseIn.getDim(1));
         for (int i=0; i<out.getDim(1); i++) {
             for (int j=0; j<out.getDim(2); j++) {
                 if (tmFalseIn.get(i,j) != s.zero()) {
-                    out.set(prod / tmFalseIn.get(i,j), 0, i, j);
-                    out.set(0.0, 1, i, j);
+                    out.set(s.divide(prod, tmFalseIn.get(i,j)), 0, i, j);
+                    out.set(s.zero(), 1, i, j);
+                } else if (tmTrueIn.get(i,j) != s.zero()) {
+                    out.set(s.zero(), 0, i, j);
+                    out.set(s.divide(prod, tmTrueIn.get(i,j)), 1, i, j);
                 } else {
-                    out.set(0.0, 0, i, j);
-                    out.set(prod / tmTrueIn.get(i,j), 1, i, j);
+                    out.set(s.zero(), 0, i, j);
+                    out.set(s.zero(), 1, i, j);
                 }
+                log.debug("out[0][{}][{}] = {}", i, j, out.get(0, i, j));
+                log.debug("out[1][{}][{}] = {}", i, j, out.get(1, i, j));
+                assert !s.isNaN(out.get(0, i,j));
+                assert !s.isNaN(out.get(1, i,j));
             }
         }
-//        comb = new Combine(mFalseIn, mTrueIn);
-//        topoOrder = Lists.getList(comb);
-//        Tensor out = comb.forward();
-//        out.fill(outS.one());
+        comb = new Identity<Tensor>(out);
         return out;
     }
 

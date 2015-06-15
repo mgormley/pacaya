@@ -218,12 +218,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
         }
         // Add ALL the original factors to the clamped factor graph.
         for (Factor origFactor : this.getFactors()) {
-//            if (origFactor instanceof GlobalFactor) {
-//                // Add an empty factor.
-//                clmpFg.addFactor(new ExplicitFactor(new VarSet()));
-//            } else {
-//                clmpFg.addFactor(origFactor);
-//            }
             clmpFg.addFactor(origFactor);
 
         }
