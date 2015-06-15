@@ -5,12 +5,6 @@ import java.io.Serializable;
 
 public interface Factor extends Serializable {
     
-    /**
-     * Gets a new version of the factor graph where the specified variables are
-     * clamped to their given values.
-     */
-    Factor getClamped(VarConfig clmpVarConfig);
-
     /** Gets the variables associated with this factor. */
     VarSet getVars();
 

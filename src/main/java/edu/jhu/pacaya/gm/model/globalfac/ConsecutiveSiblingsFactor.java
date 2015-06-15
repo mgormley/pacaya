@@ -115,20 +115,6 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
             return Lists.getList(modIn, fm);
         }
     }
-        
-    @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new ConsecutiveSiblingsFactor(new LinkVar[]{}, new LinkVar[][]{{}}, new Tensor(RealAlgebra.getInstance(), 0, 0, 0));
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
-        }
-    }
 
     @Override
     public double getLogUnormalizedScore(int configId) {

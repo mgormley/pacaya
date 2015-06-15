@@ -206,24 +206,6 @@ public class HeadAutomataFactorTest {
         
         throw new RuntimeException("not yet implemented");
     }
-    
-    @Test
-    public void testGetClamped() throws Exception {
-        final HeadAutomataFactor cs = getDefaultCs();
-        {
-            // Clamp no variables.
-            Factor csClamped = cs.getClamped(new VarConfig());
-            assertTrue(cs == csClamped);
-        }{
-            // Clamp all variables.
-            VarConfig vc = new VarConfig();
-            for (Var v : cs.getVars()) {
-                vc.put(v, LinkVar.TRUE);
-            }
-            Factor csClamped = cs.getClamped(vc);
-            assertTrue(csClamped.getVars().size() == 0);
-        }
-    }
 
     private static HeadAutomataFactor getDefaultCs() {
         return getDefaultFactor(getDefaultScores(RealAlgebra.getInstance(), 4));

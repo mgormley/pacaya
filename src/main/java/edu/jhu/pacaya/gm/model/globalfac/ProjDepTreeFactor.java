@@ -204,20 +204,6 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     public VarSet getVars() {
         return vars;
     }
-    
-    @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new ProjDepTreeFactor(0, VarType.PREDICTED);
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
-        }
-    }
 
     @Override
     public double getLogUnormalizedScore(int configId) {

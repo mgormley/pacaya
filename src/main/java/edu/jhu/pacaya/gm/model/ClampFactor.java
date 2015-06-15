@@ -3,6 +3,10 @@ package edu.jhu.pacaya.gm.model;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.Semiring;
 
+/**
+ * Factor which clamps a variable to a specific value.
+ * @author mgormley
+ */
 public class ClampFactor extends ExplicitFactor implements Factor {
 
     private static final long serialVersionUID = 1L;
@@ -20,11 +24,6 @@ public class ClampFactor extends ExplicitFactor implements Factor {
 
     public void updateFromModel(FgModel model) {
         // No-op.
-    }
-
-    @Override
-    public ClampFactor getClamped(VarConfig clmpVarConfig) {
-        throw new IllegalStateException("Clamp factors shouldn't be clamped.");
     }
         
 }

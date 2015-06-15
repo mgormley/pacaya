@@ -30,11 +30,6 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     public ExplicitFactor(VarTensor other) {
         super(other);
     }
-
-    public ExplicitFactor getClamped(VarConfig clmpVarConfig) {
-        VarTensor df = super.getClamped(clmpVarConfig);
-        return new ExplicitFactor(df);
-    }
     
     public void updateFromModel(FgModel model) {
         // No op since this type of factor doesn't depend on the model.

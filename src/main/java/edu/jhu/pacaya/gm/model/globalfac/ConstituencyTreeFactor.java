@@ -344,20 +344,6 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     }
 
     @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new ConstituencyTreeFactor(0, VarType.PREDICTED);
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
-        }
-    }
-
-    @Override
     public double getLogUnormalizedScore(int configId) {
         VarConfig vc = vars.getVarConfig(configId);
         // TODO: This would be faster: int[] cfg = vars.getVarConfigAsArray(configId);
