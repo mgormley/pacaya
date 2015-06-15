@@ -552,6 +552,11 @@ public class Tensor implements MVec {
         return dims;
     }
 
+    /** Gets the size of the i'th dimension. */
+    public int getDim(int i) {
+        return dims[i];
+    }
+
     /** Gets the abstract algebra for this tensor. */
     public Algebra getAlgebra() {
         return s;

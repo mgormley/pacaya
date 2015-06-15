@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.erma.ErmaBp;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.autodiff.erma.ExplicitGlobalFactor;
+import edu.jhu.pacaya.autodiff.erma.GlobalExplicitFactor;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
@@ -31,6 +33,7 @@ import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
@@ -567,23 +570,28 @@ public class ProjDepTreeFactorTest {
         for (int i=0; i<msgsExpl.length; i++) {
             VarTensor msgExpl = msgsExpl[i].message;
             VarTensor msgDp = msgsDp[i].message;
-            assertEquals(msgExpl.size(), msgDp.size());
-            for (int c=0; c<msgExpl.size(); c++) {
-                if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
-                        || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
-                    //continue;
-                }
-
-                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
-                    System.out.println("NOT EQUAL:");
-                    System.out.println(fgExpl.getEdge(i));
-                    System.out.println(msgExpl);
-                    System.out.println(msgDp);
-                } 
-                assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
-            }
-            // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
+            FgEdge edge = fgExpl.getEdge(i);
+            assertEqualMessages(msgExpl, msgDp, edge.toString());
         }
+    }
+
+    private void assertEqualMessages(VarTensor msgExpl, VarTensor msgDp, String edge) {
+        assertEquals(msgExpl.size(), msgDp.size());
+        for (int c=0; c<msgExpl.size(); c++) {
+            if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
+                    || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
+                //continue;
+            }
+
+            if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
+                System.out.println("NOT EQUAL:");
+                System.out.println(edge);
+                System.out.println(msgExpl);
+                System.out.println(msgDp);
+            } 
+            assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
+        }
+        // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
     }
 
     private void assertEqualVarTensors(VarTensor[] msgsExpl, VarTensor[] msgsDp) {
@@ -619,12 +627,6 @@ public class ProjDepTreeFactorTest {
         System.out.println("Partition: " + bp.getPartition());
     }
 
-    private void printMessages(FactorGraph fg, ErmaBp bp) {
-        System.out.println("Messages");
-        Messages[] msgs = bp.getMessages();
-        printMessages(fg, msgs);
-        System.out.println("Partition: " + bp.getPartition());
-    }
 
     private void printMessages(FactorGraph fg, Messages[] msgs) {
         for (int i=0; i<fg.getNumEdges(); i++) {            
@@ -884,6 +886,53 @@ public class ProjDepTreeFactorTest {
         fg.addFactor(treeFac);
         
         return new FgAndLinks(fg, rootVars, childVars, n);
+    }
+    
+    @Test
+    public void testGlobalFactorComputationSameAsExplicitFactor() {
+        checkGlobalFactorComputationSameAsExplicitFactor(RealAlgebra.getInstance());
+        checkGlobalFactorComputationSameAsExplicitFactor(SplitAlgebra.getInstance());
+        checkGlobalFactorComputationSameAsExplicitFactor(LogSemiring.getInstance());
+    }
+
+    private void checkGlobalFactorComputationSameAsExplicitFactor(Algebra s) {
+        ProjDepTreeFactor ptree = new ProjDepTreeFactor(3, VarType.PREDICTED);        
+        GlobalExplicitFactor ef = new GlobalExplicitFactor(new ExplicitGlobalFactor(ptree));
+        
+        // Create messages that simulate being clamped to a specific tree.
+        VarSet vars = ptree.getVars();
+        VarTensor[] inMsgs = new VarTensor[vars.size()];
+        for (int v=0; v<inMsgs.length; v++) {
+            LinkVar var = (LinkVar)vars.get(v);
+            inMsgs[v] = new VarTensor(s, new VarSet(var));
+            if ((var.getParent() == -1 && var.getChild() == 1) ||
+                    (var.getParent() == 1 && var.getChild() == 0) ||
+                    (var.getParent() == 1 && var.getChild() == 2)) {
+                inMsgs[v].setValue(LinkVar.FALSE, s.fromReal(0.0));
+                inMsgs[v].setValue(LinkVar.TRUE, s.fromReal(1+v));
+            } else {
+                inMsgs[v].setValue(LinkVar.FALSE, s.fromReal(1+v));
+                inMsgs[v].setValue(LinkVar.TRUE, s.fromReal(0.0));
+            }
+        }
+        
+        // Compute the messages by dynamic programming.
+        VarTensor[] outMsgs1 = new VarTensor[vars.size()];
+        for (int v=0; v<outMsgs1.length; v++) {
+            outMsgs1[v] = new VarTensor(s, new VarSet(vars.get(v)));
+        }
+        ptree.createMessages(inMsgs, outMsgs1);
+        
+        // Compute the messages by explicit enumeration of the factor.
+        VarTensor[] outMsgs2 = new VarTensor[vars.size()];
+        for (int v=0; v<outMsgs2.length; v++) {
+            outMsgs2[v] = new VarTensor(s, new VarSet(vars.get(v)));
+        }
+        ef.createMessages(inMsgs, outMsgs2);
+        
+        for (int v=0; v<outMsgs2.length; v++) {
+            assertEqualMessages(outMsgs2[v], outMsgs1[v], ""+vars.get(v));
+        }
     }
     
 }

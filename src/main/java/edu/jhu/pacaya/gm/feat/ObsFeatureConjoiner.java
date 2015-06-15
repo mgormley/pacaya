@@ -246,7 +246,6 @@ public class ObsFeatureConjoiner implements Serializable {
                         VarTensor marg = inferencer.getMarginalsForFactorId(a);
                         f.addExpectedPartials(counts, marg, 0);
                     }
-                    
                 }
             }
         }
@@ -268,31 +267,22 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
+            FactorGraph fg = ex.getFactorGraph();
             for (int a=0; a<ex.getFactorGraph().getNumFactors(); a++) {
-                Factor f = fgLat.getFactor(a);
+                Factor f = fg.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     int t = templates.getTemplateId((TemplateFactor) f);
                     if (t != -1) {
-                        FeatureVector fv = ((ObsFeatureCarrier) f).getObsFeatures();                            
-                        if (f.getVars().size() == 0) {
-                            int predConfig = ex.getGoldConfigIdxPred(a);
+                        FeatureVector fv = ((ObsFeatureCarrier) f).getObsFeatures();
+                        // We must clamp the predicted variables and loop over the latent ones.
+                        VarConfig predVc = ex.getGoldConfigPred(a);
+                        IntIter iter = IndexForVc.getConfigIter(ex.getFactorGraph().getFactor(a).getVars(), predVc);
+                        while (iter.hasNext()) {
+                            // The configuration of all the latent/predicted variables,
+                            // where the predicted variables have been clamped.
+                            int config = iter.next();
                             for (IntDoubleEntry entry : fv) {
-                                counts[t][predConfig].add(entry.index(), 1);
-                            }
-                        } else {
-                            // We must clamp the predicted variables and loop over the latent ones.
-                            VarConfig predVc = ex.getGoldConfigPred(a);
-                            IntIter iter = IndexForVc.getConfigIter(ex.getFactorGraph().getFactor(a).getVars(), predVc);
-                            
-                            int numConfigs = f.getVars().calcNumConfigs();
-                            for (int c=0; c<numConfigs; c++) {            
-                                // The configuration of all the latent/predicted variables,
-                                // where the predicted variables have been clamped.
-                                int config = iter.next();
-                                for (IntDoubleEntry entry : fv) {
-                                    counts[t][config].add(entry.index(), 1);
-                                }
+                                counts[t][config].add(entry.index(), 1);
                             }
                         }
                     }

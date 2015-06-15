@@ -7,6 +7,7 @@ import java.util.List;
 
 import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.FactorGraph.FgNode;
+import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.gm.util.DirectedGraph;
 
 /**
@@ -203,39 +204,30 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
     }
     
     /**
-     * Gets a new factor graph, identical to this one, except that specified variables are clamped to their values.
-     * 
-     * Each clamped variable will be removed from the factor graph. All factors,
-     * even those with zero variables will be preserved.
+     * Gets a new factor graph, identical to this one, except that specified variables are clamped
+     * to their values. This is accomplished by adding a unary factor on each clamped variable. The
+     * original K factors are preserved in order with IDs 1...K.
      * 
      * @param clampVars The variables to clamp.
      */
     public FactorGraph getClamped(VarConfig clampVars) {
         FactorGraph clmpFg = new FactorGraph();
-        
-        // Add ALL the variables to the clamped factor graph.
-        for (Var v : this.vars) {
+        // Add ALL the original variables to the clamped factor graph.
+        for (Var v : this.getVars()) {
             clmpFg.addVar(v);
         }
-        
+        // Add ALL the original factors to the clamped factor graph.
         for (Factor origFactor : this.getFactors()) {
-            if (origFactor instanceof ClampFactor) {
-                clmpFg.addFactor(origFactor);
-            } else {
-                VarConfig factorConfig = clampVars.getIntersection(origFactor.getVars());
-                Factor clmpFactor = origFactor.getClamped(factorConfig);
-                clmpFg.addFactor(clmpFactor);            
-            }
+            clmpFg.addFactor(origFactor);
+
         }
-        
         // Add unary factors to the clamped variables to ensure they take on the correct value.
         for (Var v : clampVars.getVars()) {
             // TODO: We could skip these (cautiously) if there's already a
-            // ClampFactor attached to this variable. 
+            // ClampFactor attached to this variable.
             int c = clampVars.getState(v);
             clmpFg.addFactor(new ClampFactor(v, c));
-        }
-        
+        }        
         return clmpFg;
     }
     
