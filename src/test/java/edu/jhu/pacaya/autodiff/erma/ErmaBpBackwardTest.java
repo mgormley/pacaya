@@ -21,8 +21,8 @@ import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraphTest;
-import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -110,7 +110,7 @@ public class ErmaBpBackwardTest {
     // Tests ErmaBp and ExpectedRecall gradient by finite differences on a small chain factor graph.
     @Test
     public void testErmaGradientLinearChain() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();
         FactorGraph fg = fgv.fg;
         
         VarConfig goldConfig = new VarConfig();
@@ -175,7 +175,7 @@ public class ErmaBpBackwardTest {
     // TODO: This test is really slow: ~20 seconds.
     @Test
     public void testErmaGradientLinearChainWithLoops() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();
         FactorGraph fg = fgv.fg;
         
         ExplicitFactor loop0 = new ExplicitFactor(new VarSet(fgv.t0, fgv.t2)); 
@@ -207,7 +207,7 @@ public class ErmaBpBackwardTest {
     
     @Test
     public void testErmaGradientWithGlobalExplicitFactor() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();
         FactorGraph fg = fgv.fg;
         
         ExplicitFactor loop0 = new GlobalExplicitFactor(new VarSet(fgv.t0, fgv.t1, fgv.t2)); 

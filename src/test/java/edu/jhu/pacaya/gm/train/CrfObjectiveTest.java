@@ -17,6 +17,9 @@ import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
+import edu.jhu.pacaya.gm.feat.FactorTemplateList;
+import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -24,8 +27,8 @@ import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraphTest;
-import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -34,24 +37,25 @@ import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.prim.util.random.Prng;
 
 public class CrfObjectiveTest {
 
     @Test
     public void testGetLogLikelihood() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();   
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();   
         double expectedValue = -3.341;
-        checkExpectedLikelihood(fgv, expectedValue);
+        checkLikelihoodMatches(fgv, expectedValue);
     }
 
     @Test
     public void testGetLogLikelihoodLatentVars() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVarsLatent();   
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVarsLatent();   
         double expectedValue = -1.865;
-        checkExpectedLikelihood(fgv, expectedValue);
+        checkLikelihoodMatches(fgv, expectedValue);
     }
 
-    private static void checkExpectedLikelihood(FgAndVars fgv, double expectedValue) {
+    private static void checkLikelihoodMatches(FactorGraphsForTests.FgAndVars fgv, double expectedValue) {
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         data.add(new LabeledFgExample(fgv.fg, fgv.goldConfig));
         ErmaBpPrm bpPrm = new ErmaBpPrm();
@@ -61,8 +65,87 @@ public class CrfObjectiveTest {
         CrfObjective obj = new CrfObjective(data, bpPrm);
         Accumulator ac = new Accumulator();
         ac.accumValue = true;
-        obj.accum(new FgModel(0), 0, ac );
+        obj.accumWithException(new FgModel(0), 0, ac );
         assertEquals(expectedValue, ac.value, 1e-3);
+    }
+
+    @Test
+    public void testGetGradientOneVar() {
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SimpleVCObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);       
+        
+        FgAndVars fgv = FactorGraphsForTests.getOneVarFgAndVars(ofc, obsFe);
+        {
+            double[] expectedGradient = new double[] {0.5, -0.5};        
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 0.0, 0.0);
+        }{
+            double[] expectedGradient = new double[] {0.5, -0.5};        
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 1.0, 0.0);
+        }{
+            double[] expectedGradient = new double[] {0.731, -0.731};        
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 0.0, 1.0);
+        }
+    }
+    
+    @Test
+    public void testGetGradient() {
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SimpleVCObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);       
+        
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars(ofc, obsFe);
+        {
+            double[] expectedGradient = new double[] { 0.25, 1.25, -0.75, -0.75, -0.5, 0.5, -0.5, 0.5 };
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 0.0, 0.0);
+        }{
+            double[] expectedGradient = new double[] { 0.25, 1.25, -0.75, -0.75, -0.5, 0.5, -0.5, 0.5 };
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 1.0, 0.0);
+        }
+    }
+    
+    @Test
+    public void testGetGradientLatentVars() {
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SimpleVCObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);       
+        
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVarsLatent(ofc, obsFe);
+        {
+            double[] expectedGradient = new double[] {0.75, 0.75, -0.75, -0.75, -0.25, 0.25, -0.25, 0.25, -0.5, 0.5, -0.5, 0.5};        
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 0.0, 0.0);
+        }{
+            double[] expectedGradient = new double[] {0.75, 0.75, -0.75, -0.75, -0.25, 0.25, -0.25, 0.25, -0.5, 0.5, -0.5, 0.5};        
+            checkGradientMatches(fgv, expectedGradient, fts, ofc, obsFe, 1.0, 0.0);
+        }
+    }
+
+    protected void checkGradientMatches(FgAndVars fgv, double[] expectedGradient, FactorTemplateList fts,
+            ObsFeatureConjoiner ofc, SimpleVCObsFeatureExtractor obsFe, double alpha, double beta) {
+        // Create the training examples.         
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
+        data.add(new LabeledFgExample(fgv.fg, fgv.goldConfig, obsFe, fts));
+        ofc.init(data);
+        
+        // Create the Model.
+        FgModel model = new FgModel(ofc.getNumParams());
+        for (int i=0; i<model.getNumParams(); i++) {
+            model.getParams().set(i, alpha + beta * i);
+        }
+
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        bpPrm.schedule = BpScheduleType.TREE_LIKE;
+        bpPrm.maxIterations = 1;
+        CrfObjective obj = new CrfObjective(data, bpPrm);
+        Accumulator ac = new Accumulator();
+        ac.accumGradient = true;
+        ac.gradient = model.getSparseZeroedCopy();
+        obj.accumWithException(model, 0, ac);
+        System.out.println("gradient: " + ac.gradient);
+        for (int i=0; i<model.getNumParams(); i++) {
+            assertEquals(expectedGradient[i], ac.gradient.getParams().get(i), 1e-3);    
+        }
     }
     
 	@Test

@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.gm.data.bayesnet.BayesNetReaderTest;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraphTest;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.JUnitUtils;
@@ -167,7 +167,7 @@ public class BruteForceInferencerTest {
     }
     
     public static FactorGraph getLinearChainGraph() {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
+        FactorGraph fg = FactorGraphsForTests.getLinearChainGraph();
         return fg;
     }
 

@@ -2,20 +2,19 @@ package edu.jhu.pacaya.gm.model;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.jhu.pacaya.autodiff.AbstractModule;
-import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.erma.AutodiffFactor;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
-import edu.jhu.prim.iter.IntIncrIter;
-import edu.jhu.prim.iter.IntIter;
 
 
 /**
@@ -27,7 +26,8 @@ import edu.jhu.prim.iter.IntIter;
 public abstract class ExpFamFactor extends ExplicitFactor implements Factor, FeatureCarrier, AutodiffFactor {
     
     private static final long serialVersionUID = 1L;
-    
+    private static final Logger log = LoggerFactory.getLogger(ExpFamFactor.class);
+
     protected boolean initialized = false;
 
     public ExpFamFactor(VarSet vars) {
@@ -85,13 +85,14 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
          return model.dot(fv);
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+    public void addExpectedPartials(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);        
         addExpectedPartials(counts, factorMarginal, multiplier);
     }
 
     @Override
     public void addExpectedPartials(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+        log.trace("factorMarginal = {}", factorMarginal);
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
         for (int c=0; c<numConfigs; c++) {       
             // Get the probability of the c'th configuration for this factor.

@@ -13,8 +13,8 @@ import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.autodiff.erma.Beliefs;
 import edu.jhu.pacaya.autodiff.erma.ExpectedRecall;
-import edu.jhu.pacaya.gm.model.FactorGraphTest;
-import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -26,7 +26,7 @@ public class VTProdTest {
 
     @Before
     public void setUp() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();
         // Create input module.
         //Algebra s = RealAlgebra.REAL_ALGEBRA;
         VarTensor[] xsa = new VarTensor[3];

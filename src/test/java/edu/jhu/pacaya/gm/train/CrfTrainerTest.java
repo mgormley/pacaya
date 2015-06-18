@@ -31,15 +31,14 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY;
 import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
-import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraphTest;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.FgModelTest;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
@@ -126,7 +125,7 @@ public class CrfTrainerTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
 
         // Create the factor graph.
-        FgAndVars fgv = getLinearChainFgWithVars(ofc, obsFe);
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars(ofc, obsFe);
 
         // Create a "gold" assignment of the variables.
         VarConfig trainConfig = new VarConfig();
@@ -173,7 +172,7 @@ public class CrfTrainerTest {
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
-        FgAndVars fgv = getLinearChainFgWithVarsLatent(ofc, obsFe);
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVarsLatent(ofc, obsFe);
 
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
@@ -323,155 +322,5 @@ public class CrfTrainerTest {
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
         return model;
-    }
-
-    /**
-     * This method differs from {@link FactorGraphTest}'s version in that it uses a feature extractor.
-     */
-    public static FgAndVars getLinearChainFgWithVars(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
-
-        FactorGraph fg = new FactorGraph();
-
-        // Create three words.
-        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
-        
-        // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
-
-        // Emission factors. 
-        ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(t0, w0), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit1 = new ObsFeExpFamFactor(new VarSet(t1, w1), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit2 = new ObsFeExpFamFactor(new VarSet(t2, w2), "emit", ofc, obsFe); 
-
-        emit0.setValue(0, 0.1);
-        emit0.setValue(1, 0.9);
-        emit1.setValue(0, 0.3);
-        emit1.setValue(1, 0.7);
-        emit2.setValue(0, 0.5);
-        emit2.setValue(1, 0.5);
-        
-        // Transition factors.
-        ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
-        ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
-        
-        tran0.fill(1);
-        tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.4);
-        tran0.setValue(2, 0.3);
-        tran0.setValue(3, 0.5);
-        tran1.fill(1);
-        tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.4);
-        tran1.setValue(2, 1.3);
-        tran1.setValue(3, 1.5);
-                
-        fg.addFactor(emit0);
-        fg.addFactor(emit1);
-        fg.addFactor(emit2);
-        fg.addFactor(tran0);
-        fg.addFactor(tran1);
-        
-        for (Factor f : fg.getFactors()) {
-            ((ExpFamFactor)f).convertRealToLog();
-        }
-
-        FgAndVars fgv = new FgAndVars();
-        fgv.fg = fg;
-        fgv.w0 = w0;
-        fgv.w1 = w1;
-        fgv.w2 = w2;
-        fgv.t0 = t0;
-        fgv.t1 = t1;
-        fgv.t2 = t2;
-        return fgv;
-    }
-    
-    public static FgAndVars getLinearChainFgWithVarsLatent(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
-
-        FactorGraph fg = new FactorGraph();
-
-        // Create three words.
-        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
-
-        // Create latent classes.
-        Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));
-        Var z1 = new Var(VarType.LATENT, 2, "z1", Lists.getList("C1", "C2"));
-        Var z2 = new Var(VarType.LATENT, 2, "z2", Lists.getList("C1", "C2"));
-        
-        // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
-
-        // Emission factors. 
-        ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(z0, w0), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit1 = new ObsFeExpFamFactor(new VarSet(z1, w1), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit2 = new ObsFeExpFamFactor(new VarSet(z2, w2), "emit", ofc, obsFe); 
-
-        emit0.setValue(0, 0.1);
-        emit0.setValue(1, 0.9);
-        emit1.setValue(0, 0.3);
-        emit1.setValue(1, 0.7);
-        emit2.setValue(0, 0.5);
-        emit2.setValue(1, 0.5);
-        
-        // Latent emission factors. 
-        ObsFeExpFamFactor emitL0 = new ObsFeExpFamFactor(new VarSet(t0, z0), "latent-emit", ofc, obsFe); 
-        ObsFeExpFamFactor emitL1 = new ObsFeExpFamFactor(new VarSet(t1, z1), "latent-emit", ofc, obsFe); 
-        ObsFeExpFamFactor emitL2 = new ObsFeExpFamFactor(new VarSet(t2, z2), "latent-emit", ofc, obsFe); 
-
-        emitL0.setValue(0, 1.1);
-        emitL0.setValue(1, 1.9);
-        emitL1.setValue(0, 1.3);
-        emitL1.setValue(1, 1.7);
-        emitL2.setValue(0, 1.5);
-        emitL2.setValue(1, 1.5);
-        
-        // Transition factors.
-        ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
-        ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
-
-        tran0.fill(1);
-        tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.4);
-        tran0.setValue(2, 0.3);
-        tran0.setValue(3, 0.5);
-        tran1.fill(1);
-        tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.4);
-        tran1.setValue(2, 1.3);
-        tran1.setValue(3, 1.5);
-        
-        fg.addFactor(emit0);
-        fg.addFactor(emit1);
-        fg.addFactor(emit2);
-        fg.addFactor(emitL0);
-        fg.addFactor(emitL1);
-        fg.addFactor(emitL2);
-        fg.addFactor(tran0);
-        fg.addFactor(tran1);
-
-        for (Factor f : fg.getFactors()) {
-            ((ExpFamFactor)f).convertRealToLog();
-        }
-        
-        FgAndVars fgv = new FgAndVars();
-        fgv.fg = fg;
-        fgv.w0 = w0;
-        fgv.w1 = w1;
-        fgv.w2 = w2;
-        fgv.z0 = z0;
-        fgv.z1 = z1;
-        fgv.z2 = z2;
-        fgv.t0 = t0;
-        fgv.t1 = t1;
-        fgv.t2 = t2;
-        return fgv;
     }
 }

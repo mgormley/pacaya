@@ -20,11 +20,12 @@ import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphTest;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -49,19 +50,7 @@ public class ErmaBpForwardTest {
     }
 
     private void testOneVarHelper(Algebra s) {
-        FactorGraph fg = new FactorGraph();
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
-
-        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
-
-        emit0.setValue(0, 1.1);
-        emit0.setValue(1, 1.9);
-
-        fg.addFactor(emit0);
-        
-        for (Factor f : fg.getFactors()) {
-            ((VarTensor)f).convertRealToLog();
-        }
+        FactorGraph fg = FactorGraphsForTests.getOneVarFg();
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
@@ -74,7 +63,7 @@ public class ErmaBpForwardTest {
 
         assertEqualMarginals(fg, bf, bp);
     }
-    
+
     @Test
     public void testTwoVars() {
         runTwoVars(RealAlgebra.getInstance(), null);

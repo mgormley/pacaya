@@ -182,31 +182,6 @@ public class CrfObjective implements ExampleObjective {
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
         double denominator = infLatPred.getLogPartition();
 
-        // TODO: Move this (with adjustments) to Likelihood.java.
-//        // "Multiply" in all the fully clamped factors to the numerator. 
-//        int numFullyClamped = 0;
-//        for (int a=0; a<fgLatPred.getNumFactors(); a++) {
-//            Factor f = fgLatPred.getFactor(a);
-//            boolean isNumeratorClamped = fgLat.getFactor(a).getVars().size() == 0;
-//            if (f instanceof GlobalFactor) {
-//                GlobalFactor gf = (GlobalFactor)f;
-//                if (isNumeratorClamped) {
-//                    // These are the factors which do not include any latent variables. 
-//                    VarConfig facConfig = goldConfig.getIntersection(fgLatPred.getFactor(a).getVars());
-//                    numerator += gf.getLogUnormalizedScore(facConfig);
-//                    numFullyClamped++;
-//                }
-//            } else {
-//                if (isNumeratorClamped) {
-//                    // These are the factors which do not include any latent variables. 
-//                    int facConfig = goldConfig.getConfigIndexOfSubset(f.getVars());
-//                    numerator += f.getLogUnormalizedScore(facConfig);
-//                    numFullyClamped++;
-//                }
-//            }
-//        }
-//      log.trace(String.format("numFullyClamped=%d numFactors=%d", numFullyClamped, fgLatPred.getFactors().size()));
-        
         double ll = numerator - denominator;
         log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
         
