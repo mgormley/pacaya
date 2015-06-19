@@ -31,7 +31,7 @@ import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
-public class MarginalLikelihoodTest {
+public class MarginalLogLikelihoodTest {
         
     private FgModel model;
     private FactorGraph fg;
@@ -71,7 +71,7 @@ public class MarginalLikelihoodTest {
     public void testSimple() {
         FgModelIdentity id1 = new FgModelIdentity(model);
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig);
+        MarginalLogLikelihood cll = new MarginalLogLikelihood(id1, fg, infFactory , trainConfig);
         Algebra outS = cll.getAlgebra();
         
         Tensor y = cll.forward();
@@ -101,7 +101,7 @@ public class MarginalLikelihoodTest {
         model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig, tmpS);
+        MarginalLogLikelihood cll = new MarginalLogLikelihood(id1, fg, infFactory , trainConfig, tmpS);
         ModuleTestUtils.assertGradientCorrectByFd(cll, 1e-5, 1e-8);
     }
         
@@ -122,7 +122,7 @@ public class MarginalLikelihoodTest {
     private static void checkLikelihoodMatches(FactorGraphsForTests.FgAndVars fgv, double expectedValue) {
         FgModelIdentity mid = new FgModelIdentity(new FgModel(0));        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        MarginalLikelihood obj = new MarginalLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
+        MarginalLogLikelihood obj = new MarginalLogLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
         Tensor ll = obj.forward();
         Algebra outS = ll.getAlgebra();
         assertEquals(expectedValue, outS.toReal(ll.get(0)), 1e-3);
@@ -193,7 +193,7 @@ public class MarginalLikelihoodTest {
         
         FgModelIdentity mid = new FgModelIdentity(model);        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        MarginalLikelihood obj = new MarginalLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
+        MarginalLogLikelihood obj = new MarginalLogLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
         obj.forward();
         obj.getOutputAdj().set(obj.getAlgebra().one(), 0);
         obj.backward();

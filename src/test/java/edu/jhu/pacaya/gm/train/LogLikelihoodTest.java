@@ -31,7 +31,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.random.Prng;
 
 
-public class LikelihoodTest {
+public class LogLikelihoodTest {
         
     private FgModel model;
     private FactorGraph fg;
@@ -71,7 +71,7 @@ public class LikelihoodTest {
     public void testSimple() {
         FgModelIdentity id1 = new FgModelIdentity(model);
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        Likelihood cll = new Likelihood(id1, fg, infFactory , trainConfig);
+        LogLikelihood cll = new LogLikelihood(id1, fg, infFactory , trainConfig);
         Algebra outS = cll.getAlgebra();
 
         Tensor y = cll.forward();
@@ -101,7 +101,7 @@ public class LikelihoodTest {
         model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        Likelihood cll = new Likelihood(id1, fg, infFactory , trainConfig, tmpS);
+        LogLikelihood cll = new LogLikelihood(id1, fg, infFactory , trainConfig, tmpS);
         ModuleTestUtils.assertGradientCorrectByFd(cll, 1e-5, 1e-8);
     }
         
@@ -122,7 +122,7 @@ public class LikelihoodTest {
     private static void checkLikelihoodMatches(FactorGraphsForTests.FgAndVars fgv, double expectedValue) {
         FgModelIdentity mid = new FgModelIdentity(new FgModel(0));        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        Likelihood obj = new Likelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
+        LogLikelihood obj = new LogLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
         Tensor ll = obj.forward();
         Algebra outS = ll.getAlgebra();
         assertEquals(expectedValue, outS.toReal(ll.get(0)), 1e-3);
@@ -188,7 +188,7 @@ public class LikelihoodTest {
         
         FgModelIdentity mid = new FgModelIdentity(model);        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        Likelihood obj = new Likelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
+        LogLikelihood obj = new LogLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
         obj.forward();
         obj.getOutputAdj().set(obj.getAlgebra().one(), 0);
         obj.backward();

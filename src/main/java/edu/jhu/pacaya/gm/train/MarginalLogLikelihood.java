@@ -18,8 +18,6 @@ import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
-import edu.jhu.pacaya.gm.model.Var;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
@@ -29,20 +27,20 @@ import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
- * Module for computing the marginal likelihood of a factor graph. If there are latent variables in
+ * Module for computing the marginal log-likelihood of a factor graph. If there are latent variables in
  * the factor, these are marginalized out. If there are no latent variables this reduces to the
- * likelihood though in this case {@link Likelihood} would do the same computation faster.
+ * log-likelihood though in this case {@link LogLikelihood} would do the same computation faster.
  * 
  * <pre>
- * p_{\prms}(\vc{y}) = 
- *    \sum_{\vc{z}} \frac{1}{Z} \prod_{\alpha} \psi_{\alpha}(\vc{y}_{\alpha}, \vc{z}_{\alpha})
+ * \log p_{\prms}(\vc{y}) = 
+ *    \log \sum_{\vc{z}} \frac{1}{Z} \prod_{\alpha} \psi_{\alpha}(\vc{y}_{\alpha}, \vc{z}_{\alpha})
  * </pre>
  * 
  * @author mgormley
  */
-public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor> {
+public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Module<Tensor> {
 
-    private static final Logger log = LoggerFactory.getLogger(Likelihood.class);
+    private static final Logger log = LoggerFactory.getLogger(MarginalLogLikelihood.class);
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
 
     private FgInferencerFactory infFactory;
@@ -51,60 +49,54 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
     private Algebra tmpS;
     
     // Cached variables from forward() pass.
-    private FactorsModule fm;
-    private FactorGraph fg;
-    private FgInferencer inf;
+    private FactorsModule fmLatPred;
+    private FactorsModule fmLat;
+    private FactorGraph fgLatPred;
+    private FactorGraph fgLat;
+    private FgInferencer infLatPred;
+    private FgInferencer infLat;
 
     // TODO: Switch from FgInferencerFactory to BeliefsFactory.
-    public Likelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig) {
+    public MarginalLogLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig) {
         this(mid, fg, infFactory, goldConfig, LogSignAlgebra.getInstance());
     }
     
-    public Likelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig, Algebra tmpS) {
+    public MarginalLogLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig, Algebra tmpS) {
         super(RealAlgebra.getInstance());
         this.mid = mid;
-        this.fg = fg;
+        this.fgLatPred = fg;
         this.infFactory = infFactory;
-        this.goldConfig = goldConfig;      
+        this.goldConfig = goldConfig;
         this.tmpS = tmpS;
-        for (Var v : fg.getVars()) {
-            if (v.getType() == VarType.LATENT) {
-                throw new IllegalStateException("Unable to handle factors graphs with latent variables");
-            }
-        }
     }
 
     @Override
-    public Tensor forward() {        
+    public Tensor forward() {
         // Compute the potential tables.
         // TODO: Use these cached factors.
-        fm = new FactorsModule(mid, fg, tmpS);
-        Factors facs = fm.forward();
-        
-        // Compute the numerator.
-        double numerator = tmpS.one();
-        
-        // "Multiply" in all the factors to the numerator. 
-        for (int a=0; a<fg.getNumFactors(); a++) {
-            Factor f = fg.getFactor(a);
-            if (f instanceof GlobalFactor) {
-                GlobalFactor gf = (GlobalFactor)f;
-                VarConfig facConfig = goldConfig.getIntersection(fg.getFactor(a).getVars());
-                numerator = tmpS.times(numerator, gf.getLogUnormalizedScore(facConfig));
-            } else {
-                VarTensor fac = facs.get(a);
-                int facConfig = goldConfig.getConfigIndexOfSubset(f.getVars());
-                numerator = tmpS.times(numerator, fac.getValue(facConfig));
-            }
-        }
+        fmLatPred = new FactorsModule(mid, fgLatPred, tmpS);
+        fmLatPred.forward();
+        fgLat = CrfObjective.getFgLat(fgLatPred, goldConfig);        
+        fmLat = new FactorsModule(mid, fgLat, tmpS);
+        fmLat.forward();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
         //fgLatPred = factors.getOutput().getFactorGraph();
-        inf = infFactory.getInferencer(fg);
-        inf.run();
+        infLatPred = infFactory.getInferencer(fgLatPred);
+        infLatPred.run();
+        
+        // Run inference to compute Z(y,x) by summing over the latent variables w.
+        infLat = infFactory.getInferencer(fgLat);
+        infLat.run();
+        
+        // Compute the conditional log-likelihood for this example.
+        
+        // Inference computes Z(y,x) by summing over the latent variables w.
+        double numerator = tmpS.fromLogProb(infLat.getLogPartition());
         
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
-        double denominator = tmpS.fromLogProb(inf.getLogPartition());
+        double denominator = tmpS.fromLogProb(infLatPred.getLogPartition());
+
 
         // Compute the conditional log-likelihood for this example.
         double likelihood = tmpS.divide(numerator, denominator);
@@ -125,39 +117,38 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
     public void backward() {
         FgModel gradient = mid.getOutputAdj().getModel();
         // For each factor...
-        for (int a=0; a<fg.getNumFactors(); a++) {
+        for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             // If the factor is a global factor, backprop through CLL and the factor to the model.            
             // Otherwise, backprop through CLL only to the factor.
-            Factor f = fg.getFactor(a);
-            if (f instanceof GlobalFactor) {
+            Factor fLatPred = fgLatPred.getFactor(a);
+            Factor fLat = fgLat.getFactor(a);
+            if (fLatPred instanceof GlobalFactor) {
                 assert mid.getAlgebra() == RealAlgebra.getInstance();
-                // TODO: Right now this only works for global factors which do not have any expected partials.
-                ((GlobalFactor) f).addExpectedPartials(gradient, 1.0, null, a);
-                ((GlobalFactor) f).addExpectedPartials(gradient, -1.0, inf, a);
+                ((GlobalFactor) fLat).addExpectedPartials(gradient, 1.0, infLat, a);
+                ((GlobalFactor) fLatPred).addExpectedPartials(gradient, -1.0, infLatPred, a);
             } else {
-                // Compute 1.0 minus the marginal distrubtion.
-                VarTensor marg = inf.getLogMarginalsForFactorId(a);
-                Tensor addend = marg.copyAndConvertAlgebra(tmpS);
-                addend.multiply(tmpS.fromReal(-1.0));
-                int facConfig = goldConfig.getConfigIndexOfSubset(marg.getVars());
-                addend.addValue(facConfig, tmpS.one());
-                // Divide out the factor.
-                VarTensor ft = fm.getOutput().f[a];
+                // Compute the difference of the marginal distrubtions.
+                VarTensor margLat = infLat.getLogMarginalsForFactorId(a);
+                VarTensor margLatPred = infLatPred.getLogMarginalsForFactorId(a);
+                Tensor addend = margLat.copyAndConvertAlgebra(tmpS);
+                addend.elemSubtract(margLatPred.copyAndConvertAlgebra(tmpS));
+                // Divide out the factor itself.
+                VarTensor ft = fmLatPred.getOutput().f[a];
                 addend.elemDivide(ft);
-                
-                // Multiply in the adjoint of the likelihood.
+
+                // Multiply in the adjoint of the likelihood. TODO
                 assert s.equals(RealAlgebra.getInstance());
                 addend.multiply(tmpS.fromReal(yAdj.get(0)));
                 
-                // Add the adjoint to the factors module.
-                Factors factorsAdj = fm.getOutputAdj();
+                // Add the adjoint to the lat pred module only.
+                Factors factorsAdj = fmLatPred.getOutputAdj();
                 VarTensor fAdj = factorsAdj.f[a];
                 fAdj.elemAdd(addend);
-                log.trace("margLatPred = {}\naddend = {}\nfAdj = {}", marg, addend, fAdj);
+                log.trace("margLat = {}\nmargLatPred = {}\naddend = {}\nfAdj = {}", margLat, margLatPred, addend, fAdj);
             }
         }
         // Backprop through the factors to the model. 
-        fm.backward();
+        fmLatPred.backward();
     }
 
     @Override
