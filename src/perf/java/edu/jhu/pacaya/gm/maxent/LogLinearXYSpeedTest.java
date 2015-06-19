@@ -11,14 +11,20 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.math.FastMath;
 
-public class LogLinearEDsSpeedTest {
+public class LogLinearXYSpeedTest {
 
     /**
-     * Ouput: 
+     * Output: (old)
      * Build time (ms): 6322.0
      * Train time (ms): 12804.0
      * Accuracy: 1.0
      * Decode time (ms): 299.0
+     * 
+     * Output: (6/19/15)
+     * Build time (ms): 11814.0
+     * Train time (ms): 11678.0
+     * Accuracy: 1.0
+     * Decode time (ms): 49.0
      */
     //Too slow to be a unit test. @Test
     public void testLogLinearTrainDecodeSpeed() {
@@ -45,7 +51,7 @@ public class LogLinearEDsSpeedTest {
                     }
                 }   
                 // Only add examples for which x == y.
-                data.addEx(1.0, "x="+x, "y="+x, fvs);
+                data.addEx(1.0, "x="+x, "y="+(x%numYs), fvs);
             }
             tBuild.stop();
             System.out.println("Build time (ms): " + tBuild.totMs());
@@ -75,8 +81,11 @@ public class LogLinearEDsSpeedTest {
             System.out.println("Accuracy: " + (double) numCorrect / data.size());
             tDecode.stop();
             System.out.println("Decode time (ms): " + tDecode.totMs());
-
-        }        
+        }
+    }
+    
+    public static void main(String[] args) {
+        (new LogLinearXYSpeedTest()).testLogLinearTrainDecodeSpeed();
     }
         
 }
