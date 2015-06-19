@@ -2,23 +2,21 @@ package edu.jhu.pacaya.gm.train;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
+import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.autodiff.erma.FactorsModule;
 import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
+import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -26,10 +24,11 @@ import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.VarConfig;
-import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.prim.util.random.Prng;
 
 
 public class LikelihoodTest {
@@ -73,34 +72,39 @@ public class LikelihoodTest {
         FgModelIdentity id1 = new FgModelIdentity(model);
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         Likelihood cll = new Likelihood(id1, fg, infFactory , trainConfig);
-        Algebra s = cll.getAlgebra();
+        Algebra outS = cll.getAlgebra();
 
         Tensor y = cll.forward();
-        assertEquals(-5.914, s.toLogProb(y.get(0)), 1e-3);
+        assertEquals(-5.914, outS.toReal(y.get(0)), 1e-3);
         
         Tensor yAdj = cll.getOutputAdj();
-        yAdj.set(s.fromReal(1.0), 0); // TODO: this should use a different value.
+        yAdj.set(outS.fromReal(5.0), 0);
         
         cll.backward();
         FgModel grad = id1.getOutputAdj().getModel();
         System.out.println(grad);
-        assertEquals(0.574, grad.getParams().get(0), 1e-2);
-        assertEquals(-0.489, grad.getParams().get(1), 1e-3);        
-        assertEquals(-0.826, grad.getParams().get(2), 1e-3);        
-        assertEquals(0.742, grad.getParams().get(3), 1e-3);
+        assertEquals(5*0.574, grad.getParams().get(0), 1e-2);
+        assertEquals(5*-0.489, grad.getParams().get(1), 1e-2);        
+        assertEquals(5*-0.826, grad.getParams().get(2), 1e-2);        
+        assertEquals(5*0.742, grad.getParams().get(3), 1e-2);
     }
     
     // TODO: This should test an AutoDiffFactor, an AutoDiffGlobalFactor, and a Factor that implements neither.
     @Test
     public void testGradByFiniteDiffs() {
-        // This tests ONLY the real semiring, since that is the only supported semiring.
+        checkGradByFiniteDiffs(RealAlgebra.getInstance());
+        checkGradByFiniteDiffs(LogSignAlgebra.getInstance());
+    }
+
+    private void checkGradByFiniteDiffs(Algebra tmpS) {
+        // This tests ONLY the real semiring as input, since that is the only supported semiring for FgModelIdentity.
         model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        Likelihood cll = new Likelihood(id1, fg, infFactory , trainConfig);
+        Likelihood cll = new Likelihood(id1, fg, infFactory , trainConfig, tmpS);
         ModuleTestUtils.assertGradientCorrectByFd(cll, 1e-5, 1e-8);
     }
-    
+        
     @Test
     public void testGetLogLikelihood() {
         FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();   
@@ -121,7 +125,7 @@ public class LikelihoodTest {
         Likelihood obj = new Likelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
         Tensor ll = obj.forward();
         Algebra outS = ll.getAlgebra();
-        assertEquals(expectedValue, outS.toLogProb(ll.get(0)), 1e-3);
+        assertEquals(expectedValue, outS.toReal(ll.get(0)), 1e-3);
     }
     
     @Test

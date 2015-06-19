@@ -22,6 +22,7 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
@@ -45,6 +46,7 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
     private FgInferencerFactory infFactory;
     private Module<MVecFgModel> mid;
     private VarConfig goldConfig;
+    private Algebra tmpS;
     
     // Cached variables from forward() pass.
     private FactorsModule fmLatPred;
@@ -56,21 +58,26 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
 
     // TODO: Switch from FgInferencerFactory to BeliefsFactory.
     public MarginalLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig) {
-        super(LogSignAlgebra.getInstance());
+        this(mid, fg, infFactory, goldConfig, LogSignAlgebra.getInstance());
+    }
+    
+    public MarginalLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig, Algebra tmpS) {
+        super(RealAlgebra.getInstance());
         this.mid = mid;
         this.fgLatPred = fg;
         this.infFactory = infFactory;
         this.goldConfig = goldConfig;
+        this.tmpS = tmpS;
     }
 
     @Override
     public Tensor forward() {
         // Compute the potential tables.
         // TODO: Use these cached factors.
-        fmLatPred = new FactorsModule(mid, fgLatPred, s);
+        fmLatPred = new FactorsModule(mid, fgLatPred, tmpS);
         fmLatPred.forward();
         fgLat = CrfObjective.getFgLat(fgLatPred, goldConfig);        
-        fmLat = new FactorsModule(mid, fgLat, s);
+        fmLat = new FactorsModule(mid, fgLat, tmpS);
         fmLat.forward();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
@@ -85,13 +92,16 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
         // Compute the conditional log-likelihood for this example.
         
         // Inference computes Z(y,x) by summing over the latent variables w.
-        double numerator = s.fromLogProb(infLat.getLogPartition());
+        double numerator = tmpS.fromLogProb(infLat.getLogPartition());
         
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
-        double denominator = s.fromLogProb(infLatPred.getLogPartition());
+        double denominator = tmpS.fromLogProb(infLatPred.getLogPartition());
 
-        double ll = s.divide(numerator, denominator);
-        log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
+
+        // Compute the conditional log-likelihood for this example.
+        double likelihood = tmpS.divide(numerator, denominator);
+        double ll = tmpS.toLogProb(likelihood);
+        log.trace(String.format("ll=%f numerator=%f denominator=%f", likelihood, numerator, denominator));
 
         if (ll > MAX_LOG_LIKELIHOOD) {
             // Note: this can occur if the graph is loopy because the
@@ -99,8 +109,7 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
             // has not yet converged.
             log.warn("Log-likelihood for example should be <= 0: " + ll);
         }
-
-        // Compute the conditional log-likelihood for this example.
+        
         return y = Scalar.getInstance(s, ll);
     }
 
@@ -121,14 +130,15 @@ public class MarginalLikelihood extends AbstractModule<Tensor> implements Module
                 // Compute the difference of the marginal distrubtions.
                 VarTensor margLat = infLat.getLogMarginalsForFactorId(a);
                 VarTensor margLatPred = infLatPred.getLogMarginalsForFactorId(a);
-                Tensor addend = margLat.copyAndConvertAlgebra(s);
-                addend.elemSubtract(margLatPred.copyAndConvertAlgebra(s));
+                Tensor addend = margLat.copyAndConvertAlgebra(tmpS);
+                addend.elemSubtract(margLatPred.copyAndConvertAlgebra(tmpS));
                 // Divide out the factor itself.
                 VarTensor ft = fmLatPred.getOutput().f[a];
                 addend.elemDivide(ft);
 
-                // Multiply in the adjoint of the likelihood.
-                // TODO: addend.multiply(yAdj.get(0));
+                // Multiply in the adjoint of the likelihood. TODO
+                assert s.equals(RealAlgebra.getInstance());
+                addend.multiply(tmpS.fromReal(yAdj.get(0)));
                 
                 // Add the adjoint to the lat pred module only.
                 Factors factorsAdj = fmLatPred.getOutputAdj();

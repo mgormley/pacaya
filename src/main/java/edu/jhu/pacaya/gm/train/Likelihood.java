@@ -24,10 +24,9 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.collections.Lists;
-import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
-import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 
 /**
  * Module for computing the marginal likelihood of a factor graph. If there are latent variables in
@@ -49,6 +48,7 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
     private FgInferencerFactory infFactory;
     private Module<MVecFgModel> mid;
     private VarConfig goldConfig;
+    private Algebra tmpS;
     
     // Cached variables from forward() pass.
     private FactorsModule fm;
@@ -57,11 +57,16 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
 
     // TODO: Switch from FgInferencerFactory to BeliefsFactory.
     public Likelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig) {
-        super(LogSignAlgebra.getInstance());
+        this(mid, fg, infFactory, goldConfig, LogSignAlgebra.getInstance());
+    }
+    
+    public Likelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig, Algebra tmpS) {
+        super(RealAlgebra.getInstance());
         this.mid = mid;
         this.fg = fg;
         this.infFactory = infFactory;
-        this.goldConfig = goldConfig;        
+        this.goldConfig = goldConfig;      
+        this.tmpS = tmpS;
         for (Var v : fg.getVars()) {
             if (v.getType() == VarType.LATENT) {
                 throw new IllegalStateException("Unable to handle factors graphs with latent variables");
@@ -73,11 +78,11 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
     public Tensor forward() {        
         // Compute the potential tables.
         // TODO: Use these cached factors.
-        fm = new FactorsModule(mid, fg, s);
+        fm = new FactorsModule(mid, fg, tmpS);
         Factors facs = fm.forward();
         
         // Compute the numerator.
-        double numerator = s.one();
+        double numerator = tmpS.one();
         
         // "Multiply" in all the factors to the numerator. 
         for (int a=0; a<fg.getNumFactors(); a++) {
@@ -85,11 +90,11 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
             if (f instanceof GlobalFactor) {
                 GlobalFactor gf = (GlobalFactor)f;
                 VarConfig facConfig = goldConfig.getIntersection(fg.getFactor(a).getVars());
-                numerator = s.times(numerator, gf.getLogUnormalizedScore(facConfig));
+                numerator = tmpS.times(numerator, gf.getLogUnormalizedScore(facConfig));
             } else {
                 VarTensor fac = facs.get(a);
                 int facConfig = goldConfig.getConfigIndexOfSubset(f.getVars());
-                numerator = s.times(numerator, fac.getValue(facConfig));
+                numerator = tmpS.times(numerator, fac.getValue(facConfig));
             }
         }
         
@@ -99,10 +104,12 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
         inf.run();
         
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
-        double denominator = s.fromLogProb(inf.getLogPartition());
+        double denominator = tmpS.fromLogProb(inf.getLogPartition());
 
-        double ll = s.divide(numerator, denominator);
-        log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
+        // Compute the conditional log-likelihood for this example.
+        double likelihood = tmpS.divide(numerator, denominator);
+        double ll = tmpS.toLogProb(likelihood);
+        log.trace(String.format("ll=%f numerator=%f denominator=%f", likelihood, numerator, denominator));
 
         if (ll > MAX_LOG_LIKELIHOOD) {
             // Note: this can occur if the graph is loopy because the
@@ -111,7 +118,6 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
             log.warn("Log-likelihood for example should be <= 0: " + ll);
         }
         
-        // Compute the conditional log-likelihood for this example.
         return y = Scalar.getInstance(s, ll);
     }
 
@@ -131,16 +137,17 @@ public class Likelihood extends AbstractModule<Tensor> implements Module<Tensor>
             } else {
                 // Compute 1.0 minus the marginal distrubtion.
                 VarTensor marg = inf.getLogMarginalsForFactorId(a);
-                Tensor addend = marg.copyAndConvertAlgebra(s);
-                addend.multiply(s.fromReal(-1.0));
+                Tensor addend = marg.copyAndConvertAlgebra(tmpS);
+                addend.multiply(tmpS.fromReal(-1.0));
                 int facConfig = goldConfig.getConfigIndexOfSubset(marg.getVars());
-                addend.addValue(facConfig, s.one());
+                addend.addValue(facConfig, tmpS.one());
                 // Divide out the factor.
                 VarTensor ft = fm.getOutput().f[a];
                 addend.elemDivide(ft);
                 
                 // Multiply in the adjoint of the likelihood.
-                // TODO: addend.multiply(yAdj.get(0));
+                assert s.equals(RealAlgebra.getInstance());
+                addend.multiply(tmpS.fromReal(yAdj.get(0)));
                 
                 // Add the adjoint to the factors module.
                 Factors factorsAdj = fm.getOutputAdj();

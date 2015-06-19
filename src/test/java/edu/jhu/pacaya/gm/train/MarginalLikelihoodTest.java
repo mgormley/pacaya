@@ -27,6 +27,7 @@ import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
@@ -71,45 +72,39 @@ public class MarginalLikelihoodTest {
         FgModelIdentity id1 = new FgModelIdentity(model);
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig);
-        Algebra s = cll.getAlgebra();
+        Algebra outS = cll.getAlgebra();
         
         Tensor y = cll.forward();
-        assertEquals(-5.914, s.toLogProb(y.get(0)), 1e-3);
+        assertEquals(-5.914, outS.toReal(y.get(0)), 1e-3);
         
         Tensor yAdj = cll.getOutputAdj();
-        yAdj.set(s.fromReal(1.0), 0); // TODO: this should use a different value.
+        yAdj.set(outS.fromReal(5.0), 0);
         
         cll.backward();
         FgModel grad = id1.getOutputAdj().getModel();
         System.out.println(grad);
-        assertEquals(0.574, grad.getParams().get(0), 1e-2);
-        assertEquals(-0.489, grad.getParams().get(1), 1e-3);        
-        assertEquals(-0.826, grad.getParams().get(2), 1e-3);        
-        assertEquals(0.742, grad.getParams().get(3), 1e-3);
+        assertEquals(5*0.574, grad.getParams().get(0), 1e-2);
+        assertEquals(5*-0.489, grad.getParams().get(1), 1e-2);        
+        assertEquals(5*-0.826, grad.getParams().get(2), 1e-2);        
+        assertEquals(5*0.742, grad.getParams().get(3), 1e-2);
     }
-    
+
     // TODO: This should test an AutoDiffFactor, an AutoDiffGlobalFactor, and a Factor that implements neither.
     @Test
     public void testGradByFiniteDiffs() {
-        //        model.fill(0.0);
-        //        FgModelIdentity id1 = new FgModelIdentity(model);        
-        //        final FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        //        //MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig);
-        //        OneToOneFactory<MVecFgModel,Tensor> fact = new OneToOneFactory<MVecFgModel,Tensor>() {
-        //            public Module<Tensor> getModule(Module<MVecFgModel> m1) {
-        //                return new MarginalLikelihood(m1, fg, infFactory , trainConfig);
-        //            }
-        //        };        
-        //        AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact, id1);
-        
-        // This tests ONLY the real semiring, since that is the only supported semiring.
+        checkGradByFiniteDiffs(RealAlgebra.getInstance());
+        checkGradByFiniteDiffs(LogSignAlgebra.getInstance());
+    }
+
+    private void checkGradByFiniteDiffs(Algebra tmpS) {
+        // This tests ONLY the real semiring as input, since that is the only supported semiring for FgModelIdentity.
         model.fill(0.0);
         FgModelIdentity id1 = new FgModelIdentity(model);        
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
-        MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig);
+        MarginalLikelihood cll = new MarginalLikelihood(id1, fg, infFactory , trainConfig, tmpS);
         ModuleTestUtils.assertGradientCorrectByFd(cll, 1e-5, 1e-8);
     }
-    
+        
     @Test
     public void testGetLogLikelihood() {
         FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();   
@@ -130,7 +125,7 @@ public class MarginalLikelihoodTest {
         MarginalLikelihood obj = new MarginalLikelihood(mid, fgv.fg, infFactory, fgv.goldConfig);
         Tensor ll = obj.forward();
         Algebra outS = ll.getAlgebra();
-        assertEquals(expectedValue, outS.toLogProb(ll.get(0)), 1e-3);
+        assertEquals(expectedValue, outS.toReal(ll.get(0)), 1e-3);
     }
     
     @Test
