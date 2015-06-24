@@ -114,9 +114,18 @@ public class CrfTrainerTest {
         JUnitUtils.assertArrayEquals(new double[]{0.253, -0.253, -0.253, 0.253}, params2, 1e-3);
         //MSE: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
     }
-        
+
     @Test
-    public void testTrainNoLatentVars() {
+    public void testTrainNoLatentVarsSgd() {
+        checkTrainNoLatentVars(true);
+    }
+    
+    @Test
+    public void testTrainNoLatentVarsLbfgs() {
+        checkTrainNoLatentVars(false);
+    }
+    
+    public void checkTrainNoLatentVars(boolean sgd) {
         // Boiler plate feature extraction code.
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
@@ -143,14 +152,20 @@ public class CrfTrainerTest {
         FgModel model = new FgModel(ofc.getNumParams());
 
         // Train the model.
-        model = train(model, data);
+        model = train(model, data, null, sgd);
         
         // Assertions:
         System.out.println(model);
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89}, FgModelTest.getParams(model), 1e-2);
-        
+        double[] expected;
+        if (sgd) {
+            expected = new double[]{0.19, 0.11, -0.40, 0.11, -0.26, 0.34, -0.32, 0.25};
+        } else {
+            expected = new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89};
+        }
+        JUnitUtils.assertArrayEquals(expected, FgModelTest.getParams(model), 1e-2);
+
         // OLD WAY:
         //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
         //        assertEquals(-4.79, getParam(model, "emit", "V:man"), 1e-2);
