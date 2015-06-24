@@ -14,12 +14,19 @@ import edu.jhu.pacaya.autodiff.erma.Factors;
 import edu.jhu.pacaya.autodiff.erma.FactorsModule;
 import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
+import edu.jhu.pacaya.gm.data.FgExampleList;
+import edu.jhu.pacaya.gm.data.LFgExample;
+import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
+import edu.jhu.pacaya.gm.model.IFgModel;
+import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
+import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.collections.Lists;
@@ -77,7 +84,7 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
         // TODO: Use these cached factors.
         fmLatPred = new FactorsModule(mid, fgLatPred, tmpS);
         fmLatPred.forward();
-        fgLat = CrfObjective.getFgLat(fgLatPred, goldConfig);        
+        fgLat = MarginalLogLikelihood.getFgLat(fgLatPred, goldConfig);        
         fmLat = new FactorsModule(mid, fgLat, tmpS);
         fmLat.forward();
         
@@ -155,6 +162,80 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
         return Lists.getList(mid);
+    }
+
+    /**
+     * Get a copy of the factor graph where the predicted variables are clamped.
+     * 
+     * @param fgLatPred The original factor graph.
+     * @param goldConfig The assignment to the predicted variables.
+     * @return The clamped factor graph.
+     */
+    public static FactorGraph getFgLat(FactorGraph fgLatPred, VarConfig goldConfig) {
+        List<Var> predictedVars = VarSet.getVarsOfType(fgLatPred.getVars(), VarType.PREDICTED);
+        VarConfig predConfig = goldConfig.getIntersection(predictedVars);
+        FactorGraph fgLat = fgLatPred.getClamped(predConfig);
+        assert (fgLatPred.getNumFactors() <= fgLat.getNumFactors());
+        return fgLat;
+    }
+
+    /** Gets the "expected" feature counts. */
+    public static FeatureVector getExpectedFeatureCounts(FgExampleList data, FgInferencerFactory infFactory, FgModel model, double[] params) {
+        model.updateModelFromDoubles(params);
+        FgModel feats = model.getDenseCopy();
+        feats.zero();
+        for (int i=0; i<data.size(); i++) {
+            LFgExample ex = data.get(i);
+            FactorGraph fgLatPred = ex.getFactorGraph();
+            fgLatPred.updateFromModel(model);
+            FgInferencer infLatPred = infFactory.getInferencer(fgLatPred);
+            infLatPred.run();
+            addExpectedPartials(fgLatPred, infLatPred, 1.0 * ex.getWeight(), feats);
+        }
+        double[] f = new double[model.getNumParams()];
+        feats.updateDoublesFromModel(f);
+        return new FeatureVector(f);
+    }
+
+    /** Gets the "observed" feature counts. */
+    public static FeatureVector getObservedFeatureCounts(FgExampleList data, FgInferencerFactory infFactory, FgModel model, double[] params) {
+        model.updateModelFromDoubles(params);
+        FgModel feats = model.getDenseCopy();
+        feats.zero();
+        for (int i=0; i<data.size(); i++) {
+            LFgExample ex = data.get(i);
+            FactorGraph fgLat = getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
+            fgLat.updateFromModel(model);
+            FgInferencer infLat = infFactory.getInferencer(fgLat);
+            infLat.run();
+            addExpectedPartials(fgLat, infLat, 1.0 * ex.getWeight(), feats);
+        }
+        double[] f = new double[model.getNumParams()];
+        feats.updateDoublesFromModel(f);
+        return new FeatureVector(f);
+    }
+
+    /**
+     * Computes the expected partials (i.e. feature counts for exponential family factors) for a
+     * factor graph, and adds them to the gradient after scaling them.
+     *
+     * @param fg The factor graph.
+     * @param inferencer The inferencer for a clamped factor graph, which has already been run.
+     * @param multiplier The value which the expected partials will be multiplied by.
+     * @param gradient The OUTPUT gradient vector to which the scaled expected partials will be
+     *            added.
+     */
+    static void addExpectedPartials(FactorGraph fg, FgInferencer inferencer, double multiplier, IFgModel gradient) {
+        // For each factor...
+        for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
+            Factor f = fg.getFactor(factorId);
+            if (f instanceof GlobalFactor) {
+                ((GlobalFactor) f).addExpectedPartials(gradient, multiplier, inferencer, factorId);
+            } else {
+                VarTensor marg = inferencer.getMarginalsForFactorId(factorId);
+                f.addExpectedPartials(gradient, marg, multiplier);
+            }
+        }
     }
 
 }

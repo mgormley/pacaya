@@ -7,12 +7,20 @@ import org.junit.Test;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.functions.L2;
+import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
+import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective;
+import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.pacaya.gm.train.CrfObjective;
+import edu.jhu.pacaya.gm.train.LogLikelihoodFactory;
 import edu.jhu.pacaya.gm.train.LogLikelihoodFactoryTest;
+import edu.jhu.pacaya.gm.train.MarginalLogLikelihood;
+import edu.jhu.pacaya.gm.train.ModuleObjective;
+import edu.jhu.pacaya.gm.train.MtFactory;
+import edu.jhu.pacaya.gm.train.ScaleByWeightFactory;
 import edu.jhu.pacaya.gm.train.SumBatchObjective;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -74,7 +82,11 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
 
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), LogLikelihoodFactoryTest.getInfFactory(s));
+        FgExampleList data = maxent.getData(exs.getData());
+        FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
+        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        mtFactory = new ScaleByWeightFactory(mtFactory);
+        ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
@@ -83,12 +95,12 @@ public class LogLinearEDsTest {
         assertEquals(-95.531, ll, 1e-3);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
+        FeatureVector obsFeats = MarginalLogLikelihood.getObservedFeatureCounts(data, infFactory, model, params);
         assertEquals(45, obsFeats.get(0), 1e-13);
         assertEquals(40, obsFeats.get(1), 1e-13);
         
         // Test expected feature counts.
-        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
+        FeatureVector expFeats = MarginalLogLikelihood.getExpectedFeatureCounts(data, infFactory, model, params);
         assertEquals(57.15444760934599, expFeats.get(0), 1e-3);
         assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
         
@@ -107,7 +119,10 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), LogLikelihoodFactoryTest.getInfFactory(s));
+        FgExampleList data = maxent.getData(exs.getData());
+        FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
+        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1); // Note: this test uses Avg not Sum.
         
         assertEquals(2, exs.getAlphabet().size());
@@ -118,12 +133,12 @@ public class LogLinearEDsTest {
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
+        FeatureVector obsFeats = MarginalLogLikelihood.getObservedFeatureCounts(data, infFactory, model, params);
         assertEquals(1, obsFeats.get(0), 1e-13);
         assertEquals(1, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
-        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
+        FeatureVector expFeats = MarginalLogLikelihood.getExpectedFeatureCounts(data, infFactory, model, params);
         assertEquals(1.4621, expFeats.get(0), 1e-3);
         assertEquals(0.5378, expFeats.get(1), 1e-3);
         
@@ -141,9 +156,12 @@ public class LogLinearEDsTest {
         double[] params = new double[]{3.0, 2.0};
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
-        
+
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), LogLikelihoodFactoryTest.getInfFactory(s));
+        FgExampleList data = maxent.getData(exs.getData());
+        FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
+        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());
@@ -154,12 +172,12 @@ public class LogLinearEDsTest {
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
+        FeatureVector obsFeats = MarginalLogLikelihood.getObservedFeatureCounts(data, infFactory, model, params);
         assertEquals(1, obsFeats.get(0), 1e-13);
         assertEquals(0, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
-        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
+        FeatureVector expFeats = MarginalLogLikelihood.getExpectedFeatureCounts(data, infFactory, model, params);
         assertEquals(0.7310, expFeats.get(0), 1e-3);
         assertEquals(0.2689, expFeats.get(1), 1e-3);
         

@@ -25,7 +25,7 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.gm.train.CrfObjective;
+import edu.jhu.pacaya.gm.train.MarginalLogLikelihood;
 import edu.jhu.pacaya.gm.util.ArrayIter3D;
 import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.Prm;
@@ -226,7 +226,7 @@ public class ObsFeatureConjoiner implements Serializable {
                 log.debug("Processing example: " + i);
             }
             LFgExample ex = data.get(i);
-            FactorGraph fgLat = CrfObjective.getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
+            FactorGraph fgLat = MarginalLogLikelihood.getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
             // Create a "no-op" inferencer, which returns arbitrary marginals.
             NoOpInferencer inferencer = new NoOpInferencer(ex.getFactorGraph());   
             for (int a=0; a<ex.getFactorGraph().getNumFactors(); a++) {
