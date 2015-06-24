@@ -14,7 +14,6 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.pacaya.gm.train.CrfObjective;
 import edu.jhu.pacaya.gm.train.LogLikelihoodFactory;
 import edu.jhu.pacaya.gm.train.LogLikelihoodFactoryTest;
 import edu.jhu.pacaya.gm.train.MarginalLogLikelihood;
