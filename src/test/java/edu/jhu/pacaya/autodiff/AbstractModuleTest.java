@@ -129,6 +129,13 @@ public class AbstractModuleTest {
         Identity<Tensor> in1 = new Identity<Tensor>(t1);
         evalTensor1ByFiniteDiffs(fact, in1);
     }
+    
+    /** Calls {@link #evalTensor1ByFiniteDiffsAbs(Tensor1Factory, Module)} with one 3 dimensional input tensors. */
+    public static void evalTensor1ByFiniteDiffsAbs(Tensor1Factory fact) {
+        Tensor t1 = TensorUtils.getVectorFromValues(RealAlgebra.getInstance(), 2, 3, 5);
+        Identity<Tensor> in1 = new Identity<Tensor>(t1);
+        evalTensor1ByFiniteDiffsAbs(fact, in1);
+    }
 
     /**
      * Calls {@link #evalOneToOneByFiniteDiffsAbs(OneToOneFactory, Module, VectorFactory)} with 0,1 Gaussian vector factory.
