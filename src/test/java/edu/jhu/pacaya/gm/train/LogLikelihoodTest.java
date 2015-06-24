@@ -64,11 +64,12 @@ public class LogLikelihoodTest {
         // Create the Model.
         model = new FgModel(ofc.getNumParams());
         System.out.println("Number of model parameters: " + model.getNumParams());
-        model.setRandomStandardNormal();
     }
     
     @Test
     public void testSimple() {
+        Prng.seed(Prng.DEFAULT_SEED);
+        model.setRandomStandardNormal();
         FgModelIdentity id1 = new FgModelIdentity(model);
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         LogLikelihood cll = new LogLikelihood(id1, fg, infFactory , trainConfig);

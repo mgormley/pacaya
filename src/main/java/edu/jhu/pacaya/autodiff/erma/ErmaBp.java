@@ -16,7 +16,6 @@ import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;

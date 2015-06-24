@@ -19,13 +19,16 @@ public abstract class AbstractModule<T extends MVec> implements Module<T> {
 
     @Override
     public T getOutput() {
+        if (y == null) {
+            throw new IllegalStateException("Output is null. This could be because forward() was never called or because forward() was implemented incorrectly.");
+        }
         return y;
     }
 
     @Override
     public T getOutputAdj() {
         if (yAdj == null) {
-            yAdj = (T) y.copyAndFill(s.zero());
+            yAdj = (T) getOutput().copyAndFill(s.zero());
         }
         return yAdj;
     }

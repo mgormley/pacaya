@@ -10,6 +10,7 @@ import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
+import edu.jhu.pacaya.autodiff.erma.EmpiricalRisk;
 import edu.jhu.pacaya.autodiff.erma.Factors;
 import edu.jhu.pacaya.autodiff.erma.FactorsModule;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
@@ -46,13 +47,14 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
     private FgInferencerFactory infFactory;
     private Module<MVecFgModel> mid;
     private VarConfig goldConfig;
+    private FactorGraph fg;
+    private FgInferencer inf;
     private Algebra tmpS;
     
     // Cached variables from forward() pass.
     private FactorsModule fm;
-    private FactorGraph fg;
-    private FgInferencer inf;
 
+    /** Constructor which defaults to using the log-sign algebra internally. */
     // TODO: Switch from FgInferencerFactory to BeliefsFactory.
     public LogLikelihood(Module<MVecFgModel> mid, FactorGraph fg, FgInferencerFactory infFactory, VarConfig goldConfig) {
         this(mid, fg, infFactory, goldConfig, LogSignAlgebra.getInstance());

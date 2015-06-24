@@ -12,7 +12,7 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective;
 import edu.jhu.pacaya.gm.train.CrfObjective;
-import edu.jhu.pacaya.gm.train.CrfObjectiveTest;
+import edu.jhu.pacaya.gm.train.LogLikelihoodFactoryTest;
 import edu.jhu.pacaya.gm.train.SumBatchObjective;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -74,7 +74,7 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
 
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(s));
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), LogLikelihoodFactoryTest.getInfFactory(s));
         SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
@@ -107,7 +107,7 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(s));
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), LogLikelihoodFactoryTest.getInfFactory(s));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1); // Note: this test uses Avg not Sum.
         
         assertEquals(2, exs.getAlphabet().size());
@@ -143,7 +143,7 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
-        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(s));
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), LogLikelihoodFactoryTest.getInfFactory(s));
         SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());

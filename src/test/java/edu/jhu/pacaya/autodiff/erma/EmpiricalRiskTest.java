@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.pacaya.autodiff.erma.EmpiricalRisk.EmpiricalRiskFactory;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.pacaya.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.pacaya.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.pacaya.gm.data.FgExampleList;
@@ -18,6 +18,10 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective;
 import edu.jhu.pacaya.gm.train.CrfObjective;
+import edu.jhu.pacaya.gm.train.LogLikelihoodFactory;
+import edu.jhu.pacaya.gm.train.ModuleObjective;
+import edu.jhu.pacaya.gm.train.MtFactory;
+import edu.jhu.pacaya.gm.train.ScaleByWeightFactory;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
 import edu.jhu.pacaya.util.JUnitUtils;
@@ -27,7 +31,7 @@ import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 
-public class ErmaObjectiveTest {
+public class EmpiricalRiskTest {
     
     @Test
     public void testSimpleGradient() {
@@ -67,12 +71,14 @@ public class ErmaObjectiveTest {
         FgModel model = new FgModel(xyData.getFeatAlphabet().size());
         model.updateModelFromDoubles(params);
 
-        ExampleObjective exObj;
+        MtFactory mtFactory;
         if (trainer == Trainer.ERMA) {
-            exObj = new ErmaObjective(data, getErmaBpPrm(s), dl);
+            mtFactory = new EmpiricalRiskFactory(getErmaBpPrm(s), dl);
         } else {
-            exObj = new CrfObjective(data, getErmaBpPrm(s));
+            mtFactory = new LogLikelihoodFactory(getErmaBpPrm(s));
         }
+        //TODO: mtFactory = new ScaleByWeightFactory(mtFactory);
+        ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         double[] grad = obj.getGradient(model.getParams()).toNativeArray();

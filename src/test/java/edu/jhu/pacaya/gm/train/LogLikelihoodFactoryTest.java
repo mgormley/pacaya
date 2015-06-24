@@ -12,6 +12,7 @@ import org.junit.Test;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.pacaya.autodiff.erma.EmpiricalRisk.EmpiricalRiskFactory;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
@@ -34,12 +35,13 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
+import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.random.Prng;
 
-public class CrfObjectiveTest {
+public class LogLikelihoodFactoryTest {
 
     @Test
     public void testGetLogLikelihood() {
@@ -224,7 +226,8 @@ public class CrfObjectiveTest {
 	}
 	
     public static AvgBatchObjective getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
-        CrfObjective exObj = new CrfObjective(data, infFactory);
+        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         return new AvgBatchObjective(exObj, model, 1);
     }
 

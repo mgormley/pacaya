@@ -25,6 +25,12 @@ public class LogLinearXYSpeedTest {
      * Train time (ms): 11678.0
      * Accuracy: 1.0
      * Decode time (ms): 49.0
+     * 
+     * Output: (6/24/15)
+     * Build time (ms): 7033.0
+     * Train time (ms): 7315.0
+     * Accuracy: 1.0
+     * Decode time (ms): 44.0
      */
     //Too slow to be a unit test. @Test
     public void testLogLinearTrainDecodeSpeed() {

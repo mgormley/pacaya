@@ -12,6 +12,7 @@ import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.erma.Factors;
 import edu.jhu.pacaya.autodiff.erma.FactorsModule;
+import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;

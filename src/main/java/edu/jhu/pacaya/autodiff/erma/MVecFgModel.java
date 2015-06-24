@@ -84,4 +84,8 @@ public class MVecFgModel implements MVec {
         return model;
     }
 
+    public void setModel(FgModel model) {
+        this.model = model;
+    }
+
 }

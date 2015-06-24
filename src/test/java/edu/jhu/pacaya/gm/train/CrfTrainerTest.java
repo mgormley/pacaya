@@ -12,7 +12,7 @@ import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjectiveTest;
+import edu.jhu.pacaya.autodiff.erma.EmpiricalRiskTest;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
 import edu.jhu.pacaya.gm.data.FgExampleList;
@@ -162,7 +162,11 @@ public class CrfTrainerTest {
         if (sgd) {
             expected = new double[]{0.19, 0.11, -0.40, 0.11, -0.26, 0.34, -0.32, 0.25};
         } else {
-            expected = new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89};
+            expected = new double[]{2.85, 0.99, -4.82, 0.98, -6.33, 9.25, -6.55, 3.63};
+            // Due to floating point precision, we used to run an extra iteration of LBFGS
+            // and got the following answer:
+            //
+            //expected = new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89};
         }
         JUnitUtils.assertArrayEquals(expected, FgModelTest.getParams(model), 1e-2);
 

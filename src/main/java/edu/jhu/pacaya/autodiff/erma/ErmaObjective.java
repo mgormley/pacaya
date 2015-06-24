@@ -17,16 +17,6 @@ import edu.jhu.prim.util.Timer;
 
 public class ErmaObjective implements ExampleObjective {
     
-    public interface DlFactory {
-        /** Get a module which decodes then evaluates the loss. */
-        Module<Tensor> getDl(VarConfig goldConfig, FactorsModule fm, Module<Beliefs> inf, int curIter, int maxIter);
-    }
-    
-    public interface BeliefsModuleFactory {
-        Module<Beliefs> getBeliefsModule(Module<Factors> fm, FactorGraph fg);
-        Algebra getAlgebra();
-    }
-    
     private static final Logger log = LoggerFactory.getLogger(ErmaObjective.class);
 
     private FgExampleList data;

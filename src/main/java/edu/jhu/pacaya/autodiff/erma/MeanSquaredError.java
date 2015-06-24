@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;

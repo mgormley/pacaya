@@ -29,6 +29,7 @@ import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.prim.util.random.Prng;
 
 
 public class MarginalLogLikelihoodTest {
@@ -64,11 +65,12 @@ public class MarginalLogLikelihoodTest {
         // Create the Model.
         model = new FgModel(ofc.getNumParams());
         System.out.println("Number of model parameters: " + model.getNumParams());
-        model.setRandomStandardNormal();
     }
     
     @Test
     public void testSimple() {
+        Prng.seed(Prng.DEFAULT_SEED);
+        model.setRandomStandardNormal();
         FgModelIdentity id1 = new FgModelIdentity(model);
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         MarginalLogLikelihood cll = new MarginalLogLikelihood(id1, fg, infFactory , trainConfig);
