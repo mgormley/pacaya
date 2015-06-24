@@ -15,28 +15,26 @@ import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.collections.Lists;
 
 /**
- * Mean squared error (MSE) loss function.
- * 
- * This computes the MSE for a single example without the 1/N scaling factor.
+ * Computes the L2 distance between the "true beliefs" and the predicted beliefs.
  * 
  * @author mgormley
  */
-public class MeanSquaredError extends AbstractModule<Tensor> implements Module<Tensor> {
+public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor> {
     
-    /** Factory for MSE loss without a decoder. */
+    /** Factory for L2 distance loss without a decoder. */
     public static class MeanSquaredErrorFactory implements DlFactory {
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
-            return new MeanSquaredError(inf, goldConfig);
+            return new L2Distance(inf, goldConfig);
         }
     }
     
-    private static final Logger log = LoggerFactory.getLogger(MeanSquaredError.class);
+    private static final Logger log = LoggerFactory.getLogger(L2Distance.class);
 
     private Module<Beliefs> inf;
     private VarConfig vc;
     
-    public MeanSquaredError(Module<Beliefs> inf, VarConfig vc) {
+    public L2Distance(Module<Beliefs> inf, VarConfig vc) {
         super(inf.getAlgebra());
         this.inf = inf;
         this.vc = vc;
@@ -49,7 +47,7 @@ public class MeanSquaredError extends AbstractModule<Tensor> implements Module<T
      */
     public Tensor forward() {
         VarTensor[] varBeliefs = inf.getOutput().varBeliefs;
-        double mse = s.zero();
+        double l2dist = s.zero();
 
         for (Var v : vc.getVars()) {
             if (v.getType() == VarType.PREDICTED) {
@@ -59,11 +57,11 @@ public class MeanSquaredError extends AbstractModule<Tensor> implements Module<T
                     double goldMarg = (c == goldState) ? s.one() : s.zero();
                     double predMarg = marg.getValue(c);
                     double diff = s.minus(Math.max(goldMarg, predMarg), Math.min(goldMarg, predMarg));
-                    mse = s.plus(mse, s.times(diff, diff));
+                    l2dist = s.plus(l2dist, s.times(diff, diff));
                 }
             }
         }
-        y = Tensor.getScalarTensor(s, mse);
+        y = Tensor.getScalarTensor(s, l2dist);
         return y;        
     }
     
@@ -75,7 +73,7 @@ public class MeanSquaredError extends AbstractModule<Tensor> implements Module<T
      * dG/db(x_i) = dG/dy dy/db(x_i) = dG/dy 2(b(x_i) - b*(x_i)), \forall x_i. 
      */
     public void backward() {
-        double mseAdj = yAdj.getValue(0);
+        double l2distAdj = yAdj.getValue(0);
         VarTensor[] varBeliefs = inf.getOutput().varBeliefs;
         VarTensor[] varBeliefsAdjs = inf.getOutputAdj().varBeliefs;
         
@@ -89,7 +87,7 @@ public class MeanSquaredError extends AbstractModule<Tensor> implements Module<T
                     double predMarg = marg.getValue(c);
                     // dG/db(x_i) = dG/dy 2(b(x_i) - b*(x_i))
                     double diff = s.minus(predMarg, goldMarg);
-                    double adj_b = s.times(mseAdj, s.plus(diff, diff));
+                    double adj_b = s.times(l2distAdj, s.plus(diff, diff));
                     // Increment adjoint of the belief.
                     varBeliefsAdjs[v.getId()].addValue(c, adj_b);
                 }

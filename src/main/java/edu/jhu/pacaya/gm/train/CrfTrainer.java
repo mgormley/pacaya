@@ -47,13 +47,6 @@ public class CrfTrainer {
         public Trainer trainer = Trainer.CLL;
         /** The decoder and loss function used by ERMA training. */
         public DlFactory dlFactory = new ExpectedRecallFactory();
-        /**
-         * Whether to use the mean squared error (MSE) in place of conditional
-         * log-likelihood in the CRF objective. This is useful for loopy graphs
-         * where the BP estimate of the partition function is unreliable.
-         */
-        @Deprecated
-        public boolean useMseForValue = false;
     }
     
     private static final Logger log = LoggerFactory.getLogger(CrfTrainer.class);

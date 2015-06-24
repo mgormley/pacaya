@@ -19,7 +19,7 @@ import edu.jhu.pacaya.util.collections.Lists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
-public class MeanSquaredErrorTest {
+public class L2DistanceTest {
     
     private VarConfig goldConfig;
     private Identity<Beliefs> id1;
@@ -53,7 +53,7 @@ public class MeanSquaredErrorTest {
     @Test
     public void testSimple() {
         Algebra s = RealAlgebra.getInstance();        
-        MeanSquaredError mse = new MeanSquaredError(id1, goldConfig);
+        L2Distance mse = new L2Distance(id1, goldConfig);
         
         Tensor out = mse.forward();
         assertEquals(sq(1-0.3)+sq(0-.7)+sq(0-.4)+sq(1-.6), out.getValue(0), 1e-13);
@@ -75,7 +75,7 @@ public class MeanSquaredErrorTest {
     public void testGradByFiniteDiffsAllSemirings() {
         OneToOneFactory<Beliefs,Tensor> fact = new OneToOneFactory<Beliefs,Tensor>() {
             public Module<Tensor> getModule(Module<Beliefs> m1) {
-                return new MeanSquaredError(m1, goldConfig);
+                return new L2Distance(m1, goldConfig);
             }
         };        
         AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact, id1);

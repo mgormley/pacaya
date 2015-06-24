@@ -40,7 +40,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
             if (annealMse) {
                 double prop = (double) curIter / maxIter;
                 
-                Module<Tensor> mse = new MeanSquaredError(inf, goldConfig);
+                Module<Tensor> mse = new L2Distance(inf, goldConfig);
                 Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temp);                
                 Module<Tensor> lin = new ElemLinear(mse, dep, (1.0-prop), prop);
                 return new TopoOrder<Tensor>(Lists.getList(inf, temp), lin);
