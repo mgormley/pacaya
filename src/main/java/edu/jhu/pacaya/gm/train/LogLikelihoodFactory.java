@@ -23,7 +23,7 @@ public class LogLikelihoodFactory implements MtFactory {
         if (weight != 1.0) {
             throw new IllegalArgumentException("Weight not supported by CLL.");
         }
-        if (true || hasLatentVars(fg)) {
+        if (hasLatentVars(fg)) {
             return new MarginalLogLikelihood(mid, fg, infFactory, goldConfig);
         } else {
             return new LogLikelihood(mid, fg, infFactory, goldConfig);
