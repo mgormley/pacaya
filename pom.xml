@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.0.11</version>
+  <version>3.0.12-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -13,7 +13,7 @@
 
   <properties>
     <!-- The version for the Pacaya dependencies. -->
-    <pacaya.version>3.0.11</pacaya.version>
+    <pacaya.version>3.0.12-SNAPSHOT</pacaya.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
@@ -105,7 +105,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/src/benchmark/java</source>
+                <source>${project.basedir}/src/perf/java</source>
               </sources>
             </configuration>
           </execution>
@@ -129,6 +129,19 @@
             </property>
           </properties>
         </configuration>
+      </plugin>
+      <!-- This plugin creates a separate jar for the test classes. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -266,7 +279,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8</version>
-      <!-- <scope>test</scope> -->
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>edu.jhu.prim</groupId>
@@ -346,10 +359,10 @@
       <version>4.4.4</version>
     </dependency>
     <dependency>
-      <groupId>edu.jhu.hlt.optimize</groupId>
+      <groupId>edu.jhu.hlt.optimize-wrappers</groupId>
       <artifactId>optimize-wrappers</artifactId>
       <version>${pacaya.version}</version>
-      <optional>true</optional>      
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
