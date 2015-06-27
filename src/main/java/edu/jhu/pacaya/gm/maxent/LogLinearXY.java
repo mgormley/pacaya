@@ -29,8 +29,8 @@ import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.train.CrfTrainer;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.pacaya.util.Alphabet;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.tuple.Pair;
 
 /**
@@ -55,7 +55,7 @@ public class LogLinearXY {
         this.prm = prm;
     }
     
-    private Alphabet<String> alphabet = null;
+    private IntObjectBimap<String> alphabet = null;
     private List<String> stateNames = null;
     
     /**
@@ -66,7 +66,7 @@ public class LogLinearXY {
      * @return Trained model.
      */
     public FgModel train(LogLinearXYData data) {
-        Alphabet<String> alphabet = data.getFeatAlphabet();
+        IntObjectBimap<String> alphabet = data.getFeatAlphabet();
         FgExampleList list = getData(data);
         log.info("Number of train instances: " + list.size());                
         log.info("Number of model parameters: " + alphabet.size());
@@ -104,7 +104,7 @@ public class LogLinearXY {
      * For testing only. Converts to the graphical model's representation of the data.
      */
     public FgExampleList getData(LogLinearXYData data) {
-        Alphabet<String> alphabet = data.getFeatAlphabet();
+        IntObjectBimap<String> alphabet = data.getFeatAlphabet();
         List<LogLinearExample> exList = data.getData();    
         if (this.alphabet == null) {
             this.alphabet = alphabet;
@@ -151,7 +151,7 @@ public class LogLinearXY {
         return new Var(VarType.PREDICTED, stateNames.size(), "v0", stateNames);
     }
     
-    private static List<String> getStateNames(List<LogLinearExample> exList, Alphabet<Object> yAlphabet) {
+    private static List<String> getStateNames(List<LogLinearExample> exList, IntObjectBimap<Object> yAlphabet) {
         StringIterable iter = new StringIterable(yAlphabet.getObjects());
         List<String> list = new ArrayList<String>();
         for (String s : iter) {

@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.jhu.pacaya.nlp.data.Sentence;
 import edu.jhu.pacaya.parse.cky.GrammarConstants;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 
 /**
@@ -220,7 +220,7 @@ public class BinaryTree {
     /**
      * Gets the lexical item ids comprising the sentence.
      */
-    public int[] getSentenceIds(Alphabet<String> lexAlphabet) {
+    public int[] getSentenceIds(IntObjectBimap<String> lexAlphabet) {
         ArrayList<BinaryTree> leaves = getLexicalLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
@@ -229,7 +229,7 @@ public class BinaryTree {
         return sent;
     }
 
-    public Sentence getSentence(Alphabet<String> lexAlphabet) {
+    public Sentence getSentence(IntObjectBimap<String> lexAlphabet) {
         ArrayList<BinaryTree> leaves = getLexicalLeaves();
         ArrayList<String> labels = new ArrayList<String>(leaves.size());
         for (int i = 0; i < leaves.size(); i++) {

@@ -2,9 +2,11 @@ package edu.jhu.pacaya.util;
 
 import java.util.BitSet;
 
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 
-public class FeatureNames extends Alphabet<Object> {
+
+public class FeatureNames extends IntObjectBimap<Object> {
 
 	private static final long serialVersionUID = 1L;
 

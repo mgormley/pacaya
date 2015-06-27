@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.list.IntArrayList;
 
 
@@ -15,22 +15,22 @@ public class LabelSequence<X> implements Iterable<X>, Serializable {
     private static final long serialVersionUID = 1L;
     private ArrayList<X> labels;
     private IntArrayList labelIds;     // TODO: cache an int[] version of this.
-    private Alphabet<X> alphabet;
+    private IntObjectBimap<X> alphabet;
     
-    protected LabelSequence(Alphabet<X> alphabet) {
+    protected LabelSequence(IntObjectBimap<X> alphabet) {
         labels = new ArrayList<X>();
         labelIds = new IntArrayList();
         this.alphabet = alphabet; 
     }
 
-    public LabelSequence(Alphabet<X> alphabet, Iterable<X> labels) {
+    public LabelSequence(IntObjectBimap<X> alphabet, Iterable<X> labels) {
         this(alphabet);
         for (X l : labels) {
             add(l);
         }
     }
     
-    public LabelSequence(Alphabet<X> alphabet, int[] labelIds) {
+    public LabelSequence(IntObjectBimap<X> alphabet, int[] labelIds) {
         this(alphabet);
         for (int labelId : labelIds) {
             add(labelId);
@@ -68,7 +68,7 @@ public class LabelSequence<X> implements Iterable<X>, Serializable {
         return labelIds.toNativeArray();
     }
 
-    public Alphabet<X> getAlphabet() {
+    public IntObjectBimap<X> getAlphabet() {
         return alphabet;
     }
     

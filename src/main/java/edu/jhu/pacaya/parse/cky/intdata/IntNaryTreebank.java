@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 public class IntNaryTreebank extends ArrayList<IntNaryTree> {
 
@@ -19,7 +19,7 @@ public class IntNaryTreebank extends ArrayList<IntNaryTree> {
     /**
      * Reads a list of trees in Penn Treebank format.
      */
-    public static IntNaryTreebank readTreesInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    public static IntNaryTreebank readTreesInPtbFormat(IntObjectBimap<String> lexAlphabet, IntObjectBimap<String> ntAlphabet, Reader reader) throws IOException {
         IntNaryTreebank trees = new IntNaryTreebank();
         while (true) {
             IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
@@ -71,7 +71,7 @@ public class IntNaryTreebank extends ArrayList<IntNaryTree> {
         writer.close(); 
     } 
 
-    public IntBinaryTreebank leftBinarize(Alphabet<String> ntAlphabet) {
+    public IntBinaryTreebank leftBinarize(IntObjectBimap<String> ntAlphabet) {
         IntBinaryTreebank binaryTrees = new IntBinaryTreebank();
         for (IntNaryTree tree : this) {
             binaryTrees.add(tree.leftBinarize(ntAlphabet));
@@ -79,8 +79,8 @@ public class IntNaryTreebank extends ArrayList<IntNaryTree> {
         return binaryTrees;
     }
 
-    public void resetAlphabets(Alphabet<String> lexAlphabet,
-            Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(IntObjectBimap<String> lexAlphabet,
+            IntObjectBimap<String> ntAlphabet) {
         for (IntNaryTree tree : this) {
             tree.resetAlphabets(lexAlphabet, ntAlphabet);
         }
