@@ -8,7 +8,7 @@ import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Wraps a MessagePassingSchedule to create an iteration-specific schedule such that: at iteration
@@ -128,7 +128,7 @@ public class CachingBpSchedule {
         if (item instanceof List) {
             return (List<?>) item;
         } else {
-            return Lists.getList(item);
+            return QLists.getList(item);
         }
     }
 

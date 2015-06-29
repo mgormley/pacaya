@@ -4,7 +4,7 @@ import java.util.List;
 
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Link variable. When true it indicates that there is an edge between its
@@ -22,7 +22,7 @@ public class LinkVar extends Var {
     // The config ID of a factor with two TRUE LinkVars.
     public static final int TRUE_TRUE = 3;
     
-    private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
+    private static final List<String> BOOLEANS = QLists.getList("FALSE", "TRUE");
 
     private int parent;
     private int child;     

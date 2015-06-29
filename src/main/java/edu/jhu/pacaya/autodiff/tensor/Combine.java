@@ -5,7 +5,7 @@ import java.util.List;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Combines two tensors into a single larger tensor by adding an additional dimension of size two.
@@ -41,7 +41,7 @@ public class Combine extends AbstractModule<Tensor> implements Module<Tensor> {
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(mod1, mod2);
+        return QLists.getList(mod1, mod2);
     }
 
 }

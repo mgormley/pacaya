@@ -11,7 +11,7 @@ import edu.jhu.pacaya.autodiff.tensor.ElemMultiply;
 import edu.jhu.pacaya.autodiff.tensor.Exp;
 import edu.jhu.pacaya.autodiff.tensor.ScalarDivide;
 import edu.jhu.pacaya.autodiff.tensor.Select;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -74,7 +74,7 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
         
         ConvertAlgebra<Tensor> conv = new ConvertAlgebra<Tensor>(marg, outS);
 
-        return new TopoOrder<Tensor>(Lists.getList(pIn, tIn), conv);
+        return new TopoOrder<Tensor>(QLists.getList(pIn, tIn), conv);
     }
 
     public void report() {

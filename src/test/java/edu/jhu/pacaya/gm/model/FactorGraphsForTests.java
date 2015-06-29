@@ -4,7 +4,7 @@ import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 // TODO: Move FactorGraphTest.* and CrfTrainerTest.* here.
 public class FactorGraphsForTests {
@@ -95,14 +95,14 @@ public class FactorGraphsForTests {
         FactorGraph fg = new FactorGraph();
     
         // Create three words.
-        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", QLists.getList("man", "dog"));
+        Var w1 = new Var(VarType.PREDICTED, 2, "w1", QLists.getList("run", "jump"));
+        Var w2 = new Var(VarType.PREDICTED, 2, "w2", QLists.getList("fence", "bucket"));
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", QLists.getList("N", "V"));
     
         // Emission factors. 
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0, w0)); 
@@ -172,19 +172,19 @@ public class FactorGraphsForTests {
         FactorGraph fg = new FactorGraph();
     
         // Create three words.
-        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", QLists.getList("man", "dog"));
+        Var w1 = new Var(VarType.PREDICTED, 2, "w1", QLists.getList("run", "jump"));
+        Var w2 = new Var(VarType.PREDICTED, 2, "w2", QLists.getList("fence", "bucket"));
     
         // Create latent classes.
-        Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));
-        Var z1 = new Var(VarType.LATENT, 2, "z1", Lists.getList("C1", "C2"));
-        Var z2 = new Var(VarType.LATENT, 2, "z2", Lists.getList("C1", "C2"));
+        Var z0 = new Var(VarType.LATENT, 2, "z0", QLists.getList("C1", "C2"));
+        Var z1 = new Var(VarType.LATENT, 2, "z1", QLists.getList("C1", "C2"));
+        Var z2 = new Var(VarType.LATENT, 2, "z2", QLists.getList("C1", "C2"));
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", QLists.getList("N", "V"));
     
         // Emission factors. 
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(z0, w0)); 
@@ -278,14 +278,14 @@ public class FactorGraphsForTests {
         FactorGraph fg = new FactorGraph();
     
         // Create three words.
-        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", QLists.getList("man", "dog"));
+        Var w1 = new Var(VarType.PREDICTED, 2, "w1", QLists.getList("run", "jump"));
+        Var w2 = new Var(VarType.PREDICTED, 2, "w2", QLists.getList("fence", "bucket"));
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", QLists.getList("N", "V"));
     
         // Emission factors. 
         ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(t0, w0), "emit", ofc, obsFe); 
@@ -352,19 +352,19 @@ public class FactorGraphsForTests {
         FactorGraph fg = new FactorGraph();
     
         // Create three words.
-        Var w0 = new Var(VarType.PREDICTED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.PREDICTED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.PREDICTED, 2, "w2", Lists.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", QLists.getList("man", "dog"));
+        Var w1 = new Var(VarType.PREDICTED, 2, "w1", QLists.getList("run", "jump"));
+        Var w2 = new Var(VarType.PREDICTED, 2, "w2", QLists.getList("fence", "bucket"));
     
         // Create latent classes.
-        Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));
-        Var z1 = new Var(VarType.LATENT, 2, "z1", Lists.getList("C1", "C2"));
-        Var z2 = new Var(VarType.LATENT, 2, "z2", Lists.getList("C1", "C2"));
+        Var z0 = new Var(VarType.LATENT, 2, "z0", QLists.getList("C1", "C2"));
+        Var z1 = new Var(VarType.LATENT, 2, "z1", QLists.getList("C1", "C2"));
+        Var z2 = new Var(VarType.LATENT, 2, "z2", QLists.getList("C1", "C2"));
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", QLists.getList("N", "V"));
     
         // Emission factors. 
         ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(z0, w0), "emit", ofc, obsFe); 
@@ -477,7 +477,7 @@ public class FactorGraphsForTests {
 
     public static FgAndVars getOneVarFgAndVars(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
         FactorGraph fg = new FactorGraph();
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
         
         ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(t0), "emit", ofc, obsFe); 
     

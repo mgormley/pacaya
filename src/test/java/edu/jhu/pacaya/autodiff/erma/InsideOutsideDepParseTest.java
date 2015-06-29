@@ -14,7 +14,7 @@ import edu.jhu.pacaya.autodiff.TopoOrder;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.pacaya.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -71,7 +71,7 @@ public class InsideOutsideDepParseTest {
         InsideOutsideDepParse ea = new InsideOutsideDepParse(idCo);
         ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, s);
 
-        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), eaCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1), eaCo);
         
         Tensor out = topo.forward();
         System.out.println(out);

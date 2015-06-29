@@ -15,7 +15,7 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
@@ -27,8 +27,8 @@ public class ExpectedRecallTest {
 
     @Before
     public void setUp() {
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
         t0.setId(0);
         t1.setId(1);
         

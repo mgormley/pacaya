@@ -8,7 +8,7 @@ import edu.jhu.pacaya.autodiff.tensor.ElemLinear;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.math.FastMath;
@@ -43,7 +43,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
                 Module<Tensor> mse = new L2Distance(inf, goldConfig);
                 Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temp);                
                 Module<Tensor> lin = new ElemLinear(mse, dep, (1.0-prop), prop);
-                return new TopoOrder<Tensor>(Lists.getList(inf, temp), lin);
+                return new TopoOrder<Tensor>(QLists.getList(inf, temp), lin);
             } else {
                 return new DepParseDecodeLoss(inf, goldConfig, temp);
             }
@@ -83,7 +83,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         VarSet predVars = VarSet.getVarsOfType(goldConfig.getVars(), VarType.PREDICTED);
         VarConfig predConfig = goldConfig.getSubset(predVars);
         ExpectedRecall er = new ExpectedRecall(d2b, predConfig);
-        return new TopoOrder<Tensor>(Lists.getList(inf, temperature), er);
+        return new TopoOrder<Tensor>(QLists.getList(inf, temperature), er);
     }
     
 }

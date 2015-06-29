@@ -15,8 +15,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.Toposort.Deps;
-import edu.jhu.pacaya.util.collections.Lists;
-import edu.jhu.pacaya.util.collections.Sets;
+import edu.jhu.pacaya.util.collections.QLists;
+import edu.jhu.pacaya.util.collections.QSets;
 import edu.jhu.prim.util.random.Prng;
 
 public class ToposortTest {
@@ -39,7 +39,7 @@ public class ToposortTest {
                 "[7, 3, 8, 5, 11, 10, 9, 2, ROOT]",
         });
         
-        for (int i : Lists.getList(1, 10, 12)) {
+        for (int i : QLists.getList(1, 10, 12)) {
             Deps<String> deps = new ShuffledSimpleGraph(i);
             List<String> sort = Toposort.toposort("ROOT", deps);            
             if(valid.contains(sort.toString())) {
@@ -55,7 +55,7 @@ public class ToposortTest {
         Deps<String> deps = new SimpleGraph() {
             public List<String> getDeps(String x) {
                 if (x == "5") {
-                    return Lists.getList("7", "2");
+                    return QLists.getList("7", "2");
                 }
                 return super.getDeps(x);
             }
@@ -77,7 +77,7 @@ public class ToposortTest {
         });
         
         Deps<String> deps = new DiamondGraph();
-        List<String> sort = Toposort.toposort(Lists.getList("4"), "ROOT", deps);
+        List<String> sort = Toposort.toposort(QLists.getList("4"), "ROOT", deps);
         System.out.println(sort);
         assertTrue(valid.contains(sort.toString()));
     }
@@ -94,10 +94,10 @@ public class ToposortTest {
                 "[11, 10, 8, 9, 2, ROOT]",
         });
         
-        for (int i : Lists.getList(0, 1, 2)) {
+        for (int i : QLists.getList(0, 1, 2)) {
             // Note: in current implementation all orders are equivalent.
             Deps<String> deps = new ShuffledSimpleGraph(i*3);
-            List<String> sort = Toposort.toposort(Lists.getList("7", "5", "3"), "ROOT", deps);            
+            List<String> sort = Toposort.toposort(QLists.getList("7", "5", "3"), "ROOT", deps);            
             if(valid.contains(sort.toString())) {
                 System.out.println("i:" + i);
             }
@@ -111,14 +111,14 @@ public class ToposortTest {
         SimpleGraph deps = new SimpleGraph();
         // Invalid leaf set.
         try {
-            Toposort.toposort(Lists.getList("11", "8"), "ROOT", deps);         
+            Toposort.toposort(QLists.getList("11", "8"), "ROOT", deps);         
             fail();
         } catch (IllegalStateException e) {
             //pass
         }
         // Multiple copies.
         try {
-            Toposort.toposort(Lists.getList("11", "8", "11"), "ROOT", deps);         
+            Toposort.toposort(QLists.getList("11", "8", "11"), "ROOT", deps);         
             fail();
         } catch (IllegalStateException e) {
             //pass
@@ -129,31 +129,31 @@ public class ToposortTest {
     public void testCheckIsValidLeafSet() {
         SimpleGraph deps = new SimpleGraph();
         // root = ROOT
-        Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("11", "8", "3")), "ROOT", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("7", "5", "3")), "ROOT", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("11", "9", "10")), "ROOT", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("ROOT")), "ROOT", deps);
+        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8", "3")), "ROOT", deps);
+        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("7", "5", "3")), "ROOT", deps);
+        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "9", "10")), "ROOT", deps);
+        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("ROOT")), "ROOT", deps);
         
         // root = 9
-        Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("7", "5", "3")), "9", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("11", "8")), "9", deps);
+        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("7", "5", "3")), "9", deps);
+        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8")), "9", deps);
         
         try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("11", "8")), "ROOT", deps);
+            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8")), "ROOT", deps);
             fail();
         } catch (IllegalStateException e) {
             //pass
         }
 
         try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("5", "3")), "ROOT", deps);
+            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("5", "3")), "ROOT", deps);
             fail();
         } catch (IllegalStateException e) {
             //pass
         }
 
         try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("2", "8", "5")), "ROOT", deps);
+            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("2", "8", "5")), "ROOT", deps);
             fail();
         } catch (IllegalStateException e) {
             //pass
@@ -161,7 +161,7 @@ public class ToposortTest {
         
         // ROOT is not a descendent of 9.
         try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(Lists.getList("11", "8", "ROOT")), "9", deps);
+            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8", "ROOT")), "9", deps);
             fail();
         } catch (IllegalStateException e) {
             //pass
@@ -188,15 +188,15 @@ public class ToposortTest {
     public void testGetImmediateParents() {
         {
             SimpleGraph deps = new SimpleGraph();
-            HashSet<String> inputs = new HashSet<String>(Lists.getList("7", "5", "3"));
+            HashSet<String> inputs = new HashSet<String>(QLists.getList("7", "5", "3"));
             Set<String> parents = Toposort.getImmediateParents(inputs, "ROOT", deps);
-            assertEquals(Sets.getSet("11", "8", "10"), parents);
+            assertEquals(QSets.getSet("11", "8", "10"), parents);
         }
         {
             SimpleGraph deps = new SimpleGraph();
             HashSet<String> inputs = new HashSet<String>();
             Set<String> parents = Toposort.getImmediateParents(inputs, "ROOT", deps);
-            assertEquals(Sets.getSet("7", "5", "3"), parents);
+            assertEquals(QSets.getSet("7", "5", "3"), parents);
         }
     }
     
@@ -223,15 +223,15 @@ public class ToposortTest {
         @Override
         public List<String> getDeps(String x) {
             switch(x) {
-            case "ROOT": return Lists.getList("2", "9", "10");
-            case "2": return Lists.getList("11");
-            case "9": return Lists.getList("11", "8");
-            case "10": return Lists.getList("11", "3");
-            case "11": return Lists.getList("7", "5");
-            case "8": return Lists.getList("7", "3");
-            case "7": return Lists.getList();
-            case "5": return Lists.getList();
-            case "3": return Lists.getList();
+            case "ROOT": return QLists.getList("2", "9", "10");
+            case "2": return QLists.getList("11");
+            case "9": return QLists.getList("11", "8");
+            case "10": return QLists.getList("11", "3");
+            case "11": return QLists.getList("7", "5");
+            case "8": return QLists.getList("7", "3");
+            case "7": return QLists.getList();
+            case "5": return QLists.getList();
+            case "3": return QLists.getList();
             default: throw new IllegalArgumentException("Unknown node: " + x);
             }
         }
@@ -244,11 +244,11 @@ public class ToposortTest {
         @Override
         public List<String> getDeps(String x) {
             switch(x) {
-            case "ROOT": return Lists.getList("1");
-            case "1": return Lists.getList("2", "3");
-            case "2": return Lists.getList("3", "4");
-            case "3": return Lists.getList("4");
-            case "4": return Lists.getList();
+            case "ROOT": return QLists.getList("1");
+            case "1": return QLists.getList("2", "3");
+            case "2": return QLists.getList("3", "4");
+            case "3": return QLists.getList("4");
+            case "4": return QLists.getList();
             default: throw new IllegalArgumentException("Unknown node: " + x);
             }
         }

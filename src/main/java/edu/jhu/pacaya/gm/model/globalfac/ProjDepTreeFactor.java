@@ -31,7 +31,7 @@ import edu.jhu.pacaya.hypergraph.depparse.HyperDepParser;
 import edu.jhu.pacaya.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ParentsArray;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -148,7 +148,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn, fm);
+            return QLists.getList(modIn, fm);
         }
         
     }

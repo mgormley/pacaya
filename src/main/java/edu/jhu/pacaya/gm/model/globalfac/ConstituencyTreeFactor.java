@@ -23,7 +23,7 @@ import edu.jhu.pacaya.parse.cky.Scorer;
 import edu.jhu.pacaya.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgIoChart;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -73,7 +73,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         public static final int TRUE = 1;
         public static final int FALSE = 0;
 
-        private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
+        private static final List<String> BOOLEANS = QLists.getList("FALSE", "TRUE");
         private int start;
         private int end;
 

@@ -12,12 +12,16 @@ import java.util.Set;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.IntObjectHashMap;
 
-public class Maps {
+/**
+ * Functions for quick manipulation and creation of {@link Map}s.
+ * @author mgormley
+ */
+public class QMaps {
 
     public static final Integer INTEGER_ZERO = Integer.valueOf(0);
     public static final Double DOUBLE_ZERO = Double.valueOf(0.0);
 
-    private Maps() {
+    private QMaps() {
         // private constructor
     }
 

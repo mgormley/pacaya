@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
 import edu.jhu.pacaya.autodiff.tensor.ConvertAlgebra;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -47,8 +47,8 @@ public class AbstractModuleTest {
     /** Factory for a module which takes two tensor modules as input. */
     public interface Tensor2Factory extends TwoToOneFactory<Tensor, Tensor, Tensor> { }
 
-    private static final List<Algebra> test2Algebras = Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
-    private static final List<Algebra> test3Algebras = Lists.getList(RealAlgebra.getInstance(), SplitAlgebra.getInstance(), LogSignAlgebra.getInstance());
+    private static final List<Algebra> test2Algebras = QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
+    private static final List<Algebra> test3Algebras = QLists.getList(RealAlgebra.getInstance(), SplitAlgebra.getInstance(), LogSignAlgebra.getInstance());
     
     /** Evaluation of a module which takes one tensor modules as input. */
     public static void evalTensor1(Tensor t1, Tensor expT1Adj, Tensor1Factory fact, Tensor expOut, double adjFill) {
@@ -63,7 +63,7 @@ public class AbstractModuleTest {
         Module<Tensor> ea = fact.getModule(id1Co);
         ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, t1.getAlgebra());
     
-        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), eaCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1), eaCo);
         
         Tensor out = topo.forward();
         assertTensorEqual(expOut, out, 1e-10);
@@ -105,7 +105,7 @@ public class AbstractModuleTest {
         Module<Tensor> main = fact.getModule(id1Co, id2Co);
         ConvertAlgebra<Tensor> mainCo = new ConvertAlgebra<Tensor>(main, t1.getAlgebra());
     
-        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1, id2), mainCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1, id2), mainCo);
         
         Tensor out = topo.forward();
         assertTensorEqual(expOut, out, 1e-13);
@@ -177,7 +177,7 @@ public class AbstractModuleTest {
             Module<Y> main = fact.getModule(in1Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.getInstance());
             
-            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
+            TopoOrder<Y> topo = new TopoOrder<Y>(QLists.getList(in1), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
             double delta = s.equals(SplitAlgebra.getInstance()) ? 1e-2 : 1e-7;
             ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
@@ -240,7 +240,7 @@ public class AbstractModuleTest {
             Module<Y> main = fact.getModule(in1Co, in2Co);
             Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.getInstance());
             
-            TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1, in2), mainCo);
+            TopoOrder<Y> topo = new TopoOrder<Y>(QLists.getList(in1, in2), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
             double delta = s.equals(SplitAlgebra.getInstance()) ? 1e-2 : 1e-8;
             ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
@@ -269,12 +269,12 @@ public class AbstractModuleTest {
             @SuppressWarnings("unchecked")
             Module<Y>[] topos = new Module[2];
             int i=0;
-            for (OneToOneFactory<X,Y> fact : Lists.getList(fact1, fact2)) {
+            for (OneToOneFactory<X,Y> fact : QLists.getList(fact1, fact2)) {
                 Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
                 Module<Y> main = fact.getModule(in1Co);
                 Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.getInstance());
                 
-                TopoOrder<Y> topo = new TopoOrder<Y>(Lists.getList(in1), mainCo);
+                TopoOrder<Y> topo = new TopoOrder<Y>(QLists.getList(in1), mainCo);
                 topos[i++] = topo;
             }
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topos[0].getInputs()));

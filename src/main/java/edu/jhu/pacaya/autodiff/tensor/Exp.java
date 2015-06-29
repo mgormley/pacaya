@@ -5,7 +5,7 @@ import java.util.List;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Takes the exp of each entry.
@@ -43,7 +43,7 @@ public class Exp extends AbstractModule<Tensor> implements Module<Tensor> {
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(modInX);
+        return QLists.getList(modInX);
     }
 
 }

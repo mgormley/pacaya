@@ -14,7 +14,7 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
@@ -53,8 +53,8 @@ public class DepTensorFromBeliefsTest {
     }
 
     public static Identity<Beliefs> getBeliefsModule() {
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
         LinkVar l0 = new LinkVar(VarType.PREDICTED, "l0", -1, 1);
         LinkVar l1 = new LinkVar(VarType.PREDICTED, "l1", 1, 0);
         t0.setId(0);

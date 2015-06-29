@@ -14,7 +14,7 @@ import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -82,7 +82,7 @@ public class ProjDepTreeModuleTest {
     
     @Test
     public void testForwardAndBackward() {
-        for (final Algebra tmpS : Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
+        for (final Algebra tmpS : QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
             Tensor t1 = new Tensor(s, 2, 2);
             t1.set(0.5, 0, 0);
             t1.set(0.5, 0, 1);
@@ -166,8 +166,8 @@ public class ProjDepTreeModuleTest {
 
     @Test
     public void testGradWithZeroAdjointsInAndPruning() {
-        for (Double adjVal : Lists.getList(0., 1.)) {
-            for (double[] inVals : Lists.getList(new double[]{.5, .5}, new double[]{0, 1})) {
+        for (Double adjVal : QLists.getList(0., 1.)) {
+            for (double[] inVals : QLists.getList(new double[]{.5, .5}, new double[]{0, 1})) {
                 System.out.println("inVals: " + Arrays.toString(inVals) + " adjVal: " + adjVal);
                 Tensor tmTrueIn = new Tensor(s, 3,3);
                 Identity<Tensor> id1 = new Identity<Tensor>(tmTrueIn);
@@ -201,7 +201,7 @@ public class ProjDepTreeModuleTest {
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.
-        for (final Algebra tmpS : Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
+        for (final Algebra tmpS : QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
             Tensor t1 = new Tensor(s, 3,3);
             Identity<Tensor> id1 = new Identity<Tensor>(t1);
             Tensor t2 = new Tensor(s, 3,3);

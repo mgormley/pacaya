@@ -5,7 +5,7 @@ import java.util.List;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Element-wise operation which takes the left side if the mark is zero, and the right side
@@ -61,7 +61,7 @@ public class TakeLeftIfZero extends AbstractModule<Tensor> implements Module<Ten
     @Override
     public List<Module<Tensor>> getInputs() {
         // The mark is excluded from the inputs list since nothing is backpropagated to it.
-        return Lists.getList(leftIn, rightIn);
+        return QLists.getList(leftIn, rightIn);
     }
     
 }

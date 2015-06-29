@@ -45,7 +45,7 @@ import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
 import edu.jhu.pacaya.util.JUnitUtils;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
@@ -83,9 +83,9 @@ public class CrfTrainerTest {
     public void testLogLinearModelShapesErma() {
         LogLinearXYData xyData = new LogLinearXYData();
         List<String>[] fvs;
-        fvs = new List[]{ Lists.getList("x=A,y=A"), Lists.getList("x=A,y=B") };
+        fvs = new List[]{ QLists.getList("x=A,y=A"), QLists.getList("x=A,y=B") };
         xyData.addExStrFeats(1.0, "x=A", "y=A", fvs);
-        fvs = new List[]{ Lists.getList("x=B,y=A"), Lists.getList("x=B,y=B") };
+        fvs = new List[]{ QLists.getList("x=B,y=A"), QLists.getList("x=B,y=B") };
         xyData.addExStrFeats(1.0, "x=B", "y=B", fvs);        
         LogLinearXY xy = new LogLinearXY(new LogLinearXYPrm());
         FgExampleList data = xy.getData(xyData);
@@ -246,7 +246,7 @@ public class CrfTrainerTest {
                         f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), MockTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
-                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));
+                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, QLists.getList("A1", "A2", "A3"));
                         fg.addFactor(new ObsFeExpFamFactor(new VarSet(childRoles[i][j]), MockTemplate.ROLE_UNARY, ofc, obsFe));
                         
                         //trainConfig.put(childVars[i][j], 0);

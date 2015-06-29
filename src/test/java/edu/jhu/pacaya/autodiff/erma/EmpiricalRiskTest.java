@@ -23,7 +23,7 @@ import edu.jhu.pacaya.gm.train.LogLikelihoodFactory;
 import edu.jhu.pacaya.gm.train.ModuleObjective;
 import edu.jhu.pacaya.gm.train.MtFactory;
 import edu.jhu.pacaya.util.JUnitUtils;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -59,9 +59,9 @@ public class EmpiricalRiskTest {
     private void helpSimpleGradient(double[] params, DlFactory dl, Trainer trainer, double[] expected, Algebra s) {
         LogLinearXYData xyData = new LogLinearXYData();
         List<String>[] fvs;
-        fvs = new List[]{ Lists.getList("x=A,y=A"), Lists.getList("x=A,y=B") };
+        fvs = new List[]{ QLists.getList("x=A,y=A"), QLists.getList("x=A,y=B") };
         xyData.addExStrFeats(1.0, "x=A", "y=A", fvs);
-        fvs = new List[]{ Lists.getList("x=B,y=A"), Lists.getList("x=B,y=B") };
+        fvs = new List[]{ QLists.getList("x=B,y=A"), QLists.getList("x=B,y=B") };
         xyData.addExStrFeats(1.0, "x=B", "y=B", fvs);        
         LogLinearXY xy = new LogLinearXY(new LogLinearXYPrm());
         FgExampleList data = xy.getData(xyData);

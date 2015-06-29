@@ -14,7 +14,7 @@ import edu.jhu.pacaya.autodiff.TopoOrder;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.train.MtFactory;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.TimerAdder;
@@ -83,7 +83,7 @@ public class EmpiricalRisk extends TopoOrder<Tensor> implements Module<Tensor> {
                 // Decoding and Loss.
                 dl = dlFactory.getDl(goldConfig, effm, inf, curIter, maxIter);
                 // Define topo order.
-                shallowCopy(new TopoOrder<Tensor>(Lists.getList(mid), dl, "EmpiricalRisk"));
+                shallowCopy(new TopoOrder<Tensor>(QLists.getList(mid), dl, "EmpiricalRisk"));
             }
         }
     }
@@ -133,6 +133,6 @@ public class EmpiricalRisk extends TopoOrder<Tensor> implements Module<Tensor> {
 
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
-        return Lists.getList(mid);
+        return QLists.getList(mid);
     }
 }

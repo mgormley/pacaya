@@ -5,7 +5,7 @@ import java.util.List;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -47,7 +47,7 @@ public class ConvertAlgebra<T extends MVec> extends AbstractModule<T> implements
 
     @Override
     public List<Module<T>> getInputs() {
-        return Lists.getList(modIn);
+        return QLists.getList(modIn);
     }
     
 }

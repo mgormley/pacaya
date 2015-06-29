@@ -27,7 +27,7 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -131,9 +131,9 @@ public class ErmaBpForwardTest {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", QLists.getList("N", "V"));
         
         // Emission factors. 
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0));; 

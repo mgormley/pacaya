@@ -14,7 +14,7 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.FeatureNames;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 public class ObsFeatureConjoinerTest {
 
@@ -100,8 +100,8 @@ public class ObsFeatureConjoinerTest {
     }
     
     private LFgExample getExForFts(String state1, String state2, ObsFeatureConjoiner ofc, FactorTemplateList fts, boolean useLat) {
-        Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
-        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
+        Var v1 = new Var(VarType.PREDICTED, 2, "1", QLists.getList("1a", "1b"));
+        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", QLists.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();
         MockFeatureExtractor obsFe = new MockFeatureExtractor();
         fg.addFactor(new ObsFeExpFamFactor(new VarSet(v1, v2), "key2", ofc, obsFe));
@@ -119,8 +119,8 @@ public class ObsFeatureConjoinerTest {
     
     public static FactorTemplateList getFtl(boolean useLat) {
         FactorTemplateList fts = new FactorTemplateList();
-        Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
-        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
+        Var v1 = new Var(VarType.PREDICTED, 2, "1", QLists.getList("1a", "1b"));
+        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", QLists.getList("2a", "2b", "2c"));
         {
             FeatureNames alphabet = new FeatureNames();
             alphabet.lookupIndex("feat1");

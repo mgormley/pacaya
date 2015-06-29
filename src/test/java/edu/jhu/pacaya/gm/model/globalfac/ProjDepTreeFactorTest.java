@@ -29,7 +29,7 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -294,7 +294,7 @@ public class ProjDepTreeFactorTest {
         int n = fgl.n;
                 
         // Add an extra variable over which we will marginalize.        
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", QLists.getList("arg0", "_"));
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar, childVars[0][1]));
         roleFac.setValue(0, 2);
         roleFac.setValue(1, 5);
@@ -358,7 +358,7 @@ public class ProjDepTreeFactorTest {
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
         
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Lists.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", QLists.getList("arg0", "_"));
                 
         // Add an extra variable over which we will marginalize.        
         ExplicitFactor roleLinkFac = new ExplicitFactor(new VarSet(childVars[1][0], roleVar));

@@ -2,7 +2,7 @@ package edu.jhu.pacaya.autodiff;
 
 import java.util.List;
 
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * This module is simply the identity function. 
@@ -27,7 +27,7 @@ public class Identity<T extends MVec> extends AbstractMutableModule<T> implement
     }
 
     public List<Module<?>> getInputs() {
-        return Lists.getList();
+        return QLists.getList();
     }
 
 }

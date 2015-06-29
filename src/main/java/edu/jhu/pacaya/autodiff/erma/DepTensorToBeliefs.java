@@ -9,7 +9,7 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Conversion from a Tensor representation of the edge marginals back to Beliefs. The input beliefs
@@ -108,7 +108,7 @@ public class DepTensorToBeliefs extends AbstractModule<Beliefs> implements Modul
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(depIn);
+        return QLists.getList(depIn);
     }    
 
 }

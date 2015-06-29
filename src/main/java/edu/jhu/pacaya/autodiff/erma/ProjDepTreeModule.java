@@ -19,7 +19,7 @@ import edu.jhu.pacaya.autodiff.tensor.ScalarFill;
 import edu.jhu.pacaya.autodiff.tensor.ScalarMultiply;
 import edu.jhu.pacaya.autodiff.tensor.Select;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -123,7 +123,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
         ConvertAlgebra<Tensor> mFalseOut = new ConvertAlgebra<Tensor>(mFalseOut1, outS);        
         comb = new Combine(mFalseOut, mTrueOut);
         
-        topoOrder = Lists.getList(mTrueIn1, mFalseIn1, pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
+        topoOrder = QLists.getList(mTrueIn1, mFalseIn1, pi, weights, parse, alphas, betas, root, edgeSums, bTrue,
                 partition, partitionMat, bFalse, mTrueOut0, mFalseOut0, inProd, mTrueOut1, mFalseOut1, mTrueOut, mFalseOut, comb);
 
         // Forward pass.
@@ -158,7 +158,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
     @Override
     public void backward() {
         // Backward pass.
-        List<Module<Tensor>> rev = Lists.reverse(topoOrder);
+        List<Module<Tensor>> rev = QLists.reverse(topoOrder);
         for (Module<Tensor> module : rev) {
             assert !module.getOutputAdj().containsNaN();
             module.backward();
@@ -188,7 +188,7 @@ public class ProjDepTreeModule implements Module<Tensor> {
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(mTrueIn, mFalseIn);
+        return QLists.getList(mTrueIn, mFalseIn);
     }
 
     /** Special case: all edges are clamped to a specific value.

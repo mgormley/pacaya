@@ -12,7 +12,7 @@ import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -104,7 +104,7 @@ public class FactorsModule extends AbstractModule<Factors> implements Module<Fac
     public List<Module<MVecFgModel>> getInputs() {
         // Note that ONLY the FgModel's module is considered the input. 
         // The factor creation modules are internal to this module.
-        return Lists.getList(modIn);
+        return QLists.getList(modIn);
     }
 
 }

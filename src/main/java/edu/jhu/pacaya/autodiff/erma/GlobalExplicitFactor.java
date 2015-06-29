@@ -16,7 +16,7 @@ import edu.jhu.pacaya.gm.model.IFgModel;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -157,7 +157,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn); // TODO: add fm, but see note above.
+            return QLists.getList(modIn); // TODO: add fm, but see note above.
         }
         
     }

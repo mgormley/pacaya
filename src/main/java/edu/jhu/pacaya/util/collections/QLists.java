@@ -6,9 +6,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class Lists {
+/**
+ * Functions for quick manipulation and creation of {@link List}s.
+ * @author mgormley
+ */
+public class QLists {
 
-    private Lists() {
+    private QLists() {
         // private constructor
     }
 

@@ -24,7 +24,7 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -162,7 +162,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
 
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
-        return Lists.getList(mid);
+        return QLists.getList(mid);
     }
 
 }

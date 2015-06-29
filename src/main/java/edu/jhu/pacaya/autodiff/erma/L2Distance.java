@@ -12,7 +12,7 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Computes the L2 distance between the "true beliefs" and the predicted beliefs.
@@ -97,7 +97,7 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
     
     @Override
     public List<Module<Beliefs>> getInputs() {
-        return Lists.getList(inf);
+        return QLists.getList(inf);
     }
 
 }

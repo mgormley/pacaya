@@ -37,7 +37,7 @@ import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.Prm;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.files.Files;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
@@ -967,7 +967,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
 
     @Override
     public List<Module<Factors>> getInputs() {
-        return Lists.getList(fm);
+        return QLists.getList(fm);
     }
     
     public FactorGraph getFactorGraph() {

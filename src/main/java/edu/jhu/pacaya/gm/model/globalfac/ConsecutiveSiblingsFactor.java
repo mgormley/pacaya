@@ -20,7 +20,7 @@ import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
@@ -112,7 +112,7 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn, fm);
+            return QLists.getList(modIn, fm);
         }
     }
 
@@ -150,7 +150,7 @@ public class ConsecutiveSiblingsFactor extends AbstractConstraintFactor implemen
     
     @Override
     public Module<LazyVarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
-        return new ParamFreeGlobalFactorModule(s, this, Lists.getList(modIn, this.scoresIn));
+        return new ParamFreeGlobalFactorModule(s, this, QLists.getList(modIn, this.scoresIn));
     }
     
     @Override

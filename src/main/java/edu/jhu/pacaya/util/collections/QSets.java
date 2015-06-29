@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+/**
+ * Functions for quick manipulation and creation of {@link Set}s.
+ * @author mgormley
+ */
+public class QSets {
 
-public class Sets {
-
-    private Sets() {
+    private QSets() {
         // private constructor
     }
 
@@ -107,7 +110,7 @@ public class Sets {
 
     @SafeVarargs
     public static <T> Set<T> getSet(T... values) {
-        return new HashSet<T>(Lists.getList(values));
+        return new HashSet<T>(QLists.getList(values));
     }
     
     public static <T> Set<T> union(Set<T> s1, Set<T> s2) {
