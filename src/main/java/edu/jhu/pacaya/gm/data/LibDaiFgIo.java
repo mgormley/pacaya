@@ -37,8 +37,13 @@ public class LibDaiFgIo {
     
     // TODO: Test this.
     public static void write(FactorGraph fg, Path file) throws IOException {
-        BufferedWriter out = Files.newBufferedWriter(file);
-        out.write(String.format("# Num factors = %d, Num variables = %d, Num edges = %d", fg.getNumFactors(), fg.getNumVars(), fg.getNumEdges()));
+        try (BufferedWriter out = Files.newBufferedWriter(file)) {
+            write(fg, out);    
+        }
+    }
+    
+    public static void write(FactorGraph fg, BufferedWriter out) throws IOException {
+        out.write(String.format("# Num factors = %d, Num variables = %d, Num edges = %d\n", fg.getNumFactors(), fg.getNumVars(), fg.getNumEdges()));
         // Write: Number of factors.
         out.write(fg.getNumFactors() + "\n");
         // Write: Empty line.
@@ -51,14 +56,14 @@ public class LibDaiFgIo {
                 out.write(vars.size() + "\n");
                 // Write: The ids of the vars in reverse order, so that the one with the fastest
                 // changing index is the leftmost variable.                
-                for (int v=vars.size()-1; v>=0; v++) {
-                    out.write(vars.get(v).getId());
+                for (int v=vars.size()-1; v>=0; v--) {
+                    out.write("" + vars.get(v).getId());
                     if (v > 0) { out.write(" "); }
                 }
                 out.write("\n");
                 // Write: The number of values each variable in the above row can take on.               
-                for (int v=vars.size()-1; v>=0; v++) {
-                    out.write(vars.get(v).getNumStates());
+                for (int v=vars.size()-1; v>=0; v--) {
+                    out.write("" + vars.get(v).getNumStates());
                     if (v > 0) { out.write(" "); }
                 }
                 out.write("\n");
@@ -66,7 +71,7 @@ public class LibDaiFgIo {
                 out.write(ef.size() + "\n");
                 // Write: The values of the configurations of the variables.
                 for (int c=0; c<ef.size(); c++) {
-                    out.write(c + " " + ef.getValue(c));
+                    out.write(c + " " + ef.getValue(c) + "\n");
                 }
                 // Write: Empty line.
                 out.write("\n");
