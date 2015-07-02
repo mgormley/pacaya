@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
+import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class VarSetTest {
@@ -91,7 +92,7 @@ public class VarSetTest {
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*3*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14}, configs);
+        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, configs);
     }
 
     @Test
@@ -112,7 +113,7 @@ public class VarSetTest {
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*3*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 1, 0, 1, 0, 1, 2, 3, 2, 3, 2, 3, 4, 5, 4, 5, 4, 5, 6, 7, 6, 7, 6, 7, 8, 9, 8, 9, 8, 9}, configs);
+        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 5, 6, 7, 8, 9, 5, 6, 7, 8, 9}, configs);
     }
     
     @Test
@@ -133,7 +134,7 @@ public class VarSetTest {
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*3*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5}, configs);
+        Assert.assertArrayEquals(new int[]{0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5}, configs);
     }
     
     @Test
@@ -151,21 +152,46 @@ public class VarSetTest {
         vars2.add(v0);
         vars2.add(v2);
         
-        System.out.println(new VarTensor(RealAlgebra.REAL_ALGEBRA, vars1));
+        System.out.println(new VarTensor(RealAlgebra.getInstance(), vars1));
         
         // TODO: we can't loop over a particular configuration of vars1, only the config in which each (non-vars2) variable has state 0.
         int[] configs = vars1.getConfigArr(vars2);
         System.out.println(Arrays.toString(configs));
         assertEquals(2*5, configs.length);
-        Assert.assertArrayEquals(new int[]{0, 1, 6, 7, 12, 13, 18, 19, 24, 25}, configs);
+        Assert.assertArrayEquals(new int[]{0, 1, 2, 3, 4, 15, 16, 17, 18, 19}, configs);
     }
     
     public static Var getVar(int id, int numStates) {
         ArrayList<String> stateNames = new ArrayList<String>();
         for (int i=0; i<numStates; i++) {
-            stateNames.add("state" + i);
+            stateNames.add("v" + i);
         }
-        return new Var(VarType.OBSERVED, numStates, "var"+id, stateNames);
+        return new Var(VarType.PREDICTED, numStates, "var"+id, stateNames);
+    }
+
+    @Test
+    public void testGetVarConfigAsArrayInt() throws Exception {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        VarSet vars1 = new VarSet();
+        vars1.add(v0);
+        vars1.add(v1);
+        
+        // Double check that they are ordered as we expect.
+        assertEquals(v0, vars1.get(0));
+        assertEquals(v1, vars1.get(1));
+        
+        for (int c=0; c<vars1.calcNumConfigs(); c++) {
+            System.out.println(Arrays.toString(vars1.getVarConfigAsArray(c)));
+        }
+        
+        JUnitUtils.assertArrayEquals(new int[]{0,0}, vars1.getVarConfigAsArray(0));
+        JUnitUtils.assertArrayEquals(new int[]{0,1}, vars1.getVarConfigAsArray(1));
+        JUnitUtils.assertArrayEquals(new int[]{0,2}, vars1.getVarConfigAsArray(2));
+        JUnitUtils.assertArrayEquals(new int[]{1,0}, vars1.getVarConfigAsArray(3));
+        JUnitUtils.assertArrayEquals(new int[]{1,1}, vars1.getVarConfigAsArray(4));
+        JUnitUtils.assertArrayEquals(new int[]{1,2}, vars1.getVarConfigAsArray(5));
+        
     }
     
 }

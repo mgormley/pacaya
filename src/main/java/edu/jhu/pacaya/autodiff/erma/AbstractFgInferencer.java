@@ -101,15 +101,15 @@ public abstract class AbstractFgInferencer implements FgInferencer {
     }   
 
     public static VarTensor ensureRealSemiring(VarTensor marg) {
-        if (!marg.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA)) {
-            marg = marg.copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA);
+        if (!marg.getAlgebra().equals(RealAlgebra.getInstance())) {
+            marg = marg.copyAndConvertAlgebra(RealAlgebra.getInstance());
         }
         return marg;
     }
     
     public static VarTensor ensureLogSemiring(VarTensor marg) {
-        if (!marg.getAlgebra().equals(LogSemiring.LOG_SEMIRING)) {
-            marg = marg.copyAndConvertAlgebra(LogSemiring.LOG_SEMIRING);
+        if (!marg.getAlgebra().equals(LogSemiring.getInstance())) {
+            marg = marg.copyAndConvertAlgebra(LogSemiring.getInstance());
         }
         return marg;
     }

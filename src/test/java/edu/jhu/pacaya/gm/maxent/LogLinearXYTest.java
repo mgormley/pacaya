@@ -7,6 +7,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearXYData.LogLinearExample;
@@ -48,7 +51,7 @@ public class LogLinearXYTest {
                 
         List<LogLinearExample> data = exs.getData();
         
-        LogLinearXYPrm prm = new LogLinearXYPrm();
+        LogLinearXYPrm prm = getDefaultLogLinearXYPrm();
         LogLinearXY td = new LogLinearXY(prm); 
         FgModel model = td.train(exs);
         System.out.println(model);
@@ -71,6 +74,14 @@ public class LogLinearXYTest {
             // TODO: Bring back this assertion.
             //JUnitUtils.assertArrayEquals(new double[] {-0.8277652102139692, -0.5745197983563534 }, dist.getValues(), 1e-3);
         }
+    }
+
+    public static LogLinearXYPrm getDefaultLogLinearXYPrm() {
+        LogLinearXYPrm prm = new LogLinearXYPrm();
+        prm.crfPrm.batchOptimizer = null;
+        prm.crfPrm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
+        prm.crfPrm.regularizer = new L2(1.0);
+        return prm;
     }
     
 }

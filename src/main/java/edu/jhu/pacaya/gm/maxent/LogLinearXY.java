@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
@@ -24,13 +23,14 @@ import edu.jhu.pacaya.gm.model.ExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.train.CrfTrainer;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.tuple.Pair;
 
 /**
@@ -43,13 +43,9 @@ public class LogLinearXY {
     private static final Logger log = LoggerFactory.getLogger(LogLinearXY.class);
 
     public static class LogLinearXYPrm {
-        /** Variance of L2 regularizer. */
-        public double l2Variance = -1;
         public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public LogLinearXYPrm() {
-            crfPrm.infFactory = new BruteForceInferencerPrm(true);
-            //crfPrm.batchMaximizer = new SGD(new SGDPrm());
-            //crfPrm.maximizer = null;
+            crfPrm.infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
         }
     }
     
@@ -59,7 +55,7 @@ public class LogLinearXY {
         this.prm = prm;
     }
     
-    private Alphabet<String> alphabet = null;
+    private IntObjectBimap<String> alphabet = null;
     private List<String> stateNames = null;
     
     /**
@@ -70,12 +66,9 @@ public class LogLinearXY {
      * @return Trained model.
      */
     public FgModel train(LogLinearXYData data) {
-        Alphabet<String> alphabet = data.getFeatAlphabet();
+        IntObjectBimap<String> alphabet = data.getFeatAlphabet();
         FgExampleList list = getData(data);
-        log.info("Number of train instances: " + list.size());
-        
-        prm.crfPrm.regularizer = new L2(prm.l2Variance);
-        
+        log.info("Number of train instances: " + list.size());                
         log.info("Number of model parameters: " + alphabet.size());
         FgModel model = new FgModel(alphabet.size(), new StringIterable(alphabet.getObjects()));
         CrfTrainer trainer = new CrfTrainer(prm.crfPrm);
@@ -100,7 +93,7 @@ public class LogLinearXY {
         decoder.decode(model, ex);
         List<VarTensor> marginals = decoder.getVarMarginals();
         VarConfig vc = decoder.getMbrVarConfig();
-        String stateName = vc.getStateName(ex.getFgLatPred().getVar(0));
+        String stateName = vc.getStateName(ex.getFactorGraph().getVar(0));
         if (marginals.size() != 1) {
             throw new IllegalStateException("Example is not from a LogLinearData factory");
         }
@@ -111,7 +104,7 @@ public class LogLinearXY {
      * For testing only. Converts to the graphical model's representation of the data.
      */
     public FgExampleList getData(LogLinearXYData data) {
-        Alphabet<String> alphabet = data.getFeatAlphabet();
+        IntObjectBimap<String> alphabet = data.getFeatAlphabet();
         List<LogLinearExample> exList = data.getData();    
         if (this.alphabet == null) {
             this.alphabet = alphabet;
@@ -158,7 +151,7 @@ public class LogLinearXY {
         return new Var(VarType.PREDICTED, stateNames.size(), "v0", stateNames);
     }
     
-    private static List<String> getStateNames(List<LogLinearExample> exList, Alphabet<Object> yAlphabet) {
+    private static List<String> getStateNames(List<LogLinearExample> exList, IntObjectBimap<Object> yAlphabet) {
         StringIterable iter = new StringIterable(yAlphabet.getObjects());
         List<String> list = new ArrayList<String>();
         for (String s : iter) {
@@ -169,7 +162,7 @@ public class LogLinearXY {
     
     private BeliefPropagationPrm getBpPrm() {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = true;
+        bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

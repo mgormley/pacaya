@@ -20,48 +20,28 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
     
     public static class BruteForceInferencerPrm implements FgInferencerFactory {
         
-        public boolean logDomain = true;
         public Algebra s = null;
-        
-        @Deprecated
-        public BruteForceInferencerPrm(boolean logDomain) {
-            this.logDomain = logDomain;
-        }
-        
+                
         public BruteForceInferencerPrm(Algebra s) {
             this.s = s;
         }
         
         @Override
         public FgInferencer getInferencer(FactorGraph fg) {
-            if (s == null) {
-                return new BruteForceInferencer(fg, logDomain);
-            } else {
-                return new BruteForceInferencer(fg, s);
-            }
+            return new BruteForceInferencer(fg, s);
         }
 
         @Override
         public Algebra getAlgebra() {
-            if (s == null) {
-                return logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
-            } else {
-                return s;
-            }
+            return s;
         }
         
     }
     
-
     private Algebra s;
     private FactorGraph fg;
     private VarTensor joint;
     
-    //@Deprecated
-    public BruteForceInferencer(FactorGraph fg, boolean logDomain) {
-        this(fg, logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA);
-    }
-
     public BruteForceInferencer(FactorGraph fg, Algebra s) {
         this.fg = fg;
         this.s = s;
@@ -71,8 +51,6 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
      * Gets the product of all the factors in the factor graph. If working in
      * the log-domain, this will do factor addition.
      * 
-     * @param logDomain
-     *            Whether to work in the log-domain.
      * @return The product of all the factors.
      */
     private static VarTensor getProductOfAllFactors(FactorGraph fg, Algebra s) {

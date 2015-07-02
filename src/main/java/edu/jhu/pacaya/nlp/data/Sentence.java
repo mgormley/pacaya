@@ -1,21 +1,21 @@
 package edu.jhu.pacaya.nlp.data;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 
 public class Sentence extends LabelSequence<String> {
 
     private static final long serialVersionUID = 1L;
         
-    protected Sentence(Alphabet<String> alphabet) {
+    protected Sentence(IntObjectBimap<String> alphabet) {
         super(alphabet); 
     }
 
-    public Sentence(Alphabet<String> alphabet, Iterable<String> labels) {
+    public Sentence(IntObjectBimap<String> alphabet, Iterable<String> labels) {
         super(alphabet, labels);
     }
     
-    public Sentence(Alphabet<String> alphabet, int[] labelIds) {
+    public Sentence(IntObjectBimap<String> alphabet, int[] labelIds) {
         super(alphabet, labelIds);
     }
 

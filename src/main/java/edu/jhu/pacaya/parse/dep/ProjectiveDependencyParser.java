@@ -65,14 +65,14 @@ public class ProjectiveDependencyParser {
         // Trace the backpointers to extract the parents.        
         Arrays.fill(parents, -2);
         // Get the head of the sentence.
-        int head = c.bps[0][n][RIGHT][COMPLETE];
+        int head = c.getBp(0, n, RIGHT, COMPLETE);
         parents[head-1] = -1; // The wall (-1) is its parent.
         // Extract parents left of the head.
-        extractParentsComp(1, head, LEFT, c.scores, c.bps, parents);
+        extractParentsComp(1, head, LEFT, c, parents);
         // Extract parents right of the head.
-        extractParentsComp(head, n, RIGHT, c.scores, c.bps, parents);
+        extractParentsComp(head, n, RIGHT, c, parents);
         
-        return c.scores[0][n][RIGHT][COMPLETE];
+        return c.getScore(0, n, RIGHT, COMPLETE);
     }
     
     /**
@@ -99,8 +99,8 @@ public class ProjectiveDependencyParser {
         // Trace the backpointers to extract the parents.        
         Arrays.fill(parents, -2);
         // Extract parents right of the wall.
-        extractParentsComp(0, n, RIGHT, c.scores, c.bps, parents);
-        return c.scores[0][n][RIGHT][COMPLETE];
+        extractParentsComp(0, n, RIGHT, c, parents);
+        return c.getScore(0, n, RIGHT, COMPLETE);
     }
     
     /**
@@ -146,8 +146,8 @@ public class ProjectiveDependencyParser {
 
         // Initialize.
         for (int s = 0; s < n; s++) {
-            inChart.scores[s][s][RIGHT][COMPLETE] = 0.0;
-            inChart.scores[s][s][LEFT][COMPLETE] = 0.0;
+            inChart.setScore(s, s, RIGHT, COMPLETE, 0.0);
+            inChart.setScore(s, s, LEFT, COMPLETE, 0.0);
         }
                 
         // Parse.
@@ -159,8 +159,8 @@ public class ProjectiveDependencyParser {
                 for (int r=s; r<t; r++) {
                     for (int d=0; d<2; d++) {
                         double edgeScore = (d==LEFT) ? scores[t][s] : scores[s][t];
-                        double score = inChart.scores[s][r][RIGHT][COMPLETE] +
-                                       inChart.scores[r+1][t][LEFT][COMPLETE] +  
+                        double score = inChart.getScore(s, r, RIGHT, COMPLETE) +
+                                       inChart.getScore(r+1, t, LEFT, COMPLETE) +  
                                        edgeScore;
                         inChart.updateCell(s, t, d, INCOMPLETE, score, r);
                     }
@@ -170,15 +170,15 @@ public class ProjectiveDependencyParser {
                 // -- Left side.
                 for (int r=s; r<t; r++) {
                     final int d = LEFT;
-                    double score = inChart.scores[s][r][d][COMPLETE] +
-                                inChart.scores[r][t][d][INCOMPLETE];
+                    double score = inChart.getScore(s, r, d, COMPLETE) +
+                                inChart.getScore(r, t, d, INCOMPLETE);
                     inChart.updateCell(s, t, d, COMPLETE, score, r);
                 }
                 // -- Right side.
                 for (int r=s+1; r<=t; r++) {
                     final int d = RIGHT;
-                    double score = inChart.scores[s][r][d][INCOMPLETE] +
-                                   inChart.scores[r][t][d][COMPLETE];
+                    double score = inChart.getScore(s, r, d, INCOMPLETE) +
+                                   inChart.getScore(r, t, d, COMPLETE);
                     inChart.updateCell(s, t, d, COMPLETE, score, r);
                 }                
             }
@@ -190,8 +190,8 @@ public class ProjectiveDependencyParser {
             // left and right triangles. (Note: this is the opposite of how we
             // build an incomplete constituent.)
             for (int r=1; r<n; r++) {
-                double score = inChart.scores[1][r][LEFT][COMPLETE] +
-                               inChart.scores[r][n-1][RIGHT][COMPLETE] + 
+                double score = inChart.getScore(1, r, LEFT, COMPLETE) +
+                               inChart.getScore(r, n-1, RIGHT, COMPLETE) + 
                                scores[0][r];
                 inChart.updateCell(0, r, RIGHT, INCOMPLETE, score, r);
                 inChart.updateCell(0, n-1, RIGHT, COMPLETE, score, r);
@@ -233,13 +233,13 @@ public class ProjectiveDependencyParser {
             // build an incomplete constituent.)
             for (int r=1; r<n; r++) {
                 // Left child.
-                double leftScore = outChart.scores[0][r][RIGHT][INCOMPLETE] + 
-                                   inChart.scores[r][n - 1][RIGHT][COMPLETE] + 
+                double leftScore = outChart.getScore(0, r, RIGHT, INCOMPLETE) + 
+                                   inChart.getScore(r, n - 1, RIGHT, COMPLETE) + 
                                    scores[0][r];
                 outChart.updateCell(1, r, LEFT, COMPLETE, leftScore, -1);
                 // Right child.
-                double rightScore = outChart.scores[0][r][RIGHT][INCOMPLETE] + 
-                                    inChart.scores[1][r][LEFT][COMPLETE] + 
+                double rightScore = outChart.getScore(0, r, RIGHT, INCOMPLETE) + 
+                                    inChart.getScore(1, r, LEFT, COMPLETE) + 
                                     scores[0][r];
                 outChart.updateCell(r, n - 1, RIGHT, COMPLETE, rightScore, -1);
             }
@@ -260,20 +260,24 @@ public class ProjectiveDependencyParser {
                 for (int r=s; r<t; r++) {
                     final int d = LEFT;
                     // Left child.
-                    double leftScore = outChart.scores[s][t][d][COMPLETE] + inChart.scores[r][t][d][INCOMPLETE];
+                    double leftScore = outChart.getScore(s, t, d, COMPLETE) + 
+                            inChart.getScore(r, t, d, INCOMPLETE);
                     outChart.updateCell(s, r, d, COMPLETE, leftScore, -1);
                     // Right child.
-                    double rightScore = outChart.scores[s][t][d][COMPLETE] + inChart.scores[s][r][d][COMPLETE];
+                    double rightScore = outChart.getScore(s, t, d, COMPLETE) + 
+                            inChart.getScore(s, r, d, COMPLETE);
                     outChart.updateCell(r, t, d, INCOMPLETE, rightScore, -1);
                 }
                 // -- Right side.
                 for (int r=s+1; r<=t; r++) {
                     final int d = RIGHT;
                     // Left child.
-                    double leftScore = outChart.scores[s][t][d][COMPLETE] + inChart.scores[r][t][d][COMPLETE];
+                    double leftScore = outChart.getScore(s, t, d, COMPLETE) + 
+                            inChart.getScore(r, t, d, COMPLETE);
                     outChart.updateCell(s, r, d, INCOMPLETE, leftScore, -1);
                     // Right child.
-                    double rightScore = outChart.scores[s][t][d][COMPLETE] + inChart.scores[s][r][d][INCOMPLETE];
+                    double rightScore = outChart.getScore(s, t, d, COMPLETE) + 
+                            inChart.getScore(s, r, d, INCOMPLETE);
                     outChart.updateCell(r, t, d, COMPLETE, rightScore, -1);
                 }
                 
@@ -282,12 +286,12 @@ public class ProjectiveDependencyParser {
                     for (int d=0; d<2; d++) {
                         double edgeScore = (d == LEFT) ? scores[t][s] : scores[s][t];
                         // Left child.
-                        double leftScore = outChart.scores[s][t][d][INCOMPLETE]
-                                + inChart.scores[r + 1][t][LEFT][COMPLETE] + edgeScore;
+                        double leftScore = outChart.getScore(s, t, d, INCOMPLETE)
+                                + inChart.getScore(r + 1, t, LEFT, COMPLETE) + edgeScore;
                         outChart.updateCell(s, r, RIGHT, COMPLETE, leftScore, -1);
                         // Right child.
-                        double rightScore = outChart.scores[s][t][d][INCOMPLETE]
-                                + inChart.scores[s][r][RIGHT][COMPLETE] + edgeScore;
+                        double rightScore = outChart.getScore(s, t, d, INCOMPLETE)
+                                + inChart.getScore(s, r, RIGHT, COMPLETE) + edgeScore;
                         outChart.updateCell(r + 1, t, LEFT, COMPLETE, rightScore, -1);
                     }
                 }
@@ -295,28 +299,27 @@ public class ProjectiveDependencyParser {
         }
     }
 
-    private static void extractParentsComp(int s, int t, int d, double[][][][] chart, int[][][][] bps, int[] parents) {
+    private static void extractParentsComp(int s, int t, int d, ProjTreeChart c, int[] parents) {
         if (s == t) {
             return;
         }
         
         if (d == LEFT) {
-            int r = bps[s][t][d][COMPLETE];
+            int r = c.getBp(s, t, d, COMPLETE);
             // Left side is complete (a triangle).
-            extractParentsComp(s, r, d, chart, bps, parents);
+            extractParentsComp(s, r, d, c, parents);
             // Right side is incomplete (a trapezoid).
-            extractParentsIncomp(r, t, d, chart, bps, parents);
+            extractParentsIncomp(r, t, d, c, parents);
         } else { // d == RIGHT
-            int r = bps[s][t][d][COMPLETE];
+            int r = c.getBp(s, t, d, COMPLETE);
             // Left side is incomplete (a trapezoid).
-            extractParentsIncomp(s, r, d, chart, bps, parents);
+            extractParentsIncomp(s, r, d, c, parents);
             // Right side is complete (a triangle).
-            extractParentsComp(r, t, d, chart, bps, parents);
+            extractParentsComp(r, t, d, c, parents);
         }
     }
 
-    private static void extractParentsIncomp(int s, int t, int d, double[][][][] chart,
-            int[][][][] bps, int[] parents) {
+    private static void extractParentsIncomp(int s, int t, int d, ProjTreeChart c, int[] parents) {
         if (s == t) {
             return;
         }
@@ -326,9 +329,9 @@ public class ProjectiveDependencyParser {
         } else { // d == RIGHT
             parents[t-1] = s-1;
         }
-        int r = bps[s][t][d][INCOMPLETE];
-        extractParentsComp(s, r, RIGHT, chart, bps, parents);
-        extractParentsComp(r+1, t, LEFT, chart, bps, parents);
+        int r = c.getBp(s, t, d, INCOMPLETE);
+        extractParentsComp(s, r, RIGHT, c, parents);
+        extractParentsComp(r+1, t, LEFT, c, parents);
     }
 
 }

@@ -2,6 +2,7 @@ package edu.jhu.pacaya.autodiff;
 
 import java.util.Arrays;
 
+import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -13,6 +14,7 @@ import edu.jhu.pacaya.util.semiring.Algebra;
  */
 public class MVecArray<Y extends MVec> implements MVec {
     
+    // TODO: Switch to protected.
     public Y[] f;
     public Algebra s;
     
@@ -20,8 +22,8 @@ public class MVecArray<Y extends MVec> implements MVec {
         this.s = s;
     }
 
-    public MVecArray(Y[] facBeliefs) {
-        this.f = facBeliefs;
+    public MVecArray(Y[] f) {
+        this.f = f;
         this.s = f[0].getAlgebra();
     }
 
@@ -81,6 +83,23 @@ public class MVecArray<Y extends MVec> implements MVec {
         return f;
     }
 
+    public Y get(int a) {
+        return f[a];
+    }
+
+    public int dim() {
+        return f.length;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int a=0; a<f.length; a++) {
+            sb.append(f[a]);
+            sb.append(" ");
+        }
+        return sb.toString();
+    }
+    
     /* --------------------------------------------------------- */
     
     // For use by this class only, these methods can be rewritten as having type <T extends

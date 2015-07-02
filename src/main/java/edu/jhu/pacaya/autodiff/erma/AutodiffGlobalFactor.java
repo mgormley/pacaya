@@ -3,7 +3,7 @@ package edu.jhu.pacaya.autodiff.erma;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
-import edu.jhu.pacaya.autodiff.Scalar;
+import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 
@@ -44,8 +44,8 @@ public interface AutodiffGlobalFactor extends AutodiffFactor, GlobalFactor {
      * 
      * @param modIn The incoming messages to this factor.
      * @param fm The factor module created by this.{@link #getFactorModule(Module, edu.jhu.util.semiring.Algebra)}.
-     * @return The expected log belief.
+     * @return The expected log belief (a scalar in the first position of the tensor).
      */
-    Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm);
+    Module<Tensor> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm);
     
 }

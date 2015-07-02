@@ -15,7 +15,7 @@ import edu.jhu.pacaya.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.pacaya.parse.cky.chart.Chart;
 import edu.jhu.pacaya.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.pacaya.parse.cky.chart.Chart.ParseType;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 /**
  * This class takes the bracketing grammar defined in {@link ConstituencyTreeFactor}
@@ -53,7 +53,7 @@ public class ConstituencyTreeFactorParser {
     private BeliefScorer scorer = new BeliefScorer();
     private CnfGrammar grammar = ConstituencyTreeFactor.grammar;
     private int terminalSymbol = ConstituencyTreeFactor.terminalSymbol;
-    private Alphabet<String> alph = ConstituencyTreeFactor.grammar.getLexAlphabet();
+    private IntObjectBimap<String> alph = ConstituencyTreeFactor.grammar.getLexAlphabet();
 
     public Chart parse(int n, List<SpanVar> constituencyVars, List<Tensor> beliefs) {
         // Set all of the words to be the same, terminal symbol

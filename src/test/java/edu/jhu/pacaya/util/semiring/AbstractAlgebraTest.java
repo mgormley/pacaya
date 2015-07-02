@@ -25,7 +25,7 @@ public abstract class AbstractAlgebraTest {
 
     protected static final int NUM_RANDS = 100;
     protected Algebra sThis = getAlgebra();
-    protected RealAlgebra sReal = RealAlgebra.REAL_ALGEBRA;
+    protected RealAlgebra sReal = RealAlgebra.getInstance();
     protected double deltaStrict = 1e-13;
     protected double deltaLoose = 1e-5;
             
@@ -332,8 +332,8 @@ public abstract class AbstractAlgebraTest {
         }
         
         for (int i=0; i<NUM_RANDS; i++) {
-            x = Gaussian.nextDouble(0.0, 1000);
-            y = Gaussian.nextDouble(0.0, 1000);
+            x = Gaussian.nextDouble(0.0, getStdDevForRand());
+            y = Gaussian.nextDouble(0.0, getStdDevForRand());
             if (!supportsNegatives()) {
                 x = Math.abs(x);
                 y = Math.abs(y);
@@ -342,6 +342,10 @@ public abstract class AbstractAlgebraTest {
         }
     }
         
+    protected double getStdDevForRand() {
+        return 1000;
+    }
+
     protected static double compute(BinOp lambda, double x, double y, Algebra s) {
         double compacted = lambda.call(s.fromReal(x), s.fromReal(y), s);
         System.out.printf("%0#16x\n", Double.doubleToRawLongBits(compacted));

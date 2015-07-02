@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 /**
  * Grammar in Chomsky normal form.
@@ -32,13 +32,13 @@ public class CnfGrammar {
     private Rule[][] brwlc;
     private Rule[][] brwrc;
     
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private IntObjectBimap<String> lexAlphabet;
+    private IntObjectBimap<String> ntAlphabet;
 
     private LoopOrder loopOrder;
     
     @SuppressWarnings("unchecked")
-    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, LoopOrder loopOrder) {
+    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, IntObjectBimap<String> lexAlphabet, IntObjectBimap<String> ntAlphabet, LoopOrder loopOrder) {
         this.rootSymbol = rootSymbol;
         this.lexAlphabet = lexAlphabet;
         this.ntAlphabet = ntAlphabet;
@@ -157,11 +157,11 @@ public class CnfGrammar {
         return brwrc[rightChildNt];
     }
     
-    public Alphabet<String> getLexAlphabet() {
+    public IntObjectBimap<String> getLexAlphabet() {
         return lexAlphabet;
     }
 
-    public Alphabet<String> getNtAlphabet() {
+    public IntObjectBimap<String> getNtAlphabet() {
         return ntAlphabet;
     }
 

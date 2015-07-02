@@ -140,9 +140,10 @@ public class VarSet extends SmallSet<Var> {
     public void getVarConfigAsArray(int configIndex, int[] putInto) {
         if(putInto.length != this.size())
             throw new IllegalArgumentException();
-        int i = 0;
-        for (Var var : this) {
-            putInto[i++] = configIndex % var.getNumStates();
+        int i = putInto.length - 1;
+        for (int v=this.size()-1; v >= 0; v--) {
+            Var var = this.get(v);
+            putInto[i--] = configIndex % var.getNumStates();
             configIndex /= var.getNumStates();
         }
     }

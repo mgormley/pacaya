@@ -6,23 +6,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractMutableModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
-import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
 import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.pacaya.autodiff.erma.LazyVarTensor;
-import edu.jhu.pacaya.autodiff.erma.MVecArrayIdentity;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.autodiff.erma.ParamFreeGlobalFactorModule;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
@@ -63,7 +61,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
      * @param scores Tensor representing the scores (1-indexed by head, modifier, sibling)
      */
     public HeadAutomataFactor(int head, boolean isRight, LinkVar[] varsByDist, Tensor scores) {
-        this(head, isRight, varsByDist, new TensorIdentity(scores));
+        this(head, isRight, varsByDist, new Identity<Tensor>(scores));
     }
     
     public HeadAutomataFactor(int head, boolean isRight, LinkVar[] varsByDist, Module<Tensor> scoresIn) {    
@@ -87,7 +85,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
     // TODO: This could be put in an abstract class.
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
-        MVecArrayIdentity<VarTensor> modIn = new MVecArrayIdentity<VarTensor>(new MVecArray<VarTensor>(inMsgs));
+        Identity<MVecArray<VarTensor>> modIn = new Identity<MVecArray<VarTensor>>(new MVecArray<VarTensor>(inMsgs));
         MutableModule<MVecArray<VarTensor>> modOut = getCreateMessagesModule(modIn, null);
         modOut.setOutput(new MVecArray<VarTensor>(outMsgs));
         modOut.forward();
@@ -129,21 +127,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn, fm);
-        }
-    }
-        
-    @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new HeadAutomataFactor(head, isRight, new LinkVar[]{}, new Tensor(RealAlgebra.REAL_ALGEBRA, 0, 0, 0));
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
+            return QLists.getList(modIn, fm);
         }
     }
 
@@ -156,7 +140,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.getInstance();
         Tensor scores = scoresIn.getOutput();
         double logScore = s.one();
         int maxDist = varsByDist.length;
@@ -192,7 +176,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
     
     @Override
     public Module<LazyVarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
-        return new ParamFreeGlobalFactorModule(s, this, Lists.getList(modIn, this.scoresIn));
+        return new ParamFreeGlobalFactorModule(s, this, QLists.getList(modIn, this.scoresIn));
     }
     
     @Override
@@ -201,7 +185,7 @@ public class HeadAutomataFactor extends AbstractConstraintFactor implements Glob
     }
     
     @Override
-    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+    public Module<Tensor> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
         throw new RuntimeException("not implemented");
     }
 

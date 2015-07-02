@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import edu.jhu.pacaya.autodiff.Toposort.Deps;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 
@@ -23,7 +23,7 @@ public class TopoOrder<Y extends MVec> implements Module<Y> {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public TopoOrder(Module<Y> root) {
-        this.inputs = Lists.getList();
+        this.inputs = QLists.getList();
         this.outMod = root;
         Deps deps = getModuleDeps();
         this.topoOrder = Toposort.toposort(root, deps);
@@ -77,7 +77,7 @@ public class TopoOrder<Y extends MVec> implements Module<Y> {
 
     @Override
     public void backward() {
-        List<? extends Module<?>> revTopo = Lists.reverse(topoOrder);
+        List<? extends Module<?>> revTopo = QLists.reverse(topoOrder);
         for (Module<?> m : revTopo) {
             m.backward();
         }

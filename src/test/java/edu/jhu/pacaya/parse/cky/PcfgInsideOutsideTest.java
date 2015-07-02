@@ -11,7 +11,7 @@ import edu.jhu.pacaya.nlp.data.SentenceCollection;
 import edu.jhu.pacaya.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgIoChart;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.util.math.FastMath;
 
 public class PcfgInsideOutsideTest {
@@ -121,7 +121,7 @@ public class PcfgInsideOutsideTest {
     }
 
     private static Sentence getSentenceFromString(String sentStr,
-            Alphabet<String> alphabet) {
+            IntObjectBimap<String> alphabet) {
         SentenceCollection sentences = new SentenceCollection(alphabet);
         sentences.addSentenceFromString(sentStr);
         Sentence sentence = sentences.get(0);

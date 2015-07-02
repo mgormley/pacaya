@@ -1,14 +1,14 @@
 package edu.jhu.pacaya.autodiff.erma;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.pacaya.autodiff.AbstractMutableModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
-import edu.jhu.pacaya.autodiff.Scalar;
+import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
@@ -16,7 +16,7 @@ import edu.jhu.pacaya.gm.model.IFgModel;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -38,7 +38,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
 
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
-        MVecArrayIdentity<VarTensor> modIn = new MVecArrayIdentity<VarTensor>(new MVecArray<VarTensor>(inMsgs));
+        Identity<MVecArray<VarTensor>> modIn = new Identity<MVecArray<VarTensor>>(new MVecArray<VarTensor>(inMsgs));
         MutableModule<MVecArray<VarTensor>> modOut = getCreateMessagesModule(modIn, null);
         modOut.setOutput(new MVecArray<VarTensor>(outMsgs));
         modOut.forward();
@@ -73,7 +73,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
     }
 
     @Override
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+    public void addExpectedPartials(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         // No-op since this factor has no FEATURES.
     }
 
@@ -83,7 +83,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
     }
 
     @Override
-    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+    public Module<Tensor> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
         throw new RuntimeException("Not implemented");
     }
 
@@ -157,7 +157,7 @@ public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlob
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn); // TODO: add fm, but see note above.
+            return QLists.getList(modIn); // TODO: add fm, but see note above.
         }
         
     }

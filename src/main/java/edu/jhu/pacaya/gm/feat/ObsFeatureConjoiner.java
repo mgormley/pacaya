@@ -25,6 +25,7 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
+import edu.jhu.pacaya.gm.train.MarginalLogLikelihood;
 import edu.jhu.pacaya.gm.util.ArrayIter3D;
 import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.Prm;
@@ -89,19 +90,15 @@ public class ObsFeatureConjoiner implements Serializable {
         this.feAlphabet = new FeatureNames();
     }
     
-    public void init() {
-        if (!prm.includeUnsupportedFeatures) {
-            log.warn("Enabling includeUnsupportedFeatures");
-            prm.includeUnsupportedFeatures = true;
-        }
-        if (prm.featCountCutoff >= 1) {
-            log.warn("Disabling featCountCutoff");
-            prm.featCountCutoff = -1;
-        }
-        init(null);
-    }
-        
+    /** The case of data == null should only be allowed in testing. */
     public void init(FgExampleList data) {
+        if (data == null && !prm.includeUnsupportedFeatures) {
+            throw new IllegalArgumentException("Data can only be null if unsupported features are not included.");
+        }
+        if (data == null && prm.featCountCutoff > 0) {
+            throw new IllegalArgumentException("Data can only be null if there is no feature count cutoff.");
+        }
+        
         // Ensure the FactorTemplateList is initialized, and maybe count features along the way.
         if (templates.isGrowing() && data != null) {
             log.info("Growing feature template list by iterating over examples");
@@ -176,7 +173,7 @@ public class ObsFeatureConjoiner implements Serializable {
         
         @Override
         public VarTensor getMarginalsForFactorId(int factorId) { 
-            return new VarTensor(RealAlgebra.REAL_ALGEBRA, fg.getFactor(factorId).getVars()); 
+            return new VarTensor(RealAlgebra.getInstance(), fg.getFactor(factorId).getVars()); 
         }
         
         @Override
@@ -229,10 +226,11 @@ public class ObsFeatureConjoiner implements Serializable {
                 log.debug("Processing example: " + i);
             }
             LFgExample ex = data.get(i);
+            FactorGraph fgLat = MarginalLogLikelihood.getFgLat(ex.getFactorGraph(), ex.getGoldConfig());
             // Create a "no-op" inferencer, which returns arbitrary marginals.
-            NoOpInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
-            for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
-                Factor f = ex.getFgLat().getFactor(a);
+            NoOpInferencer inferencer = new NoOpInferencer(ex.getFactorGraph());   
+            for (int a=0; a<ex.getFactorGraph().getNumFactors(); a++) {
+                Factor f = fgLat.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     // For each observation function extractor.
                     int t = templates.getTemplateId((TemplateFactor) f);
@@ -241,14 +239,13 @@ public class ObsFeatureConjoiner implements Serializable {
                     }
                 } else {
                     // For each standard factor.  
-                    f = ex.getFgLatPred().getFactor(a);
+                    f = ex.getFactorGraph().getFactor(a);
                     if (f instanceof GlobalFactor) {
-                        ((GlobalFactor) f).addExpectedFeatureCounts(counts, 0, inferencer, a);
+                        ((GlobalFactor) f).addExpectedPartials(counts, 0, inferencer, a);
                     } else {
                         VarTensor marg = inferencer.getMarginalsForFactorId(a);
-                        f.addExpectedFeatureCounts(counts, marg, 0);
+                        f.addExpectedPartials(counts, marg, 0);
                     }
-                    
                 }
             }
         }
@@ -270,30 +267,22 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         for (int i=0; i<data.size(); i++) {
             LFgExample ex = data.get(i);
-            for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
-                Factor f = ex.getFgLat().getFactor(a);
+            FactorGraph fg = ex.getFactorGraph();
+            for (int a=0; a<ex.getFactorGraph().getNumFactors(); a++) {
+                Factor f = fg.getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
                     int t = templates.getTemplateId((TemplateFactor) f);
                     if (t != -1) {
-                        FeatureVector fv = ((ObsFeatureCarrier) f).getObsFeatures();                            
-                        if (f.getVars().size() == 0) {
-                            int predConfig = ex.getGoldConfigIdxPred(a);
+                        FeatureVector fv = ((ObsFeatureCarrier) f).getObsFeatures();
+                        // We must clamp the predicted variables and loop over the latent ones.
+                        VarConfig predVc = ex.getGoldConfigPred(a);
+                        IntIter iter = IndexForVc.getConfigIter(ex.getFactorGraph().getFactor(a).getVars(), predVc);
+                        while (iter.hasNext()) {
+                            // The configuration of all the latent/predicted variables,
+                            // where the predicted variables have been clamped.
+                            int config = iter.next();
                             for (IntDoubleEntry entry : fv) {
-                                counts[t][predConfig].add(entry.index(), 1);
-                            }
-                        } else {
-                            // We must clamp the predicted variables and loop over the latent ones.
-                            VarConfig predVc = ex.getGoldConfigPred(a);
-                            IntIter iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(a).getVars(), predVc);
-                            
-                            int numConfigs = f.getVars().calcNumConfigs();
-                            for (int c=0; c<numConfigs; c++) {            
-                                // The configuration of all the latent/predicted variables,
-                                // where the predicted variables have been clamped.
-                                int config = iter.next();
-                                for (IntDoubleEntry entry : fv) {
-                                    counts[t][config].add(entry.index(), 1);
-                                }
+                                counts[t][config].add(entry.index(), 1);
                             }
                         }
                     }

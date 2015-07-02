@@ -10,24 +10,24 @@ public class AlgebrasTest {
     public void testConvertAlgebras() {
         double val = 3.0;
         double logVal = Math.log(val);
-        double lsVal = LogSignAlgebra.LOG_SIGN_ALGEBRA.fromReal(val);
+        double lsVal = LogSignAlgebra.getInstance().fromReal(val);
         
         // Real to other.
-        assertEquals(logVal, Algebras.convertAlgebra(val, RealAlgebra.REAL_ALGEBRA, LogSemiring.LOG_SEMIRING), 1e-13);
-        assertEquals(lsVal, Algebras.convertAlgebra(val, RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA), 1e-13);
+        assertEquals(logVal, Algebras.convertAlgebra(val, RealAlgebra.getInstance(), LogSemiring.getInstance()), 1e-13);
+        assertEquals(lsVal, Algebras.convertAlgebra(val, RealAlgebra.getInstance(), LogSignAlgebra.getInstance()), 1e-13);
         
         // Log to other.
-        assertEquals(val, Algebras.convertAlgebra(logVal, LogSemiring.LOG_SEMIRING, RealAlgebra.REAL_ALGEBRA), 1e-13);
-        assertEquals(lsVal, Algebras.convertAlgebra(logVal, LogSemiring.LOG_SEMIRING, LogSignAlgebra.LOG_SIGN_ALGEBRA), 1e-13);
+        assertEquals(val, Algebras.convertAlgebra(logVal, LogSemiring.getInstance(), RealAlgebra.getInstance()), 1e-13);
+        assertEquals(lsVal, Algebras.convertAlgebra(logVal, LogSemiring.getInstance(), LogSignAlgebra.getInstance()), 1e-13);
         
         // Log-sign to other.
-        assertEquals(val, Algebras.convertAlgebra(lsVal, LogSignAlgebra.LOG_SIGN_ALGEBRA, RealAlgebra.REAL_ALGEBRA), 1e-13);
-        assertEquals(logVal, Algebras.convertAlgebra(lsVal, LogSignAlgebra.LOG_SIGN_ALGEBRA, LogSemiring.LOG_SEMIRING), 1e-13);
+        assertEquals(val, Algebras.convertAlgebra(lsVal, LogSignAlgebra.getInstance(), RealAlgebra.getInstance()), 1e-13);
+        assertEquals(logVal, Algebras.convertAlgebra(lsVal, LogSignAlgebra.getInstance(), LogSemiring.getInstance()), 1e-13);
         
         // Equal semirings.
-        assertEquals(val, Algebras.convertAlgebra(val, RealAlgebra.REAL_ALGEBRA, RealAlgebra.REAL_ALGEBRA), 1e-13);
-        assertEquals(logVal, Algebras.convertAlgebra(logVal, LogSemiring.LOG_SEMIRING, LogSemiring.LOG_SEMIRING), 1e-13);
-        assertEquals(lsVal, Algebras.convertAlgebra(lsVal, LogSignAlgebra.LOG_SIGN_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA), 1e-13);        
+        assertEquals(val, Algebras.convertAlgebra(val, RealAlgebra.getInstance(), RealAlgebra.getInstance()), 1e-13);
+        assertEquals(logVal, Algebras.convertAlgebra(logVal, LogSemiring.getInstance(), LogSemiring.getInstance()), 1e-13);
+        assertEquals(lsVal, Algebras.convertAlgebra(lsVal, LogSignAlgebra.getInstance(), LogSignAlgebra.getInstance()), 1e-13);        
     }
 
 }

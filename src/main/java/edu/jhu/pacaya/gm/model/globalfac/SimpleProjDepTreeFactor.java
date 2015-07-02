@@ -109,7 +109,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
-        if (!s.equals(RealAlgebra.REAL_ALGEBRA) && !s.equals(LogSemiring.LOG_SEMIRING)) {
+        if (!s.equals(RealAlgebra.getInstance()) && !s.equals(LogSemiring.getInstance())) {
             throw new IllegalStateException("OldProjDepTreeFactor only supports log and real semirings as input.");
         }
         
@@ -359,7 +359,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
         EdgeScores ratios = getLogOddsRatios(inMsgs);
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = LogSignAlgebra.LOG_SIGN_ALGEBRA;
+        Algebra s = LogSignAlgebra.getInstance();
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();
@@ -398,20 +398,6 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
     public VarSet getVars() {
         return vars;
     }
-    
-    @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new SimpleProjDepTreeFactor(0, VarType.OBSERVED);
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
-        }
-    }
 
     @Override
     public double getLogUnormalizedScore(int configId) {
@@ -422,7 +408,7 @@ public class SimpleProjDepTreeFactor extends AbstractConstraintFactor implements
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.getInstance();
         if (!hasOneParentPerToken(n, vc)) {
             log.warn("Tree has more than one arc to root.");
             return s.zero();

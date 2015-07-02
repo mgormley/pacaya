@@ -34,10 +34,10 @@ public class SimplerErmaProjDepTreeFactorTest {
 
     @Test
     public void testErmaCompareMessagesWithExplicitTreeFactor() {
-        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, true);
-        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.LOG_SIGN_ALGEBRA, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.LOG_SIGN_ALGEBRA, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.getInstance(), true, false);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.getInstance(), true, true);
+        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.getInstance(), true, false);
+        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.getInstance(), true, true);
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {

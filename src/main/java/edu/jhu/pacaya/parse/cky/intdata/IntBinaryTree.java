@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 import edu.jhu.pacaya.nlp.data.Sentence;
 import edu.jhu.pacaya.parse.cky.GrammarConstants;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 
 /**
@@ -23,10 +23,10 @@ public class IntBinaryTree {
     private IntBinaryTree rightChild;
     private boolean isLexical;
     
-    private Alphabet<String> alphabet;
+    private IntObjectBimap<String> alphabet;
     
     public IntBinaryTree(int symbol, int start, int end, IntBinaryTree leftChildNode,
-            IntBinaryTree rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
+            IntBinaryTree rightChildNode, boolean isLexical, IntObjectBimap<String> alphabet) {
         this.symbol = symbol;
         this.start = start;
         this.end = end;
@@ -157,7 +157,7 @@ public class IntBinaryTree {
         return rightChild;
     }
 
-    public Alphabet<String> getAlphabet() {
+    public IntObjectBimap<String> getAlphabet() {
         return alphabet;
     }
     
@@ -272,8 +272,8 @@ public class IntBinaryTree {
         
     }
 
-    public IntNaryTree collapseToNary(Alphabet<String> ntAlphabet) {
-        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+    public IntNaryTree collapseToNary(IntObjectBimap<String> ntAlphabet) {
+        IntObjectBimap<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
         // Reset the symbol id according to the new alphabet.
         int symbol = alphabet.lookupIndex(getSymbolLabel());
         
@@ -290,7 +290,7 @@ public class IntBinaryTree {
     }
 
     private static void addToQueue(LinkedList<IntNaryTree> queue, IntBinaryTree child,
-            Alphabet<String> ntAlphabet) {
+            IntObjectBimap<String> ntAlphabet) {
         if (child == null) {
             return;
         }
@@ -303,8 +303,8 @@ public class IntBinaryTree {
         }
     }
 
-    public void resetAlphabets(final Alphabet<String> lexAlphabet,
-            final Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(final IntObjectBimap<String> lexAlphabet,
+            final IntObjectBimap<String> ntAlphabet) {
         preOrderTraversal(new FnO1ToVoid<IntBinaryTree>() {
             public void call(IntBinaryTree node) {
                 String label = node.getSymbolLabel();

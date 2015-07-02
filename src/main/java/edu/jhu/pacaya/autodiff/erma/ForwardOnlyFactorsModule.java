@@ -14,7 +14,7 @@ import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -98,7 +98,7 @@ class ForwardOnlyFactorsModule extends AbstractModule<Factors> implements Module
 
     @Override
     public List<Module<MVecFgModel>> getInputs() {
-        return Lists.getList();
+        return QLists.getList();
     }
     
     private static class FactorToVarTensorModule extends AbstractModule<VarTensor> implements Module<VarTensor> {
@@ -123,7 +123,7 @@ class ForwardOnlyFactorsModule extends AbstractModule<Factors> implements Module
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList();
+            return QLists.getList();
         }
         
     }

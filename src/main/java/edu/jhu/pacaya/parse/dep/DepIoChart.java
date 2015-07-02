@@ -11,7 +11,7 @@ public class DepIoChart {
     final ProjTreeChart outChart;
 
     public DepIoChart(ProjTreeChart inChart, ProjTreeChart outChart) {
-        this.nplus = inChart.scores.length;
+        this.nplus = inChart.getNplus();
         this.inChart = inChart;
         this.outChart = outChart;
     }

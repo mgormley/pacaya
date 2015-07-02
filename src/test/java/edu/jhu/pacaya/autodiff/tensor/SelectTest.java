@@ -8,7 +8,7 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -16,13 +16,13 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class SelectTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testForwardAndBackward() {
         Tensor t1 = TensorUtils.get3DTensor(s, 2, 3, 5);
                 
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         Select ea = new Select(id1, 1, 2);
         
         Tensor out = ea.forward();
@@ -53,7 +53,7 @@ public class SelectTest {
 
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
-        TensorIdentity id1 = new TensorIdentity(TensorUtils.get3DTensor(s, 2, 3, 5));
+        Identity<Tensor> id1 = new Identity<Tensor>(TensorUtils.get3DTensor(s, 2, 3, 5));
 
         Tensor1Factory fact = new Tensor1Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1) {

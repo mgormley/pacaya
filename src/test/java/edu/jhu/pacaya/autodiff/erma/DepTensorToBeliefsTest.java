@@ -7,7 +7,7 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -15,15 +15,15 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class DepTensorToBeliefsTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testSimple() {
         Tensor t1 = new Tensor(s, 2,2);
         t1.setValuesOnly(TensorUtils.getVectorFromValues(s, .2, .3, .5, .7));
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
 
-        BeliefsIdentity inf = DepTensorFromBeliefsTest.getBeliefsModule();
+        Identity<Beliefs> inf = DepTensorFromBeliefsTest.getBeliefsModule();
         DepTensorToBeliefs mod = new DepTensorToBeliefs(id1, inf);
         
         Beliefs out = mod.forward();
@@ -53,8 +53,8 @@ public class DepTensorToBeliefsTest {
         // Inputs
         Tensor t1 = new Tensor(s, 2,2);
         t1.setValuesOnly(TensorUtils.getVectorFromValues(s, .2, .3, .5, .7));
-        TensorIdentity id1 = new TensorIdentity(t1);
-        final BeliefsIdentity inf = DepTensorFromBeliefsTest.getBeliefsModule();
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        final Identity<Beliefs> inf = DepTensorFromBeliefsTest.getBeliefsModule();
 
         OneToOneFactory<Tensor,Beliefs> fact = new OneToOneFactory<Tensor,Beliefs>() {
             public Module<Beliefs> getModule(Module<Tensor> m1) {

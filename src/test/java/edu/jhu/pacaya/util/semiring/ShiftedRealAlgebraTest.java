@@ -5,7 +5,7 @@ public class ShiftedRealAlgebraTest extends AbstractAlgebraTest {
 
     @Override
     public Algebra getAlgebra() {
-        return new ShiftedRealAlgebra();
+        return new ShiftedRealAlgebra(3.0);
     }
 
 }

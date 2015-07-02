@@ -8,15 +8,16 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.prim.util.random.Prng;
 
 public class ElemDivideTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testForwardAndBackward() {
@@ -77,8 +78,8 @@ public class ElemDivideTest {
     private void testDivide(double in1, double in2, double outAdj, double expOut, double expOutAdj1, double expOutAdj2) {
         Tensor t1 = TensorUtils.getVectorFromValues(s, in1);
         Tensor t2 = TensorUtils.getVectorFromValues(s, in2);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity id2 = new TensorIdentity(t2);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        Identity<Tensor> id2 = new Identity<Tensor>(t2);
         ElemDivide ea = new ElemDivide(id1, id2);
 
         Tensor out = ea.forward();
@@ -95,6 +96,7 @@ public class ElemDivideTest {
 
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
+        Prng.seed(12345678);
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
                 return new ElemDivide(m1, m2);

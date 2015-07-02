@@ -64,7 +64,7 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
      */
     public FgInferencer decode(FgModel model, UFgExample ex) {
         // Run inference.
-        FactorGraph fgLatPred = ex.getFgLatPred();
+        FactorGraph fgLatPred = ex.getFactorGraph();
         fgLatPred.updateFromModel(model);
         FgInferencer infLatPred = prm.infFactory.getInferencer(fgLatPred);
         infLatPred.run();        
@@ -78,14 +78,11 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
      * stored on the class, and can be queried after this call to decode.
      */
     public void decode(FgInferencer infLatPred, UFgExample ex) {
-        FactorGraph fgLatPred = ex.getFgLatPred();
+        FactorGraph fgLatPred = ex.getFactorGraph();
         
         mbrVarConfig = new VarConfig();
         margs = new ArrayList<VarTensor>();
         varMargMap = new HashMap<Var,Double>();
-
-        // Add in the observed variables.
-        mbrVarConfig.put(ex.getObsConfig());
 
         // Get the MBR configuration of all the latent and predicted
         // variables.        

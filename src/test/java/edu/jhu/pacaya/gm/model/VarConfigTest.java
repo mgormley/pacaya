@@ -14,9 +14,9 @@ public class VarConfigTest {
     @Test
     public void testGetState() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -31,9 +31,9 @@ public class VarConfigTest {
     @Test
     public void testGetIntersection() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -50,9 +50,9 @@ public class VarConfigTest {
     @Test
     public void testGetConfigIndex() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -60,17 +60,17 @@ public class VarConfigTest {
         config.put(w2, 0);
 
         // Vars are now sorted by numStates first. Then later by name.
-        assertEquals(1 + 0*2 + 4*6, config.getConfigIndex());
+        assertEquals(1*3*5 + 0*5 + 4, config.getConfigIndex());
     }
     
     @Test
     public void testGetConfigIndexOfSubset() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
-        Var w3 = new Var(VarType.OBSERVED, 3, "w3", null);
-        Var w4 = new Var(VarType.OBSERVED, 6, "w4", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
+        Var w3 = new Var(VarType.PREDICTED, 3, "w3", null);
+        Var w4 = new Var(VarType.PREDICTED, 6, "w4", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -86,9 +86,9 @@ public class VarConfigTest {
 
     @Test
     public void testGetConfigIndex2() {
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 0);
@@ -97,13 +97,13 @@ public class VarConfigTest {
 
 
         HashSet<Integer> set = new HashSet<Integer>();
-        for (int b = 0; b < 5; b++) {
-            config.put(w1, b);
+        for (int a = 0; a < 2; a++) {
+            config.put(w0, a);
             for (int c = 0; c < 3; c++) {
                 config.put(w2, c);
-                for (int a = 0; a < 2; a++) {
-                    config.put(w0, a);
-                    int configIndex = a * 1 + c * 2 + b * 6;
+                for (int b = 0; b < 5; b++) {
+                    config.put(w1, b);
+                    int configIndex = a * 3*5 + c *5 + b;
                     System.out.println(configIndex);
                     assertEquals(configIndex, config.getConfigIndex());
                     set.add(configIndex);
@@ -120,9 +120,9 @@ public class VarConfigTest {
     @Test
     public void testGetConfigIndex3() {
 
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w0 = new Var(VarType.PREDICTED, 2, "w0", null);
+        Var w1 = new Var(VarType.PREDICTED, 5, "w1", null);
+        Var w2 = new Var(VarType.PREDICTED, 3, "w2", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);

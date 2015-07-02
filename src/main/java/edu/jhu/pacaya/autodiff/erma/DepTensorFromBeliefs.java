@@ -8,7 +8,7 @@ import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Conversion from Beliefs to a Tensor representation of the edge marginals.
@@ -66,7 +66,7 @@ public class DepTensorFromBeliefs extends AbstractModule<Tensor> implements Modu
 
     @Override
     public List<Module<Beliefs>> getInputs() {
-        return Lists.getList(inf);
+        return QLists.getList(inf);
     }
 
     /** Gets the maximum index of a parent or child in a LinkVar, plus one. */ 

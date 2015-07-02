@@ -9,19 +9,26 @@ public abstract class AbstractModule<T extends MVec> implements Module<T> {
     // The output adjoint will be represented in this abstract algebra.
     protected Algebra s;
     
+    /** 
+     * Constructor.
+     * @param s The algebra of the output and output adjoint.
+     */
     public AbstractModule(Algebra s) {
         this.s = s;
     }
 
     @Override
     public T getOutput() {
+        if (y == null) {
+            throw new IllegalStateException("Output is null. This could be because forward() was never called or because forward() was implemented incorrectly.");
+        }
         return y;
     }
 
     @Override
     public T getOutputAdj() {
         if (yAdj == null) {
-            yAdj = (T) y.copyAndFill(s.zero());
+            yAdj = (T) getOutput().copyAndFill(s.zero());
         }
         return yAdj;
     }
@@ -41,7 +48,7 @@ public abstract class AbstractModule<T extends MVec> implements Module<T> {
         return this.getClass() + " [y=" + y + ", yAdj=" + yAdj + "]";
     }
 
-    public static <T extends MVec> void checkEqualAlgebras(Module<T> m1, Module<T> m2) {
+    public static <T extends MVec, Y extends MVec> void checkEqualAlgebras(Module<T> m1, Module<Y> m2) {
         if (m1.getAlgebra().getClass() != m2.getAlgebra().getClass()) {
             throw new IllegalArgumentException("Algebras must be the same");
         }

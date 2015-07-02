@@ -9,13 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractMutableModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
-import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
 import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
 import edu.jhu.pacaya.autodiff.erma.InsideOutsideDepParse;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
@@ -23,16 +22,16 @@ import edu.jhu.pacaya.autodiff.erma.ParamFreeGlobalFactorModule;
 import edu.jhu.pacaya.autodiff.erma.ProjDepTreeModule;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.depparse.HyperDepParser;
 import edu.jhu.pacaya.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ParentsArray;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -149,7 +148,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn, fm);
+            return QLists.getList(modIn, fm);
         }
         
     }
@@ -158,13 +157,13 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         Algebra s = inMsgs[0].getAlgebra();
 
         // Get the incoming messages at time (t).
-        Tensor tmTrueIn = getMsgs(inMsgs, LinkVar.TRUE, s);        
-        Tensor tmFalseIn = getMsgs(inMsgs, LinkVar.FALSE, s);
+        Tensor tmTrueIn = getMsgs(inMsgs, LinkVar.TRUE);        
+        Tensor tmFalseIn = getMsgs(inMsgs, LinkVar.FALSE);
         
         // Construct the circuit.
-        TensorIdentity mTrueIn = new TensorIdentity(tmTrueIn);
-        TensorIdentity mFalseIn = new TensorIdentity(tmFalseIn);        
-        Algebra tmpS = (isForward) ? LogSemiring.LOG_SEMIRING : LogSignAlgebra.LOG_SIGN_ALGEBRA;
+        Identity<Tensor> mTrueIn = new Identity<Tensor>(tmTrueIn);
+        Identity<Tensor> mFalseIn = new Identity<Tensor>(tmFalseIn);        
+        Algebra tmpS = (isForward) ? LogSemiring.getInstance() : LogSignAlgebra.getInstance();
         ProjDepTreeModule dep = new ProjDepTreeModule(mTrueIn, mFalseIn, tmpS);
         dep.forward();
         
@@ -174,12 +173,12 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             Tensor tmFalseOut = pair.select(0, 0);
             
             // Set the outgoing messages at time (t+1).
-            setMsgs(outMsgs, tmTrueOut, LinkVar.TRUE, s);
-            setMsgs(outMsgs, tmFalseOut, LinkVar.FALSE, s);
+            setMsgs(outMsgs, tmTrueOut, LinkVar.TRUE);
+            setMsgs(outMsgs, tmFalseOut, LinkVar.FALSE);
         } else {
             // Get the adjoints on outgoing message modules at time (t+1).
-            Tensor tTrue = getMsgs(outMsgsAdj, LinkVar.TRUE, s);
-            Tensor tFalse = getMsgs(outMsgsAdj, LinkVar.FALSE, s);
+            Tensor tTrue = getMsgs(outMsgsAdj, LinkVar.TRUE);
+            Tensor tFalse = getMsgs(outMsgsAdj, LinkVar.FALSE);
             Tensor pairAdj = dep.getOutputAdj();
             pairAdj.addTensor(tTrue, 0, 1);
             pairAdj.addTensor(tFalse, 0, 0);
@@ -188,8 +187,8 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
             dep.backward();
             
             // Increment adjoints of the incoming messages at time (t).
-            addMsgs(inMsgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE, s);
-            addMsgs(inMsgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE, s);
+            addMsgs(inMsgsAdj, mTrueIn.getOutputAdj(), LinkVar.TRUE);
+            addMsgs(inMsgsAdj, mFalseIn.getOutputAdj(), LinkVar.FALSE);
         }
     }
 
@@ -205,20 +204,6 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     public VarSet getVars() {
         return vars;
     }
-    
-    @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new ProjDepTreeFactor(0, VarType.OBSERVED);
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
-        }
-    }
 
     @Override
     public double getLogUnormalizedScore(int configId) {
@@ -229,7 +214,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.getInstance();
         if (!hasOneParentPerToken(n, vc)) {
             log.trace("Tree has more than one arc to root.");
             return s.zero();
@@ -297,10 +282,10 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
      * 
      * @param inMsgs The input messages.
      * @param tf Whether to get TRUE or FALSE messages.
-     * @param s The abstract algebra.
      * @return The messages as a Tensor.
      */
-    private Tensor getMsgs(VarTensor[] inMsgs, int tf, Algebra s) {
+    private Tensor getMsgs(VarTensor[] inMsgs, int tf) {
+        Algebra s = inMsgs[0].getAlgebra();
         EdgeScores es = new EdgeScores(n, s.zero());
         for (VarTensor inMsg : inMsgs) {
             LinkVar link = (LinkVar) inMsg.getVars().get(0);            
@@ -316,9 +301,9 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
      * @param msgs The output messages.
      * @param t The input messages.
      * @param tf Whether to set TRUE or FALSE messages.
-     * @param s The abstract algebra.
      */
-    private void setMsgs(VarTensor[] msgs, Tensor t, int tf, Algebra s) {
+    private void setMsgs(VarTensor[] msgs, Tensor t, int tf) {
+        assert msgs[0].getAlgebra().equals(t.getAlgebra());
         EdgeScores es = EdgeScores.tensorToEdgeScores(t);
         for (VarTensor msg : msgs) {
             LinkVar link = (LinkVar) msg.getVars().get(0);            
@@ -333,9 +318,9 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
      * @param msgs The output messages.
      * @param t The input messages.
      * @param tf Whether to set TRUE or FALSE messages.
-     * @param s The abstract algebra.
      */
-    private void addMsgs(VarTensor[] msgs, Tensor t, int tf, Algebra s) {
+    private void addMsgs(VarTensor[] msgs, Tensor t, int tf) {
+        assert msgs[0].getAlgebra().equals(t.getAlgebra());
         EdgeScores es = EdgeScores.tensorToEdgeScores(t);
         for (VarTensor msg : msgs) {
             LinkVar link = (LinkVar) msg.getVars().get(0);
@@ -345,19 +330,21 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
     }
     
     @Override
-    public Module<Scalar> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
+    public Module<Tensor> getExpectedLogBeliefModule(Module<MVecArray<VarTensor>> modIn, Module<?> fm) {
         throw new RuntimeException("not implemented");
     }
 
     @Override
     public double getExpectedLogBelief(VarTensor[] inMsgs) {
-        if (n == 0) {
+        Algebra s = LogSignAlgebra.getInstance();
+        Tensor tmTrueIn = getMsgs(inMsgs, LinkVar.TRUE);
+        Tensor tmFalseIn = getMsgs(inMsgs, LinkVar.FALSE);
+        if (ProjDepTreeModule.allEdgesClamped(tmFalseIn, tmTrueIn)) {
             return 0.0;
         }
         EdgeScores ratios = getLogOddsRatios(inMsgs);
         double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
-        Algebra s = LogSignAlgebra.LOG_SIGN_ALGEBRA;
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
         Scores scores = pair.get2();
@@ -377,7 +364,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         }
         return expectation;
     }
-    
+
     /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
     private EdgeScores getLogOddsRatios(VarTensor[] inMsgs) {  
         EdgeScores es = new EdgeScores(n, Double.NEGATIVE_INFINITY);

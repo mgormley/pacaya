@@ -10,25 +10,25 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.tensor.Exp;
 import edu.jhu.pacaya.autodiff.tensor.ScalarAdd;
 import edu.jhu.pacaya.autodiff.tensor.Sum;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class TopoOrderTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testSimple() {        
         Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
 
-        TensorIdentity id1 = new TensorIdentity(t1);        
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);        
         Sum s = new Sum(id1);        
         ScalarAdd add = new ScalarAdd(id1, s, 0);
       
         TopoOrder<Tensor> topo = new TopoOrder<Tensor>(add);
-        assertEquals(Lists.getList(), topo.getInputs());
+        assertEquals(QLists.getList(), topo.getInputs());
 
         Tensor t = topo.forward();
         System.out.println(t);
@@ -50,37 +50,37 @@ public class TopoOrderTest {
     @Test
     public void testGetInputs() {
         // Input.
-        TensorIdentity id1 = new TensorIdentity(TensorUtils.getVectorFromValues(s, 2, 3, 5));
-        TensorIdentity id2 = new TensorIdentity(TensorUtils.getVectorFromValues(s, 4, 6, 7));
+        Identity<Tensor> id1 = new Identity<Tensor>(TensorUtils.getVectorFromValues(s, 2, 3, 5));
+        Identity<Tensor> id2 = new Identity<Tensor>(TensorUtils.getVectorFromValues(s, 4, 6, 7));
         
         // TopoOrder
         Sum s = new Sum(id1);
         ScalarAdd add = new ScalarAdd(id2, s, 0);
         Exp exp = new Exp(add);
         
-        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1, id2), exp);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1, id2), exp);
         
-        assertTrue(Lists.getList(id1, id2).equals(topo.getInputs()) ||
-                Lists.getList(id2, id1).equals(topo.getInputs()));
+        assertTrue(QLists.getList(id1, id2).equals(topo.getInputs()) ||
+                QLists.getList(id2, id1).equals(topo.getInputs()));
     }
     
     @Test
     public void testGradByFiniteDiffs() {
         Tensor t1 = TensorUtils.getVectorFromValues(s, 2, 3, 5);
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         Sum s = new Sum(id1);
         ScalarAdd add = new ScalarAdd(id1, s, 0);
         Exp exp = new Exp(add);
         
-        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), exp);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1), exp);
         
         List<? extends Module<?>> order = topo.getTopoOrder();
         assertTrue(order.contains(s));
         assertTrue(order.contains(add));
         assertTrue(order.contains(exp));
         
-        assertTrue(Lists.getList(s, add, exp).equals(topo.getTopoOrder()));
-        assertTrue(Lists.getList(id1).equals(topo.getInputs()));
+        assertTrue(QLists.getList(s, add, exp).equals(topo.getTopoOrder()));
+        assertTrue(QLists.getList(id1).equals(topo.getInputs()));
         
         ModuleTestUtils.assertGradientCorrectByFd(topo, 1e-5, 1e-8);
 

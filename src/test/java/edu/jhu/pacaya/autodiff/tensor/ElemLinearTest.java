@@ -12,7 +12,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class ElemLinearTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testSimple() {

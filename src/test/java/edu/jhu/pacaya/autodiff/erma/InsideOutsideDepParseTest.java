@@ -8,13 +8,13 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.TopoOrder;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.pacaya.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -46,32 +46,32 @@ public class InsideOutsideDepParseTest {
             + "    1    1  |  24.2000\n"
             + "]";
     
-    Algebra s = RealAlgebra.REAL_ALGEBRA;
+    Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testSimpleReal() {
-        helpForwardBackward(RealAlgebra.REAL_ALGEBRA);        
+        helpForwardBackward(RealAlgebra.getInstance());        
     }
 
     @Test
     public void testSimpleLog() {
-        helpForwardBackward(LogSemiring.LOG_SEMIRING);
+        helpForwardBackward(LogSemiring.getInstance());
     }
     
     @Test
     public void testSimpleLogPosNeg() {
-        helpForwardBackward(LogSignAlgebra.LOG_SIGN_ALGEBRA);        
+        helpForwardBackward(LogSignAlgebra.getInstance());        
     }
 
     private void helpForwardBackward(Algebra tmpS) {
         Tensor t1 = new Tensor(s, 2,2);
         t1.setValuesOnly(TensorUtils.getVectorFromValues(s, 2, 3, 5, 7));
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         ConvertAlgebra<Tensor> idCo = new ConvertAlgebra<Tensor>(id1, tmpS);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(idCo);
         ConvertAlgebra<Tensor> eaCo = new ConvertAlgebra<Tensor>(ea, s);
 
-        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), eaCo);
+        TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1), eaCo);
         
         Tensor out = topo.forward();
         System.out.println(out);
@@ -92,7 +92,7 @@ public class InsideOutsideDepParseTest {
     public void testCountTreesUsingPartition() {
         Tensor t1 = new Tensor(s, 4,4);
         t1.fill(1.0);
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
         Tensor y = ea.forward();        
         assertEquals(30.0, y.get(InsideOutsideDepParse.ROOT_IDX, 0, 0), 1e-13);
@@ -112,7 +112,7 @@ public class InsideOutsideDepParseTest {
         // Allow non-projective child of token 0
         es.setScore(0, 2, 1.0);
         Tensor t1 = es.toTensor(s);
-        TensorIdentity id1 = new TensorIdentity(t1);
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
         InsideOutsideDepParse ea = new InsideOutsideDepParse(id1);
         Tensor y = ea.forward();        
         assertEquals(0.0, y.get(InsideOutsideDepParse.ROOT_IDX, 0, 0), 1e-13);
@@ -126,7 +126,7 @@ public class InsideOutsideDepParseTest {
                 return new InsideOutsideDepParse(m1);
             }
         };        
-        AbstractModuleTest.evalTensor1ByFiniteDiffs(fact, new TensorIdentity(t1));
+        AbstractModuleTest.evalTensor1ByFiniteDiffs(fact, new Identity<Tensor>(t1));
     }
     
 }

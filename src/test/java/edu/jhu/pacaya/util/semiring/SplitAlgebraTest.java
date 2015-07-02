@@ -6,7 +6,7 @@ import org.junit.Test;
 
 public class SplitAlgebraTest extends AbstractAlgebraTest {
     
-    private SplitAlgebra s = SplitAlgebra.SPLIT_ALGEBRA;
+    private SplitAlgebra s = SplitAlgebra.getInstance();
     
     @Before
     public void setUp() {
@@ -16,7 +16,13 @@ public class SplitAlgebraTest extends AbstractAlgebraTest {
     
     @Override
     public Algebra getAlgebra() {
-        return SplitAlgebra.SPLIT_ALGEBRA;
+        return SplitAlgebra.getInstance();
+    }
+    
+    @Override
+    protected double getStdDevForRand() {
+        // The default of 1000 gives numbers which can't be safely converted to floats.
+        return 10;
     }
 
     @Test

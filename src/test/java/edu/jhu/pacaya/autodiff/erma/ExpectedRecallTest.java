@@ -6,28 +6,29 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class ExpectedRecallTest {
 
     private VarConfig goldConfig;
-    private BeliefsIdentity id1;
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Identity<Beliefs> id1;
+    private Algebra s = RealAlgebra.getInstance();
 
     @Before
     public void setUp() {
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
         t0.setId(0);
         t1.setId(1);
         
@@ -40,7 +41,7 @@ public class ExpectedRecallTest {
         b.varBeliefs[0] = new VarTensor(s, new VarSet(t0), 0.5);
         b.varBeliefs[1] = new VarTensor(s, new VarSet(t1), 0.5);
         
-        id1 = new BeliefsIdentity(b);
+        id1 = new Identity<Beliefs>(b);
     }
     
     @Test

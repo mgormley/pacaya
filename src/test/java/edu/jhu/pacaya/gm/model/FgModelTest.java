@@ -91,8 +91,9 @@ public class FgModelTest {
 
         double[] params = new double[model.getNumParams()];
         model.updateDoublesFromModel(params);
+        System.out.println("model:\n" + model);
         System.out.println("sum: " + DoubleArrays.sum(params));
-        assertEquals(-2.0817045546109862, DoubleArrays.sum(params), 1e-3);
+        assertEquals(-7.319562010940222, DoubleArrays.sum(params), 1e-3);
     }
 
     @Test

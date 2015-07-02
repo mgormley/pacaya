@@ -1,10 +1,11 @@
 package edu.jhu.pacaya.parse.dep;
 
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.math.FastMath;
 
 /**
@@ -27,45 +28,61 @@ public class ProjTreeChart {
     // For incomplete constituents chart[s][t][d][INCOMPLETE] indicates that
     // s is the parent of t if (d == RIGHT) or that t is the parent of s if
     // (d==LEFT). That is the direction, d, indicates which side is the dependent.
-    final double[][][][] scores;
+    private final double[] scores;
 
     // Backpointers, indexed just like the chart.
     //
     // The value at bps[s][t][d][c] will be the split point (r) for the
     // maximum chart entry.
-    final int[][][][] bps;
+    private final int[] bps;
+    private final int nplus;
     
     final DepParseType type;
     
     public ProjTreeChart(int nplus, DepParseType type) {
         this.type = type;
-        scores = new double[nplus][nplus][2][2];
-        bps = new int[nplus][nplus][2][2];
+        this.nplus = nplus;
+        this.scores = new double[nplus*nplus*2*2];
+        this.bps = new int[nplus*nplus*2*2];
         
         // Initialize chart to negative infinities.
         DoubleArrays.fill(scores, Double.NEGATIVE_INFINITY);
         
         // Fill backpointers with -1.
-        IntArrays.fill(bps, -1);            
+        Arrays.fill(bps, -1);
+    }
+    
+    private final int getIndex(int s, int t, int d, int ic) {
+        // The below is equivalent to: return s*nplus*2*2 + t*2*2 + d*2 + ic;
+        return ((((s*nplus) + t)*2) + d)*2 + ic; 
     }
     
     // TODO: Consider using this method and making chart/bps private.
     public final double getScore(int s, int t, int d, int ic) {
-        return scores[s][t][d][ic];
+        return scores[getIndex(s, t, d, ic)];
+    }
+
+    public final void setScore(int s, int t, int d, int ic, double val) {
+        scores[getIndex(s, t, d, ic)] = val;
     }
     
     public final int getBp(int s, int t, int d, int ic) {
-        return bps[s][t][d][ic];
+        return bps[getIndex(s, t, d, ic)];
+    }
+    
+    public final int getNplus() {
+        return nplus;
     }
     
     public final void updateCell(int s, int t, int d, int ic, double score, int r) {
+        int idx = getIndex(s, t, d, ic);
         if (this.type == DepParseType.VITERBI) {
-            if (score > scores[s][t][d][ic]) {
-                scores[s][t][d][ic] = score;
-                bps[s][t][d][ic] = r;
+            if (score > scores[idx]) {
+                scores[idx] = score;
+                bps[idx] = r;
             }
         } else {
-            scores[s][t][d][ic] = FastMath.logAdd(scores[s][t][d][ic], score);
+            scores[idx] = FastMath.logAdd(scores[idx], score);
             // Don't update the backpointer.
             
             // Commented out for speed.

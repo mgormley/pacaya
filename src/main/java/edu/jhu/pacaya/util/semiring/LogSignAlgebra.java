@@ -4,9 +4,8 @@ import edu.jhu.prim.util.math.FastMath;
 
 public class LogSignAlgebra implements Semiring, Algebra {
 
-    private static final long serialVersionUID = 1L;
-    
-    public static final LogSignAlgebra LOG_SIGN_ALGEBRA = new LogSignAlgebra();
+    private static final long serialVersionUID = 1L;    
+    private static final LogSignAlgebra SINGLETON = new LogSignAlgebra();
 
     // We choose the least significant digit of the mantissa as our sign bit.
     // This bit is chosen for two reasons: (1) the various bit representations
@@ -23,6 +22,10 @@ public class LogSignAlgebra implements Semiring, Algebra {
     
     private LogSignAlgebra() { 
         // Private constructor.
+    }
+    
+    public static LogSignAlgebra getInstance() {
+        return SINGLETON;
     }
     
     /** Converts a compacted number to its real value. */

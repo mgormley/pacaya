@@ -2,20 +2,19 @@ package edu.jhu.pacaya.gm.model;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.jhu.pacaya.autodiff.AbstractModule;
-import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.erma.AutodiffFactor;
 import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
-import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
-import edu.jhu.prim.iter.IntIncrIter;
-import edu.jhu.prim.iter.IntIter;
 
 
 /**
@@ -27,26 +26,20 @@ import edu.jhu.prim.iter.IntIter;
 public abstract class ExpFamFactor extends ExplicitFactor implements Factor, FeatureCarrier, AutodiffFactor {
     
     private static final long serialVersionUID = 1L;
-        
-    // The following two fields are stored in order to enable special case logic for 
-    // clamped factors which represent the numerator factor graph.
-    protected IntIter iter;
-    protected int clmpConfigId = -1;
+    private static final Logger log = LoggerFactory.getLogger(ExpFamFactor.class);
+
     protected boolean initialized = false;
 
     public ExpFamFactor(VarSet vars) {
         super(vars);
-        this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
     
     public ExpFamFactor(ExpFamFactor other) {
         super(other);
-        this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
     
     public ExpFamFactor(VarTensor other) {
         super(other);
-        this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
 
     public abstract FeatureVector getFeatures(int config);
@@ -67,22 +60,11 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      */
     public void updateFromModel(FgModel model) {
         initialized = true;
-        if (iter != null) { iter.reset(); }
-        
-        ExpFamFactor f = this;
-        int numConfigs = f.getVars().calcNumConfigs();
-        if (numConfigs > 0) {            
-            for (int c=0; c<numConfigs; c++) {
-    
-                // The configuration of all the latent/predicted variables,
-                // where the predicted variables (might) have been clamped.
-                int config = (iter != null) ? iter.next() : c;
-                
-                double dot = getDotProd(config, model);                
-                assert !Double.isNaN(dot) && dot != Double.POSITIVE_INFINITY : "Invalid value for factor: " + dot;
-                f.setValue(c, dot);
-            }
-            assert(iter == null || !iter.hasNext());
+        int numConfigs = this.getVars().calcNumConfigs();
+        for (int c=0; c<numConfigs; c++) {
+            double dot = getDotProd(c, model);                
+            assert !Double.isNaN(dot) && dot != Double.POSITIVE_INFINITY : "Invalid value for factor: " + dot;
+            this.setValue(c, dot);
         }
     }
     
@@ -103,86 +85,28 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
          return model.dot(fv);
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+    public void addExpectedPartials(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         VarTensor factorMarginal = inferencer.getMarginalsForFactorId(factorId);        
-        addExpectedFeatureCounts(counts, factorMarginal, multiplier);
+        addExpectedPartials(counts, factorMarginal, multiplier);
     }
 
     @Override
-    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+    public void addExpectedPartials(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+        log.trace("factorMarginal = {}", factorMarginal);
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
-        if (numConfigs == 0) {
-            // If there are no variables in this factor, we still need to get the cached features.
+        for (int c=0; c<numConfigs; c++) {       
+            // Get the probability of the c'th configuration for this factor.
+            double prob = factorMarginal.getValue(c);
+
+            // Get the feature counts when they are clamped to the c'th configuration for this factor.
+            FeatureVector fv = getFeatures(c);
+
+            // Scale the feature counts by the marginal probability of the c'th configuration.
             // Update the gradient for each feature.
-            FeatureVector fv = getFeatures(clmpConfigId);
-            counts.addAfterScaling(fv, multiplier);
-        } else {
-            if (iter != null) { iter.reset(); }
-
-            for (int c=0; c<numConfigs; c++) {       
-                // Get the probability of the c'th configuration for this factor.
-                double prob = factorMarginal.getValue(c);
-                
-                // The configuration of all the latent/predicted variables,
-                // where the predicted variables (might) have been clamped.
-                int config = (iter != null) ? iter.next() : c;
-
-                // Get the feature counts when they are clamped to the c'th configuration for this factor.
-                FeatureVector fv = getFeatures(config);
-
-                // Scale the feature counts by the marginal probability of the c'th configuration.
-                // Update the gradient for each feature.
-                counts.addAfterScaling(fv, multiplier * prob);
-            }
-            assert(iter == null || !iter.hasNext());
+            counts.addAfterScaling(fv, multiplier * prob);
         }
     }
-
-    public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-        VarTensor df = super.getClamped(clmpVarConfig);
-        return new ClampedExpFamFactor(df, clmpVarConfig, this);
-    }
-    
-    protected static class ClampedExpFamFactor extends ExpFamFactor {
         
-        private static final long serialVersionUID = 1L;
-		
-		// The unclamped factor from which this one was derived
-        private ExpFamFactor unclmpFactor;
-        
-        // Used only to create clamped factors.
-        public ClampedExpFamFactor(VarTensor clmpDf, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
-            super(clmpDf);
-            this.unclmpFactor = unclmpFactor;
-            VarSet unclmpVarSet = unclmpFactor.getVars();
-            if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {
-                // Only store the unclampedVarSet if it does not contain OBSERVED variables.
-                // This corresponds to only storing the VarSet if this is a factor graph 
-                // containing only latent variables.
-                //
-                // TODO: Switch this to an option.
-                //
-                // If this is the numerator then we must clamp the predicted
-                // variables to determine the correct set of model
-                // parameters.
-                iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
-                clmpConfigId = clmpVarConfig.getConfigIndex();
-            }
-        }
-        
-        @Override
-        public double getDotProd(int config, FgModel model) {
-        	return unclmpFactor.getDotProd(config, model);
-        }
-
-        @Override
-        public FeatureVector getFeatures(int config) {
-            // Pass through to the unclamped factor.
-            return unclmpFactor.getFeatures(config);
-        }
-        
-    }
-    
     @Override
     public Module<VarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
         return new ExpFamFactorModule(modIn, s, this);
@@ -217,14 +141,14 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
             VarTensor factorMarginal = new VarTensor(yAdj);
             factorMarginal.prod(y);
             // addExpectedFeatureCounts() currently only supports the real semiring
-            assert modIn.getAlgebra().equals(RealAlgebra.REAL_ALGEBRA);
-            factorMarginal = factorMarginal.copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA);
-            f.addExpectedFeatureCounts(modelAdj, factorMarginal, RealAlgebra.REAL_ALGEBRA.one());
+            assert modIn.getAlgebra().equals(RealAlgebra.getInstance());
+            factorMarginal = factorMarginal.copyAndConvertAlgebra(RealAlgebra.getInstance());
+            f.addExpectedPartials(modelAdj, factorMarginal, RealAlgebra.getInstance().one());
         }
 
         @Override
         public List<? extends Module<MVecFgModel>> getInputs() {
-            return Lists.getList(modIn);
+            return QLists.getList(modIn);
         }
         
     }

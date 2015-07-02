@@ -134,7 +134,7 @@ public class Tensor implements MVec {
                 strides[i] = dims[i+1]*strides[i+1];
             }
         }
-        return strides;      
+        return strides;
     }
 
     /** Checks that the indices are valid. */
@@ -550,6 +550,11 @@ public class Tensor implements MVec {
     /** Gets the internal dimensions array. */
     public int[] getDims() {
         return dims;
+    }
+
+    /** Gets the size of the i'th dimension. */
+    public int getDim(int i) {
+        return dims[i];
     }
 
     /** Gets the abstract algebra for this tensor. */

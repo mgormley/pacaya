@@ -3,16 +3,16 @@ package edu.jhu.pacaya.gm.data;
 import static org.junit.Assert.assertEquals;
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraphTest;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
-import edu.jhu.pacaya.gm.train.CrfTrainerTest.SimpleVCObsFeatureExtractor;
+import edu.jhu.pacaya.gm.train.SimpleVCObsFeatureExtractor;
 
 public class FgExampleListTest {
 
     // TODO: Move this test. It doesn't really belong here. @Test
     public void testUpdatingOfTemplates() {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
+        FactorGraph fg = FactorGraphsForTests.getLinearChainGraph();
         VarConfig vc = new VarConfig();
         for (Var v : fg.getVars()) {
             vc.put(v, 0);

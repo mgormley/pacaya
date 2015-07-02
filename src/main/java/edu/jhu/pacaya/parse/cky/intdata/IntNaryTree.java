@@ -7,8 +7,8 @@ import java.util.LinkedList;
 
 import edu.jhu.pacaya.nlp.data.Sentence;
 import edu.jhu.pacaya.parse.cky.GrammarConstants;
-import edu.jhu.pacaya.util.Alphabet;
 import edu.jhu.pacaya.util.files.Files;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 
 /**
@@ -27,10 +27,10 @@ public class IntNaryTree {
     private ArrayList<IntNaryTree> children;
     private boolean isLexical;
     
-    private Alphabet<String> alphabet;
+    private IntObjectBimap<String> alphabet;
     
     public IntNaryTree(int symbol, int start, int end, ArrayList<IntNaryTree> children,
-            boolean isLexical, Alphabet<String> alphabet) {
+            boolean isLexical, IntObjectBimap<String> alphabet) {
         this.symbol = symbol;
         this.start = start;
         this.end = end;
@@ -110,7 +110,7 @@ public class IntNaryTree {
     }
 
     public static ArrayList<IntNaryTree> readTreesInPtbFormat(
-            Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+            IntObjectBimap<String> lexAlphabet, IntObjectBimap<String> ntAlphabet, Reader reader) throws IOException {
         ArrayList<IntNaryTree> trees = new ArrayList<IntNaryTree>();
         while (true) {
             IntNaryTree tree = readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
@@ -130,7 +130,7 @@ public class IntNaryTree {
      * outer set of parentheses. The returned tree will have initialized the
      * start/end fields.
      */
-    public static IntNaryTree readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    public static IntNaryTree readTreeInPtbFormat(IntObjectBimap<String> lexAlphabet, IntObjectBimap<String> ntAlphabet, Reader reader) throws IOException {
         Files.readUntilCharacter(reader, '(');
         IntNaryTree root = IntNaryTree.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
         Files.readUntilCharacter(reader, ')');
@@ -155,7 +155,7 @@ public class IntNaryTree {
      * @return
      * @throws IOException
      */
-    private static IntNaryTree readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    private static IntNaryTree readSubtreeInPtbFormat(IntObjectBimap<String> lexAlphabet, IntObjectBimap<String> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
         StringBuilder symbolSb = new StringBuilder();
         ArrayList<IntNaryTree> children = null;
@@ -204,7 +204,7 @@ public class IntNaryTree {
         
         int start = NOT_INITIALIZED;
         int end = NOT_INITIALIZED;
-        Alphabet<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
+        IntObjectBimap<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
         String symbolStr = symbolSb.toString();
         String l = isLexical ? symbolStr : symbolStr;
         int symbol = alphabet.lookupIndex(l);
@@ -350,8 +350,8 @@ public class IntNaryTree {
      * 
      * @param ntAlphabet The alphabet to use for the non-lexical nodes. 
      */
-    public IntBinaryTree leftBinarize(Alphabet<String> ntAlphabet) {
-        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+    public IntBinaryTree leftBinarize(IntObjectBimap<String> ntAlphabet) {
+        IntObjectBimap<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
         // Reset the symbol id according to the new alphabet.
         int symbol = alphabet.lookupIndex(getSymbolLabel());
 
@@ -426,7 +426,7 @@ public class IntNaryTree {
         return isLexical;
     }
 
-    public Alphabet<String> getAlphabet() {
+    public IntObjectBimap<String> getAlphabet() {
         return alphabet;
     }
     
@@ -462,8 +462,8 @@ public class IntNaryTree {
         this.symbol = symbol;
     }
 
-    public void resetAlphabets(final Alphabet<String> lexAlphabet,
-            final Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(final IntObjectBimap<String> lexAlphabet,
+            final IntObjectBimap<String> ntAlphabet) {
         preOrderTraversal(new FnO1ToVoid<IntNaryTree>() {
             public void call(IntNaryTree node) {
                 String label = node.getSymbolLabel();

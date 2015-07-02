@@ -14,14 +14,13 @@ import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
-import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective.BeliefsModuleFactory;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective.DlFactory;
+import edu.jhu.pacaya.autodiff.erma.BeliefsModuleFactory;
+import edu.jhu.pacaya.autodiff.erma.DlFactory;
+import edu.jhu.pacaya.autodiff.erma.EmpiricalRisk.EmpiricalRiskFactory;
 import edu.jhu.pacaya.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.pacaya.gm.data.FgExampleList;
-import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.pacaya.util.Prm;
@@ -48,18 +47,12 @@ public class CrfTrainer {
         public Trainer trainer = Trainer.CLL;
         /** The decoder and loss function used by ERMA training. */
         public DlFactory dlFactory = new ExpectedRecallFactory();
-        /**
-         * Whether to use the mean squared error (MSE) in place of conditional
-         * log-likelihood in the CRF objective. This is useful for loopy graphs
-         * where the BP estimate of the partition function is unreliable.
-         */
-        public boolean useMseForValue = false;
     }
     
     private static final Logger log = LoggerFactory.getLogger(CrfTrainer.class);
     
     private CrfTrainerPrm prm; 
-        
+    
     public CrfTrainer(CrfTrainerPrm prm) {
         this.prm = prm;
         if (prm.optimizer != null && prm.batchOptimizer != null) {
@@ -75,13 +68,16 @@ public class CrfTrainer {
     public FgModel train(FgModel model, FgExampleList data, Function validation) {        
         ExampleObjective exObj;
         boolean isMinimize;
+        MtFactory mtFactory;
         if (prm.trainer == Trainer.ERMA) {
-            exObj = new ErmaObjective(data, prm.bFactory, prm.dlFactory);
+            mtFactory = new EmpiricalRiskFactory(prm.bFactory, prm.dlFactory);
             isMinimize = true;
         } else {
-            exObj = new CrfObjective(data, prm.infFactory, prm.useMseForValue);
+            mtFactory = new LogLikelihoodFactory(prm.infFactory);
             isMinimize = false;
         }
+        mtFactory = new ScaleByWeightFactory(mtFactory);
+        exObj = new ModuleObjective(data, mtFactory);
         AvgBatchObjective objective = new AvgBatchObjective(exObj, model, prm.numThreads);
         
         Regularizer reg = prm.regularizer;

@@ -11,11 +11,11 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -25,7 +25,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class SoftmaxMbrDepParseTest {
 
-    Algebra s = RealAlgebra.REAL_ALGEBRA;
+    Algebra s = RealAlgebra.getInstance();
     
     String expout = "Tensor (RealAlgebra) [\n"
             + "    0    1  |  value\n"
@@ -50,13 +50,13 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testSimpleReal() {
-        helpSimple(LogSignAlgebra.LOG_SIGN_ALGEBRA);              
+        helpSimple(LogSignAlgebra.getInstance());              
         //helpSimple(RealAlgebra.REAL_ALGEBRA);
     }
     
     @Test    
     public void testSimpleLogPosNeg() {    
-        helpSimple(LogSignAlgebra.LOG_SIGN_ALGEBRA);              
+        helpSimple(LogSignAlgebra.getInstance());              
     }
 
     private void helpSimple(Algebra tmpS) {
@@ -67,8 +67,8 @@ public class SoftmaxMbrDepParseTest {
         // in InsideOutsideDepParseTest.
         t1.log();
         t1.multiply(T);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, T));
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, T));
         SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
 
         Tensor out = ea.forward();
@@ -97,7 +97,7 @@ public class SoftmaxMbrDepParseTest {
             + "]";
     @Test    
     public void testSimpleLogPosNeg2() {    
-        helpSimple2(RealAlgebra.REAL_ALGEBRA);              
+        helpSimple2(RealAlgebra.getInstance());              
     }
 
     private void helpSimple2(Algebra tmpS) {
@@ -107,8 +107,8 @@ public class SoftmaxMbrDepParseTest {
         // in InsideOutsideDepParseTest.
         //t1.log();
         //t1.multiply(100);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 1));
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, 1));
         SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
 
         Tensor out = ea.forward();
@@ -134,18 +134,18 @@ public class SoftmaxMbrDepParseTest {
     
     @Test
     public void testGradByFiniteDiffsReal() {   
-        helpGradByFiniteDiffs(RealAlgebra.REAL_ALGEBRA);
+        helpGradByFiniteDiffs(RealAlgebra.getInstance());
     }
     
     @Test
     public void testGradByFiniteDiffsLogPosNeg() {
-        helpGradByFiniteDiffs(LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        helpGradByFiniteDiffs(LogSignAlgebra.getInstance());
     }
 
     private void helpGradByFiniteDiffs(Algebra tmpS) {
         Tensor t1 = new Tensor(s, 4,4);
-        TensorIdentity id1 = new TensorIdentity(t1);
-        TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 2));
+        Identity<Tensor> id1 = new Identity<Tensor>(t1);
+        Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, 2));
         SoftmaxMbrDepParse ea = new SoftmaxMbrDepParse(id1, temp, tmpS);
         
         int numParams = ModuleFn.getOutputSize(ea.getInputs());
@@ -163,10 +163,10 @@ public class SoftmaxMbrDepParseTest {
     @Test
     public void testGradByFiniteDiffsAllSemirings() {
         // Loop over possible internal algebras.
-        for (final Algebra tmpS : Lists.getList(RealAlgebra.REAL_ALGEBRA, LogSignAlgebra.LOG_SIGN_ALGEBRA)) {
+        for (final Algebra tmpS : QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance())) {
             Tensor t1 = new Tensor(s, 4,4);
-            TensorIdentity id1 = new TensorIdentity(t1);
-            TensorIdentity temp = new TensorIdentity(Tensor.getScalarTensor(s, 2));
+            Identity<Tensor> id1 = new Identity<Tensor>(t1);
+            Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, 2));
             Tensor2Factory fact = new Tensor2Factory() {
                 public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
                     return new SoftmaxMbrDepParse(m1, m2, tmpS);

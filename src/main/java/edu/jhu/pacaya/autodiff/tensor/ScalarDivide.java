@@ -3,9 +3,11 @@ package edu.jhu.pacaya.autodiff.tensor;
 import java.util.List;
 
 import edu.jhu.pacaya.autodiff.AbstractModule;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
+import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Division of each entry in a tensor by a scalar from another tensor.
@@ -18,6 +20,13 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
     private Module<Tensor> modInW;
     // The index in w, by which each x entry should be divided.
     private int k;
+
+    public ScalarDivide(Module<Tensor> modInX, double value) {
+        super(modInX.getAlgebra());
+        this.modInX = modInX;
+        this.modInW = new Identity<Tensor>(Scalar.getInstance(s, value));
+        this.k = 0;
+    }
     
     public ScalarDivide(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
         super(modInX.getAlgebra());
@@ -61,7 +70,7 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(modInX, modInW);
+        return QLists.getList(modInX, modInW);
     }
 
 }

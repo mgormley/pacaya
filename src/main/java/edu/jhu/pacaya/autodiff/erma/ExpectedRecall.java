@@ -5,12 +5,11 @@ import java.util.List;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjective.DlFactory;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Loss function computing the negative expected recall from variable beliefs and an assignment to the
@@ -66,7 +65,7 @@ public class ExpectedRecall extends AbstractModule<Tensor> implements Module<Ten
     
     @Override
     public List<Module<Beliefs>> getInputs() {
-        return Lists.getList(inf);
+        return QLists.getList(inf);
     }
 
 }

@@ -8,29 +8,31 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.Messages;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
@@ -107,47 +109,47 @@ public class ErmaProjDepTreeFactorTest {
     
     @Test
     public void testPartitionFunctionWithoutUnaryFactorsProb() {
-        partitionFunctionWithoutUnaryFactors(false);       
+        partitionFunctionWithoutUnaryFactors(RealAlgebra.getInstance());       
     }
     
     @Test
     public void testPartitionFunctionWithoutUnaryFactorsLogProb() {
-        partitionFunctionWithoutUnaryFactors(true);
+        partitionFunctionWithoutUnaryFactors(LogSemiring.getInstance());
     }
     
-    public void partitionFunctionWithoutUnaryFactors(boolean logDomain) {
-        assertEquals(1, getNumberOfTreesByBruteForce(1, logDomain), 1e-13);
-        assertEquals(2, getNumberOfTreesByBruteForce(2, logDomain), 1e-13);
-        assertEquals(7, getNumberOfTreesByBruteForce(3, logDomain), 1e-13);
-        //Slow: assertEquals(30, getNumberOfTreesByBruteForce(4, logDomain), 1e-13);
+    public void partitionFunctionWithoutUnaryFactors(Algebra s) {
+        assertEquals(1, getNumberOfTreesByBruteForce(1, s), 1e-13);
+        assertEquals(2, getNumberOfTreesByBruteForce(2, s), 1e-13);
+        assertEquals(7, getNumberOfTreesByBruteForce(3, s), 1e-13);
+        //Slow: assertEquals(30, getNumberOfTreesByBruteForce(4, s), 1e-13);
         
-        assertEquals(1, getNumberOfTreesByBp(1, logDomain), 1e-13);
-        assertEquals(2, getNumberOfTreesByBp(2, logDomain), 1e-13);
-        assertEquals(7, getNumberOfTreesByBp(3, logDomain), 1e-13);
-        assertEquals(30, getNumberOfTreesByBp(4, logDomain), 1e-13); // TODO: is this correct
-        assertEquals(143, getNumberOfTreesByBp(5, logDomain), 1e-13); 
-        assertEquals(728, getNumberOfTreesByBp(6, logDomain), 1e-13);
+        assertEquals(1, getNumberOfTreesByBp(1, s), 1e-13);
+        assertEquals(2, getNumberOfTreesByBp(2, s), 1e-13);
+        assertEquals(7, getNumberOfTreesByBp(3, s), 1e-13);
+        assertEquals(30, getNumberOfTreesByBp(4, s), 1e-13); // TODO: is this correct
+        assertEquals(143, getNumberOfTreesByBp(5, s), 1e-13); 
+        assertEquals(728, getNumberOfTreesByBp(6, s), 1e-13);
         
-        assertEquals(1, getNumberOfTreesByLoopyBp(1, logDomain), 1e-13);
-        assertEquals(2, getNumberOfTreesByLoopyBp(2, logDomain), 1e-13);
-        assertEquals(7, getNumberOfTreesByLoopyBp(3, logDomain), 1e-13);
-        assertEquals(30, getNumberOfTreesByLoopyBp(4, logDomain), 1e-13); 
-        assertEquals(143, getNumberOfTreesByLoopyBp(5, logDomain), 1e-10); 
-        assertEquals(728, getNumberOfTreesByLoopyBp(6, logDomain), 1e-10);
+        assertEquals(1, getNumberOfTreesByLoopyBp(1, s), 1e-13);
+        assertEquals(2, getNumberOfTreesByLoopyBp(2, s), 1e-13);
+        assertEquals(7, getNumberOfTreesByLoopyBp(3, s), 1e-13);
+        assertEquals(30, getNumberOfTreesByLoopyBp(4, s), 1e-13); 
+        assertEquals(143, getNumberOfTreesByLoopyBp(5, s), 1e-10); 
+        assertEquals(728, getNumberOfTreesByLoopyBp(6, s), 1e-10);
     }
 
-    private double getNumberOfTreesByBruteForce(int n, boolean logDomain) {
+    private double getNumberOfTreesByBruteForce(int n, Algebra s) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
         treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         return bf.getPartition();
     }    
 
-    private double getNumberOfTreesByBp(int n, boolean logDomain) {
+    private double getNumberOfTreesByBp(int n, Algebra s) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
         treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
@@ -155,7 +157,7 @@ public class ErmaProjDepTreeFactorTest {
         
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = false;
@@ -165,7 +167,7 @@ public class ErmaProjDepTreeFactorTest {
     }
     
 
-    private double getNumberOfTreesByLoopyBp(int n, boolean logDomain) {
+    private double getNumberOfTreesByLoopyBp(int n, Algebra s) {
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
         treeFac.updateFromModel(null);
         FactorGraph fg = new FactorGraph();
@@ -173,7 +175,7 @@ public class ErmaProjDepTreeFactorTest {
         
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = true;
@@ -184,26 +186,26 @@ public class ErmaProjDepTreeFactorTest {
     
     @Test
     public void testMarginalsAndPartitionFunction() {
-        boolean logDomain;
-        logDomain = false;        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, false, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
-        logDomain = true;        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, false, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
-        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
+        Algebra s;
+        s = RealAlgebra.getInstance();        
+        inferAndCheckMarginalsAndPartitionFunction(s, false, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, true); 
+        s = LogSemiring.getInstance();        
+        inferAndCheckMarginalsAndPartitionFunction(s, false, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, false);        
+        inferAndCheckMarginalsAndPartitionFunction(s, true, true); 
     }
         
-    private void inferAndCheckMarginalsAndPartitionFunction(boolean logDomain, boolean normalizeMessages, boolean useBetheFreeEnergy) {
-        FgAndLinks fgl = getFgl(logDomain);
+    private void inferAndCheckMarginalsAndPartitionFunction(Algebra s, boolean normalizeMessages, boolean useBetheFreeEnergy) {
+        FgAndLinks fgl = getFgl();
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
         
         ErmaBpPrm prm = new ErmaBpPrm();        
-        prm.logDomain = logDomain;
+        prm.s = s;
         if (useBetheFreeEnergy) {
             prm.maxIterations = 20;
             prm.updateOrder = BpUpdateOrder.PARALLEL;
@@ -254,20 +256,20 @@ public class ErmaProjDepTreeFactorTest {
         assertEquals(45+28+20+84+162+216+96, bp.getPartition(), 1e-3);
         
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
     public void testMarginalsAndPartitionWithAdditionalVariable() {
-        testPartitionWithAdditionalVariableHelper(false, false);
-        testPartitionWithAdditionalVariableHelper(true, false);
-        testPartitionWithAdditionalVariableHelper(true, true);
-        testPartitionWithAdditionalVariableHelper(false, true);
+        testPartitionWithAdditionalVariableHelper(RealAlgebra.getInstance(), false);
+        testPartitionWithAdditionalVariableHelper(LogSemiring.getInstance(), false);
+        testPartitionWithAdditionalVariableHelper(LogSemiring.getInstance(), true);
+        testPartitionWithAdditionalVariableHelper(RealAlgebra.getInstance(), true);
     }
     
-    public void testPartitionWithAdditionalVariableHelper(boolean logDomain, boolean normalizeMessages) {
+    public void testPartitionWithAdditionalVariableHelper(Algebra s, boolean normalizeMessages) {
         double[] root = new double[] {1, 2}; 
         double[][] child = new double[][]{ {0, 3}, {4, 0} };   
         
@@ -278,11 +280,11 @@ public class ErmaProjDepTreeFactorTest {
         int n = fgl.n;
                 
         // Add an extra variable over which we will marginalize.        
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", QLists.getList("arg0", "_"));
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar, childVars[0][1]));
         roleFac.setValue(0, 2);
-        roleFac.setValue(1, 3);
-        roleFac.setValue(2, 5);
+        roleFac.setValue(1, 5);
+        roleFac.setValue(2, 3);
         roleFac.setValue(3, 7);
         System.out.println(roleFac);
         roleFac.convertRealToLog();
@@ -290,7 +292,7 @@ public class ErmaProjDepTreeFactorTest {
         
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = normalizeMessages;
@@ -324,14 +326,14 @@ public class ErmaProjDepTreeFactorTest {
         assertEquals((8*2 + 8*5)/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
     public void testPartitionWithAllOnesAndLatentRoleVar() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.getInstance();        
 
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
@@ -342,7 +344,7 @@ public class ErmaProjDepTreeFactorTest {
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
         
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Lists.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", QLists.getList("arg0", "_"));
                 
         // Add an extra variable over which we will marginalize.        
         ExplicitFactor roleLinkFac = new ExplicitFactor(new VarSet(childVars[1][0], roleVar));
@@ -360,7 +362,7 @@ public class ErmaProjDepTreeFactorTest {
         
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = false;
@@ -398,14 +400,14 @@ public class ErmaProjDepTreeFactorTest {
         assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
     }
     
     @Test
     public void testMarginalsAndPartitionWithAllOnes() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.getInstance();        
 
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
@@ -418,7 +420,7 @@ public class ErmaProjDepTreeFactorTest {
                 
         ErmaBpPrm prm = new ErmaBpPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = true;
@@ -444,13 +446,14 @@ public class ErmaProjDepTreeFactorTest {
         double Z = 2;
         // Check partition function.
         assertEquals(Z,  bp.getPartition(), 1e-3);
+        
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
         assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
         assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, 1, 0), 1e-3);
 
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
     }
@@ -459,15 +462,15 @@ public class ErmaProjDepTreeFactorTest {
     // Currently, the values in get2WordSentFactorGraph() are scaled to avoid the floating point error.
     @Test
     public void testBpCompareMessagesWithExplicitTreeFactor() {
-        compareBpMessagesWithExplicitTreeFactor(false, true, false);
-        compareBpMessagesWithExplicitTreeFactor(false, true, true);
-        compareBpMessagesWithExplicitTreeFactor(true, true, false);
-        compareBpMessagesWithExplicitTreeFactor(true, true, true);
+        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.getInstance(), true, false);
+        compareBpMessagesWithExplicitTreeFactor(RealAlgebra.getInstance(), true, true);
+        compareBpMessagesWithExplicitTreeFactor(LogSemiring.getInstance(), true, false);
+        compareBpMessagesWithExplicitTreeFactor(LogSemiring.getInstance(), true, true);
     }
 
-    public void compareBpMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+    public void compareBpMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
@@ -491,10 +494,10 @@ public class ErmaProjDepTreeFactorTest {
     
     @Test
     public void testErmaCompareMessagesWithExplicitTreeFactor() {
-        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.REAL_ALGEBRA, true, true);
-        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.LOG_SIGN_ALGEBRA, true, false);
-        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.LOG_SIGN_ALGEBRA, true, true);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.getInstance(), true, false);
+        compareErmaMessagesWithExplicitTreeFactor(RealAlgebra.getInstance(), true, true);
+        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.getInstance(), true, false);
+        compareErmaMessagesWithExplicitTreeFactor(LogSignAlgebra.getInstance(), true, true);
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
@@ -546,23 +549,28 @@ public class ErmaProjDepTreeFactorTest {
         for (int i=0; i<msgsExpl.length; i++) {
             VarTensor msgExpl = msgsExpl[i].message;
             VarTensor msgDp = msgsDp[i].message;
-            assertEquals(msgExpl.size(), msgDp.size());
-            for (int c=0; c<msgExpl.size(); c++) {
-                if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
-                        || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
-                    //continue;
-                }
-
-                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
-                    System.out.println("NOT EQUAL:");
-                    System.out.println(fgExpl.getEdge(i));
-                    System.out.println(msgExpl);
-                    System.out.println(msgDp);
-                }
-                assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
-            }
-            // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
+            FgEdge edge = fgExpl.getEdge(i);
+            assertEqualMessages(msgExpl, msgDp, edge.toString());
         }
+    }
+
+    private void assertEqualMessages(VarTensor msgExpl, VarTensor msgDp, String edge) {
+        assertEquals(msgExpl.size(), msgDp.size());
+        for (int c=0; c<msgExpl.size(); c++) {
+            if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
+                    || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
+                //continue;
+            }
+
+            if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
+                System.out.println("NOT EQUAL:");
+                System.out.println(edge);
+                System.out.println(msgExpl);
+                System.out.println(msgDp);
+            } 
+            assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
+        }
+        // TODO: This doesn't work because the vars aren't the same: assertTrue(msgExpl.equals(msgDp, 1e-5));
     }
 
     private void assertEqualVarTensors(VarTensor[] msgsExpl, VarTensor[] msgsDp) {
@@ -618,26 +626,26 @@ public class ErmaProjDepTreeFactorTest {
         // Below, we check both the case of an explicit tree factor and the ProjDepTreeFactor class.
         // 
         // Check that we can correctly compute the partition in the non-loopy setting.
-        comparePartitionWithBruteForce(true, true, true, false, false);
-        comparePartitionWithBruteForce(true, true, false, false, false);
+        comparePartitionWithBruteForce(LogSemiring.getInstance(), true, true, false, false);
+        comparePartitionWithBruteForce(LogSemiring.getInstance(), true, false, false, false);
         // Check that we can correctly compute the partition in the loopy setting.
-        comparePartitionWithBruteForce(true, true, true, true, false);
-        comparePartitionWithBruteForce(true, true, false, true, false);
+        comparePartitionWithBruteForce(LogSemiring.getInstance(), true, true, true, false);
+        comparePartitionWithBruteForce(LogSemiring.getInstance(), true, false, true, false);
     }
     
     @Test
     public void testComparePartitionWithBruteForceInfiniteEdgeWeight() {
         // Check the case of a negative infinity edge weight
-        comparePartitionWithBruteForce(true, true, false, false, true);
+        comparePartitionWithBruteForce(LogSemiring.getInstance(), true, false, false, true);
     }
 
-    public void comparePartitionWithBruteForce(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+    public void comparePartitionWithBruteForce(Algebra s, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
         FactorGraph fg = get2WordSentFactorGraph(useExplicitTreeFactor, makeLoopy, negInfEdgeWeight);
         
         System.out.println(fg.getFactors());
         
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 20;
         prm.normalizeMessages = normalizeMessages;
@@ -649,7 +657,7 @@ public class ErmaProjDepTreeFactorTest {
         printBeliefs(fg, bp);
         
         // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         printBeliefs(fg, bf);
 
@@ -659,29 +667,29 @@ public class ErmaProjDepTreeFactorTest {
         
     @Test
     public void testBackwardPass2WordGlobalFactor() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.getInstance();        
         double[] root = new double[]{ 1.0, 1.0 };
         double[][] child = new double[][]{ { 0.0, 1.0 }, { 1.0, 0.0 } };
-        testBackwardPassGlobalFactor(logDomain, root, child);
+        testBackwardPassGlobalFactor(s, root, child);
     }
     
     @Test
     public void testBackwardPass2WordGlobalFactorWithPruning() {
-        boolean logDomain = false;        
+        Algebra s = RealAlgebra.getInstance();        
         double[] root = new double[]{ 1.0, 1.0 };
         // We prune the edge from 1 --> 0.
         double[][] child = new double[][]{ { 0.0, 1.0 }, { 0.0, 0.0 } };
-        testBackwardPassGlobalFactor(logDomain, root, child);
+        testBackwardPassGlobalFactor(s, root, child);
     }
 
-    private void testBackwardPassGlobalFactor(boolean logDomain, double[] root, double[][] child) {
+    private void testBackwardPassGlobalFactor(Algebra s, double[] root, double[][] child) {
         FgAndLinks fgl = ProjDepTreeFactorTest.getFgl(root, child);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
         
         ErmaBpPrm prm = new ErmaBpPrm();
-        prm.logDomain = logDomain;
+        prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.maxIterations = 2;
@@ -815,7 +823,7 @@ public class ErmaProjDepTreeFactorTest {
         return marg.getValue(LinkVar.TRUE);
     }
 
-    public static FgAndLinks getFgl(boolean logDomain) {
+    public static FgAndLinks getFgl() {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };        
         return getFgl(root, child);
@@ -856,6 +864,53 @@ public class ErmaProjDepTreeFactorTest {
         fg.addFactor(treeFac);
         
         return new FgAndLinks(fg, rootVars, childVars, n);
+    }
+    
+    @Test
+    public void testGlobalFactorComputationSameAsExplicitFactor() {
+        checkGlobalFactorComputationSameAsExplicitFactor(RealAlgebra.getInstance());
+        checkGlobalFactorComputationSameAsExplicitFactor(SplitAlgebra.getInstance());
+        checkGlobalFactorComputationSameAsExplicitFactor(LogSemiring.getInstance());
+    }
+
+    private void checkGlobalFactorComputationSameAsExplicitFactor(Algebra s) {
+        ProjDepTreeFactor ptree = new ProjDepTreeFactor(3, VarType.PREDICTED);        
+        GlobalExplicitFactor ef = new GlobalExplicitFactor(new ExplicitGlobalFactor(ptree));
+        
+        // Create messages that simulate being clamped to a specific tree.
+        VarSet vars = ptree.getVars();
+        VarTensor[] inMsgs = new VarTensor[vars.size()];
+        for (int v=0; v<inMsgs.length; v++) {
+            LinkVar var = (LinkVar)vars.get(v);
+            inMsgs[v] = new VarTensor(s, new VarSet(var));
+            if ((var.getParent() == -1 && var.getChild() == 1) ||
+                    (var.getParent() == 1 && var.getChild() == 0) ||
+                    (var.getParent() == 1 && var.getChild() == 2)) {
+                inMsgs[v].setValue(LinkVar.FALSE, s.fromReal(0.0));
+                inMsgs[v].setValue(LinkVar.TRUE, s.fromReal(1+v));
+            } else {
+                inMsgs[v].setValue(LinkVar.FALSE, s.fromReal(1+v));
+                inMsgs[v].setValue(LinkVar.TRUE, s.fromReal(0.0));
+            }
+        }
+        
+        // Compute the messages by dynamic programming.
+        VarTensor[] outMsgs1 = new VarTensor[vars.size()];
+        for (int v=0; v<outMsgs1.length; v++) {
+            outMsgs1[v] = new VarTensor(s, new VarSet(vars.get(v)));
+        }
+        ptree.createMessages(inMsgs, outMsgs1);
+        
+        // Compute the messages by explicit enumeration of the factor.
+        VarTensor[] outMsgs2 = new VarTensor[vars.size()];
+        for (int v=0; v<outMsgs2.length; v++) {
+            outMsgs2[v] = new VarTensor(s, new VarSet(vars.get(v)));
+        }
+        ef.createMessages(inMsgs, outMsgs2);
+        
+        for (int v=0; v<outMsgs2.length; v++) {
+            assertEqualMessages(outMsgs2[v], outMsgs1[v], ""+vars.get(v));
+        }
     }
     
 }

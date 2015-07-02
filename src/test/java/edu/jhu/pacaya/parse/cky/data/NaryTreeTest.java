@@ -10,7 +10,7 @@ import org.junit.Test;
 public class NaryTreeTest {
 
     @Test
-    public void testGetAsPennTreebankString2() throws IOException {
+    public void testGetAsPennTreebankString2() throws IOException { 
         String origTreeStr = "" +
                 "((S (VP (VB join)\n" +
                     "(NP (DT the) (NN board) )\n" +

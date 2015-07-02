@@ -47,10 +47,7 @@ public class JUnitUtils {
     }
 
     public static void assertArrayEquals(int[] a1, int[] a2) {
-        Assert.assertEquals(a1.length, a2.length);
-        for (int i=0; i<a1.length; i++) {
-            Assert.assertEquals(a1[i], a2[i]);
-        }
+        Assert.assertArrayEquals(a1, a2);
     }
 
     public static void assertArrayEquals(boolean[] a1, boolean[] a2) {

@@ -11,7 +11,7 @@ import edu.jhu.pacaya.autodiff.tensor.ElemMultiply;
 import edu.jhu.pacaya.autodiff.tensor.Exp;
 import edu.jhu.pacaya.autodiff.tensor.ScalarDivide;
 import edu.jhu.pacaya.autodiff.tensor.Select;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -40,7 +40,7 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
      * @param temperature Tensor containing the temperature in its first entry.
      */
     public SoftmaxMbrDepParse(Module<Tensor> margIn, Module<Tensor> temperature) {
-        this(margIn, temperature, LogSignAlgebra.LOG_SIGN_ALGEBRA);
+        this(margIn, temperature, LogSignAlgebra.getInstance());
     }
     
     /**
@@ -74,7 +74,7 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
         
         ConvertAlgebra<Tensor> conv = new ConvertAlgebra<Tensor>(marg, outS);
 
-        return new TopoOrder<Tensor>(Lists.getList(pIn, tIn), conv);
+        return new TopoOrder<Tensor>(QLists.getList(pIn, tIn), conv);
     }
 
     public void report() {
@@ -82,8 +82,8 @@ public class SoftmaxMbrDepParse extends TopoOrder<Tensor> implements Module<Tens
             Module<Tensor> m = (Module<Tensor>) mm;
             System.out.println("Module: " + m.getClass());
             System.out.println("Algebra: " + m.getAlgebra().getClass());
-            System.out.println("Output (reals): " + m.getOutput().copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA));
-            System.out.println("OutputAdj (reals): " + m.getOutputAdj().copyAndConvertAlgebra(RealAlgebra.REAL_ALGEBRA));
+            System.out.println("Output (reals): " + m.getOutput().copyAndConvertAlgebra(RealAlgebra.getInstance()));
+            System.out.println("OutputAdj (reals): " + m.getOutputAdj().copyAndConvertAlgebra(RealAlgebra.getInstance()));
             System.out.println("");
         }
     }

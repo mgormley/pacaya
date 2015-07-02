@@ -23,7 +23,7 @@ import edu.jhu.pacaya.parse.cky.Scorer;
 import edu.jhu.pacaya.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.pacaya.parse.cky.PcfgInsideOutside.PcfgIoChart;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -73,7 +73,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
         public static final int TRUE = 1;
         public static final int FALSE = 0;
 
-        private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
+        private static final List<String> BOOLEANS = QLists.getList("FALSE", "TRUE");
         private int start;
         private int end;
 
@@ -158,7 +158,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     @Override
     public void createMessages(VarTensor[] inMsgs, VarTensor[] outMsgs) {
         Algebra s = inMsgs[0].getAlgebra();
-        if (!s.equals(RealAlgebra.REAL_ALGEBRA) && !s.equals(LogSemiring.LOG_SEMIRING)) {
+        if (!s.equals(RealAlgebra.getInstance()) && !s.equals(LogSemiring.getInstance())) {
             throw new IllegalStateException("ConstituencyTreeFactor only supports log and real semirings as input.");
         }
         
@@ -344,20 +344,6 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
     }
 
     @Override
-    public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() == 0) {
-            // None clamped.
-            return this;
-        } else if (clmpVarConfig.size() == vars.size()) {
-            // All clamped.
-            return new ConstituencyTreeFactor(0, VarType.OBSERVED);
-        } else {
-            // Some clamped.
-            throw new IllegalStateException("Unable to clamp these variables.");
-        }
-    }
-
-    @Override
     public double getLogUnormalizedScore(int configId) {
         VarConfig vc = vars.getVarConfig(configId);
         // TODO: This would be faster: int[] cfg = vars.getVarConfigAsArray(configId);
@@ -366,7 +352,7 @@ public class ConstituencyTreeFactor extends AbstractConstraintFactor implements 
 
     @Override
     public double getLogUnormalizedScore(VarConfig vc) {
-        LogSemiring s = LogSemiring.LOG_SEMIRING;
+        LogSemiring s = LogSemiring.getInstance();
         boolean[][] chart = getChart(n, vc);
         if (chart == null || !isTree(n, chart)) {
             log.warn("Tree is not a valid constituency tree.");

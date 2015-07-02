@@ -1,10 +1,8 @@
 package edu.jhu.pacaya.gm.train;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,19 +12,16 @@ import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.pacaya.autodiff.erma.ErmaObjectiveTest;
+import edu.jhu.pacaya.autodiff.erma.EmpiricalRiskTest;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.autodiff.erma.MeanSquaredError.MeanSquaredErrorFactory;
+import edu.jhu.pacaya.autodiff.erma.L2Distance.MeanSquaredErrorFactory;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
-import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
-import edu.jhu.pacaya.gm.feat.SlowFeatureExtractor;
-import edu.jhu.pacaya.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
@@ -36,119 +31,33 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY;
 import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
-import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FeExpFamFactor;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.FgModelTest;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
-import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.pacaya.util.JUnitUtils;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
+import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.random.Prng;
 
 public class CrfTrainerTest {
 
-    /**
-     * Constructs features for each factor graph configuration by creating a
-     * sorted list of all the variable states and concatenating them together.
-     * 
-     * For testing only.
-     * 
-     * @author mgormley
-     */
-    public static class SimpleVCFeatureExtractor extends SlowFeatureExtractor {
-
-        protected FeatureNames alphabet;
-
-        public SimpleVCFeatureExtractor(FeatureNames alphabet) {
-            super();
-            this.alphabet = alphabet;          
-        }
-        
-        // Just concatenates all the state names together (in-order).
-        @Override
-        public FeatureVector calcFeatureVector(FeExpFamFactor factor, VarConfig varConfig) {
-            FeatureVector fv = new FeatureVector();
-
-            if (varConfig.size() > 0) {
-                String[] strs = new String[varConfig.getVars().size()];
-                int i=0;
-                for (Var v : varConfig.getVars()) {
-                    strs[i] = varConfig.getStateName(v);
-                    i++;
-                }
-                Arrays.sort(strs);
-                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
-                fv.set(featIdx, 1.0);
-            }
-            
-            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
-            alphabet.setIsBias(featIdx);
-            fv.set(featIdx, 1.0);
-            
-            return fv;
-        }
-    }
-    
     @Before
     public void setUp() {
         Prng.seed(123456789101112l);
     }
     
-    /**
-     * Constructs features for each factor graph configuration by creating a
-     * sorted list of all the variable states and concatenating them together.
-     * 
-     * For testing only.
-     * 
-     * @author mgormley
-     */
-    public static class SimpleVCObsFeatureExtractor extends SlowObsFeatureExtractor {
-
-        protected FactorTemplateList fts;
-
-        public SimpleVCObsFeatureExtractor(FactorTemplateList fts) {
-            super();
-            this.fts = fts;
-        }
-        
-        // Just concatenates all the state names together (in-order).
-        @Override
-        public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
-            FeatureVector fv = new FeatureVector();
-            FeatureNames alphabet = fts.getTemplate(factor).getAlphabet();
-
-            if (varConfig.size() > 0) {
-                String[] strs = new String[varConfig.getVars().size()];
-                int i=0;
-                for (Var v : varConfig.getVars()) {
-                    strs[i] = varConfig.getStateName(v);
-                    i++;
-                }
-                Arrays.sort(strs);
-                int featIdx = alphabet.lookupIndex(StringUtils.join(strs, ":"));
-                fv.set(featIdx, 1.0);
-            }
-            
-            int featIdx = alphabet.lookupIndex("BIAS_FEATURE");
-            alphabet.setIsBias(featIdx);
-            fv.set(featIdx, 1.0);
-            
-            return fv;
-        }
-    }
-
     @Test 
     public void testLogLinearModelShapes() {
         LogLinearEDs exs = new LogLinearEDs();
@@ -174,9 +83,9 @@ public class CrfTrainerTest {
     public void testLogLinearModelShapesErma() {
         LogLinearXYData xyData = new LogLinearXYData();
         List<String>[] fvs;
-        fvs = new List[]{ Lists.getList("x=A,y=A"), Lists.getList("x=A,y=B") };
+        fvs = new List[]{ QLists.getList("x=A,y=A"), QLists.getList("x=A,y=B") };
         xyData.addExStrFeats(1.0, "x=A", "y=A", fvs);
-        fvs = new List[]{ Lists.getList("x=B,y=A"), Lists.getList("x=B,y=B") };
+        fvs = new List[]{ QLists.getList("x=B,y=A"), QLists.getList("x=B,y=B") };
         xyData.addExStrFeats(1.0, "x=B", "y=B", fvs);        
         LogLinearXY xy = new LogLinearXY(new LogLinearXYPrm());
         FgExampleList data = xy.getData(xyData);
@@ -205,9 +114,18 @@ public class CrfTrainerTest {
         JUnitUtils.assertArrayEquals(new double[]{0.253, -0.253, -0.253, 0.253}, params2, 1e-3);
         //MSE: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
     }
-        
+
     @Test
-    public void testTrainNoLatentVars() {
+    public void testTrainNoLatentVarsSgd() {
+        checkTrainNoLatentVars(true);
+    }
+    
+    @Test
+    public void testTrainNoLatentVarsLbfgs() {
+        checkTrainNoLatentVars(false);
+    }
+    
+    public void checkTrainNoLatentVars(boolean sgd) {
         // Boiler plate feature extraction code.
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
@@ -216,7 +134,7 @@ public class CrfTrainerTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
 
         // Create the factor graph.
-        FgAndVars fgv = getLinearChainFgWithVars(ofc, obsFe);
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars(ofc, obsFe);
 
         // Create a "gold" assignment of the variables.
         VarConfig trainConfig = new VarConfig();
@@ -234,15 +152,24 @@ public class CrfTrainerTest {
         FgModel model = new FgModel(ofc.getNumParams());
 
         // Train the model.
-        model = train(model, data);
+        model = train(model, data, null, sgd);
         
         // Assertions:
         System.out.println(model);
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
-        JUnitUtils.assertArrayEquals(new double[]{-0.10, -0.10, 0.10, 0.10, -3.15, -3.15, -3.29, -3.29, 5.30, 5.30, 1.14, 1.14}, FgModelTest.getParams(model), 1e-2);
-        
+        double[] expected;
+        if (sgd) {
+            expected = new double[]{0.19, 0.11, -0.40, 0.11, -0.26, 0.34, -0.32, 0.25};
+        } else {
+            expected = new double[]{2.85, 0.99, -4.82, 0.98, -6.33, 9.25, -6.55, 3.63};
+            // Due to floating point precision, we used to run an extra iteration of LBFGS
+            // and got the following answer:
+            //
+            //expected = new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89};
+        }
+        JUnitUtils.assertArrayEquals(expected, FgModelTest.getParams(model), 1e-2);
+
         // OLD WAY:
         //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
         //        assertEquals(-4.79, getParam(model, "emit", "V:man"), 1e-2);
@@ -264,7 +191,7 @@ public class CrfTrainerTest {
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
-        FgAndVars fgv = getLinearChainFgWithVarsLatent(ofc, obsFe);
+        FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVarsLatent(ofc, obsFe);
 
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
@@ -283,12 +210,7 @@ public class CrfTrainerTest {
         
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=latent-emit, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
-        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.01, 0.01, 0.01, 0.01, -0.01, -0.01, -0.01, -0.01, -3.08, -3.08, -3.33, -3.33, 5.25, 5.25, 1.16, 1.16}, FgModelTest.getParams(model), 1e-2);
-          
-        // OLD PARAMS:
-        //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
-        //JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{0.35, 0.35, -0.35, -0.35, 0.14, -0.14, 0.14, -0.14, -6.26, 11.09, -7.31, 2.48}, FgModelTest.getParams(model), 1e-2);
     }
     
     public enum MockTemplate {
@@ -324,7 +246,7 @@ public class CrfTrainerTest {
                         f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), MockTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
-                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));
+                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, QLists.getList("A1", "A2", "A3"));
                         fg.addFactor(new ObsFeExpFamFactor(new VarSet(childRoles[i][j]), MockTemplate.ROLE_UNARY, ofc, obsFe));
                         
                         //trainConfig.put(childVars[i][j], 0);
@@ -353,13 +275,13 @@ public class CrfTrainerTest {
 
     }
     
-    private static FgModel train(FgModel model, FgExampleList data) {
+    public static FgModel train(FgModel model, FgExampleList data) {
         return train(model, data, null, false);
     }
     
     public static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = true;
+        bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
@@ -377,6 +299,7 @@ public class CrfTrainerTest {
             prm.batchOptimizer = new SGD(optPrm);
             prm.optimizer = null;
         } else {
+            prm.batchOptimizer = null;
             prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         }
         prm.regularizer = r;
@@ -388,14 +311,14 @@ public class CrfTrainerTest {
     
     public static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
         ErmaBpPrm bpPrm = new ErmaBpPrm();
-        bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
-        bpPrm.s = RealAlgebra.REAL_ALGEBRA;
+        bpPrm.s = RealAlgebra.getInstance();
         
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
+        prm.bFactory = bpPrm;
         prm.dlFactory = new MeanSquaredErrorFactory();
         //prm.dlFactory = new ExpectedRecallFactory();
         prm.trainer = Trainer.ERMA;
@@ -410,6 +333,7 @@ public class CrfTrainerTest {
             prm.batchOptimizer = new SGD(optPrm);
             prm.optimizer = null;
         } else {
+            prm.batchOptimizer = null;
             prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
         }
         prm.regularizer = r;
@@ -417,152 +341,5 @@ public class CrfTrainerTest {
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
         return model;
-    }
-
-    public static FgAndVars getLinearChainFgWithVars(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
-
-        FactorGraph fg = new FactorGraph();
-
-        // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
-        
-        // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
-
-        // Emission factors. 
-        ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(t0, w0), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit1 = new ObsFeExpFamFactor(new VarSet(t1, w1), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit2 = new ObsFeExpFamFactor(new VarSet(t2, w2), "emit", ofc, obsFe); 
-
-        emit0.setValue(0, 0.1);
-        emit0.setValue(1, 0.9);
-        emit1.setValue(0, 0.3);
-        emit1.setValue(1, 0.7);
-        emit2.setValue(0, 0.5);
-        emit2.setValue(1, 0.5);
-        
-        // Transition factors.
-        ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
-        ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
-        
-        tran0.fill(1);
-        tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.3);
-        tran0.setValue(2, 0.4);
-        tran0.setValue(3, 0.5);
-        tran1.fill(1);
-        tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.3);
-        tran1.setValue(2, 1.4);
-        tran1.setValue(3, 1.5);
-                
-        fg.addFactor(emit0);
-        fg.addFactor(emit1);
-        fg.addFactor(emit2);
-        fg.addFactor(tran0);
-        fg.addFactor(tran1);
-        
-        for (Factor f : fg.getFactors()) {
-            ((ExpFamFactor)f).convertRealToLog();
-        }
-
-        FgAndVars fgv = new FgAndVars();
-        fgv.fg = fg;
-        fgv.w0 = w0;
-        fgv.w1 = w1;
-        fgv.w2 = w2;
-        fgv.t0 = t0;
-        fgv.t1 = t1;
-        fgv.t2 = t2;
-        return fgv;
-    }
-    
-    public static FgAndVars getLinearChainFgWithVarsLatent(ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
-
-        FactorGraph fg = new FactorGraph();
-
-        // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
-
-        // Create latent classes.
-        Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));
-        Var z1 = new Var(VarType.LATENT, 2, "z1", Lists.getList("C1", "C2"));
-        Var z2 = new Var(VarType.LATENT, 2, "z2", Lists.getList("C1", "C2"));
-        
-        // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
-
-        // Emission factors. 
-        ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(z0, w0), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit1 = new ObsFeExpFamFactor(new VarSet(z1, w1), "emit", ofc, obsFe); 
-        ObsFeExpFamFactor emit2 = new ObsFeExpFamFactor(new VarSet(z2, w2), "emit", ofc, obsFe); 
-
-        emit0.setValue(0, 0.1);
-        emit0.setValue(1, 0.9);
-        emit1.setValue(0, 0.3);
-        emit1.setValue(1, 0.7);
-        emit2.setValue(0, 0.5);
-        emit2.setValue(1, 0.5);
-        
-        // Latent emission factors. 
-        ObsFeExpFamFactor emitL0 = new ObsFeExpFamFactor(new VarSet(t0, z0), "latent-emit", ofc, obsFe); 
-        ObsFeExpFamFactor emitL1 = new ObsFeExpFamFactor(new VarSet(t1, z1), "latent-emit", ofc, obsFe); 
-        ObsFeExpFamFactor emitL2 = new ObsFeExpFamFactor(new VarSet(t2, z2), "latent-emit", ofc, obsFe); 
-
-        emitL0.setValue(0, 1.1);
-        emitL0.setValue(1, 1.9);
-        emitL1.setValue(0, 1.3);
-        emitL1.setValue(1, 1.7);
-        emitL2.setValue(0, 1.5);
-        emitL2.setValue(1, 1.5);
-        
-        // Transition factors.
-        ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
-        ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
-        
-        tran0.fill(1);
-        tran0.setValue(0, 0.2);
-        tran0.setValue(1, 0.3);
-        tran0.setValue(2, 0.4);
-        tran0.setValue(3, 0.5);
-        tran1.fill(1);
-        tran1.setValue(0, 1.2);
-        tran1.setValue(1, 1.3);
-        tran1.setValue(2, 1.4);
-        tran1.setValue(3, 1.5);
-                
-        fg.addFactor(emit0);
-        fg.addFactor(emit1);
-        fg.addFactor(emit2);
-        fg.addFactor(emitL0);
-        fg.addFactor(emitL1);
-        fg.addFactor(emitL2);
-        fg.addFactor(tran0);
-        fg.addFactor(tran1);
-
-        for (Factor f : fg.getFactors()) {
-            ((ExpFamFactor)f).convertRealToLog();
-        }
-        
-        FgAndVars fgv = new FgAndVars();
-        fgv.fg = fg;
-        fgv.w0 = w0;
-        fgv.w1 = w1;
-        fgv.w2 = w2;
-        fgv.z0 = z0;
-        fgv.z1 = z1;
-        fgv.z2 = z2;
-        fgv.t0 = t0;
-        fgv.t1 = t1;
-        fgv.t2 = t2;
-        return fgv;
     }
 }

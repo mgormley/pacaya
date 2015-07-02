@@ -1,6 +1,6 @@
 package edu.jhu.pacaya.parse.cky;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 /**
  * A unary or binary rule (or production) in a CNF grammar.
@@ -20,11 +20,11 @@ public class Rule {
     // TODO: Subclass: LogProb rule should have this: private double logProb;
     // TODO: Separate subclass should compute based on features of the sentence.
 
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private IntObjectBimap<String> lexAlphabet;
+    private IntObjectBimap<String> ntAlphabet;
 
-    public Rule(int parent, int leftChild, int rightChild, double score, Alphabet<String> ntAlphabet,
-            Alphabet<String> lexAlphabet) {
+    public Rule(int parent, int leftChild, int rightChild, double score, IntObjectBimap<String> ntAlphabet,
+            IntObjectBimap<String> lexAlphabet) {
         this.parent = parent;
         this.leftChild = leftChild;
         this.rightChild = rightChild;

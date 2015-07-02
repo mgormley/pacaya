@@ -20,7 +20,7 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     private int id = -1;
     
     public ExplicitFactor(VarSet vars) {
-        super(RealAlgebra.REAL_ALGEBRA, vars);
+        super(RealAlgebra.getInstance(), vars);
     }
     
     public ExplicitFactor(ExplicitFactor other) {
@@ -29,11 +29,6 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     
     public ExplicitFactor(VarTensor other) {
         super(other);
-    }
-
-    public ExplicitFactor getClamped(VarConfig clmpVarConfig) {
-        VarTensor df = super.getClamped(clmpVarConfig);
-        return new ExplicitFactor(df);
     }
     
     public void updateFromModel(FgModel model) {
@@ -48,7 +43,7 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
         return getLogUnormalizedScore(vc.getConfigIndex());
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+    public void addExpectedPartials(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         // No op since this type of factor doesn't have any features.
     }
 
@@ -66,5 +61,5 @@ public class ExplicitFactor extends VarTensor implements Factor, AutodiffFactor 
     public Module<VarTensor> getFactorModule(Module<MVecFgModel> modIn, Algebra s) {
         return new ParamFreeFactorModule(s, this);
     }
-
+    
 }

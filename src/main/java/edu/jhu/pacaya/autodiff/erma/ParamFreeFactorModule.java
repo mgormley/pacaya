@@ -8,7 +8,7 @@ import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**
@@ -38,7 +38,7 @@ public class ParamFreeFactorModule extends AbstractModule<VarTensor> implements 
 
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
-        return Lists.getList();
+        return QLists.getList();
     }
     
 }

@@ -199,11 +199,6 @@ public class BfsMpScheduleTest {
         }
 
         @Override
-        public Factor getClamped(VarConfig clmpVarConfig) {
-            throw new RuntimeException("not implemented");
-        }
-
-        @Override
         public double getLogUnormalizedScore(VarConfig goldConfig) {
             throw new RuntimeException("not implemented");
         }

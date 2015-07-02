@@ -136,10 +136,10 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         
         if (ac.accumValue) {
-            ac.value /= batch.length;
+            ac.value /= getDivisorForAveraging(batch, ac);
         }
         if (ac.accumGradient) {
-            ac.gradient.scale(1.0 / batch.length);    
+            ac.gradient.scale(1.0 / getDivisorForAveraging(batch, ac));    
         }
         if (isFullDataset) {
             // Print out the likelihood if we're computing it on the entire dataset.
@@ -147,6 +147,11 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
                     ac.value, ac.loss, ac.weight));
             exObj.report();
         }
+    }
+
+    protected double getDivisorForAveraging(int[] batch, Accumulator ac) {
+        // TODO: Should this be the total weight of all the examples instead?
+        return batch.length;
     }
 
     private class AccumValueGradientOfExample implements Callable<Object> {

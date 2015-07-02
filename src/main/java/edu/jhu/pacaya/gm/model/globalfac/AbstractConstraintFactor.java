@@ -24,11 +24,11 @@ public abstract class AbstractConstraintFactor implements GlobalFactor {
         // therefore have no model parameters.
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, VarTensor factorMarginal, double multiplier) {
+    public void addExpectedPartials(IFgModel counts, VarTensor factorMarginal, double multiplier) {
         // No op since this type of factor doesn't have any features.
     }
 
-    public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
+    public void addExpectedPartials(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         // No op since this type of factor doesn't have any features.
     }
 

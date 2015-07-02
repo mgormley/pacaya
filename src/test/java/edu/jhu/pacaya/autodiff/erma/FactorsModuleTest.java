@@ -15,20 +15,19 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.Var.VarType;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class FactorsModuleTest {
 
-    boolean logDomain = false;
-    Algebra s = RealAlgebra.REAL_ALGEBRA;
+    Algebra s = RealAlgebra.getInstance();
         
     private final FgModel model;
     private final FactorGraph fg;
     
     public FactorsModuleTest() {
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
         ExplicitExpFamFactor emit1 = new ExplicitExpFamFactor(new VarSet(t0));
         for (int c=0; c<emit1.size(); c++) {
             FeatureVector features = new FeatureVector();

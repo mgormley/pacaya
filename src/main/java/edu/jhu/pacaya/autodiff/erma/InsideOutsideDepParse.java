@@ -6,16 +6,16 @@ import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.hypergraph.Hyperalgo;
+import edu.jhu.pacaya.hypergraph.Hyperalgo.HyperedgeDoubleFn;
+import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.Hyperedge;
 import edu.jhu.pacaya.hypergraph.Hypernode;
 import edu.jhu.pacaya.hypergraph.Hyperpotential;
-import edu.jhu.pacaya.hypergraph.Hyperalgo.HyperedgeDoubleFn;
-import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.pacaya.hypergraph.depparse.PCBasicHypernode;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.util.cli.Opt;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.prim.arrays.DoubleArrays;
 
 /**
@@ -121,7 +121,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(weightsIn);
+        return QLists.getList(weightsIn);
     }
     
 }

@@ -42,9 +42,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         public int maxIterations = 100;
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
-        @Deprecated
-        public boolean logDomain = true;
-        public Algebra s = null;
+        public Algebra s = LogSemiring.getInstance();
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;        
         public boolean cacheFactorBeliefs = false;
@@ -62,11 +60,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements FgInferen
         
         @Override
         public Algebra getAlgebra() {
-            if (s == null) {
-                return logDomain ? LogSemiring.LOG_SEMIRING : RealAlgebra.REAL_ALGEBRA;
-            } else {
-                return s;
-            }
+            return s;
         }
         
     }

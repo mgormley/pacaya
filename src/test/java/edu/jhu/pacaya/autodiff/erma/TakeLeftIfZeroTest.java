@@ -5,7 +5,7 @@ import org.junit.Test;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.TensorIdentity;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -13,7 +13,7 @@ import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class TakeLeftIfZeroTest {
 
-    private Algebra s = RealAlgebra.REAL_ALGEBRA;
+    private Algebra s = RealAlgebra.getInstance();
     
     @Test
     public void testForwardAndBackward() {
@@ -31,7 +31,7 @@ public class TakeLeftIfZeroTest {
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
                 final Tensor t3 = TensorUtils.getVectorFromReals(m1.getAlgebra(), 0, 1, 1e-13);
-                return new TakeLeftIfZero(m1, m2, new TensorIdentity(t3));
+                return new TakeLeftIfZero(m1, m2, new Identity<Tensor>(t3));
             }
         };
         
@@ -43,7 +43,7 @@ public class TakeLeftIfZeroTest {
         Tensor2Factory fact = new Tensor2Factory() {
             public Module<Tensor> getModule(Module<Tensor> m1, Module<Tensor> m2) {
                 final Tensor t3 = TensorUtils.getVectorFromReals(m1.getAlgebra(), 0, 1, 1e-13);
-                return new TakeLeftIfZero(m1, m2, new TensorIdentity(t3));
+                return new TakeLeftIfZero(m1, m2, new Identity<Tensor>(t3));
             }
         };        
         AbstractModuleTest.evalTensor2ByFiniteDiffs(fact);

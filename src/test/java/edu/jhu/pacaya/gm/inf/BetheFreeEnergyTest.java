@@ -10,20 +10,22 @@ import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
-import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.pacaya.gm.model.VarSet;
+import edu.jhu.pacaya.util.semiring.Algebra;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 public class BetheFreeEnergyTest {
 
     @Test
     public void testPrintBfeOnChain() {
-        boolean logDomain = false;
+        Algebra s = RealAlgebra.getInstance();
         
         FactorGraph fg = getLinearChainGraph();
 
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
-        prm.logDomain = logDomain;
+        prm.s = s;
         //prm.schedule = BpScheduleType.TREE_LIKE;
         //prm.updateOrder = BpUpdateOrder.SEQUENTIAL;        
         prm.updateOrder = BpUpdateOrder.PARALLEL;
@@ -34,7 +36,7 @@ public class BetheFreeEnergyTest {
         bp.run();
         System.out.println("BFE:" + bp.getBetheFreeEnergy());
 
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
                 
         assertEquals(bf.getPartition(), bp.getPartition(), 1e-13);
@@ -55,11 +57,6 @@ public class BetheFreeEnergyTest {
     public static FactorGraph getLinearChainGraph() {
         FactorGraph fg = new FactorGraph();
 
-        // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", null);
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", null);
-        
         // Create three tags.
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);

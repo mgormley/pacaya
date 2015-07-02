@@ -35,14 +35,29 @@ public interface GlobalFactor extends Factor {
     double getExpectedLogBelief(VarTensor[] inMsgs);
     
     /**
-     * Adds the expected feature counts for this factor, given the marginal distribution 
+     * Adds the expected partial derivatives for this factor, given the marginal distribution 
      * specified by the inferencer for this factor.
+     * This corresponds to the following expectation:
      * 
-     * @param counts The object collecting the feature counts.
-     * @param multiplier The multiplier for the added feature accounts.
+     * <pre>
+     * d/d\theta_i log p(y) 
+     *     += \sum_{y_{\alpha}} p(y_{\alpha}) d/d\theta_i \log \psi_{\alpha}(y_{\alpha})
+     * </pre>
+     * 
+     * If the factor is in the exponential family, this is equivalent to adding the expected feature
+     * counts. This falls out of the partial derivative as below:
+     * 
+     * <pre>
+     * d/d\theta_i \log \psi_{\alpha}(y_{\alpha})
+     *     = d/d\theta_i (\theta \cdot f(y_{\alpha}), x)) 
+     *     = f_i(y_{\alpha}, x)
+     * </pre>
+     * 
+     * @param counts The accumulator for the partial derivatives.
+     * @param multiplier The multiplier for the added partials.
      * @param inferencer The inferencer from which the marginal distribution is taken.
      * @param factorId The id of this factor within the inferencer.
      */
-    void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId);
+    void addExpectedPartials(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId);
 
 }
