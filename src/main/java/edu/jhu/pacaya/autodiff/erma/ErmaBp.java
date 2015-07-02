@@ -256,19 +256,23 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         }
         // Cache the variable beliefs.
         varBeliefs = new VarTensor[fg.getNumVars()];
-        for (int v=0; v<varBeliefs.length; v++) {
-            varBeliefs[v] = calcVarBeliefs(fg.getVar(v));
+        if (prm.minVarNbsForCache < Integer.MAX_VALUE) {
+            for (int v=0; v<varBeliefs.length; v++) {
+                varBeliefs[v] = calcVarBeliefs(fg.getVar(v));
+            }
         }
         // Cache the factor beliefs.
         facBeliefs = new VarTensor[fg.getNumFactors()];
-        for (int a=0; a<facBeliefs.length; a++) {
-            Factor fac = fg.getFactor(a);
-            if (!(fac instanceof GlobalFactor)) {
-                // Note that this is used to cache the product of messages. It is not a factor belief.
-                //facBeliefs[a] = new VarTensor(s, fac.getVars(), s.one());
-                //FgNode node = fg.getFactorNode(fac.getId());
-                //getProductOfMessages(node, facBeliefs[a], null, null);
-                facBeliefs[a] = calcFactorBeliefs(fac);
+        if (prm.minFacNbsForCache < Integer.MAX_VALUE) {
+            for (int a=0; a<facBeliefs.length; a++) {
+                Factor fac = fg.getFactor(a);
+                if (!(fac instanceof GlobalFactor)) {
+                    // Note that this is used to cache the product of messages. It is not a factor belief.
+                    //facBeliefs[a] = new VarTensor(s, fac.getVars(), s.one());
+                    //FgNode node = fg.getFactorNode(fac.getId());
+                    //getProductOfMessages(node, facBeliefs[a], null, null);
+                    facBeliefs[a] = calcFactorBeliefs(fac);
+                }
             }
         }
         // Initialize the normalizing constants. These are used when computing the final beliefs.
@@ -1005,6 +1009,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
 
     private void maybeWriteAllBeliefs(int iter) {
         if (prm.dumpDir != null) {
+            forwardVarAndFacBeliefs();
             try {
                 BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
                 writer.write("Iteration: " + iter + "\n");

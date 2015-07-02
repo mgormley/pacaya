@@ -478,8 +478,8 @@ public abstract class AbstractAlgebraTest {
         }
         
         for (int i=0; i<NUM_RANDS; i++) {
-            x = Gaussian.nextDouble(0.0, 1000);
-            y = Gaussian.nextDouble(0.0, 1000);
+            x = Gaussian.nextDouble(0.0, getStdDevForRand());
+            y = Gaussian.nextDouble(0.0, getStdDevForRand());
             if (!supportsNegatives()) {
                 x = Math.abs(x);
                 y = Math.abs(y);
