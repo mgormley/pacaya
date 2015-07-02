@@ -165,13 +165,13 @@ public class LibDaiFgIoTest {
             ErmaBpPrm prm = new ErmaBpPrm();
             prm.updateOrder = BpUpdateOrder.PARALLEL;
             prm.maxIterations = 10;
+            prm.keepTape = false;
             prm.s = RealAlgebra.getInstance();
             ErmaBp bp = new ErmaBp(fg, prm);
             Beliefs b = bp.forward();
             t.stop();
             log.info("Completed trial {} in {} secs", trial, t.totSec());
         }
-        
     }
 
 }
