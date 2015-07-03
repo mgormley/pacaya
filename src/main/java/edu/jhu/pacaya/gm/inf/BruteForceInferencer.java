@@ -7,8 +7,6 @@ import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.LogSemiring;
-import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
  * Inference by brute force summation.

@@ -116,7 +116,7 @@ public class LogLikelihoodFactoryTest {
 			fg.addFactor(f);
 		}
 		
-		assertTrue(fg.getEdges().size() > 0);
+		assertTrue(fg.getNumEdges() > 0);
 		
 		// find out what the log-likelihood is
 		CrfTrainer.CrfTrainerPrm trainerPrm = new CrfTrainer.CrfTrainerPrm();

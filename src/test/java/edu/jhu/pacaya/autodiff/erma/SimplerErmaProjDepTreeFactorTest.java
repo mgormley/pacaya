@@ -5,15 +5,14 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
@@ -100,7 +99,8 @@ public class SimplerErmaProjDepTreeFactorTest {
 
                 if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13)) {
                     System.out.println("NOT EQUAL:");
-                    System.out.println(fgExpl.getEdge(i));
+                    String edge = fgExpl.edgeToString(i);
+                    System.out.println(edge);
                     System.out.println(msgExpl);
                     System.out.println(msgDp);
                 }
@@ -141,12 +141,10 @@ public class SimplerErmaProjDepTreeFactorTest {
 
     private void printMessages(FactorGraph fg, Messages[] msgs) {
         for (int i = 0; i < fg.getNumEdges(); i++) {
-            FgEdge edge = fg.getEdge(i);
-            // if (edge.isVarToFactor() && edge.getFactor().getVars().size() == 4) {
+            String edge = fg.edgeToString(i);
             System.out.println(edge);
             System.out.println(msgs[i].message);
             System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
-            // }
         }
     }
 

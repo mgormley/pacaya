@@ -390,7 +390,7 @@ public class ErmaBpForwardTest {
             System.out.println(bf.getMarginals(x1));
             System.out.println(bp.getMarginals(x1));
             assertEquals(3, fg.getFactors().size());
-            assertTrue(fg.isUndirectedTree(fg.getVarNode(0)));
+            assertTrue(fg.getBipgraph().isAcyclic());
             assertEqualMarginals(fg, bf, bp);
         }
     }    

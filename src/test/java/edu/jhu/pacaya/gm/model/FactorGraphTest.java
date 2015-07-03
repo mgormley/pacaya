@@ -1,6 +1,6 @@
 package edu.jhu.pacaya.gm.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -13,15 +13,11 @@ import edu.jhu.pacaya.gm.model.Var.VarType;
 public class FactorGraphTest {
 
     @Test
-    public void testIsUndirectedTree() throws IOException {
-        FactorGraph fg = FactorGraphsForTests.getLinearChainGraph();        
-        for (int i=0; i<fg.getNumNodes(); i++) {
-            assertEquals(true, fg.isUndirectedTree(fg.getNode(i)));
-        }
+    public void testIsAcyclic() throws IOException {
+        FactorGraph fg = FactorGraphsForTests.getLinearChainGraph();
+        assertTrue(fg.getBipgraph().isAcyclic());
         fg = BayesNetReaderTest.readSimpleFg();
-        for (int i=0; i<fg.getNumNodes(); i++) {
-            assertEquals(false, fg.isUndirectedTree(fg.getNode(i)));
-        }
+        assertFalse(fg.getBipgraph().isAcyclic());
     }
     
     @Test
@@ -70,7 +66,6 @@ public class FactorGraphTest {
         assertEquals(5 + 4, fgClmp.getNumFactors());
         // 2 unconstrained variables, plus 4 clamped variables.
         assertEquals(2 + 4, fgClmp.getNumVars());
-        assertEquals(15, fgClmp.getNumNodes());
         // The original edges plus 8 edges for the ClampFactors.
         assertEquals(20, fgv.fg.getNumEdges());
         assertEquals(20+8, fgClmp.getNumEdges());
@@ -82,7 +77,6 @@ public class FactorGraphTest {
         
         assertEquals(5, fg.getNumFactors());
         assertEquals(3, fg.getNumVars());
-        assertEquals(8, fg.getNumNodes());
         // There is a pair of edges for each emission factor and a 
         assertEquals(3*2 + 2*2*2, fg.getNumEdges());
     }

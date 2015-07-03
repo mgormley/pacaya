@@ -335,7 +335,7 @@ public class BeliefPropagationTest {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.s = s;
-        prm.cacheFactorBeliefs = cacheFactorBeliefs;
+        // TODO: prm.cacheFactorBeliefs = cacheFactorBeliefs;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         System.out.println(bp.isConverged());

@@ -17,7 +17,6 @@ import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
@@ -549,8 +548,7 @@ public class ErmaProjDepTreeFactorTest {
         for (int i=0; i<msgsExpl.length; i++) {
             VarTensor msgExpl = msgsExpl[i].message;
             VarTensor msgDp = msgsDp[i].message;
-            FgEdge edge = fgExpl.getEdge(i);
-            assertEqualMessages(msgExpl, msgDp, edge.toString());
+            assertEqualMessages(msgExpl, msgDp, fgExpl.edgeToString(i));
         }
     }
 
@@ -608,12 +606,10 @@ public class ErmaProjDepTreeFactorTest {
 
     private void printMessages(FactorGraph fg, Messages[] msgs) {
         for (int i=0; i<fg.getNumEdges(); i++) {            
-            FgEdge edge = fg.getEdge(i);
-            //if (edge.isVarToFactor() && edge.getFactor().getVars().size() == 4) {
-                System.out.println(edge);
-                System.out.println(msgs[i].message);
-                System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
-            //}
+            String edge = fg.edgeToString(i);
+            System.out.println(edge);
+            System.out.println(msgs[i].message);
+            System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
         }
     }
 
