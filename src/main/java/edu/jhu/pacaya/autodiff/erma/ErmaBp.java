@@ -1096,7 +1096,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     
     /** For testing only. */
     public VarTensor[] getNewMessagesAdj() {
-        return msgsAdj;
+        return newMsgsAdj;
     }
     
 }

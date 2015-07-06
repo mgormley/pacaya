@@ -72,15 +72,15 @@ public class ErmaBpBackwardTest {
         bp.backward();        
         {
             assertEquals(2, bp.getMessagesAdj().length);
-            VarTensor adj0 = bp.getMessagesAdj()[0];
-            VarTensor newAdj0 = bp.getNewMessagesAdj()[0];
+            VarTensor adj0 = bp.getMessagesAdj()[1];
+            VarTensor newAdj0 = bp.getNewMessagesAdj()[1];
             assertEquals(0, adj0.getValue(0), 1e-3);
             assertEquals(0, adj0.getValue(1), 1e-3);
             assertEquals(0.211, newAdj0.getValue(0), 1e-3);
             assertEquals(-0.122, newAdj0.getValue(1), 1e-3);
             
-            VarTensor adj1 = bp.getMessagesAdj()[1];
-            VarTensor newAdj1 = bp.getNewMessagesAdj()[1];
+            VarTensor adj1 = bp.getMessagesAdj()[0];
+            VarTensor newAdj1 = bp.getNewMessagesAdj()[0];
             assertEquals(0, adj1.getValue(0), 1e-3);
             assertEquals(0, adj1.getValue(1), 1e-3);
             assertEquals(0, newAdj1.getValue(0), 1e-3);
