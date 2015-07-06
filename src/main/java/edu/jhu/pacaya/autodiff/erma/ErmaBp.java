@@ -213,7 +213,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
             for (Object item : order) {
                 List<Integer> edges = CachingBpSchedule.toEdgeList(fg, item);
                 List<?> elems = CachingBpSchedule.toFactorEdgeList(item);
-                TapeEntry te = new TapeEntry(item, edges);
+                TapeEntry te = prm.keepTape ? new TapeEntry(item, edges) : null;
                 for (Object elem : elems) {
                     if (elem instanceof Integer) {
                         forwardCreateMessage((Integer) elem);
@@ -337,7 +337,6 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         // Since this is not a global factor, we send messages in the normal way, which
         // in the case of a factor to variable message requires enumerating all possible
         // variable configurations.
-        VarTensor msg = newMsgs[edge];
         
         // Message from factor f* to variable v*.
         //
@@ -350,7 +349,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
         // Marginalize over all the assignments to variables for f*, except
         // for v*.
-        msg = prod.getMarginal(new VarSet(var), false);
+        VarTensor msg = prod.getMarginal(new VarSet(var), false);
         assert !msg.containsBadValues() : "msg = " + msg;
         
         // Set the final message in case we created a new object.
@@ -370,10 +369,12 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         MutableModule<MVecArray<VarTensor>> modOut = globalFac.getCreateMessagesModule(modIn, fmIn);
         modOut.setOutput(new MVecArray<VarTensor>(outMsgs));
         modOut.forward();
-        assert te.modIn == null;
-        assert te.modOut == null;
-        te.modIn = modIn;
-        te.modOut = modOut;
+        if (prm.keepTape) {
+            assert te.modIn == null;
+            assert te.modOut == null;
+            te.modIn = modIn;
+            te.modOut = modOut;
+        }
     }
 
     private void normalizeAndAddToTape(int edge, TapeEntry te) {
