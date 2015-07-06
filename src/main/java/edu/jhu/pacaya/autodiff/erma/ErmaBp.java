@@ -72,7 +72,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         /** Directory for dumping of beliefs at each iteration (debugging only). */
         public Path dumpDir = null;
         /** Minimum number of neighbors for a variable to compute messages by dividing out from a cached belief. */
-        public int minVarNbsForCache = 5; //Integer.MAX_VALUE; // TODO: Use this.
+        public int minVarNbsForCache = Integer.MAX_VALUE; // TODO: Use this.
         /** Minimum number of neighbors for a factor   to compute messages by dividing out from a cached belief. */
         public int minFacNbsForCache = Integer.MAX_VALUE; // TODO: This might still be buggy.
         
