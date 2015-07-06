@@ -220,7 +220,7 @@ public class FactorGraph implements Serializable {
                     el.addEdge(v.getId(), f.getId());
                 }
             }
-            bg = new BipartiteGraph<>(vars, factors, el);
+            bg = new BipartiteGraph<>(vars, factors, el, true);
         }
         return bg;
     }

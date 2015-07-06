@@ -41,6 +41,10 @@ public final class BipartiteGraph<T1, T2> {
     private final int[] iter; // TODO: Use or remove.
     
     public BipartiteGraph(List<T1> nodes1, List<T2> nodes2, EdgeList edgeList) {
+        this(nodes1, nodes2, edgeList, false);
+    }
+    
+    public BipartiteGraph(List<T1> nodes1, List<T2> nodes2, EdgeList edgeList, boolean orderEdgesByT1) {
         this.nodes1 = nodes1;
         this.nodes2 = nodes2;
         this.numEdges = edgeList.size() * 2;
@@ -99,6 +103,45 @@ public final class BipartiteGraph<T1, T2> {
             t2Count[t2]++;
         }
 
+        // TODO: test this.
+        if (orderEdgesByT1) {
+            int i=0;
+            for (int t1=0; t1<numT1Nodes(); t1++) {
+                for (int t1Nb=0; t1Nb<numNbsT1(t1); t1Nb++) {
+                    int e = edges1[t1][t1Nb];
+                    int t2 = chld[e];
+                    int t2Nb = dual[e];
+                    swapEdges(e, i++);
+                    e = edges2[t2][t2Nb];
+                    swapEdges(e, i++);
+                }
+            }
+            assert edgeCount == i;
+        }
+    }
+
+    private void swapEdges(int e, int f) {
+        if (isT1T2(e)) {
+            edges1[prnt[e]][iter[e]] = f;
+        } else {
+            edges2[prnt[e]][iter[e]] = f;
+        }
+        if (isT1T2(f)) {
+            edges1[prnt[f]][iter[f]] = e;
+        } else {
+            edges2[prnt[f]][iter[f]] = e;
+        }
+        swapVals(e, f, prnt);
+        swapVals(e, f, chld);
+        swapVals(e, f, dual);
+        swapVals(e, f, iter);
+    }
+    
+    /** Swap the values of two positions in an array. */
+    private void swapVals(int e, int f, int[] vals) {
+        int vals_e = vals[e];
+        vals[e] = vals[f];
+        vals[f] = vals_e;
     }
 
     public boolean isT1T2(int e) {
