@@ -21,7 +21,7 @@ import edu.jhu.pacaya.gm.util.BipartiteGraph;
 
 public class BfsMpScheduleTest {
 
-    private static String getOrderStr(List<Object> order, FactorGraph fg) {
+    public static String getOrderStr(List<Object> order, FactorGraph fg) {
         BipartiteGraph<Var,Factor> bg = fg.getBipgraph();
         StringBuilder orderStr = new StringBuilder();
         for (Object item : order) {
@@ -184,7 +184,7 @@ public class BfsMpScheduleTest {
         assertEquals(expectedOrderStr4, orderStr.toString());
     }
     
-    private static class MockGlobalFactor extends AbstractConstraintFactor implements GlobalFactor {
+    public static class MockGlobalFactor extends AbstractConstraintFactor implements GlobalFactor {
 
         private static final long serialVersionUID = 1L;
 
