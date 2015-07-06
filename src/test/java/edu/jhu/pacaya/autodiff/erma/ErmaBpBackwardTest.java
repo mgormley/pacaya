@@ -17,7 +17,6 @@ import edu.jhu.pacaya.autodiff.StochasticGradientApproximation;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -73,17 +72,19 @@ public class ErmaBpBackwardTest {
         bp.backward();        
         {
             assertEquals(2, bp.getMessagesAdj().length);
-            Messages adj0 = bp.getMessagesAdj()[0];
-            assertEquals(0, adj0.message.getValue(0), 1e-3);
-            assertEquals(0, adj0.message.getValue(1), 1e-3);
-            assertEquals(0.211, adj0.newMessage.getValue(0), 1e-3);
-            assertEquals(-0.122, adj0.newMessage.getValue(1), 1e-3);
+            VarTensor adj0 = bp.getMessagesAdj()[0];
+            VarTensor newAdj0 = bp.getNewMessagesAdj()[0];
+            assertEquals(0, adj0.getValue(0), 1e-3);
+            assertEquals(0, adj0.getValue(1), 1e-3);
+            assertEquals(0.211, newAdj0.getValue(0), 1e-3);
+            assertEquals(-0.122, newAdj0.getValue(1), 1e-3);
             
-            Messages adj1 = bp.getMessagesAdj()[1];
-            assertEquals(0, adj1.message.getValue(0), 1e-3);
-            assertEquals(0, adj1.message.getValue(1), 1e-3);
-            assertEquals(0, adj1.newMessage.getValue(0), 1e-3);
-            assertEquals(0, adj1.newMessage.getValue(1), 1e-3);
+            VarTensor adj1 = bp.getMessagesAdj()[1];
+            VarTensor newAdj1 = bp.getNewMessagesAdj()[1];
+            assertEquals(0, adj1.getValue(0), 1e-3);
+            assertEquals(0, adj1.getValue(1), 1e-3);
+            assertEquals(0, newAdj1.getValue(0), 1e-3);
+            assertEquals(0, newAdj1.getValue(1), 1e-3);
         }
         {
             assertEquals(1, bp.getPotentialsAdj().length);

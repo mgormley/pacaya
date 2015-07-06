@@ -19,7 +19,6 @@ import edu.jhu.pacaya.gm.inf.BeliefPropagationTest;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
-import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -555,10 +554,10 @@ public class ProjDepTreeFactorTest {
         assertEqualVarTensors(bpExpl.getPotentialsAdj(), bpDp.getPotentialsAdj());
     }
 
-    private void assertEqualMessages(FactorGraph fgExpl, Messages[] msgsExpl, Messages[] msgsDp) {
+    private void assertEqualMessages(FactorGraph fgExpl, VarTensor[] msgsExpl, VarTensor[] msgsDp) {
         for (int i=0; i<msgsExpl.length; i++) {
-            VarTensor msgExpl = msgsExpl[i].message;
-            VarTensor msgDp = msgsDp[i].message;
+            VarTensor msgExpl = msgsExpl[i];
+            VarTensor msgDp = msgsDp[i];
             String edge = fgExpl.edgeToString(i);
             assertEqualMessages(msgExpl, msgDp, edge);
         }
@@ -611,18 +610,17 @@ public class ProjDepTreeFactorTest {
 
     private void printMessages(FactorGraph fg, BeliefPropagation bp) {
         System.out.println("Messages");
-        Messages[] msgs = bp.getMessages();
-        printMessages(fg, msgs);
+        printMessages(fg, bp.getMessages());
         System.out.println("Partition: " + bp.getPartition());
     }
 
 
-    private void printMessages(FactorGraph fg, Messages[] msgs) {
+    private void printMessages(FactorGraph fg, VarTensor[] msgs) {
         for (int i=0; i<fg.getNumEdges(); i++) {            
             String edge = fg.edgeToString(i);
             System.out.println(edge);
-            System.out.println(msgs[i].message);
-            System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
+            System.out.println(msgs[i]);
+            System.out.println("Log odds: " + (msgs[i].getValue(1) - msgs[i].getValue(0)));
         }
     }
 

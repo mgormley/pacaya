@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -49,15 +48,13 @@ public class SimplerErmaProjDepTreeFactorTest {
         FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
         ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
         bpExpl.forward();
-        // printMessages(fgExpl, bpExpl);
 
         FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
         ErmaBp bpDp = new ErmaBp(fgDp, prm);
         bpDp.forward();
-        // printMessages(fgDp, bpDp);
 
         System.out.println("Messages");
-        assertEqualMessages(fgExpl, bpExpl.getMessages(), bpDp.getMessages());
+        assertEqualMessages(fgExpl, bpExpl.getNewMessages(), bpDp.getNewMessages());
         System.out.println("Beliefs");
         assertEqualVarTensors(bpExpl.getOutput().varBeliefs, bpDp.getOutput().varBeliefs);
         assertEqualVarTensors(bpExpl.getOutput().facBeliefs, bpDp.getOutput().facBeliefs);
@@ -83,12 +80,12 @@ public class SimplerErmaProjDepTreeFactorTest {
         assertEqualVarTensors(bpExpl.getPotentialsAdj(), bpDp.getPotentialsAdj());
     }
 
-    private void assertEqualMessages(FactorGraph fgExpl, Messages[] msgsExpl, Messages[] msgsDp) {
+    private void assertEqualMessages(FactorGraph fgExpl, VarTensor[] msgsExpl, VarTensor[] msgsDp) {
         for (int i = 0; i < msgsExpl.length; i++) {
             // NOTE: These are NEW messages which in the case of the adjoints will be incorrect if
             // not computed correctly in the case of the adjoints.
-            VarTensor msgExpl = msgsExpl[i].newMessage;
-            VarTensor msgDp = msgsDp[i].newMessage;
+            VarTensor msgExpl = msgsExpl[i];
+            VarTensor msgDp = msgsDp[i];
             assertEquals(msgExpl.size(), msgDp.size());
             for (int c = 0; c < msgExpl.size(); c++) {
                 if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY // && msgExpl.getValue(c) < -30
@@ -136,15 +133,6 @@ public class SimplerErmaProjDepTreeFactorTest {
             }
             // TODO: This doesn't work because the vars aren't the same:
             // assertTrue(msgExpl.equals(msgDp, 1e-5));
-        }
-    }
-
-    private void printMessages(FactorGraph fg, Messages[] msgs) {
-        for (int i = 0; i < fg.getNumEdges(); i++) {
-            String edge = fg.edgeToString(i);
-            System.out.println(edge);
-            System.out.println(msgs[i].message);
-            System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
         }
     }
 
