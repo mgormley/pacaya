@@ -23,8 +23,8 @@ public class RandomMpSchedule implements MpSchedule {
             }
         }
         for (int f=0; f<fg.getNumFactors(); f++) {
-            if (bg.t2E(f) instanceof GlobalFactor) {
-                order.add(bg.t2E(f));
+            if (bg.getT2s().get(f) instanceof GlobalFactor) {
+                order.add(bg.getT2s().get(f));
             } else {
                 for (int nb=0; nb<bg.numNbsT2(f); nb++) {
                     order.add(bg.edgeT2(f, nb));

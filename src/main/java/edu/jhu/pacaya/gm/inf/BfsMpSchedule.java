@@ -41,7 +41,7 @@ public class BfsMpSchedule implements MpSchedule {
         // Unmark all the global factors
         boolean[] markedGFup = new boolean[bg.numT2Nodes()];
         boolean[] markedGFdown = new boolean[bg.numT2Nodes()];
-        
+                
         // Add each connected component to the order.
         IntArrayList rootT2s = bg.getConnectedComponentsT2();
         for (int i=0; i<rootT2s.size(); i++) {
@@ -57,14 +57,14 @@ public class BfsMpSchedule implements MpSchedule {
             // 2. In reverse order (i.e. leaves to root), add the opposing edges from the BFS.
             for (int j=ccorder.size()-1; j >=0; j--) {
                 int e = bg.opposingE(ccorder.get(j));
-                addEdgeToOrder(e, bg, markedGFup);
+                addEdgeToOrder(e, bg, markedGFup, true);
                 markedE[e] = true;
             }
             
             // 3. Then add all the other edges in their BFS order.
             for (int j=0; j<ccorder.size(); j++) {
                 int e = ccorder.get(j);
-                addEdgeToOrder(e, bg, markedGFdown);
+                addEdgeToOrder(e, bg, markedGFdown, false);
                 markedE[e] = true;
             }
         }
@@ -73,7 +73,7 @@ public class BfsMpSchedule implements MpSchedule {
         assert !BoolArrays.contains(markedE, false);
     }
 
-    protected void addEdgeToOrder(int e, BipartiteGraph<Var, Factor> bg, boolean[] markedGF) {
+    protected void addEdgeToOrder(int e, BipartiteGraph<Var, Factor> bg, boolean[] markedGF, boolean warnGF) {
         // If this edge is from a global factor...
         if (!bg.isT1T2(e) && bg.t2E(e) instanceof GlobalFactor) {
             // If the global factor hasn't yet been added to the order...
@@ -81,9 +81,11 @@ public class BfsMpSchedule implements MpSchedule {
                 // Add the global factor to the schedule.
                 order.add(bg.t2E(e));
                 markedGF[bg.parentE(e)] = true;
-                // TODO: How could we better handle this case? Currently, we will add global factors
-                // to the order twice unless they are the root.
-                log.warn("More than one global factor is not (yet) supported with BfsBpSchedule.");
+                if (warnGF) {
+                    // TODO: How could we better handle this case? Currently, we will add global factors
+                    // to the order twice unless they are the root.
+                    log.warn("More than one global factor is not (yet) supported with BfsBpSchedule.");
+                }
             }
         } else {
             order.add(e);
