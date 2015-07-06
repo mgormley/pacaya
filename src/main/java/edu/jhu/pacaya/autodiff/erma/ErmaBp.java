@@ -354,7 +354,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         assert !msg.containsBadValues() : "msg = " + msg;
         
         // Set the final message in case we created a new object.
-        newMsgs[edge] = msg;
+        newMsgs[edge].setValuesOnly(msg);
     }
 
     private void forwardGlobalFacToVar(AutodiffGlobalFactor globalFac, TapeEntry te) {
@@ -552,7 +552,8 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         VarTensor prod = safeNewVarTensor(fac);
         prod.prod(facBeliefsAdj[facId]);
         getCavityProductAtFactor(facId, prod, bg.dualE(edge));
-        msgsAdj[edge] = prod.getMarginal(msgs[edge].getVars(), false);
+        VarTensor msgAdj = prod.getMarginal(msgs[edge].getVars(), false);
+        msgsAdj[edge].setValuesOnly(msgAdj);
         logTraceMsgUpdate("initVarToFactorAdj", msgsAdj[edge], edge);
     }
 
