@@ -23,6 +23,7 @@ import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalExplicitFactor;
+import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
@@ -424,6 +425,11 @@ public class BeliefPropagationTest {
 
     public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
             FgInferencer bp, double tolerance) {
+        assertEqualMarginals(fg, bf, bp, tolerance, true);
+    }
+    
+    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
+            FgInferencer bp, double tolerance, boolean compareGlobalFactors) {
         for (Var var : fg.getVars()) {
             {
                 VarTensor bfm = bf.getMarginals(var);
@@ -441,6 +447,9 @@ public class BeliefPropagationTest {
             }
         }
         for (Factor f : fg.getFactors()) {
+            if (!compareGlobalFactors && f instanceof GlobalFactor) {
+                continue;
+            }
             {
                 VarTensor bfm = bf.getMarginals(f);
                 VarTensor bpm = bp.getMarginals(f);
