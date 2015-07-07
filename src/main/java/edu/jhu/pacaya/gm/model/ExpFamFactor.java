@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
-import edu.jhu.pacaya.autodiff.erma.AutodiffFactor;
-import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;

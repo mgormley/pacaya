@@ -12,11 +12,8 @@ import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
-import edu.jhu.pacaya.autodiff.erma.LazyVarTensor;
-import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
-import edu.jhu.pacaya.autodiff.erma.ParamFreeGlobalFactorModule;
-import edu.jhu.pacaya.gm.model.Factor;
+import edu.jhu.pacaya.autodiff.vartensor.LazyVarTensor;
+import edu.jhu.pacaya.gm.model.MVecFgModel;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
@@ -24,7 +21,6 @@ import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
-import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
  * Global factor which adds consecutive sibling factors following Smith & Eisner (2008).

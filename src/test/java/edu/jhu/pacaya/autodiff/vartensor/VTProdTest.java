@@ -1,23 +1,18 @@
 package edu.jhu.pacaya.autodiff.vartensor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
-import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
-import edu.jhu.pacaya.autodiff.erma.Beliefs;
-import edu.jhu.pacaya.autodiff.erma.ExpectedRecall;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 
 public class VTProdTest {

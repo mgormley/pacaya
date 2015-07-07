@@ -15,10 +15,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.jhu.pacaya.autodiff.erma.Beliefs;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.Beliefs;
+import edu.jhu.pacaya.gm.inf.ErmaBp;
+import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;

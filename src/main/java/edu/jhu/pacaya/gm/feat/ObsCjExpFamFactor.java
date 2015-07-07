@@ -1,13 +1,10 @@
 package edu.jhu.pacaya.gm.feat;
 
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
-import edu.jhu.pacaya.gm.model.IndexForVc;
 import edu.jhu.pacaya.gm.model.ObsFeatureCarrier;
 import edu.jhu.pacaya.gm.model.TemplateFactor;
-import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 
 /**

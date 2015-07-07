@@ -1,8 +1,9 @@
 package edu.jhu.pacaya.autodiff.erma;
 
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.ErmaBp;
+import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;

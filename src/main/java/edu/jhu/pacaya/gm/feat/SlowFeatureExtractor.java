@@ -4,7 +4,6 @@ import edu.jhu.pacaya.gm.data.UFgExample;
 import edu.jhu.pacaya.gm.model.FeExpFamFactor;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 
 /**
  * For testing only.

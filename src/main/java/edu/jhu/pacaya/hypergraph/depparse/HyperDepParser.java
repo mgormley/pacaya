@@ -1,16 +1,16 @@
 package edu.jhu.pacaya.hypergraph.depparse;
 
 import edu.jhu.pacaya.hypergraph.Hyperalgo;
+import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.Hyperedge;
 import edu.jhu.pacaya.hypergraph.Hypernode;
 import edu.jhu.pacaya.hypergraph.Hyperpotential;
 import edu.jhu.pacaya.hypergraph.HyperpotentialFoe;
-import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.parse.dep.DepIoChart;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ProjTreeChart;
-import edu.jhu.pacaya.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.pacaya.parse.dep.ProjTreeChart.DepParseType;
+import edu.jhu.pacaya.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;

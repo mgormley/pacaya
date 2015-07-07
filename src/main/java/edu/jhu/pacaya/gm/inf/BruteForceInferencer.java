@@ -1,6 +1,5 @@
 package edu.jhu.pacaya.gm.inf;
 
-import edu.jhu.pacaya.autodiff.erma.AbstractFgInferencer;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;

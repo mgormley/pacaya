@@ -7,9 +7,9 @@ import java.util.Arrays;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import edu.jhu.pacaya.autodiff.erma.ErmaBp;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
+import edu.jhu.pacaya.gm.inf.ErmaBp;
+import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.model.ExplicitExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var.VarType;

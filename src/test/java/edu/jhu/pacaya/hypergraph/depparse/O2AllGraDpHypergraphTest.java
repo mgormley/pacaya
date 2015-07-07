@@ -2,17 +2,13 @@ package edu.jhu.pacaya.hypergraph.depparse;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.PrintStream;
-import java.io.StringWriter;
-import java.io.Writer;
-
 import org.junit.Test;
 
 import edu.jhu.pacaya.hypergraph.AbstractHypergraphTest;
 import edu.jhu.pacaya.hypergraph.Hyperalgo;
+import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.Hypernode;
 import edu.jhu.pacaya.hypergraph.Hyperpotential;
-import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 

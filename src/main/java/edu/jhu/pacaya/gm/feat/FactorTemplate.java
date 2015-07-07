@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.FeatureNames;
 
 public class FactorTemplate implements Serializable {

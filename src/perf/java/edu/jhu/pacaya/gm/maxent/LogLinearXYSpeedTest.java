@@ -1,8 +1,6 @@
 package edu.jhu.pacaya.gm.maxent;
 
 import edu.jhu.pacaya.gm.feat.FeatureVector;
-import edu.jhu.pacaya.gm.maxent.LogLinearXY;
-import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.VarTensor;

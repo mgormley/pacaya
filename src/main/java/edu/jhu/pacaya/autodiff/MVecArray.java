@@ -2,7 +2,6 @@ package edu.jhu.pacaya.autodiff;
 
 import java.util.Arrays;
 
-import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /**

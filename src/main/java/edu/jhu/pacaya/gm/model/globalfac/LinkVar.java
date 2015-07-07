@@ -3,7 +3,6 @@ package edu.jhu.pacaya.gm.model.globalfac;
 import java.util.List;
 
 import edu.jhu.pacaya.gm.model.Var;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.util.collections.QLists;
 
 /**

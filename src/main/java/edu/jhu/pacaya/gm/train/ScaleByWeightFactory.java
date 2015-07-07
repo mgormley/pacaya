@@ -3,9 +3,9 @@ package edu.jhu.pacaya.gm.train;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.TopoOrder;
-import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
 import edu.jhu.pacaya.autodiff.tensor.ScalarMultiply;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FgModelIdentity;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.util.collections.QLists;
 

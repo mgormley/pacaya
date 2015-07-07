@@ -5,11 +5,11 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
+import edu.jhu.pacaya.gm.model.FgModelIdentity;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.pacaya.util.semiring.Algebra;

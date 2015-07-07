@@ -1,6 +1,5 @@
 package edu.jhu.pacaya.gm.train;
 
-import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.pacaya.gm.model.FgModel;
 
 /**
