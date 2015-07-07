@@ -17,11 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.erma.Beliefs;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.BpUpdateOrder;
 import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
@@ -147,19 +144,6 @@ public class LibDaiFgIoTest {
         FactorGraph fg = LibDaiFgIo.read(file);
         log.info("Running inference");
         // Run BP
-        for (int trial=0; trial < 0; trial++) {
-            Timer t = new Timer();
-            t.start();
-            BeliefPropagationPrm prm = new BeliefPropagationPrm();
-            prm.updateOrder = BpUpdateOrder.PARALLEL;
-            prm.maxIterations = 10;
-            prm.s = RealAlgebra.getInstance();
-            BeliefPropagation bp = new BeliefPropagation(fg, prm);
-            bp.run();
-            t.stop();
-            log.info("Completed trial {} in {} secs", trial, t.totSec());
-        }
-        // Run ERMA BP
         for (int trial=0; trial < 3; trial++) {
             Timer t = new Timer();
             t.start();

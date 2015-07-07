@@ -8,11 +8,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.app.Decoder;
 import edu.jhu.pacaya.gm.data.UFgExample;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.Var;
@@ -29,8 +29,13 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
 
     public static class MbrDecoderPrm extends Prm {
         private static final long serialVersionUID = 1L;
-        public FgInferencerFactory infFactory = new BeliefPropagationPrm();
+        public FgInferencerFactory infFactory = new ErmaBpPrm();
         public Loss loss = Loss.L1;
+        public void MbrDecoderPrm() {
+            ErmaBpPrm bpPrm = new ErmaBpPrm();
+            bpPrm.keepTape = false;
+            infFactory = bpPrm;
+        }
     }
 
     public enum Loss {

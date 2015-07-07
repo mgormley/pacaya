@@ -7,8 +7,8 @@ import java.util.Arrays;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import edu.jhu.pacaya.gm.inf.BeliefPropagation;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.model.ExplicitExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -34,9 +34,9 @@ public class ConstituencyTreeFactorTest {
                 FactorGraph fg = new FactorGraph();
                 fg.addFactor(ctFact);
 
-                BeliefPropagationPrm prm = new BeliefPropagationPrm();
+                ErmaBpPrm prm = new ErmaBpPrm();
                 prm.s = s;
-                BeliefPropagation bp = new BeliefPropagation(fg, prm);
+                ErmaBp bp = new ErmaBp(fg, prm);
                 bp.run();
 
                 BruteForceInferencer bf = new BruteForceInferencer(fg, s);
@@ -75,9 +75,9 @@ public class ConstituencyTreeFactorTest {
         likesSpan.setValue(SpanVar.FALSE, -1d);
         fg.addFactor(likesSpan);
         
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        ErmaBpPrm prm = new ErmaBpPrm();
         prm.s = LogSemiring.getInstance();
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        ErmaBp bp = new ErmaBp(fg, prm);
         bp.run();
         
         VarTensor johnLovesMarg = bp.getMarginals(johnLoves);

@@ -5,11 +5,11 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.TwoToOneFactory;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.Identity;
-import edu.jhu.pacaya.autodiff.AbstractModuleTest.TwoToOneFactory;
 import edu.jhu.pacaya.autodiff.erma.DepParseDecodeLoss.DepParseDecodeLossFactory;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.VarConfig;

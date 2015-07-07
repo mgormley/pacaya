@@ -6,6 +6,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.BpScheduleType;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.BpUpdateOrder;
+import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
@@ -14,9 +17,6 @@ import edu.jhu.pacaya.gm.decode.MbrDecoder;
 import edu.jhu.pacaya.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.feat.StringIterable;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearXYData.LogLinearExample;
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
@@ -160,12 +160,13 @@ public class LogLinearXY {
         return list;
     }
     
-    private BeliefPropagationPrm getBpPrm() {
-        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+    private ErmaBpPrm getBpPrm() {
+        ErmaBpPrm bpPrm = new ErmaBpPrm();
         bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
+        bpPrm.keepTape = false;
         return bpPrm;
     }
     

@@ -6,12 +6,12 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor1Factory;
+import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.TopoOrder;
-import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor1Factory;
 import edu.jhu.pacaya.autodiff.tensor.ConvertAlgebra;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.util.collections.QLists;

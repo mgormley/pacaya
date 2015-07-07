@@ -17,8 +17,6 @@ import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.CachingBpSchedule;
@@ -96,6 +94,25 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
     }
     
+    public enum BpScheduleType {
+        /** Send messages from a root to the leaves and back. */
+        TREE_LIKE,
+        /** Send messages in a random order. */
+        RANDOM,
+        /**
+         * FOR TESTING ONLY: Schedule with only edges, so that no global factor dynamic programming
+         * algorithms are ever called.
+         */
+        NO_GLOBAL_FACTORS,
+    }
+    
+    public enum BpUpdateOrder {
+        /** Send each message in sequence according to the schedule. */ 
+        SEQUENTIAL,
+        /** Create all messages first. Then send them all at the same time. */
+        PARALLEL
+    };
+
     /**
      * The tape entries for recording the forward computation of belief propagation. Each entry on
      * the tape consists of several parts: an item in the schedule representing which messages were
