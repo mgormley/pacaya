@@ -48,7 +48,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
     private VarConfig goldConfig;
     private FactorGraph fg;
     private FgInferencer inf;
-    private Algebra tmpS;
+    private final Algebra tmpS;
     
     // Cached variables from forward() pass.
     private FactorsModule fm;

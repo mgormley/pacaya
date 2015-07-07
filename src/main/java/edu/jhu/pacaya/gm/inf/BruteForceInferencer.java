@@ -35,7 +35,7 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
         
     }
     
-    private Algebra s;
+    private final Algebra s;
     private FactorGraph fg;
     private VarTensor joint;
     

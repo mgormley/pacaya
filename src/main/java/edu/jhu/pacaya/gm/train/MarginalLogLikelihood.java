@@ -53,7 +53,7 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
     private FgInferencerFactory infFactory;
     private Module<MVecFgModel> mid;
     private VarConfig goldConfig;
-    private Algebra tmpS;
+    private final Algebra tmpS;
     
     // Cached variables from forward() pass.
     private FactorsModule fmLatPred;

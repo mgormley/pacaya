@@ -2,7 +2,7 @@ package edu.jhu.pacaya.util.semiring;
 
 import edu.jhu.prim.util.math.FastMath;
 
-public class LogSemiring implements Algebra {
+public final class LogSemiring implements Algebra {
 
     private static final long serialVersionUID = 1L;    
     private static final LogSemiring SINGLETON = new LogSemiring();

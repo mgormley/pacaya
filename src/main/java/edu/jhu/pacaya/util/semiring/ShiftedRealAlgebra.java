@@ -6,7 +6,7 @@ package edu.jhu.pacaya.util.semiring;
  * 
  * @author mgormley
  */
-public class ShiftedRealAlgebra extends AbstractToFromRealAlgebra {
+public final class ShiftedRealAlgebra extends AbstractToFromRealAlgebra {
     
     private static final long serialVersionUID = 1L;
     private static final ShiftedRealAlgebra SINGLETON = new ShiftedRealAlgebra(3.0);    

@@ -18,7 +18,7 @@ public class LazyVarTensor implements MVec {
     private static final Logger log = LoggerFactory.getLogger(LazyVarTensor.class);
 
     private GlobalFactor f;
-    private Algebra s;
+    private final Algebra s;
     private VarTensor vt = null;
     private Double fillVal = null;
     

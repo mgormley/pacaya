@@ -38,9 +38,9 @@ public class ProjDepTreeModule implements Module<Tensor> {
     private Module<Tensor> mFalseIn;
     private List<Module<Tensor>> topoOrder;
     private Module<Tensor> comb;
-    private Algebra outS;
+    private final Algebra outS;
     // For internal use only.
-    private Algebra tmpS;
+    private final Algebra tmpS;
 
     private static final Logger log = LoggerFactory.getLogger(ProjDepTreeModule.class);
     

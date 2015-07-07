@@ -18,7 +18,7 @@ import edu.jhu.prim.Primitives;
  * 
  * @author mgormley
  */
-public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
+public final class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = LoggerFactory.getLogger(SplitAlgebra.class);    
@@ -28,10 +28,10 @@ public class SplitAlgebra extends AbstractToFromRealAlgebra implements Algebra {
     private static final long MASK_1 = 0xFFFFFFFFl;
     private static final long MASK_2 = ~MASK_1;
     
-    private Algebra a1;
-    private Algebra a2;
-    private String format;
-    private double delta;
+    private final Algebra a1;
+    private final Algebra a2;
+    private final String format;
+    private final double delta;
     
     /** Constructs an algebra which will detect whether two separately stored algebras are correctly tracking each other. */
     private SplitAlgebra() {
