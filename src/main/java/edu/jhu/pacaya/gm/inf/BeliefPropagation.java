@@ -29,7 +29,7 @@ import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
 import edu.jhu.pacaya.gm.util.BipartiteGraph;
 import edu.jhu.pacaya.util.Prm;
 import edu.jhu.pacaya.util.collections.QLists;
-import edu.jhu.pacaya.util.files.Files;
+import edu.jhu.pacaya.util.files.QFiles;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.prim.list.DoubleArrayList;
@@ -1023,7 +1023,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         if (prm.dumpDir != null) {
             forwardVarAndFacBeliefs();
             try {
-                BufferedWriter writer = Files.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
+                BufferedWriter writer = QFiles.createTempFileBufferedWriter("bpdump", prm.dumpDir.toFile());
                 writer.write("Iteration: " + iter + "\n");
                 writer.write("Messages:\n");
                 for (int e=0; e<bg.getNumEdges(); e++) {

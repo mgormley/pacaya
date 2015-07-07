@@ -24,13 +24,15 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-
-// TODO: Rename this!
-public class Files {
+/**
+ * Functions for quick and easy use of files.
+ * @author mgormley
+ */
+public class QFiles {
 
     private static final int NUM_DIGITS = 3;
     
-    private Files() {
+    private QFiles() {
         // private constructor
     }
 
@@ -69,7 +71,7 @@ public class Files {
     public static File createTempDir(String prefix, File parentDir) {
         File tempDir;
         try {
-            tempDir = Files.getTempPath(prefix, parentDir);
+            tempDir = QFiles.getTempPath(prefix, parentDir);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -81,7 +83,7 @@ public class Files {
     
     public static BufferedWriter createTempFileBufferedWriter(String prefix, File parentDir) {
         try {
-            File tempDir = Files.getTempPath(prefix, parentDir);
+            File tempDir = QFiles.getTempPath(prefix, parentDir);
             tempDir.getParentFile().mkdirs();
             return java.nio.file.Files.newBufferedWriter(Paths.get(tempDir.getAbsolutePath()), StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -152,7 +154,7 @@ public class Files {
     }
 
     public static String getResourceAsString(String resourceName) throws IOException {
-        InputStream inputStream = Files.class.getResourceAsStream(resourceName);
+        InputStream inputStream = QFiles.class.getResourceAsStream(resourceName);
         return getInputStreamAsString(inputStream);
     }
     
@@ -168,7 +170,7 @@ public class Files {
     }    
 
     public static String getResourceAsString(String resourceName, String charset) throws IOException {
-        InputStream inputStream = Files.class.getResourceAsStream(resourceName);
+        InputStream inputStream = QFiles.class.getResourceAsStream(resourceName);
         return getInputStreamAsString(inputStream, charset);
     }
     
@@ -229,7 +231,7 @@ public class Files {
 
     public static Object deserializeResource(String resource) {
         try {
-            InputStream is = Files.class.getResourceAsStream(resource);
+            InputStream is = QFiles.class.getResourceAsStream(resource);
             if (resource.endsWith(".gz")) {
                 is = new GZIPInputStream(is);
             }

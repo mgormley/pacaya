@@ -7,7 +7,7 @@ import java.util.LinkedList;
 
 import edu.jhu.pacaya.nlp.data.Sentence;
 import edu.jhu.pacaya.parse.cky.GrammarConstants;
-import edu.jhu.pacaya.util.files.Files;
+import edu.jhu.pacaya.util.files.QFiles;
 import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 
@@ -131,9 +131,9 @@ public class IntNaryTree {
      * start/end fields.
      */
     public static IntNaryTree readTreeInPtbFormat(IntObjectBimap<String> lexAlphabet, IntObjectBimap<String> ntAlphabet, Reader reader) throws IOException {
-        Files.readUntilCharacter(reader, '(');
+        QFiles.readUntilCharacter(reader, '(');
         IntNaryTree root = IntNaryTree.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
-        Files.readUntilCharacter(reader, ')');
+        QFiles.readUntilCharacter(reader, ')');
         if (root == null) {
             return null;
         }
