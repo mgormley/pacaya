@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.gm.app.Decoder;
 import edu.jhu.pacaya.gm.data.UFgExample;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -29,10 +29,10 @@ public class MbrDecoder implements Decoder<Object, VarConfig> {
 
     public static class MbrDecoderPrm extends Prm {
         private static final long serialVersionUID = 1L;
-        public FgInferencerFactory infFactory = new ErmaBpPrm();
+        public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public Loss loss = Loss.L1;
         public void MbrDecoderPrm() {
-            ErmaBpPrm bpPrm = new ErmaBpPrm();
+            BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
             bpPrm.keepTape = false;
             infFactory = bpPrm;
         }

@@ -14,9 +14,9 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.StochasticGradientApproximation;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -45,7 +45,7 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 
 
-public class ErmaBpBackwardTest {
+public class BeliefPropagationBackwardTest {
 
     private static Algebra s = RealAlgebra.getInstance();
     
@@ -67,10 +67,10 @@ public class ErmaBpBackwardTest {
         VarConfig goldConfig = new VarConfig();
         goldConfig.put(t0, 1);
                 
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.forward();        
         bp.getOutputAdj().varBeliefs[0].setValue(0, 1.0);
         bp.getOutputAdj().varBeliefs[0].setValue(1, 0.0);
@@ -110,7 +110,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(t0, 1);
         
         testGradientByFiniteDifferences(fg, goldConfig);
-        testGradientBySpsaApprox(new ErmaErFn(fg, goldConfig));
+        testGradientBySpsaApprox(new ExpectedRecallFn(fg, goldConfig));
     }
 
     // Tests ErmaBp and ExpectedRecall gradient by finite differences on a small chain factor graph.
@@ -155,23 +155,23 @@ public class ErmaBpBackwardTest {
         // SEQUENTIAL TREE_LIKE
         OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
             public Module<Beliefs> getModule(Module<Factors> m1) {
-                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
                 prm.schedule = BpScheduleType.TREE_LIKE;
                 prm.normalizeMessages = false;
-                return new ErmaBp(fg, prm, m1);
+                return new BeliefPropagation(fg, prm, m1);
             }
         };
         
         // PARALLEL TREE_LIKE
         OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
             public Module<Beliefs> getModule(Module<Factors> m1) {
-                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.PARALLEL;
                 prm.schedule = BpScheduleType.TREE_LIKE;
                 prm.normalizeMessages = false;
                 prm.maxIterations = 100;
-                return new ErmaBp(fg, prm, m1);
+                return new BeliefPropagation(fg, prm, m1);
             }
         };
         
@@ -201,7 +201,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(fgv.t1, 1);
         goldConfig.put(fgv.t2, 1);
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.maxIterations = 2;
@@ -235,7 +235,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(fgv.t1, 1);
         goldConfig.put(fgv.t2, 1);
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 10;
         prm.s = s;
@@ -275,22 +275,22 @@ public class ErmaBpBackwardTest {
         // SEQUENTIAL TREE_LIKE
         OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
             public Module<Beliefs> getModule(Module<Factors> m1) {
-                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
                 prm.schedule = BpScheduleType.TREE_LIKE;
                 prm.maxIterations = 100;
-                return new ErmaBp(fg, prm, m1);
+                return new BeliefPropagation(fg, prm, m1);
             }
         };
         
         // SEQUENTIAL NO_GLOBAL_FACTORS
         OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
             public Module<Beliefs> getModule(Module<Factors> m1) {
-                ErmaBpPrm prm = ErmaErFn.getDefaultErmaBpPrm();
+                BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
                 prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
                 prm.schedule = BpScheduleType.NO_GLOBAL_FACTORS;
                 prm.maxIterations = 100;
-                return new ErmaBp(fg, prm, m1);
+                return new BeliefPropagation(fg, prm, m1);
             }
         };
         
@@ -300,8 +300,8 @@ public class ErmaBpBackwardTest {
     @Ignore("This test fails at the first assertion because the number of dimensions is different for the expilicit and dynamic programming functions.")
     @Test
     public void testErmaGradient2WordExplicitTreeFactor() {
-        ErmaErFn fnExpl = getErmaFnFor2WordSent(true);        
-        ErmaErFn fnDp = getErmaFnFor2WordSent(false);
+        ExpectedRecallFn fnExpl = getErmaFnFor2WordSent(true);        
+        ExpectedRecallFn fnDp = getErmaFnFor2WordSent(false);
         assertEquals(fnExpl.getNumDimensions(), fnDp.getNumDimensions());
         IntDoubleVector x = ModuleTestUtils.getAbsZeroOneGaussian(fnExpl.getNumDimensions());
         assertEquals(fnExpl.getValue(x), fnDp.getValue(x), 1e-13);
@@ -316,11 +316,11 @@ public class ErmaBpBackwardTest {
     }
 
     private void fdWithOrWithoutExplicit(boolean useExplicit) {
-        ErmaErFn fn = getErmaFnFor2WordSent(useExplicit);        
+        ExpectedRecallFn fn = getErmaFnFor2WordSent(useExplicit);        
         testGradientByFiniteDifferences(fn);
     }
 
-    private ErmaErFn getErmaFnFor2WordSent(boolean useExplicit) {
+    private ExpectedRecallFn getErmaFnFor2WordSent(boolean useExplicit) {
         FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(useExplicit, false, false);
         FactorGraph fg = fgl.fg;
         LinkVar[] rootVars = fgl.rootVars;
@@ -331,7 +331,7 @@ public class ErmaBpBackwardTest {
         goldConfig.put(rootVars[1], 1);
         goldConfig.put(childVars[0][1], 0);
         goldConfig.put(childVars[1][0], 1);
-        ErmaErFn fn = new ErmaErFn(fg, goldConfig);
+        ExpectedRecallFn fn = new ExpectedRecallFn(fg, goldConfig);
         return fn;
     }
     
@@ -375,12 +375,12 @@ public class ErmaBpBackwardTest {
 
     
     private static void testGradientByFiniteDifferences(FactorGraph fg, VarConfig goldConfig) {
-        testGradientByFiniteDifferences(fg, goldConfig, ErmaErFn.getDefaultErmaBpPrm());
+        testGradientByFiniteDifferences(fg, goldConfig, ExpectedRecallFn.getDefaultErmaBpPrm());
     }
     
-    private static void testGradientByFiniteDifferences(final FactorGraph fg, final VarConfig goldConfig, final ErmaBpPrm prm) {
+    private static void testGradientByFiniteDifferences(final FactorGraph fg, final VarConfig goldConfig, final BeliefPropagationPrm prm) {
         // Test BP and Expected Recall together.
-        testGradientByFiniteDifferences(new ErmaErFn(fg, goldConfig, prm));
+        testGradientByFiniteDifferences(new ExpectedRecallFn(fg, goldConfig, prm));
                 
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
@@ -401,13 +401,13 @@ public class ErmaBpBackwardTest {
         // Test BP by itself.
         OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
             public Module<Beliefs> getModule(Module<Factors> m1) {
-                return new ErmaBp(fg, prm, m1);
+                return new BeliefPropagation(fg, prm, m1);
             }
         };
         AbstractModuleTest.evalOneToOneByFiniteDiffsAbs(fact2, effm);
     }
 
-    private static void testGradientByFiniteDifferences(ErmaErFn fn) {
+    private static void testGradientByFiniteDifferences(ExpectedRecallFn fn) {
         int numParams = fn.getNumDimensions();
         IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         System.out.println("theta0 = " + theta0);
@@ -415,7 +415,7 @@ public class ErmaBpBackwardTest {
         ModuleTestUtils.assertGradientCorrectByFd(fn, theta0, 1e-5, 1e-7);
     }
     
-    private static IntDoubleVector testGradientBySpsaApprox(ErmaErFn fn) {
+    private static IntDoubleVector testGradientBySpsaApprox(ExpectedRecallFn fn) {
         int numParams = fn.getNumDimensions();
         IntDoubleVector theta0 = ModuleTestUtils.getAbsZeroOneGaussian(numParams);
         System.out.println("theta0 = " + theta0);
@@ -443,28 +443,28 @@ public class ErmaBpBackwardTest {
         return infNorm;
     }
 
-    private static class ErmaErFn implements DifferentiableFunction {
+    private static class ExpectedRecallFn implements DifferentiableFunction {
 
         private FactorGraph fg;
         private VarConfig goldConfig;
         private int numParams;
-        private ErmaBp bp;
+        private BeliefPropagation bp;
         private ExpectedRecall er;
-        private ErmaBpPrm prm;
+        private BeliefPropagationPrm prm;
         
-        public ErmaErFn(FactorGraph fg, VarConfig goldConfig) {
+        public ExpectedRecallFn(FactorGraph fg, VarConfig goldConfig) {
             this(fg, goldConfig, getDefaultErmaBpPrm());
         }
 
-        public ErmaErFn(FactorGraph fg, VarConfig goldConfig, ErmaBpPrm prm) {
+        public ExpectedRecallFn(FactorGraph fg, VarConfig goldConfig, BeliefPropagationPrm prm) {
             this.fg = fg;
             this.goldConfig = goldConfig;
             this.prm = prm;
             numParams = getNumParams(fg);
         }
 
-        private static ErmaBpPrm getDefaultErmaBpPrm() {
-            ErmaBpPrm prm = new ErmaBpPrm();
+        private static BeliefPropagationPrm getDefaultErmaBpPrm() {
+            BeliefPropagationPrm prm = new BeliefPropagationPrm();
             prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
             prm.schedule = BpScheduleType.TREE_LIKE;
             prm.maxIterations = 1;
@@ -480,7 +480,7 @@ public class ErmaBpBackwardTest {
 
         private double runForward(IntDoubleVector theta) {
             updateFactorGraphFromModel(theta, fg);
-            bp = new ErmaBp(fg, prm);
+            bp = new BeliefPropagation(fg, prm);
             bp.forward();            
             er = new ExpectedRecall(bp, goldConfig);            
             return er.forward().getValue(0);
@@ -538,7 +538,7 @@ public class ErmaBpBackwardTest {
         }
 
         /** Gets the gradient in the real semiring. */
-        private static IntDoubleVector getGradientFromPotentialsAdj(ErmaBp bp, FactorGraph fg, int numParams) {
+        private static IntDoubleVector getGradientFromPotentialsAdj(BeliefPropagation bp, FactorGraph fg, int numParams) {
             VarTensor[] potentialsAdj = bp.getPotentialsAdj();
             IntDoubleVector grad = new IntDoubleDenseVector(numParams);
             int i=0;

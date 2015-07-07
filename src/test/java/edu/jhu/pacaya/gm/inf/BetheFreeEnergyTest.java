@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -23,7 +23,7 @@ public class BetheFreeEnergyTest {
         
         FactorGraph fg = getLinearChainGraph();
 
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         //prm.schedule = BpScheduleType.TREE_LIKE;
@@ -32,7 +32,7 @@ public class BetheFreeEnergyTest {
         prm.maxIterations = 100;
         
         prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         System.out.println("BFE:" + bp.getBetheFreeEnergy());
 
@@ -42,7 +42,7 @@ public class BetheFreeEnergyTest {
         assertEquals(bf.getPartition(), bp.getPartition(), 1e-13);
     }
 
-    public static void printBeliefs(ErmaBp bp) {
+    public static void printBeliefs(BeliefPropagation bp) {
         FactorGraph fg = bp.getFactorGraph();
         for (int i=0; i<fg.getNumVars(); i++) {
             System.out.println(bp.getVarBeliefs(i));

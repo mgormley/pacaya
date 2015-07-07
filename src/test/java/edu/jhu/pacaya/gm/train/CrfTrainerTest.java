@@ -18,9 +18,9 @@ import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearEDs;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
@@ -276,7 +276,7 @@ public class CrfTrainerTest {
     }
     
     public static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
@@ -306,7 +306,7 @@ public class CrfTrainerTest {
     }
     
     public static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

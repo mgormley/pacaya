@@ -9,11 +9,11 @@ import org.junit.Test;
 
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
-import edu.jhu.pacaya.gm.inf.ErmaBp;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.gm.inf.ErmaBpForwardTest;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagationTest;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
@@ -150,13 +150,13 @@ public class ProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = false;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         return bp.getPartition();
     }
@@ -168,13 +168,13 @@ public class ProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         fg.addFactor(treeFac);
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         return bp.getPartition();
     }
@@ -212,7 +212,7 @@ public class ProjDepTreeFactorTest {
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
         
-        ErmaBpPrm prm = new ErmaBpPrm();        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();        
         prm.s = s;
         if (useBetheFreeEnergy) {
             prm.maxIterations = 20;
@@ -223,7 +223,7 @@ public class ProjDepTreeFactorTest {
             prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         }
         prm.normalizeMessages = normalizeMessages;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         
         // Print schedule:
@@ -266,7 +266,7 @@ public class ProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
@@ -298,13 +298,13 @@ public class ProjDepTreeFactorTest {
         roleFac.convertRealToLog();
         fg.addFactor(roleFac);
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = normalizeMessages;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         
         // Print schedule:
@@ -336,7 +336,7 @@ public class ProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
@@ -368,13 +368,13 @@ public class ProjDepTreeFactorTest {
         roleFac.convertRealToLog();
         fg.addFactor(roleFac);
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = false;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();        
         
         // Print marginals
@@ -411,7 +411,7 @@ public class ProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
     
     @Test
@@ -427,13 +427,13 @@ public class ProjDepTreeFactorTest {
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
                 
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();        
         
         // Print marginals
@@ -464,7 +464,7 @@ public class ProjDepTreeFactorTest {
         // Run brute force inference and compare.
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp);
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
 
     // This test fails because of a known floating point precision limitation of the ProjDepTreeFactor.
@@ -478,19 +478,19 @@ public class ProjDepTreeFactorTest {
     }
 
     public void compareBpMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
         FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
-        ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
+        BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
         bpExpl.run();
         //printMessages(fgExpl, bpExpl);
         
         FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
-        ErmaBp bpDp = new ErmaBp(fgDp, prm);
+        BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
         bpDp.run();
         //printMessages(fgDp, bpDp);
         
@@ -508,19 +508,19 @@ public class ProjDepTreeFactorTest {
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
         FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
-        ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
+        BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
         bpExpl.forward();
         //printMessages(fgExpl, bpExpl);
         
         FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
-        ErmaBp bpDp = new ErmaBp(fgDp, prm);
+        BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
         bpDp.forward();
         //printMessages(fgDp, bpDp);
         
@@ -604,7 +604,7 @@ public class ProjDepTreeFactorTest {
         }
     }
 
-    private void printMessages(FactorGraph fg, ErmaBp bp) {
+    private void printMessages(FactorGraph fg, BeliefPropagation bp) {
         System.out.println("Messages");
         printMessages(fg, bp.getMessages());
         System.out.println("Partition: " + bp.getPartition());
@@ -647,12 +647,12 @@ public class ProjDepTreeFactorTest {
         
         System.out.println(fg.getFactors());
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 20;
         prm.normalizeMessages = normalizeMessages;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         printMessages(fg, bp);
@@ -691,13 +691,13 @@ public class ProjDepTreeFactorTest {
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.maxIterations = 2;
         prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
 
         bp.forward();
         bp.getOutputAdj().fill(1.0);
@@ -816,7 +816,7 @@ public class ProjDepTreeFactorTest {
         System.out.println("Partition: " + bp.getPartition());
     }
     
-    private double getExpectedCount(ErmaBp bp, LinkVar[] rootVars, LinkVar[][] childVars, int i, int j) {
+    private double getExpectedCount(BeliefPropagation bp, LinkVar[] rootVars, LinkVar[][] childVars, int i, int j) {
         VarTensor marg;
         if (i == -1) {
             marg = bp.getMarginals(rootVars[j]);

@@ -16,9 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.gm.inf.Beliefs;
-import edu.jhu.pacaya.gm.inf.ErmaBp;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
@@ -147,12 +147,12 @@ public class LibDaiFgIoTest {
         for (int trial=0; trial < 3; trial++) {
             Timer t = new Timer();
             t.start();
-            ErmaBpPrm prm = new ErmaBpPrm();
+            BeliefPropagationPrm prm = new BeliefPropagationPrm();
             prm.updateOrder = BpUpdateOrder.PARALLEL;
             prm.maxIterations = 10;
             prm.keepTape = false;
             prm.s = RealAlgebra.getInstance();
-            ErmaBp bp = new ErmaBp(fg, prm);
+            BeliefPropagation bp = new BeliefPropagation(fg, prm);
             Beliefs b = bp.forward();
             t.stop();
             log.info("Completed trial {} in {} secs", trial, t.totSec());

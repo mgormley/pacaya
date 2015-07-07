@@ -16,7 +16,7 @@ import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.inf.BeliefsModuleFactory;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
@@ -36,7 +36,7 @@ public class CrfTrainer {
 
     public static class CrfTrainerPrm extends Prm {
         private static final long serialVersionUID = 1L;
-        public FgInferencerFactory infFactory = new ErmaBpPrm();
+        public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public BeliefsModuleFactory bFactory = null;
         public Optimizer<DifferentiableFunction> optimizer = null;
         public Optimizer<DifferentiableBatchFunction> batchOptimizer = new AdaGradComidL2(new AdaGradComidL2Prm());

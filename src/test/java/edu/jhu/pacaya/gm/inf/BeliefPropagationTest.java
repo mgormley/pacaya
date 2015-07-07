@@ -10,9 +10,9 @@ import java.nio.file.Paths;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -32,7 +32,7 @@ import edu.jhu.pacaya.util.semiring.ShiftedRealAlgebra;
 import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 
 
-public class ErmaBpForwardTest {
+public class BeliefPropagationTest {
 	
     @Test
     public void testOnOneVarProb() {
@@ -51,10 +51,10 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.s = s;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         assertEqualMarginals(fg, bf, bp);
@@ -98,11 +98,11 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.s = s;
         prm.dumpDir = dumpDir;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         assertEqualMarginals(fg, bf, bp);
@@ -117,7 +117,7 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBp bp = runDefaultBpForAcyclic(s, fg);
+        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
 
         assertEqualMarginals(fg, bf, bp);
     }
@@ -172,11 +172,11 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.s = s;
         prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, s);
@@ -191,11 +191,11 @@ public class ErmaBpForwardTest {
     public void testMultipleSemiringsOnSimple() throws IOException {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
 
-        ErmaBp bpReal = runHelper(fg, RealAlgebra.getInstance());
-        ErmaBp bpSplit = runHelper(fg, SplitAlgebra.getInstance());
-        ErmaBp bpShift = runHelper(fg, ShiftedRealAlgebra.getInstance());
-        ErmaBp bpLog = runHelper(fg, LogSemiring.getInstance());
-        ErmaBp bpLogSign = runHelper(fg, LogSignAlgebra.getInstance());
+        BeliefPropagation bpReal = runHelper(fg, RealAlgebra.getInstance());
+        BeliefPropagation bpSplit = runHelper(fg, SplitAlgebra.getInstance());
+        BeliefPropagation bpShift = runHelper(fg, ShiftedRealAlgebra.getInstance());
+        BeliefPropagation bpLog = runHelper(fg, LogSemiring.getInstance());
+        BeliefPropagation bpLogSign = runHelper(fg, LogSignAlgebra.getInstance());
         
         assertEqualMarginals(fg, bpReal, bpSplit, 1e-4);
         assertEqualMarginals(fg, bpReal, bpShift, 1e-13);
@@ -204,13 +204,13 @@ public class ErmaBpForwardTest {
         assertEqualMarginals(fg, bpLog, bpLogSign, 1e-13);
     }
 
-    private ErmaBp runHelper(FactorGraph fg, Algebra s) throws IOException {        
-        ErmaBpPrm prm = new ErmaBpPrm();
+    private BeliefPropagation runHelper(FactorGraph fg, Algebra s) throws IOException {        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 4;
         prm.s = s;
         prm.normalizeMessages = true;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         return bp;
     }
@@ -234,15 +234,15 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        ErmaBp bp = runDefaultBpForAcyclic(s, fg);
+        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
 
         BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
                     
         assertEqualMarginals(fg, bf, bp);
     }
 
-    protected ErmaBp runDefaultBpForAcyclic(Algebra s, FactorGraph fg) {
-        ErmaBpPrm prm = new ErmaBpPrm();
+    protected BeliefPropagation runDefaultBpForAcyclic(Algebra s, FactorGraph fg) {
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
@@ -250,7 +250,7 @@ public class ErmaBpForwardTest {
         // Don't normalize the messages, so that the partition function is the
         // same as in the brute force approach.
         prm.normalizeMessages = false;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         return bp;
     }
@@ -271,18 +271,18 @@ public class ErmaBpForwardTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
         prm.normalizeMessages = true;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.convergenceThreshold = convergenceThreshold;        
         
-        ErmaBp bp = null;
+        BeliefPropagation bp = null;
         
         for (int i=0; i<20; i++) {
             prm.maxIterations = i;
-            bp = new ErmaBp(fg, prm);
+            bp = new BeliefPropagation(fg, prm);
             bp.run();
             System.out.println("maxiters: " + i);
             System.out.println("isConverged: " + bp.isConverged());
@@ -315,7 +315,7 @@ public class ErmaBpForwardTest {
     }    
     
     public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
@@ -349,7 +349,7 @@ public class ErmaBpForwardTest {
             // should have uniform mass
             BruteForceInferencer bf = new BruteForceInferencer(fg, s);
             bf.run();
-            ErmaBp bp = new ErmaBp(fg, prm);
+            BeliefPropagation bp = new BeliefPropagation(fg, prm);
             bp.run();
             System.out.println(bp.isConverged());
             assertEqualMarginals(fg, bf, bp);
@@ -378,7 +378,7 @@ public class ErmaBpForwardTest {
         {
             BruteForceInferencer bf = new BruteForceInferencer(fg, s);
             bf.run();
-            ErmaBp bp = new ErmaBp(fg, prm);
+            BeliefPropagation bp = new BeliefPropagation(fg, prm);
             bp.run();
             System.out.println(bp.isConverged());
             System.out.println(bf.getMarginals(x0));
@@ -412,13 +412,13 @@ public class ErmaBpForwardTest {
         Algebra s = LogSemiring.getInstance();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        ErmaBp bp = runDefaultBpForAcyclic(s, fg);
+        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
         System.out.println(bp.isConverged());
         assertEqualMarginals(fg, bf, bp, 1e-12);
     }
 
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
-            ErmaBp bp) {
+            BeliefPropagation bp) {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 

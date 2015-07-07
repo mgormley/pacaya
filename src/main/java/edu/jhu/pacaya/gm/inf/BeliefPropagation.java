@@ -41,11 +41,11 @@ import edu.jhu.prim.list.IntArrayList;
  * 
  * @author mgormley
  */
-public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgInferencer {
+public class BeliefPropagation extends AbstractFgInferencer implements Module<Beliefs>, FgInferencer {
     
-    private static final Logger log = LoggerFactory.getLogger(ErmaBp.class);
+    private static final Logger log = LoggerFactory.getLogger(BeliefPropagation.class);
     
-    public static class ErmaBpPrm extends Prm implements FgInferencerFactory, BeliefsModuleFactory {
+    public static class BeliefPropagationPrm extends Prm implements FgInferencerFactory, BeliefsModuleFactory {
         private static final long serialVersionUID = 1L;        
         public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
@@ -68,17 +68,17 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         /** Minimum number of neighbors for a factor   to compute messages by dividing out from a cached belief. */
         public int minFacNbsForCache = Integer.MAX_VALUE; // TODO: This might still be buggy.
         
-        public ErmaBpPrm() {
+        public BeliefPropagationPrm() {
         }
         
         @Override
         public FgInferencer getInferencer(FactorGraph fg) {
-            return new ErmaBp(fg, this);
+            return new BeliefPropagation(fg, this);
         }
 
         @Override
         public Module<Beliefs> getBeliefsModule(Module<Factors> fm, FactorGraph fg) {
-            return new ErmaBp(fg, this, fm);
+            return new BeliefPropagation(fg, this, fm);
         }
         
         @Override
@@ -130,7 +130,7 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
         
     }
     
-    private final ErmaBpPrm prm;
+    private final BeliefPropagationPrm prm;
     private final Algebra s;
     private final FactorGraph fg;   
     private final BipartiteGraph<Var, Factor> bg;
@@ -165,17 +165,17 @@ public class ErmaBp extends AbstractFgInferencer implements Module<Beliefs>, FgI
     private static AtomicInteger oscillationCount = new AtomicInteger(0);
     private static AtomicInteger sendCount = new AtomicInteger(0);
     
-    public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
+    public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
         this(fg, prm, getFactorsModule(fg, prm));
     }
 
-    private static Module<Factors> getFactorsModule(FactorGraph fg, ErmaBpPrm prm) {
+    private static Module<Factors> getFactorsModule(FactorGraph fg, BeliefPropagationPrm prm) {
         ForwardOnlyFactorsModule fm = new ForwardOnlyFactorsModule(null, fg, prm.getAlgebra());
         fm.forward();
         return fm;
     }
     
-    public ErmaBp(final FactorGraph fg, ErmaBpPrm prm, Module<Factors> fm) {
+    public BeliefPropagation(final FactorGraph fg, BeliefPropagationPrm prm, Module<Factors> fm) {
         if (prm.getAlgebra() != null && !prm.getAlgebra().equals(fm.getAlgebra())) {
             // TODO: We shouldn't even specify the algebra in prm.
             log.warn("Ignoring Algebra in ErmaBpPrm since the input module dictates the algebra: "

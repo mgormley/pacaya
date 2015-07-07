@@ -20,9 +20,9 @@ import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -70,14 +70,14 @@ public class LogLikelihoodFactoryTest {
     
 	@Test
 	public void testLogLikelihoodBelowZeroBPLogDomain() {	// belief propagation
-		ErmaBpPrm bpPrm = new ErmaBpPrm();
+		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.s = LogSemiring.getInstance();
 		checkLogLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
 	public void testLogLikelihoodBelowZeroBPProbDomain() {	// belief propagation
-		ErmaBpPrm bpPrm = new ErmaBpPrm();
+		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.s = RealAlgebra.getInstance();
 		checkLogLikelihoodBelowZero(bpPrm);
 	}
@@ -150,7 +150,7 @@ public class LogLikelihoodFactoryTest {
     }
 
     public static FgInferencerFactory getInfFactory(Algebra s) {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.s = s;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;

@@ -6,9 +6,9 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.pacaya.gm.data.FgExampleList;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
@@ -83,8 +83,8 @@ public class EmpiricalRiskTest {
         JUnitUtils.assertArrayEquals(expected, grad, 1e-4);
     }
 
-    public static ErmaBpPrm getErmaBpPrm(Algebra s) {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
+    public static BeliefPropagationPrm getErmaBpPrm(Algebra s) {
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.s = s;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;

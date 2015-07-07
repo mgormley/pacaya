@@ -1,9 +1,9 @@
 package edu.jhu.pacaya.autodiff.erma;
 
-import edu.jhu.pacaya.gm.inf.ErmaBp;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
@@ -24,7 +24,7 @@ import edu.jhu.prim.util.random.Prng;
  * 
  * @author mgormley
  */
-public class ErmaBpSpeedTest {
+public class BeliefPropagationSpeedTest {
 
     // Number of tokens. 23 is avg sent length in sec 22 of PTB.
     private static final int n = 23;
@@ -51,13 +51,13 @@ public class ErmaBpSpeedTest {
     }
         
     public static void runBp(FactorGraph fg, int t) {
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         //prm.s = Algebras.LOG_SIGN_ALGEBRA;
         prm.s = RealAlgebra.getInstance();
         prm.maxIterations = 1;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.schedule = BpScheduleType.TREE_LIKE;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
     }
 
@@ -100,7 +100,7 @@ public class ErmaBpSpeedTest {
     }
 
     public static void main(String[] args) {
-        (new ErmaBpSpeedTest()).run();
+        (new BeliefPropagationSpeedTest()).run();
     }
     
 }

@@ -15,9 +15,9 @@ import edu.jhu.pacaya.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.feat.StringIterable;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearXYData.LogLinearExample;
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -160,8 +160,8 @@ public class LogLinearXY {
         return list;
     }
     
-    private ErmaBpPrm getBpPrm() {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
+    private BeliefPropagationPrm getBpPrm() {
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;

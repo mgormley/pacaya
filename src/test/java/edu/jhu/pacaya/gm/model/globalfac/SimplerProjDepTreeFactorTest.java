@@ -4,9 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.gm.inf.ErmaBp;
-import edu.jhu.pacaya.gm.inf.ErmaBp.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.ErmaBp.ErmaBpPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -38,18 +38,18 @@ public class SimplerProjDepTreeFactorTest {
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 1;
         prm.normalizeMessages = normalizeMessages;
 
         FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
-        ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
+        BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
         bpExpl.forward();
 
         FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
-        ErmaBp bpDp = new ErmaBp(fgDp, prm);
+        BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
         bpDp.forward();
 
         System.out.println("Messages");
