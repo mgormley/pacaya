@@ -1,7 +1,6 @@
 package edu.jhu.pacaya.gm.model;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 import edu.jhu.prim.iter.IntIter;
 

@@ -2,11 +2,11 @@ package edu.jhu.pacaya.parse.cky;
 
 import edu.jhu.pacaya.nlp.data.Sentence;
 import edu.jhu.pacaya.parse.cky.chart.Chart;
-import edu.jhu.pacaya.parse.cky.chart.ChartCell;
-import edu.jhu.pacaya.parse.cky.chart.ScoresSnapshot;
 import edu.jhu.pacaya.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.pacaya.parse.cky.chart.Chart.ParseType;
+import edu.jhu.pacaya.parse.cky.chart.ChartCell;
 import edu.jhu.pacaya.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
+import edu.jhu.pacaya.parse.cky.chart.ScoresSnapshot;
 
 /**
  * CKY Parsing algorithm for a CNF PCFG grammar.

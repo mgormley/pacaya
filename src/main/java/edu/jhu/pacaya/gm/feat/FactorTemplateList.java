@@ -11,9 +11,9 @@ import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.TemplateFactor;
 import edu.jhu.pacaya.gm.model.Var;
-import edu.jhu.pacaya.util.Alphabet;
 import edu.jhu.pacaya.util.CountingFeatureNames;
 import edu.jhu.pacaya.util.FeatureNames;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 public class FactorTemplateList implements Serializable {
 
@@ -21,7 +21,7 @@ public class FactorTemplateList implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(FactorTemplateList.class); 
     private List<FactorTemplate> fts;
     private boolean isGrowing;  
-    private Alphabet<Object> templateKeyAlphabet;
+    private IntObjectBimap<Object> templateKeyAlphabet;
     private boolean useCountingAlphabets;
 
     public FactorTemplateList() {
@@ -31,7 +31,7 @@ public class FactorTemplateList implements Serializable {
     public FactorTemplateList(boolean useCountingAlphabets) {
         fts = new ArrayList<FactorTemplate>();
         isGrowing = true;
-        templateKeyAlphabet = new Alphabet<Object>();
+        templateKeyAlphabet = new IntObjectBimap<Object>();
         this.useCountingAlphabets = useCountingAlphabets;
     }
 

@@ -6,13 +6,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 public class IntBinaryTreebank extends ArrayList<IntBinaryTree> {
 
     private static final long serialVersionUID = -8440401929408530783L;
 
-    public IntNaryTreebank collapseToNary(Alphabet<String> ntAlphabet) {
+    public IntNaryTreebank collapseToNary(IntObjectBimap<String> ntAlphabet) {
         IntNaryTreebank naryTrees = new IntNaryTreebank();
         for (IntBinaryTree tree : this) {
             naryTrees.add(tree.collapseToNary(ntAlphabet));
@@ -48,8 +48,8 @@ public class IntBinaryTreebank extends ArrayList<IntBinaryTree> {
         writer.close();        
     }
 
-    public void resetAlphabets(Alphabet<String> lexAlphabet,
-            Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(IntObjectBimap<String> lexAlphabet,
+            IntObjectBimap<String> ntAlphabet) {
         for (IntBinaryTree tree : this) {
             tree.resetAlphabets(lexAlphabet, ntAlphabet);
         }

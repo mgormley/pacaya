@@ -7,13 +7,13 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.autodiff.ModuleTestUtils;
-import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.Identity;
+import edu.jhu.pacaya.autodiff.ModuleTestUtils;
+import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
+import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.TensorUtils;
 import edu.jhu.pacaya.autodiff.TopoOrder;
-import edu.jhu.pacaya.autodiff.ModuleTestUtils.ModuleFn;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -22,8 +22,8 @@ import edu.jhu.prim.vector.IntDoubleDenseVector;
 
 public class ConvertAlgebraTest {
     
-    public static List<Algebra> algebras3 = Lists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance(), LogSignAlgebra.getInstance());
-    public static List<Algebra> algebras2 = Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
+    public static List<Algebra> algebras3 = QLists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance(), LogSignAlgebra.getInstance());
+    public static List<Algebra> algebras2 = QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
 
     @Test
     public void testForwardAndBackward() {
@@ -60,7 +60,7 @@ public class ConvertAlgebraTest {
                 ConvertAlgebra<Tensor> ea = new ConvertAlgebra<Tensor>(id1, outS);
                 ConvertAlgebra<Tensor> ea2 = new ConvertAlgebra<Tensor>(ea, inS);
                 
-                TopoOrder<Tensor> topo = new TopoOrder<Tensor>(Lists.getList(id1), ea2);
+                TopoOrder<Tensor> topo = new TopoOrder<Tensor>(QLists.getList(id1), ea2);
 
                 int numParams = ModuleFn.getOutputSize(topo.getInputs());
                 IntDoubleDenseVector x = ModuleTestUtils.getAbsZeroOneGaussian(numParams);

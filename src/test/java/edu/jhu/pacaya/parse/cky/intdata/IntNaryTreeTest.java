@@ -7,7 +7,7 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 public class IntNaryTreeTest {
 
@@ -21,7 +21,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )) ))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<String> alphabet = new Alphabet<String>();
+        IntObjectBimap<String> alphabet = new IntObjectBimap<String>();
         IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -43,7 +43,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<String> alphabet = new Alphabet<String>();
+        IntObjectBimap<String> alphabet = new IntObjectBimap<String>();
         IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -65,7 +65,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<String> alphabet = new Alphabet<String>();
+        IntObjectBimap<String> alphabet = new IntObjectBimap<String>();
         IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -98,7 +98,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origNaryTreeStr);
-        Alphabet<String> alphabet = new Alphabet<String>();
+        IntObjectBimap<String> alphabet = new IntObjectBimap<String>();
         IntNaryTree naryTree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         assertEquals(20, alphabet.size());
         IntBinaryTree binaryTree = naryTree.leftBinarize(alphabet);

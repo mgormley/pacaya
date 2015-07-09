@@ -2,7 +2,7 @@ package edu.jhu.pacaya.util.semiring;
 
 import edu.jhu.prim.util.math.FastMath;
 
-public class LogSignAlgebra implements Semiring, Algebra {
+public final class LogSignAlgebra implements Semiring, Algebra {
 
     private static final long serialVersionUID = 1L;    
     private static final LogSignAlgebra SINGLETON = new LogSignAlgebra();
@@ -204,7 +204,19 @@ public class LogSignAlgebra implements Semiring, Algebra {
 
     @Override
     public boolean eq(double x, double y, double delta) {
-        throw new RuntimeException("not yet implemented");
+        if (x == y) {
+            // This case is needed for infinity equality.
+            return true;
+        }
+        long sx = sign(x);
+        long sy = sign(y);
+        double lx = natlog(x);
+        double ly = natlog(y);
+        if (sx == sy) {
+            return Math.abs(lx - ly) < delta;
+        } else {
+            return Math.abs(lx + ly) < delta;
+        }
     }
 
     @Override

@@ -6,11 +6,8 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.hypergraph.depparse.HyperDepParser;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.arrays.Multinomials;
-import edu.jhu.prim.util.Timer;
 import edu.jhu.prim.util.math.FastMath;
 
 public class ProjectiveDependencyParserTest {

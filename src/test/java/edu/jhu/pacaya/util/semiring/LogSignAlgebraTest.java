@@ -18,25 +18,25 @@ public class LogSignAlgebraTest extends AbstractAlgebraTest {
      */
     @Test
     public void testAbsEqual() {   
-        assertTrue(!Double.isNaN(sLog.fromReal(Double.POSITIVE_INFINITY)));
-        assertTrue(Double.isNaN(sLog.fromReal(Double.NEGATIVE_INFINITY)));
+        assertTrue(!Double.isNaN(sThis.fromReal(Double.POSITIVE_INFINITY)));
+        assertTrue(Double.isNaN(sThis.fromReal(Double.NEGATIVE_INFINITY)));
         {
-            double v1 = sLog.fromReal(3);
-            double v2 = sLog.fromReal(-3);
-            double sum = sLog.plus(v1, v2);
+            double v1 = sThis.fromReal(3);
+            double v2 = sThis.fromReal(-3);
+            double sum = sThis.plus(v1, v2);
             System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sum));
             assertEquals(0l | Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY), Double.doubleToRawLongBits(sum));
             assertFalse(Double.isNaN(sum));
-            assertFalse(Double.isNaN(sLog.toReal(sum)));
+            assertFalse(Double.isNaN(sThis.toReal(sum)));
         }
         {
-            double v1 = sLog.fromReal(-3);
-            double v2 = sLog.fromReal(3);
-            double sum = sLog.plus(v1, v2);
+            double v1 = sThis.fromReal(-3);
+            double v2 = sThis.fromReal(3);
+            double sum = sThis.plus(v1, v2);
             System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sum));
             assertEquals(1l | Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY), Double.doubleToRawLongBits(sum));
             assertTrue(Double.isNaN(sum));
-            assertFalse(Double.isNaN(sLog.toReal(sum)));
+            assertFalse(Double.isNaN(sThis.toReal(sum)));
         }
     }
     

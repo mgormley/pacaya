@@ -7,7 +7,7 @@ import edu.jhu.pacaya.autodiff.Identity;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Multiplication of each entry in a tensor by a scalar from another tensor.
@@ -69,7 +69,7 @@ public class ScalarMultiply extends AbstractModule<Tensor> implements Module<Ten
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(modInX, modInW);
+        return QLists.getList(modInX, modInW);
     }
     
 }

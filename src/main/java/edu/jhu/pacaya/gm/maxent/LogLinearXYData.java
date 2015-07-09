@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.pacaya.gm.feat.FeatureVector;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 /**
  * Factory for log-linear model instances, specifying features of the
@@ -56,9 +56,9 @@ public class LogLinearXYData {
     
     public static final int UNKNOWN_NUMBER_OF_YS = -1;
     private int numYs;
-    private final Alphabet<String> featAlphabet;
-    private final Alphabet<Object> xAlphabet;
-    private final Alphabet<Object> yAlphabet;
+    private final IntObjectBimap<String> featAlphabet;
+    private final IntObjectBimap<Object> xAlphabet;
+    private final IntObjectBimap<Object> yAlphabet;
     private List<LogLinearExample> exList;
 
     public LogLinearXYData() {
@@ -66,15 +66,15 @@ public class LogLinearXYData {
     }
     
     public LogLinearXYData(int numYs) {
-        this(numYs, new Alphabet<String>());
+        this(numYs, new IntObjectBimap<String>());
     }
     
-    public LogLinearXYData(int numYs, Alphabet<String> featAlphabet) {
+    public LogLinearXYData(int numYs, IntObjectBimap<String> featAlphabet) {
         this.numYs = numYs;
         this.featAlphabet = featAlphabet;
         this.exList = new ArrayList<LogLinearExample>();
-        this.xAlphabet = new Alphabet<Object>();
-        this.yAlphabet = new Alphabet<Object>();
+        this.xAlphabet = new IntObjectBimap<Object>();
+        this.yAlphabet = new IntObjectBimap<Object>();
     }
     
     /**
@@ -138,15 +138,15 @@ public class LogLinearXYData {
         return numYs;
     }
 
-    public Alphabet<String> getFeatAlphabet() {
+    public IntObjectBimap<String> getFeatAlphabet() {
         return featAlphabet;
     }
 
-    public Alphabet<Object> getXAlphabet() {
+    public IntObjectBimap<Object> getXAlphabet() {
         return xAlphabet;
     }
 
-    public Alphabet<Object> getYAlphabet() {
+    public IntObjectBimap<Object> getYAlphabet() {
         return yAlphabet;
     }
 

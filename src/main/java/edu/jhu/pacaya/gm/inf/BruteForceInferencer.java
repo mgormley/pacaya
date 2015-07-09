@@ -1,14 +1,11 @@
 package edu.jhu.pacaya.gm.inf;
 
-import edu.jhu.pacaya.autodiff.erma.AbstractFgInferencer;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
-import edu.jhu.pacaya.util.semiring.LogSemiring;
-import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
 /**
  * Inference by brute force summation.
@@ -38,7 +35,7 @@ public class BruteForceInferencer extends AbstractFgInferencer implements FgInfe
         
     }
     
-    private Algebra s;
+    private final Algebra s;
     private FactorGraph fg;
     private VarTensor joint;
     

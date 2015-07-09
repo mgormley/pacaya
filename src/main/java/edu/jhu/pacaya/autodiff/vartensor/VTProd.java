@@ -8,7 +8,7 @@ import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 public class VTProd extends AbstractModule<VarTensor> implements Module<VarTensor> {
 
@@ -54,7 +54,7 @@ public class VTProd extends AbstractModule<VarTensor> implements Module<VarTenso
 
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
-        return Lists.getList(modIn);
+        return QLists.getList(modIn);
     }
     
 }

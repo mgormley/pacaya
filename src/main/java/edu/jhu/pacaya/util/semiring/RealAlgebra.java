@@ -2,7 +2,7 @@ package edu.jhu.pacaya.util.semiring;
 
 import edu.jhu.prim.util.math.FastMath;
 
-public class RealAlgebra implements Semiring, Algebra {
+public final class RealAlgebra implements Semiring, Algebra {
 
     private static final long serialVersionUID = 1L;    
     private static final RealAlgebra SINGLETON = new RealAlgebra();

@@ -7,7 +7,7 @@ public abstract class AbstractModule<T extends MVec> implements Module<T> {
     protected T y;
     protected T yAdj;
     // The output adjoint will be represented in this abstract algebra.
-    protected Algebra s;
+    protected final Algebra s;
     
     /** 
      * Constructor.

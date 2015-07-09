@@ -2,7 +2,7 @@ package edu.jhu.pacaya.parse.cky;
 
 import java.io.File;
 
-import edu.jhu.pacaya.util.files.Files;
+import edu.jhu.pacaya.util.files.QFiles;
 import edu.jhu.pacaya.util.sys.System;
 
 public class Evalb {
@@ -37,7 +37,7 @@ public class Evalb {
                 testTrees.getAbsolutePath(),
         };
         System.runCommand(cmd, logFile, new File("."));    
-        Files.cat(logFile);
+        QFiles.cat(logFile);
     }
     
 }

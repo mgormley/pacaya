@@ -1,10 +1,8 @@
 package edu.jhu.pacaya.gm.feat;
 
-import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.vector.IntDoubleUnsortedVector;
-import edu.jhu.prim.vector.IntDoubleVector;
 
 public class FeatureVector extends IntDoubleUnsortedVector {
 

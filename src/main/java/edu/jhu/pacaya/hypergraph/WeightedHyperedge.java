@@ -1,6 +1,5 @@
 package edu.jhu.pacaya.hypergraph;
 
-import java.util.List;
 
 public class WeightedHyperedge extends Hyperedge {
 

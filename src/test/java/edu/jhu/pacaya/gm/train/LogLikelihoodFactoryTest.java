@@ -15,21 +15,21 @@ import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
+import edu.jhu.pacaya.gm.model.FgModelIdentity;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
@@ -116,7 +116,7 @@ public class LogLikelihoodFactoryTest {
 			fg.addFactor(f);
 		}
 		
-		assertTrue(fg.getEdges().size() > 0);
+		assertTrue(fg.getNumEdges() > 0);
 		
 		// find out what the log-likelihood is
 		CrfTrainer.CrfTrainerPrm trainerPrm = new CrfTrainer.CrfTrainerPrm();

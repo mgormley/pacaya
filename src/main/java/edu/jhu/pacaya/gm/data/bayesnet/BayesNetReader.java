@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.prim.util.math.FastMath;
 
 public class BayesNetReader {

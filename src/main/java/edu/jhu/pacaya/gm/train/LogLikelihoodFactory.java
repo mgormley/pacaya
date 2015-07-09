@@ -2,9 +2,9 @@ package edu.jhu.pacaya.gm.train;
 
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.FgModelIdentity;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FgModelIdentity;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;

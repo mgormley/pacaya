@@ -3,8 +3,8 @@ package edu.jhu.pacaya.gm.eval;
 import java.util.List;
 
 import edu.jhu.pacaya.gm.model.Var;
-import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.pacaya.gm.model.VarConfig;
 
 public class AccuracyEvaluator {
 

@@ -10,21 +10,20 @@ import edu.jhu.pacaya.autodiff.MVec;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Scalar;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.EmpiricalRisk;
-import edu.jhu.pacaya.autodiff.erma.Factors;
-import edu.jhu.pacaya.autodiff.erma.FactorsModule;
-import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.Factors;
+import edu.jhu.pacaya.gm.model.FactorsModule;
 import edu.jhu.pacaya.gm.model.FgModel;
+import edu.jhu.pacaya.gm.model.MVecFgModel;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -49,7 +48,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
     private VarConfig goldConfig;
     private FactorGraph fg;
     private FgInferencer inf;
-    private Algebra tmpS;
+    private final Algebra tmpS;
     
     // Cached variables from forward() pass.
     private FactorsModule fm;
@@ -162,7 +161,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
 
     @Override
     public List<? extends Module<? extends MVec>> getInputs() {
-        return Lists.getList(mid);
+        return QLists.getList(mid);
     }
 
 }

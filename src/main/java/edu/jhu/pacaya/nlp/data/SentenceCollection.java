@@ -5,19 +5,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 public class SentenceCollection implements Iterable<Sentence> {
 
     private static final long serialVersionUID = 1L;
-    private Alphabet<String> alphabet;
+    private IntObjectBimap<String> alphabet;
     private ArrayList<Sentence> sents;
     private int numTokens;
     
     /**
      * Visible for testing only.
      */
-    public SentenceCollection(Alphabet<String> alphabet) {
+    public SentenceCollection(IntObjectBimap<String> alphabet) {
         this.alphabet = alphabet;
         this.sents = new ArrayList<Sentence>();
     }
@@ -26,7 +26,7 @@ public class SentenceCollection implements Iterable<Sentence> {
      * For testing only.
      */
     public SentenceCollection() {
-        this(new Alphabet<String>());
+        this(new IntObjectBimap<String>());
     }
     
     public SentenceCollection(Sentence sentence) {
@@ -84,7 +84,7 @@ public class SentenceCollection implements Iterable<Sentence> {
         return vocab;
     }
 
-    public Alphabet<String> getLabelAlphabet() {
+    public IntObjectBimap<String> getLabelAlphabet() {
         return alphabet;
     }
 
@@ -102,7 +102,7 @@ public class SentenceCollection implements Iterable<Sentence> {
 
         private static final long serialVersionUID = 1L;
         
-        public StringSentence(Alphabet<String> alphabet, String string) {
+        public StringSentence(IntObjectBimap<String> alphabet, String string) {
             super(alphabet);
             String[] splits = string.split("\\s");
             for (String tok : splits) {

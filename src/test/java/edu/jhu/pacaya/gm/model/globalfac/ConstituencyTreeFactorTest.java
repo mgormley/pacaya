@@ -7,16 +7,16 @@ import java.util.Arrays;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.model.ExplicitExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.ConstituencyTreeFactor.SpanVar;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -28,7 +28,7 @@ public class ConstituencyTreeFactorTest {
     public void testBpVsBruteForce() {
         
         for(int n : Arrays.asList(2, 3, 4)) {
-            for(Algebra s : Lists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance())) {
+            for(Algebra s : QLists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance())) {
 
                 ConstituencyTreeFactor ctFact = new ConstituencyTreeFactor(n, VarType.PREDICTED);
                 FactorGraph fg = new FactorGraph();

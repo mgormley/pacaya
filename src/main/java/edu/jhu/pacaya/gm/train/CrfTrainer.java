@@ -14,15 +14,14 @@ import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
 import edu.jhu.hlt.optimize.function.Regularizer;
-import edu.jhu.pacaya.autodiff.erma.BeliefsModuleFactory;
-import edu.jhu.pacaya.autodiff.erma.DlFactory;
-import edu.jhu.pacaya.autodiff.erma.EmpiricalRisk.EmpiricalRiskFactory;
-import edu.jhu.pacaya.autodiff.erma.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.pacaya.gm.data.FgExampleList;
+import edu.jhu.pacaya.gm.inf.BeliefsModuleFactory;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
+import edu.jhu.pacaya.gm.train.EmpiricalRisk.EmpiricalRiskFactory;
+import edu.jhu.pacaya.gm.train.ExpectedRecall.ExpectedRecallFactory;
 import edu.jhu.pacaya.util.Prm;
 
 /**

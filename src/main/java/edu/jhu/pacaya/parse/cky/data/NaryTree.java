@@ -8,8 +8,8 @@ import java.util.List;
 
 import edu.jhu.pacaya.nlp.data.Sentence;
 import edu.jhu.pacaya.parse.cky.GrammarConstants;
-import edu.jhu.pacaya.util.Alphabet;
-import edu.jhu.pacaya.util.files.Files;
+import edu.jhu.pacaya.util.files.QFiles;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.util.Lambda.FnO1ToVoid;
 
 /**
@@ -123,9 +123,9 @@ public class NaryTree {
      * start/end fields.
      */
     public static NaryTree readTreeInPtbFormat(Reader reader) throws IOException {
-        Files.readUntilCharacter(reader, '(');
+        QFiles.readUntilCharacter(reader, '(');
         NaryTree root = NaryTree.readSubtreeInPtbFormat(reader);
-        Files.readUntilCharacter(reader, ')');
+        QFiles.readUntilCharacter(reader, ')');
         if (root == null) {
             return null;
         }
@@ -346,7 +346,7 @@ public class NaryTree {
     /**
      * Gets the lexical item ids comprising the sentence.
      */
-    public int[] getSentenceIds(Alphabet<String> lexAlphabet) {
+    public int[] getSentenceIds(IntObjectBimap<String> lexAlphabet) {
         ArrayList<NaryTree> leaves = getLexicalLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
@@ -355,7 +355,7 @@ public class NaryTree {
         return sent;
     }
 
-    public Sentence getSentence(Alphabet<String> lexAlphabet) {
+    public Sentence getSentence(IntObjectBimap<String> lexAlphabet) {
         ArrayList<NaryTree> leaves = getLexicalLeaves();
         ArrayList<String> labels = new ArrayList<String>(leaves.size());
         for (int i = 0; i < leaves.size(); i++) {

@@ -7,29 +7,23 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.autodiff.erma.ErmaBp;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.autodiff.erma.ExplicitGlobalFactor;
-import edu.jhu.pacaya.autodiff.erma.GlobalExplicitFactor;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.BeliefPropagationTest;
 import edu.jhu.pacaya.gm.inf.BfsMpSchedule;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagationTest;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
-import edu.jhu.pacaya.gm.inf.Messages;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
-import edu.jhu.pacaya.gm.model.FactorGraph.FgEdge;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
@@ -294,7 +288,7 @@ public class ProjDepTreeFactorTest {
         int n = fgl.n;
                 
         // Add an extra variable over which we will marginalize.        
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", QLists.getList("arg0", "_"));
         ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar, childVars[0][1]));
         roleFac.setValue(0, 2);
         roleFac.setValue(1, 5);
@@ -358,7 +352,7 @@ public class ProjDepTreeFactorTest {
         LinkVar[][] childVars = fgl.childVars;
         int n = fgl.n;
         
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Lists.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", QLists.getList("arg0", "_"));
                 
         // Add an extra variable over which we will marginalize.        
         ExplicitFactor roleLinkFac = new ExplicitFactor(new VarSet(childVars[1][0], roleVar));
@@ -408,11 +402,7 @@ public class ProjDepTreeFactorTest {
         double Z = 4;
         // Check partition function.
         assertEquals(Z, bp.getPartition(), 1e-3);
-        for (Var v : fg.getVars()) {
-            double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
-            System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-            assertEquals(Z, partition, 1e-3);
-        }
+
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
         assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
@@ -465,13 +455,7 @@ public class ProjDepTreeFactorTest {
         double Z = 2;
         // Check partition function.
         assertEquals(Z,  bp.getPartition(), 1e-3);
-        if (prm.normalizeMessages == false) {
-            for (Var v : fg.getVars()) {
-                double partition = bp.getPartitionBeliefAtVarNode(fg.getNode(v));
-                System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-                assertEquals(Z, s == LogSemiring.getInstance() ? FastMath.exp(partition) : partition, 1e-3);
-            }
-        }
+
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, -1, 0));
         assertEquals(1/Z, getExpectedCount(bp, rootVars, childVars, -1, 0), 1e-3);
@@ -524,19 +508,19 @@ public class ProjDepTreeFactorTest {
     }
 
     public void compareErmaMessagesWithExplicitTreeFactor(Algebra s, boolean normalizeMessages, boolean makeLoopy) {
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.updateOrder = BpUpdateOrder.PARALLEL;
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
         FactorGraph fgExpl = get2WordSentFactorGraph(true, makeLoopy);
-        ErmaBp bpExpl = new ErmaBp(fgExpl, prm);
+        BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
         bpExpl.forward();
         //printMessages(fgExpl, bpExpl);
         
         FactorGraph fgDp = get2WordSentFactorGraph(false, makeLoopy);
-        ErmaBp bpDp = new ErmaBp(fgDp, prm);
+        BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
         bpDp.forward();
         //printMessages(fgDp, bpDp);
         
@@ -566,12 +550,12 @@ public class ProjDepTreeFactorTest {
         assertEqualVarTensors(bpExpl.getPotentialsAdj(), bpDp.getPotentialsAdj());
     }
 
-    private void assertEqualMessages(FactorGraph fgExpl, Messages[] msgsExpl, Messages[] msgsDp) {
+    private void assertEqualMessages(FactorGraph fgExpl, VarTensor[] msgsExpl, VarTensor[] msgsDp) {
         for (int i=0; i<msgsExpl.length; i++) {
-            VarTensor msgExpl = msgsExpl[i].message;
-            VarTensor msgDp = msgsDp[i].message;
-            FgEdge edge = fgExpl.getEdge(i);
-            assertEqualMessages(msgExpl, msgDp, edge.toString());
+            VarTensor msgExpl = msgsExpl[i];
+            VarTensor msgDp = msgsDp[i];
+            String edge = fgExpl.edgeToString(i);
+            assertEqualMessages(msgExpl, msgDp, edge);
         }
     }
 
@@ -622,20 +606,17 @@ public class ProjDepTreeFactorTest {
 
     private void printMessages(FactorGraph fg, BeliefPropagation bp) {
         System.out.println("Messages");
-        Messages[] msgs = bp.getMessages();
-        printMessages(fg, msgs);
+        printMessages(fg, bp.getMessages());
         System.out.println("Partition: " + bp.getPartition());
     }
 
 
-    private void printMessages(FactorGraph fg, Messages[] msgs) {
+    private void printMessages(FactorGraph fg, VarTensor[] msgs) {
         for (int i=0; i<fg.getNumEdges(); i++) {            
-            FgEdge edge = fg.getEdge(i);
-            //if (edge.isVarToFactor() && edge.getFactor().getVars().size() == 4) {
-                System.out.println(edge);
-                System.out.println(msgs[i].message);
-                System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
-            //}
+            String edge = fg.edgeToString(i);
+            System.out.println(edge);
+            System.out.println(msgs[i]);
+            System.out.println("Log odds: " + (msgs[i].getValue(1) - msgs[i].getValue(0)));
         }
     }
 
@@ -684,7 +665,7 @@ public class ProjDepTreeFactorTest {
         printBeliefs(fg, bf);
 
         assertEquals(bf.getLogPartition(), bp.getLogPartition(), 1e-1);
-        //BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        //ErmaBpForwardTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
     
     @Test
@@ -710,13 +691,13 @@ public class ProjDepTreeFactorTest {
         LinkVar[] rootVars = fgl.rootVars;
         LinkVar[][] childVars = fgl.childVars;
         
-        ErmaBpPrm prm = new ErmaBpPrm();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.s = s;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.maxIterations = 2;
         prm.normalizeMessages = true;
-        ErmaBp bp = new ErmaBp(fg, prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
 
         bp.forward();
         bp.getOutputAdj().fill(1.0);

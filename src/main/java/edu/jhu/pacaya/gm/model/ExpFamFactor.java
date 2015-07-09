@@ -7,12 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
-import edu.jhu.pacaya.autodiff.erma.AutodiffFactor;
-import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.inf.BruteForceInferencer;
 import edu.jhu.pacaya.gm.inf.FgInferencer;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
@@ -148,7 +146,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
         @Override
         public List<? extends Module<MVecFgModel>> getInputs() {
-            return Lists.getList(modIn);
+            return QLists.getList(modIn);
         }
         
     }

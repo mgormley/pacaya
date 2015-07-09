@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.pacaya.util.JUnitUtils;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
@@ -19,8 +19,8 @@ public class TensorTest {
 
     private Algebra s = RealAlgebra.getInstance();
 
-    private List<Algebra> two = Lists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
-    private List<Algebra> three = Lists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance(), LogSignAlgebra.getInstance());
+    private List<Algebra> two = QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
+    private List<Algebra> three = QLists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance(), LogSignAlgebra.getInstance());
     
     @Test
     public void testInitializedToZeros() {

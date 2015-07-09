@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.util.dist.Gaussian;
-import edu.jhu.prim.Primitives.MutableInt;
 import edu.jhu.prim.map.IntDoubleMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;

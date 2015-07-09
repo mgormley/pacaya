@@ -15,12 +15,7 @@ import edu.jhu.pacaya.autodiff.MVecArray;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.MutableModule;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.autodiff.erma.AutodiffGlobalFactor;
-import edu.jhu.pacaya.autodiff.erma.InsideOutsideDepParse;
-import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
-import edu.jhu.pacaya.autodiff.erma.ParamFreeGlobalFactorModule;
-import edu.jhu.pacaya.autodiff.erma.ProjDepTreeModule;
-import edu.jhu.pacaya.gm.model.Factor;
+import edu.jhu.pacaya.gm.model.MVecFgModel;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
@@ -28,10 +23,11 @@ import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.hypergraph.Hyperalgo.Scores;
 import edu.jhu.pacaya.hypergraph.depparse.HyperDepParser;
+import edu.jhu.pacaya.hypergraph.depparse.InsideOutsideDepParse;
 import edu.jhu.pacaya.hypergraph.depparse.O1DpHypergraph;
 import edu.jhu.pacaya.parse.dep.EdgeScores;
 import edu.jhu.pacaya.parse.dep.ParentsArray;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
@@ -148,7 +144,7 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
 
         @Override
         public List<? extends Module<? extends MVec>> getInputs() {
-            return Lists.getList(modIn, fm);
+            return QLists.getList(modIn, fm);
         }
         
     }

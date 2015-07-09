@@ -3,10 +3,10 @@ package edu.jhu.pacaya.autodiff.tensor;
 import org.junit.Test;
 
 import edu.jhu.pacaya.autodiff.AbstractModuleTest;
+import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
 import edu.jhu.pacaya.autodiff.TensorUtils;
-import edu.jhu.pacaya.autodiff.AbstractModuleTest.Tensor2Factory;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 

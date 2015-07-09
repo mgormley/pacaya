@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 import org.junit.Test;
 
 import edu.jhu.pacaya.util.Threads.TaskFactory;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.random.Prng;
@@ -42,7 +42,7 @@ public class ThreadsTest {
         Prng.seed(System.currentTimeMillis());
         IntArrays.shuffle(batch);
         List<Integer> results = Threads.safelyParallelizeBatch(pool, batch, new MockTaskFactory());
-        int[] res = Lists.asArray(results);
+        int[] res = QLists.asArray(results);
         
         IntSort.sortAsc(batch);
         IntSort.sortAsc(res);

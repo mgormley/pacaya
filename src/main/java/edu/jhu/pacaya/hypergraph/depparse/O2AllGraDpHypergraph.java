@@ -39,7 +39,7 @@ public class O2AllGraDpHypergraph implements Hypergraph {
     // Number of hyperedges.
     private int numEdges = NOT_INITIALIZED;    
     private DependencyScorer scorer;
-    private Algebra a;
+    private final Algebra a;
     private boolean singleRoot;
     
     public O2AllGraDpHypergraph(DependencyScorer scorer, Algebra a, boolean singleRoot) {

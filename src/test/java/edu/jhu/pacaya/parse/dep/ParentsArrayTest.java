@@ -10,8 +10,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.parse.dep.ParentsArray;
-import edu.jhu.pacaya.parse.dep.ParentsArray.Dir;
 import edu.jhu.prim.tuple.Pair;
 
 public class ParentsArrayTest {

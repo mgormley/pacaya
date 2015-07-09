@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.pacaya.gm.feat.FeatureVector;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.map.IntDoubleEntry;
 
 /**
@@ -34,7 +34,7 @@ public class LogLinearEDs {
         }
     }
     
-    private final Alphabet<String> alphabet = new Alphabet<String>();
+    private final IntObjectBimap<String> alphabet = new IntObjectBimap<String>();
     private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();
 
     public void addEx(int count, String... featNames) {
@@ -73,7 +73,7 @@ public class LogLinearEDs {
         return data;
     }
 
-    public Alphabet<String> getAlphabet() {
+    public IntObjectBimap<String> getAlphabet() {
         return alphabet;
     }
         

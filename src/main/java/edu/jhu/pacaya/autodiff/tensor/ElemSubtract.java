@@ -5,7 +5,7 @@ import java.util.List;
 import edu.jhu.pacaya.autodiff.AbstractModule;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 
 /**
  * Elementwise subtraction of the entries in two tensors of identical size.
@@ -47,7 +47,7 @@ public class ElemSubtract extends AbstractModule<Tensor> implements Module<Tenso
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return Lists.getList(modInX, modInW);
+        return QLists.getList(modInX, modInW);
     }
 
 }

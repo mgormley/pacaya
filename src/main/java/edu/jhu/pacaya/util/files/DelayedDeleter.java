@@ -20,7 +20,7 @@ public class DelayedDeleter implements Serializable {
         queue.addLast(file);
         if (queue.size() > numItemsToDelay) {
             File head = queue.remove();
-            Files.deleteRecursively(head);
+            QFiles.deleteRecursively(head);
         }
     }
 

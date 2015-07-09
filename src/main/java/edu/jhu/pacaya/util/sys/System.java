@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-import edu.jhu.pacaya.util.files.Files;
+import edu.jhu.pacaya.util.files.QFiles;
 
 public class System {
 
@@ -21,7 +21,7 @@ public class System {
         Process proc = System.runProcess(cmdArray, logFile, dir);
         if (proc.exitValue() != 0) {
             throw new RuntimeException("Command failed with exit code " + proc.exitValue() + ": "
-                    + System.cmdToString(cmdArray) + "\n" + Files.tail(logFile));
+                    + System.cmdToString(cmdArray) + "\n" + QFiles.tail(logFile));
         }
     }
 
@@ -59,7 +59,7 @@ public class System {
         } catch (Exception e) {
             String tail = "";
             try {
-                tail = Files.tail(logFile);
+                tail = QFiles.tail(logFile);
             } catch (Throwable t) {
                 // Ignore new exceptions
             }

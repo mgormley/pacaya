@@ -10,30 +10,34 @@ import java.nio.file.Paths;
 
 import org.junit.Test;
 
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
+import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
 import edu.jhu.pacaya.gm.model.VarTensor;
+import edu.jhu.pacaya.gm.model.globalfac.GlobalExplicitFactor;
 import edu.jhu.pacaya.gm.model.globalfac.GlobalFactor;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
+import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.pacaya.util.semiring.ShiftedRealAlgebra;
+import edu.jhu.pacaya.util.semiring.SplitAlgebra;
 
 
 public class BeliefPropagationTest {
-	    
+	
     @Test
     public void testOnOneVarProb() {
-        Algebra s = RealAlgebra.getInstance();
-        testOneVarHelper(s);
+        testOneVarHelper(RealAlgebra.getInstance());
     }
     
     @Test
@@ -43,35 +47,20 @@ public class BeliefPropagationTest {
     }
 
     private void testOneVarHelper(Algebra s) {
-        FactorGraph fg = new FactorGraph();
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
-
-        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
-
-        emit0.setValue(0, 1.1);
-        emit0.setValue(1, 1.9);
-
-        fg.addFactor(emit0);
-        
-        for (Factor f : fg.getFactors()) {
-            ((VarTensor)f).convertRealToLog();
-        }
+        FactorGraph fg = FactorGraphsForTests.getOneVarFg();
         
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        
+
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.s = s;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
-        assertEquals(3.0, bf.getPartition(), 1e-13);
-        assertEquals(3.0, bp.getPartition(), 1e-13);
-
         assertEqualMarginals(fg, bf, bp);
     }
-    
+
     @Test
     public void testTwoVars() {
         runTwoVars(RealAlgebra.getInstance(), null);
@@ -122,7 +111,6 @@ public class BeliefPropagationTest {
     
     @Test
     public void testThreeConnectedComponents() {
-        
         Algebra s = LogSemiring.getInstance();
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph();
@@ -130,16 +118,7 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 1;
-        prm.s = s;
-        prm.schedule = BpScheduleType.TREE_LIKE;
-        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        // Don't normalize the messages, so that the partition function is the
-        // same as in the brute force approach.
-        prm.normalizeMessages = false;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
+        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
 
         assertEqualMarginals(fg, bf, bp);
     }
@@ -148,9 +127,9 @@ public class BeliefPropagationTest {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", QLists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", QLists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", QLists.getList("N", "V"));
         
         // Emission factors. 
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0));; 
@@ -189,20 +168,6 @@ public class BeliefPropagationTest {
         testOnSimpleHelper(s);
     }
 
-    @Test
-    public void testOnChainProb() {
-        // Test in the probability domain.
-        Algebra s = RealAlgebra.getInstance();
-        testOnChainHelper(s);
-    }
-
-    @Test
-    public void testOnChainLogProb() {
-        // Test in the log-probability domain.
-        Algebra s = LogSemiring.getInstance();        
-        testOnChainHelper(s);
-    }
-
     private void testOnSimpleHelper(Algebra s) throws IOException {
         FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
@@ -222,40 +187,83 @@ public class BeliefPropagationTest {
         // high) tolerance of 2 to catch the partition function's value.
         assertEqualMarginals(fg, bf, bp, 2);
     }
+    
+    @Test
+    public void testMultipleSemiringsOnSimple() throws IOException {
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
+
+        BeliefPropagation bpReal = runHelper(fg, RealAlgebra.getInstance());
+        BeliefPropagation bpSplit = runHelper(fg, SplitAlgebra.getInstance());
+        BeliefPropagation bpShift = runHelper(fg, ShiftedRealAlgebra.getInstance());
+        BeliefPropagation bpLog = runHelper(fg, LogSemiring.getInstance());
+        BeliefPropagation bpLogSign = runHelper(fg, LogSignAlgebra.getInstance());
+        
+        assertEqualMarginals(fg, bpReal, bpSplit, 1e-4);
+        assertEqualMarginals(fg, bpReal, bpShift, 1e-13);
+        assertEqualMarginals(fg, bpReal, bpLog, 1e-13);
+        assertEqualMarginals(fg, bpReal, bpLogSign, 1e-13);
+        assertEqualMarginals(fg, bpLog, bpLogSign, 1e-13);
+    }
+
+    private BeliefPropagation runHelper(FactorGraph fg, Algebra s) throws IOException {        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 4;
+        prm.s = s;
+        prm.normalizeMessages = true;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        return bp;
+    }
+
+    @Test
+    public void testOnChainProb() {
+        // Test in the probability domain.
+        Algebra s = RealAlgebra.getInstance();
+        testOnChainHelper(s);
+    }
+
+    @Test
+    public void testOnChainLogProb() {
+        // Test in the log-probability domain.
+        Algebra s = LogSemiring.getInstance();        
+        testOnChainHelper(s);
+    }
 
     private void testOnChainHelper(Algebra s) {
         FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 1;
-        prm.s = s;
-        prm.schedule = BpScheduleType.TREE_LIKE;
-        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        
-        //prm.updateOrder = BpUpdateOrder.PARALLEL;
-        //prm.maxIterations = 10;
-        
-        // Don't normalize the messages, so that the partition function is the
-        // same as in the brute force approach.
-        prm.normalizeMessages = true;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
+        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
 
         BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
                     
         assertEqualMarginals(fg, bf, bp);
     }
+
+    protected BeliefPropagation runDefaultBpForAcyclic(Algebra s, FactorGraph fg) {
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.s = s;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        // Don't normalize the messages, so that the partition function is the
+        // same as in the brute force approach.
+        prm.normalizeMessages = false;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        return bp;
+    }
     
     @Test
     public void testConvergence() {
         // Test with a threshold of 0 (i.e. exact equality implies convergence)
+        testConvergenceHelper(LogSemiring.getInstance(), 1e-13, 6);
         testConvergenceHelper(RealAlgebra.getInstance(), 0, 6);
-        testConvergenceHelper(LogSemiring.getInstance(), 0, 6);
         // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
-        testConvergenceHelper(RealAlgebra.getInstance(), 1e-3, 5);
         testConvergenceHelper(LogSemiring.getInstance(), 1e-3, 5);
+        testConvergenceHelper(RealAlgebra.getInstance(), 1e-3, 5);
     }
 
     private void testConvergenceHelper(Algebra s, double convergenceThreshold, int expectedConvergenceIterations) {
@@ -295,7 +303,6 @@ public class BeliefPropagationTest {
         assertTrue(bp.isConverged());
     }
     
-
     @Test
     public void testCanHandleProbHardFactors() {
         testCanHandleHardFactorsHelper(false, RealAlgebra.getInstance());
@@ -306,9 +313,20 @@ public class BeliefPropagationTest {
     public void testCanHandleLogHardFactors() {
         testCanHandleHardFactorsHelper(false, LogSemiring.getInstance());
         testCanHandleHardFactorsHelper(true, LogSemiring.getInstance());
-    }
+    }    
     
     public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.s = s;
+        if (cacheFactorBeliefs) {
+            prm.minFacNbsForCache = 0;
+        } else {
+            prm.minFacNbsForCache = Integer.MAX_VALUE;
+        }
+        
         Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
         Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
         
@@ -317,37 +335,34 @@ public class BeliefPropagationTest {
             VarConfig vCfg = xor.getVars().getVarConfig(cfg);
             int v0 = vCfg.getState(x0);
             int v1 = vCfg.getState(x1);
-            if(v0 != v1)
+            if(v0 != v1) {
                 xor.setValue(cfg, 0d);
-            else
+            } else {
                 xor.setValue(cfg, 1d);
+            }
         }
         xor.convertRealToLog();
         
         FactorGraph fg = new FactorGraph();
-        fg.addVar(x0);
-        fg.addVar(x1);
         fg.addFactor(xor);
         
-        // should have uniform mass
-        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
-        bf.run();
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 10;
-        prm.s = s;
-        prm.cacheFactorBeliefs = cacheFactorBeliefs;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
-        System.out.println(bp.isConverged());
-        assertEqualMarginals(fg, bf, bp);
+        {
+            // should have uniform mass
+            BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+            bf.run();
+            BeliefPropagation bp = new BeliefPropagation(fg, prm);
+            bp.run();
+            System.out.println(bp.isConverged());
+            assertEqualMarginals(fg, bf, bp);
+            
+            VarTensor x0_marg = bp.getMarginals(x0);
+            assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
+            assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
+            VarTensor x1_marg = bp.getMarginals(x1);
+            assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
+            assertEquals(0.5d, x1_marg.getValue(1), 1e-6);                
+        }
         
-        VarTensor x0_marg = bp.getMarginals(x0);
-        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
-        VarTensor x1_marg = bp.getMarginals(x1);
-        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
-        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
-                
         // check again once we've added some unary factors on x0 and x1
         ExplicitFactor f0 = new ExplicitFactor(new VarSet(x0));
         f0.setValue(0, 3d);
@@ -355,22 +370,56 @@ public class BeliefPropagationTest {
         f0.convertRealToLog();
         fg.addFactor(f0);
         
-        ExplicitFactor f1 = new ExplicitFactor(new VarSet(x0));
-        f1.setValue(0, 5d);
+        ExplicitFactor f1 = new ExplicitFactor(new VarSet(x1));
+        f1.setValue(0, 4d);
         f1.setValue(1, 1d);
         f1.convertRealToLog();
         fg.addFactor(f1);
         
-        bf = new BruteForceInferencer(fg, s);
-        bf.run();
-        bp = new BeliefPropagation(fg, prm);
-        bp.run();
-        System.out.println(bp.isConverged());
-        assertEqualMarginals(fg, bf, bp);
-    }
+        {
+            BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+            bf.run();
+            BeliefPropagation bp = new BeliefPropagation(fg, prm);
+            bp.run();
+            System.out.println(bp.isConverged());
+            System.out.println(bf.getMarginals(x0));
+            System.out.println(bp.getMarginals(x0));
+            System.out.println(bf.getMarginals(x1));
+            System.out.println(bp.getMarginals(x1));
+            assertEquals(3, fg.getFactors().size());
+            assertTrue(fg.getBipgraph().isAcyclic());
+            assertEqualMarginals(fg, bf, bp);
+        }
+    }    
     
-    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
-            FgInferencer bp) {
+    @Test
+    public void testGlobalExplicitFactor() throws IOException {
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph();
+        
+        VarSet allVars = new VarSet(fg.getVars().toArray(new Var[0]));
+        ExplicitFactor gf = new GlobalExplicitFactor(allVars);
+        gf.setValue(0, 2);
+        gf.setValue(1, 3);
+        gf.setValue(2, 5);
+        gf.setValue(3, 7);
+        gf.setValue(4, 11);
+        gf.setValue(5, 15);
+        gf.setValue(6, 19);
+        gf.setValue(7, 23);
+        gf.convertRealToLog();
+        
+        fg.addFactor(gf);
+
+        Algebra s = LogSemiring.getInstance();
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+        bf.run();
+        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
+        System.out.println(bp.isConverged());
+        assertEqualMarginals(fg, bf, bp, 1e-12);
+    }
+
+    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
+            BeliefPropagation bp) {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 

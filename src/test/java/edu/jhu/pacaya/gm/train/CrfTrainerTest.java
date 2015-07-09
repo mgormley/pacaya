@@ -1,6 +1,5 @@
 package edu.jhu.pacaya.gm.train;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.junit.Before;
@@ -11,25 +10,21 @@ import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
-import edu.jhu.hlt.optimize.functions.L2;
-import edu.jhu.pacaya.autodiff.erma.EmpiricalRiskTest;
-import edu.jhu.pacaya.autodiff.erma.ErmaBp.ErmaBpPrm;
-import edu.jhu.pacaya.autodiff.erma.L2Distance.MeanSquaredErrorFactory;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
 import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearEDs;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY;
-import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
+import edu.jhu.pacaya.gm.maxent.LogLinearXYData;
 import edu.jhu.pacaya.gm.model.ExpFamFactor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
@@ -37,15 +32,16 @@ import edu.jhu.pacaya.gm.model.FactorGraphsForTests.FgAndVars;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.model.FgModelTest;
 import edu.jhu.pacaya.gm.model.Var;
+import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.VarConfig;
 import edu.jhu.pacaya.gm.model.VarSet;
-import edu.jhu.pacaya.gm.model.Var.VarType;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
+import edu.jhu.pacaya.gm.train.L2Distance.MeanSquaredErrorFactory;
 import edu.jhu.pacaya.util.JUnitUtils;
-import edu.jhu.pacaya.util.collections.Lists;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
@@ -83,9 +79,9 @@ public class CrfTrainerTest {
     public void testLogLinearModelShapesErma() {
         LogLinearXYData xyData = new LogLinearXYData();
         List<String>[] fvs;
-        fvs = new List[]{ Lists.getList("x=A,y=A"), Lists.getList("x=A,y=B") };
+        fvs = new List[]{ QLists.getList("x=A,y=A"), QLists.getList("x=A,y=B") };
         xyData.addExStrFeats(1.0, "x=A", "y=A", fvs);
-        fvs = new List[]{ Lists.getList("x=B,y=A"), Lists.getList("x=B,y=B") };
+        fvs = new List[]{ QLists.getList("x=B,y=A"), QLists.getList("x=B,y=B") };
         xyData.addExStrFeats(1.0, "x=B", "y=B", fvs);        
         LogLinearXY xy = new LogLinearXY(new LogLinearXYPrm());
         FgExampleList data = xy.getData(xyData);
@@ -246,7 +242,7 @@ public class CrfTrainerTest {
                         f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), MockTemplate.UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
-                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));
+                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, QLists.getList("A1", "A2", "A3"));
                         fg.addFactor(new ObsFeExpFamFactor(new VarSet(childRoles[i][j]), MockTemplate.ROLE_UNARY, ofc, obsFe));
                         
                         //trainConfig.put(childVars[i][j], 0);
@@ -310,7 +306,7 @@ public class CrfTrainerTest {
     }
     
     public static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
-        ErmaBpPrm bpPrm = new ErmaBpPrm();
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

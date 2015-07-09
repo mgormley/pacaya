@@ -1,9 +1,6 @@
 package edu.jhu.pacaya.gm.model;
 
 import edu.jhu.pacaya.autodiff.Module;
-import edu.jhu.pacaya.autodiff.erma.AutodiffFactor;
-import edu.jhu.pacaya.autodiff.erma.MVecFgModel;
-import edu.jhu.pacaya.autodiff.erma.ParamFreeFactorModule;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 

@@ -1,6 +1,6 @@
 package edu.jhu.pacaya.util.semiring;
 
-public class TropicalSemiring implements Semiring {
+public final class TropicalSemiring implements Semiring {
 
     private static final long serialVersionUID = 1L;
     private static final TropicalSemiring SINGLETON = new TropicalSemiring();

@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import edu.jhu.pacaya.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.pacaya.util.Alphabet;
+import edu.jhu.prim.bimap.IntObjectBimap;
 
 public class CnfGrammarReader {
 
@@ -22,15 +22,15 @@ public class CnfGrammarReader {
     private ArrayList<Rule> unaryRules;
     private ArrayList<Rule> binaryRules;
 
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private IntObjectBimap<String> lexAlphabet;
+    private IntObjectBimap<String> ntAlphabet;
     
     public CnfGrammarReader() {
-        this(new Alphabet<String>(), new Alphabet<String>());
+        this(new IntObjectBimap<String>(), new IntObjectBimap<String>());
     }
     
-    public CnfGrammarReader(Alphabet<String> lexAlphabet,
-            Alphabet<String> ntAlphabet) {
+    public CnfGrammarReader(IntObjectBimap<String> lexAlphabet,
+            IntObjectBimap<String> ntAlphabet) {
         if (lexAlphabet.size() > 0) {
             throw new IllegalArgumentException("Lexical alphabet must by empty.");
         }        
