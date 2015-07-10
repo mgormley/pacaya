@@ -338,7 +338,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
 
     private void forwardFactorToVar(int edge) {
         Var var = bg.t1E(edge);
-        Factor factor = bg.t2E(edge);
         // Since this is not a global factor, we send messages in the normal way, which
         // in the case of a factor to variable message requires enumerating all possible
         // variable configurations.
