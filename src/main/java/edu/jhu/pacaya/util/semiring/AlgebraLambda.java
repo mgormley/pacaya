@@ -47,8 +47,9 @@ public class AlgebraLambda {
      */
     public static final class DivBP implements LambdaBinOp {
         public final double call(Algebra s, double v1, double v2) {
-            if(v1 == s.zero() && v2 == s.zero())
-                return s.zero();
+            if(v1 == s.zero() && v2 == s.zero()) {
+                return s.one();
+            }
             return s.divide(v1, v2);
         }
     }

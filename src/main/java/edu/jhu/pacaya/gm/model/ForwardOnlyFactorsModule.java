@@ -99,6 +99,13 @@ public class ForwardOnlyFactorsModule extends AbstractModule<Factors> implements
         return QLists.getList();
     }
     
+    /** Constructs a factors module and runs the forward computation. */
+    public static Module<Factors> getFactorsModule(FactorGraph fg, Algebra s) {
+        ForwardOnlyFactorsModule fm = new ForwardOnlyFactorsModule(null, fg, s);
+        fm.forward();
+        return fm;
+    }
+
     private static class FactorToVarTensorModule extends AbstractModule<VarTensor> implements Module<VarTensor> {
         
         private Factor f;
