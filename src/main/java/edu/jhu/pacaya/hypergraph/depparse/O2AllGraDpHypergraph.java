@@ -107,11 +107,15 @@ public class O2AllGraDpHypergraph implements Hypergraph {
                         String label;
                         // Right.
                         label = log.isTraceEnabled() ? String.format("chart[%d][%d][%d][%d]", i,j,g,c) : null;
-                        chart[i][j][g][c] = new BasicHypernode(label, id++);
+                        chart[i][j][g][c] = (c == INCOMPLETE) ?
+                                new PCGBasicHypernode(label, id++, i-1, j-1, g-1) :
+                                new BasicHypernode(label, id++);
                         nodes.add(chart[i][j][g][c]);
                         // Left.
                         label = log.isTraceEnabled() ? String.format("chart[%d][%d][%d][%d]", j,i,g,c) : null;
-                        chart[j][i][g][c] = new BasicHypernode(label, id++);
+                        chart[j][i][g][c] = (c == INCOMPLETE) ?
+                                new PCGBasicHypernode(label, id++, j-1, i-1, g-1) :
+                                new BasicHypernode(label, id++);
                         nodes.add(chart[j][i][g][c]);
                     }
                 }
