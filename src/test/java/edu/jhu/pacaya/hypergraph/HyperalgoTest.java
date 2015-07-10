@@ -33,7 +33,6 @@ public class HyperalgoTest {
         }
     };
     
-
     @Test
     public void testTopoSortNodes() {
         MemHypergraph graph = getSimpleGraph();        
@@ -77,8 +76,8 @@ public class HyperalgoTest {
         expected = forwardBackwardCheck(graph, expected, RealAlgebra.getInstance(), null);
         forwardBackwardCheck(graph, expected, LogSignAlgebra.getInstance(), null);
     }
-       
-    private static MemHypergraph getSimpleGraph() {
+
+    public static MemHypergraph getSimpleGraph() {
         MemHypergraph graph = new MemHypergraph();
         MemHypernode root = graph.newRoot("ROOT");
         MemHypernode n7 = graph.newNode("7");
@@ -110,7 +109,7 @@ public class HyperalgoTest {
         
         return graph;
     }
-    
+           
     @Test
     public void testTinyGraph() {
         MemHypergraph graph = getTinyGraph();        
@@ -158,8 +157,8 @@ public class HyperalgoTest {
         }
         JUnitUtils.assertArrayEquals(expectedReals, actualReals, 1e-13);
     }
-
-    private static MemHypergraph getTinyGraph() {
+    
+    public static MemHypergraph getTinyGraph() {
         MemHypergraph graph = new MemHypergraph();
         // 1   2  3
         //  \/  \/
@@ -189,8 +188,7 @@ public class HyperalgoTest {
         graph.newEdge(root, n5);
         
         return graph;
-    }
-    
+    }    
 
     @Test
     public void testCkyGraph() {
@@ -216,7 +214,7 @@ public class HyperalgoTest {
         forwardBackwardCheck(graph, expected, LogSignAlgebra.getInstance(), marginalAdj);
     }
             
-    private static MemHypergraph getCkyGraph() {
+    public static MemHypergraph getCkyGraph() {
         MemHypergraph graph = new MemHypergraph();
         // "the old boat"
         MemHypernode the = graph.newNode("the");
@@ -266,5 +264,26 @@ public class HyperalgoTest {
         
         return graph;
     }
+    
+
+    public static MemHypergraph getThreeNodeGraph() {
+        MemHypergraph graph = new MemHypergraph();
+        // 1   2
+        //  \/ 
+        // ROOT
+        MemHypernode n1 = graph.newNode("1");
+        MemHypernode n2 = graph.newNode("2");
+        MemHypernode root = graph.newRoot("ROOT");
+        
+        // Add an incoming edge to each node with no tail nodes.
+        graph.newEdge(n1);
+        graph.newEdge(n2);
+        
+        // Directed edges between two nodes.
+        graph.newEdge(root, n1, n2);
+        
+        return graph;
+    }
+    
     
 }

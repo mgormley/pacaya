@@ -96,10 +96,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
         scores.betaAdj[graph.getRoot().getId()] = yAdj.get(ROOT_IDX, 0, 0);
 
         // Run backward pass.
-        Hyperpotential w = graph.getPotentials();
-        Hyperalgo.outsideAdjoint(graph, w, s, scores);
-        Hyperalgo.insideAdjoint(graph, w, s, scores);
-        
+        Hyperpotential w = graph.getPotentials();        
         // Update input adjoints on weightsIn.
         final Tensor wAdj = weightsIn.getOutputAdj();
         HyperedgeDoubleFn lambda = new HyperedgeDoubleFn() {
@@ -114,7 +111,7 @@ public class InsideOutsideDepParse extends AbstractModule<Tensor> implements Mod
                 }
             }
         };
-        Hyperalgo.weightAdjoint(graph, w, s, scores, lambda);
+        Hyperalgo.insideOutsideBackward(graph, w, s, scores, lambda);
     }
 
     @Override
