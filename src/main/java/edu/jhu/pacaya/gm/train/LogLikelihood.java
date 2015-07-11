@@ -135,7 +135,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
                 ((GlobalFactor) f).addExpectedPartials(gradient, -1.0, inf, a);
             } else {
                 // Compute 1.0 minus the marginal distrubtion.
-                VarTensor marg = inf.getLogMarginalsForFactorId(a);
+                VarTensor marg = inf.getMarginalsForFactorId(a);
                 Tensor addend = marg.copyAndConvertAlgebra(tmpS);
                 addend.multiply(tmpS.fromReal(-1.0));
                 int facConfig = goldConfig.getConfigIndexOfSubset(marg.getVars());
