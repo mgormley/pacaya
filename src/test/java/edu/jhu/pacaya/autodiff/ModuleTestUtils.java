@@ -154,7 +154,7 @@ public class ModuleTestUtils {
             IntDoubleVector gradAd = fn.getGradient(x);
             IntDoubleVector gradFd = StochasticGradientApproximation.estimateGradientFd(fn, x, epsilon);
             // Assert gradients are equal.
-            System.out.print("i="+i);
+            System.out.println("i="+i);
             assertVectorEquals(gradFd, gradAd, numParams, delta);
         }
     }
