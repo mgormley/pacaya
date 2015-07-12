@@ -338,8 +338,10 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         if (ProjDepTreeModule.allEdgesClamped(tmFalseIn, tmTrueIn)) {
             return 0.0;
         }
+
+        // We never compute the product of all false messages since this cancels in the /normalized/
+        // beliefs, which are used to compute the expected log beliefs.
         EdgeScores ratios = getLogOddsRatios(inMsgs);
-        double logPi = getLogProductOfAllFalseMessages(inMsgs);
 
         Pair<O1DpHypergraph, Scores> pair = HyperDepParser.insideEntropyFoe(ratios.root, ratios.child, s, InsideOutsideDepParse.singleRoot);
         O1DpHypergraph graph = pair.get1();
@@ -348,11 +350,9 @@ public class ProjDepTreeFactor extends AbstractConstraintFactor implements Globa
         int rt = graph.getRoot().getId();        
         double Z = scores.beta[rt];
         double rbar = scores.betaFoe[rt];
-        double pi = s.fromLogProb(logPi);
-        double partition = s.times(pi, Z);
-        double expectation = s.toLogProb(s.divide(pi, partition)) + s.toReal(s.divide(rbar, Z));
+        double expectation = s.toReal(s.divide(rbar, Z)) - s.toLogProb(Z);
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Z=%g rbar=%g pi=%g part=%g E=%g", Z, rbar, pi, partition, expectation));
+            log.trace(String.format("Z=%g rbar=%g E=%g", Z, rbar, expectation));
         }
         if (Double.isNaN(expectation)) {
             log.warn("Expected log belief was NaN. Returning zero instead.");
