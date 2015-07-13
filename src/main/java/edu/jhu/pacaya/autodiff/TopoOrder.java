@@ -32,9 +32,13 @@ public class TopoOrder<Y extends MVec> implements Module<Y> {
     public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root) {
         this(inputsList, root, null);
     }
-    
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+        
     public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root, String name) {
+        this(inputsList, root, name, true);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root, String name, boolean checkFullCut) {
         HashSet inputs = new HashSet(inputsList);
         if (inputs.size() != inputsList.size()) {
             throw new IllegalStateException("Multiple copies of module in inputs list: " + inputsList);
@@ -44,7 +48,7 @@ public class TopoOrder<Y extends MVec> implements Module<Y> {
         this.name = name;
         
         Deps deps = getModuleDeps();
-        this.topoOrder = Toposort.toposort(inputs, root, deps);
+        this.topoOrder = Toposort.toposort(inputs, root, deps, checkFullCut);
     }
     
     protected TopoOrder() { }
