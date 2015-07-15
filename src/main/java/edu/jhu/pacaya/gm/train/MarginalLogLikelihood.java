@@ -1,6 +1,7 @@
 package edu.jhu.pacaya.gm.train;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,11 +115,16 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
             // Note: this can occur if the graph is loopy because the
             // Bethe free energy has miss-estimated -log(Z) or because BP
             // has not yet converged.
-            log.warn("Log-likelihood for example should be <= 0: " + ll);
+            if (warnCount.incrementAndGet() <= 100) {
+                // This overprints when doing surrogate log-likelihood.
+                log.warn("Log-likelihood for example should be <= 0: {}", ll);
+            }
         }
         
         return y = Scalar.getInstance(s, ll);
     }
+    
+    private AtomicInteger warnCount = new AtomicInteger(0);
 
     @Override
     public void backward() {
