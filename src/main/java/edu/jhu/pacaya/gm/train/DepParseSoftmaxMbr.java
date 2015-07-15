@@ -21,7 +21,7 @@ import edu.jhu.prim.util.math.FastMath;
  * 
  * @author mgormley
  */
-public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tensor> {
+public class DepParseSoftmaxMbr extends TopoOrder<Tensor> implements Module<Tensor> {
     
     /**
      * This factory defines the decoder / loss module as non-stationary: the softmax parameter on
@@ -29,7 +29,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
      * 
      * Optionally, this loss function can be annealed from MSE to softmax MBR with expected recall.
      */
-    public static class DepParseDecodeLossFactory implements DlFactory {
+    public static class DepParseSoftmaxMbrFactory implements DlFactory {
         public double startTemp = 10;
         public double endTemp = .1;
         public boolean annealMse = true;
@@ -44,11 +44,11 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
                 double prop = (double) curIter / maxIter;
                 
                 Module<Tensor> mse = new L2Distance(inf, goldConfig);
-                Module<Tensor> dep = new DepParseDecodeLoss(inf, goldConfig, temp);                
+                Module<Tensor> dep = new DepParseSoftmaxMbr(inf, goldConfig, temp);                
                 Module<Tensor> lin = new ElemLinear(mse, dep, (1.0-prop), prop);
                 return new TopoOrder<Tensor>(QLists.getList(inf, temp), lin);
             } else {
-                return new DepParseDecodeLoss(inf, goldConfig, temp);
+                return new DepParseSoftmaxMbr(inf, goldConfig, temp);
             }
         }
 
@@ -71,7 +71,7 @@ public class DepParseDecodeLoss extends TopoOrder<Tensor> implements Module<Tens
         }
     }
         
-    public DepParseDecodeLoss(Module<Beliefs> inf, VarConfig vc, Module<Tensor> temperature) {
+    public DepParseSoftmaxMbr(Module<Beliefs> inf, VarConfig vc, Module<Tensor> temperature) {
         super();
         shallowCopy(build(inf, vc, temperature));
     }
