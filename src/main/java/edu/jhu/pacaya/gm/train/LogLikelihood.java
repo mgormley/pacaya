@@ -124,7 +124,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
         return y = Scalar.getInstance(s, ll);
     }
     
-    private AtomicInteger warnCount = new AtomicInteger(0);
+    private static AtomicInteger warnCount = new AtomicInteger(0);
 
     @Override
     public void backward() {

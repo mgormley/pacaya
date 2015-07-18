@@ -124,7 +124,7 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
         return y = Scalar.getInstance(s, ll);
     }
     
-    private AtomicInteger warnCount = new AtomicInteger(0);
+    private static AtomicInteger warnCount = new AtomicInteger(0);
 
     @Override
     public void backward() {
