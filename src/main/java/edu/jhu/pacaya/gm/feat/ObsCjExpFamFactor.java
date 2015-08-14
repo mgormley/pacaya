@@ -59,8 +59,8 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         obsFv.iterate(new FnIntDoubleToVoid() {            
             @Override
             public void call(int feat, double val) {
-                if (ofc.included[ft][config][feat]) {
-                    fv.add(ofc.indices[ft][config][feat], val);
+                if (ofc.isIncluded(ft, config, feat)) {
+                    fv.add(ofc.getFeatIndex(ft, config, feat), val);
                 }
             }
         });

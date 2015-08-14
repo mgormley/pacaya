@@ -62,12 +62,12 @@ public class ObsFeatureConjoiner implements Serializable {
      * The model parameters indices. Indexed by feature template index, variable
      * assignment config index, and observation function feature index.
      */
-    int[][][] indices;
+    private int[][][] indices;
     /**
      * Whether or not the correspondingly indexed model parameter is included in
      * this model.
      */
-    boolean[][][] included;
+    private boolean[][][] included;
     /** The number of feature templates. */
     private int numTemplates;
     /** The number of parameters in the model. */
@@ -309,28 +309,30 @@ public class ObsFeatureConjoiner implements Serializable {
         }
     }
         
+    // TODO: Remove these unused methods.
+//
+//    public int getNumTemplates() {
+//        return indices.length;
+//    }
+//
+//    public int getNumConfigs(int ft) {
+//        return indices[ft].length;
+//    }
+//
+//    public int getNumFeats(int ft, int c) {
+//        return indices[ft][c].length;
+//    }
+//    
+//    public int getFeatureHashModMax() {
+//        return featureHashModMax;
+//    }
+    
     public int getNumParams() {
         return numParams;
-    }
-
-    public int getNumTemplates() {
-        return indices.length;
-    }
-
-    public int getNumConfigs(int ft) {
-        return indices[ft].length;
-    }
-
-    public int getNumFeats(int ft, int c) {
-        return indices[ft][c].length;
     }
     
     public FeatureNames getFeAlphabet() {
         return feAlphabet;
-    }
-    
-    public int getFeatureHashModMax() {
-        return featureHashModMax;
     }
 
     public void takeNoteOfFeatureHashMod(int featureHashMod) {
@@ -440,6 +442,10 @@ public class ObsFeatureConjoiner implements Serializable {
 
     public int getFeatIndex(int t, int c, int feat) {
         return indices[t][c][feat];
+    }
+    
+    public boolean isIncluded(int t, int c, int feat) {
+        return included[t][c][feat];
     }
     
 }
