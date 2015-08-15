@@ -146,7 +146,7 @@ public class FgModel implements Serializable, IFgModel {
             iter = paramNames.iterator();
         }
         for (int i=0; i<numParams; i++) {
-            if (paramNames != null) {
+            if (paramNames != null && iter.hasNext()) {
                 writer.write(iter.next());
             } else {
                 writer.write(String.format("%d", i));

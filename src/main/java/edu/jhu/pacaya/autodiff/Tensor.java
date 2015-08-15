@@ -1,5 +1,6 @@
 package edu.jhu.pacaya.autodiff;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -13,8 +14,9 @@ import edu.jhu.prim.util.Lambda;
  * 
  * @author mgormley
  */
-public class Tensor implements MVec {
+public class Tensor implements MVec, Serializable {
 
+    private static final long serialVersionUID = 1L;
     protected int[] dims;
     protected int[] strides;
     protected double[] values;

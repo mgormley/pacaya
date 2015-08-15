@@ -168,6 +168,11 @@ public class ObsFeatureConjoiner implements Serializable {
         if (reservedMax > 0) {
             log.debug("Reserved {} parameters starting at {}", reservedMax, reservedOffset);
         }
+        if (fcmAlphabet.size() > 0) { 
+            log.debug("FCM is using {} features", fcmAlphabet.size());
+        }
+        fcmAlphabet.stopGrowth();
+        
         // If we are using the feature hashing trick, we may want to further increase
         // the number of model parameters.
         numParams = Math.max(numParams, featureHashModMax);
@@ -440,7 +445,7 @@ public class ObsFeatureConjoiner implements Serializable {
         }
 
         private void skipNonIncluded() {
-            while (!included[iter.i][iter.j][iter.k]) {
+            while (hasNext && !included[iter.i][iter.j][iter.k]) {
                 hasNext = iter.next();
             }
         }

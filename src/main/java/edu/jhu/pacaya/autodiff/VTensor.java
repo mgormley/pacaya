@@ -1,11 +1,11 @@
 package edu.jhu.pacaya.autodiff;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -17,8 +17,9 @@ import edu.jhu.prim.vector.IntDoubleVector;
  * 
  * @author mgormley
  */
-public class VTensor implements MVec {
+public class VTensor implements MVec, Serializable {
 
+    private static final long serialVersionUID = 1L;
     protected int[] dims;
     protected int[] strides;
     protected IntDoubleVector values;
