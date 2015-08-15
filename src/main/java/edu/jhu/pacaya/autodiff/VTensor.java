@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
@@ -21,6 +22,7 @@ public class VTensor implements MVec {
     protected int[] dims;
     protected int[] strides;
     protected IntDoubleVector values;
+    protected final int offset;
     protected final int size;
     protected final Algebra s;
     
@@ -29,11 +31,7 @@ public class VTensor implements MVec {
      * @param dimensions The dimensions of this tensor.
      */
     public VTensor(Algebra s, int... dimensions) {
-        this.size = IntArrays.prod(dimensions);
-        this.dims = dimensions;
-        this.strides = getStrides(dims);
-        this.values = new IntDoubleDenseVector(size);
-        this.s = s;
+        this(s, 0, new IntDoubleDenseVector(IntArrays.prod(dimensions)), dimensions);
         fill(s.zero());
     }
 
@@ -41,9 +39,22 @@ public class VTensor implements MVec {
     public VTensor(VTensor other) {
         this.dims = IntArrays.copyOf(other.dims);
         this.strides = IntArrays.copyOf(other.strides);
+        this.offset = other.offset;
         this.values = other.values.copy();
         this.s = other.s;
         this.size = other.size;
+    }
+
+    /** Constructor which will be backed by the given values starting at offset. */
+    public VTensor(Algebra s, int offset, IntDoubleVector values, int... dimensions) {
+        // For now, we only support the reals because IntDoubleVector uses zero for missing entries.
+        if (!RealAlgebra.getInstance().equals(s)) { throw new IllegalArgumentException("Unsupported Algebra: " + s); }
+        this.size = IntArrays.prod(dimensions);
+        this.dims = dimensions;
+        this.strides = getStrides(dims);
+        this.offset = offset;
+        this.values = values;
+        this.s = s;
     }
     
     /* --------------------- Multi-Dimensional View --------------------- */
@@ -94,7 +105,7 @@ public class VTensor implements MVec {
         int c = getConfigIdx(indices);
         return values.set(c, s.minus(values.get(c), val));
     }
-
+    
     /** Convenience method for setting a value with a variable number of indices. */
     public double set(double val, int... indices) {
         return set(indices, val);
@@ -112,13 +123,17 @@ public class VTensor implements MVec {
     
     /** Gets the index into the values array that corresponds to the indices. */
     public int getConfigIdx(int... indices) {
-        int c = 0;
+        int c = offset;
         for (int i=0; i<indices.length; i++) {
             c += strides[i] * indices[i];
         }
         return c;
     }
 
+    private int get1dConfigIdx(int idx) {
+        return offset + idx;
+    }
+    
     /**
      * Gets the strides for the given dimensions. The stride for dimension i
      * (stride[i]) denotes the step forward in values array necessary to
@@ -144,7 +159,7 @@ public class VTensor implements MVec {
                     indices.length, dims.length));
         }
         for (int i=0; i<indices.length; i++) {
-            if (indices[i] >= dims[i]) {
+            if (indices[i] < 0 || dims[i] <= indices[i]) {
                 throw new IllegalArgumentException(String.format(
                         "Indices array contains an index that is out of bounds: i=%d index=%d", 
                         i, indices[i]));
@@ -158,42 +173,46 @@ public class VTensor implements MVec {
      * Gets the value of the idx'th entry.
      */
     public double getValue(int idx) {
-        return values.get(idx);
+        return values.get(get1dConfigIdx(idx));
     }
 
     /** 
      * Sets the value of the idx'th entry.
      */
     public double setValue(int idx, double val) {
-        return values.set(idx, val);
+        return values.set(get1dConfigIdx(idx), val);
     }
 
     /** 
      * Adds the value to the idx'th entry.
      */
     public void addValue(int idx, double val) {
-        values.set(idx, s.plus(values.get(idx), val)); 
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.plus(values.get(c), val)); 
     }
 
     /** 
      * Subtracts the value from the idx'th entry.
      */
     public void subtractValue(int idx, double val) {
-        values.set(idx, s.minus(values.get(idx), val));
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.minus(values.get(c), val));
     }
 
     /** 
      * Multiplies the value with the idx'th entry.
      */
     public void multiplyValue(int idx, double val) {
-        values.set(idx, s.times(values.get(idx), val));
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.times(values.get(c), val));
     }
 
     /** 
      * Divides the value from the idx'th entry.
      */
     public void divideValue(int idx, double val) {
-        values.set(idx, s.divide(values.get(idx), val));
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.divide(values.get(c), val));
     }
     
     /* --------------------- Scalar Operations --------------------- */
@@ -529,10 +548,10 @@ public class VTensor implements MVec {
             return false;
         if (!t1.s.equals(t2.s))
             return false;
-        if (t1.size != t2.size)
+        if (t1.size() != t2.size())
             return false;
-        for (int i=0; i<t1.size; i++) {
-            if (!t1.s.eq(t1.values.get(i), t2.values.get(i), delta))
+        for (int i=0; i<t1.size(); i++) {
+            if (!t1.s.eq(t1.getValue(i), t2.getValue(i), delta))
                 return false;
         }
         return true;

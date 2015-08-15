@@ -13,18 +13,20 @@ import edu.jhu.pacaya.util.semiring.Algebras;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.LogSignAlgebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 
 public class VTensorTest {
 
     private Algebra s = RealAlgebra.getInstance();
 
+    private List<RealAlgebra> supported = QLists.getList(RealAlgebra.getInstance());
     private List<Algebra> two = QLists.getList(RealAlgebra.getInstance(), LogSignAlgebra.getInstance());
     private List<Algebra> three = QLists.getList(RealAlgebra.getInstance(), LogSemiring.getInstance(), LogSignAlgebra.getInstance());
     
     @Test
     public void testInitializedToZeros() {
-        for (Algebra s : three) {
+        for (Algebra s : supported) {
             VTensor t1 = new VTensor(s, 2,3,5);
             assertEquals(s.zero(), t1.get(1,1,1), 1e-13);
         }
@@ -32,13 +34,20 @@ public class VTensorTest {
     
     @Test
     public void testGetSetAddSubWithIndices() {
-        testGetSetAddSubWithIndices(RealAlgebra.getInstance());
-        testGetSetAddSubWithIndices(LogSignAlgebra.getInstance());
-        testGetSetAddSubWithIndices(LogSemiring.getInstance());
+        int offset;
+        offset = 0;
+        testGetSetAddSubWithIndices(RealAlgebra.getInstance(), offset);
+        // Not supported: testGetSetAddSubWithIndices(LogSignAlgebra.getInstance(), offset);
+        // Not supported: testGetSetAddSubWithIndices(LogSemiring.getInstance(), offset);
+        offset = 3;
+        testGetSetAddSubWithIndices(RealAlgebra.getInstance(), offset);
+        // Not supported: testGetSetAddSubWithIndices(LogSignAlgebra.getInstance(), offset);
+        // Not supported: testGetSetAddSubWithIndices(LogSemiring.getInstance(), offset);
     }
     
-    private void testGetSetAddSubWithIndices(Algebra s) {
-        VTensor t1 = new VTensor(s, 2,3,5);
+    private void testGetSetAddSubWithIndices(Algebra s, int offset) {
+        VTensor t1 = (offset == 0) ? new VTensor(s, 2,3,5) : new VTensor(s, offset, new IntDoubleSortedVector(), 2,3,5);
+
         // Test set.
         double val;
         val = 0;
@@ -98,13 +107,19 @@ public class VTensorTest {
     
     @Test
     public void testValueOperations() {
-        testValueOperations(RealAlgebra.getInstance());
-        testValueOperations(LogSignAlgebra.getInstance());
-        testValueOperations(LogSemiring.getInstance());
+        int offset;
+        offset = 0;
+        testValueOperations(RealAlgebra.getInstance(), offset);
+        // Not supported: testValueOperations(LogSignAlgebra.getInstance(), offset);
+        // Not supported: testValueOperations(LogSemiring.getInstance(), offset);
+        offset = 3;
+        testValueOperations(RealAlgebra.getInstance(), offset);
+        // Not supported: testValueOperations(LogSignAlgebra.getInstance(), offset);
+        // Not supported: testValueOperations(LogSemiring.getInstance(), offset);
     }
-    
-    private void testValueOperations(Algebra s) {
-        VTensor f1 = new VTensor(s, 2);
+
+    private void testValueOperations(Algebra s, int offset) {
+        VTensor f1 = (offset == 0) ? new VTensor(s, 2) : new VTensor(s, offset, new IntDoubleSortedVector(), 2);
         f1.setValue(0, s.fromReal(0));
         f1.setValue(1, s.fromReal(1));
         
@@ -125,14 +140,20 @@ public class VTensorTest {
 
     @Test
     public void testFactorAddIdentical() {   
-        testFactorAddIdentical(RealAlgebra.getInstance());
-        testFactorAddIdentical(LogSignAlgebra.getInstance());
-        testFactorAddIdentical(LogSemiring.getInstance());
+        int offset;
+        offset = 0;
+        testFactorAddIdentical(RealAlgebra.getInstance(), offset);
+        // Not supported: testFactorAddIdentical(LogSignAlgebra.getInstance(), offset);
+        // Not supported: testFactorAddIdentical(LogSemiring.getInstance(), offset);
+        offset = 3;
+        testFactorAddIdentical(RealAlgebra.getInstance(), offset);
+        // Not supported: testFactorAddIdentical(LogSignAlgebra.getInstance(), offset);
+        // Not supported: testFactorAddIdentical(LogSemiring.getInstance(), offset);
     }
     
-    private void testFactorAddIdentical(Algebra s) {   
+    private void testFactorAddIdentical(Algebra s, int offset) {   
         // Test where vars1 is identical to vars2.
-        VTensor f1 = new VTensor(s, 2, 3);
+        VTensor f1 = (offset == 0) ? new VTensor(s, 2, 3) : new VTensor(s, offset, new IntDoubleSortedVector(), 2, 3);
         f1.fill(s.fromReal(1));
         f1.setValue(2, s.fromReal(2));
         f1.setValue(3, s.fromReal(3));
@@ -155,7 +176,7 @@ public class VTensorTest {
     
     @Test
     public void testDotProduct() {
-        for (Algebra s : two) {
+        for (Algebra s : supported) {
             VTensor t1 = VTensorUtils.getVectorFromValues(s, s.fromReal(2), s.fromReal(3), s.fromReal(5));
             VTensor t2 = VTensorUtils.getVectorFromValues(s, s.fromReal(-4), s.fromReal(6), s.fromReal(7));
             assertEquals(s.fromReal(2*-4 + 3*6 + 5*7), t1.getDotProduct(t2), 1e-13);
