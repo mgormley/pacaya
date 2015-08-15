@@ -80,6 +80,12 @@ public class ObsFeatureConjoiner implements Serializable {
     private FeatureNames feAlphabet;
     /** Maximum feature-hashing trick modulo value in use. */
     private int featureHashModMax = 0;
+    /** Maximum reserved parameters requested. */
+    private int reservedMax = 0;
+    /** Offset of the reserved parameters section. */
+    private int reservedOffset = -1;
+    /** FCM alphabet. Does not directly impact the parameter number. */
+    public FeatureNames fcmAlphabet = new FeatureNames();
     
     private ObsFeatureConjoinerPrm prm;
     
@@ -105,7 +111,7 @@ public class ObsFeatureConjoiner implements Serializable {
             extractAllFeats(data, templates);
             templates.stopGrowth();
             feAlphabet.stopGrowth();
-        }        
+        }
         numTemplates = templates.size();
         
         // Apply a feature count cutoff.
@@ -126,7 +132,6 @@ public class ObsFeatureConjoiner implements Serializable {
             excludeByFeatCount(counts);
         }
         
-      
         // Always include the bias features.
         for (int t=0; t<included.length; t++) {
             FactorTemplate template = templates.get(t);
@@ -156,6 +161,8 @@ public class ObsFeatureConjoiner implements Serializable {
                 }
             }
         }
+        reservedOffset = numParams;
+        numParams += reservedMax;
         // If we are using the feature hashing trick, we may want to further increase
         // the number of model parameters.
         numParams = Math.max(numParams, featureHashModMax);
@@ -163,7 +170,7 @@ public class ObsFeatureConjoiner implements Serializable {
         initialized = true;
     }
 
-    private static class NoOpInferencer implements FgInferencer {
+    public static class NoOpInferencer implements FgInferencer {
 
         private FactorGraph fg;
         
@@ -335,6 +342,14 @@ public class ObsFeatureConjoiner implements Serializable {
         return feAlphabet;
     }
 
+    public void requestReserved(int reserved) {
+        this.reservedMax = Math.max(this.reservedMax, reserved);
+    }
+    
+    public int getReservedOffset() {
+        return reservedOffset;
+    }
+    
     public void takeNoteOfFeatureHashMod(int featureHashMod) {
         this.featureHashModMax = Math.max(featureHashModMax, featureHashMod);
     }
