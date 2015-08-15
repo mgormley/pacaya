@@ -3,6 +3,7 @@ package edu.jhu.pacaya.gm.feat;
 import java.io.Serializable;
 
 import edu.jhu.pacaya.gm.data.UFgExample;
+import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.util.FeatureNames;
 import edu.jhu.prim.map.IntDoubleEntry;
 
@@ -21,8 +22,14 @@ public class ObsFeatureCache implements ObsFeatureExtractor, Serializable {
 
     @Override
     public void init(UFgExample ex, FactorTemplateList fts) {
-        this.feats = new FeatureVector[ex.getFactorGraph().getNumFactors()];
+        FactorGraph fg = ex.getFactorGraph();
         this.featExtractor.init(ex, fts);
+        init(fg);
+    }
+
+    @Deprecated
+    public void init(FactorGraph fg) {
+        this.feats = new FeatureVector[fg.getNumFactors()];
     }
 
     /** Gets the feature vector for the specified factor and config. */
