@@ -129,6 +129,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         @Override
         public VarTensor forward() {
             f.updateFromModel(modIn.getOutput().getModel());
+            // This call to safeNewVarTensor correctly handles the semiring conversion and the exp().
             y = BruteForceInferencer.safeNewVarTensor(s, f);
             return y;
         }
