@@ -89,6 +89,8 @@ public class ObsFeatureConjoiner implements Serializable {
     
     private ObsFeatureConjoinerPrm prm;
     
+    public Object embeddings; // TODO: Remove this hack.
+    
     public ObsFeatureConjoiner(ObsFeatureConjoinerPrm prm, FactorTemplateList fts) {
         this.prm = prm;
         initialized = false;
@@ -163,6 +165,9 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         reservedOffset = numParams;
         numParams += reservedMax;
+        if (reservedMax > 0) {
+            log.debug("Reserved {} parameters starting at {}", reservedMax, reservedOffset);
+        }
         // If we are using the feature hashing trick, we may want to further increase
         // the number of model parameters.
         numParams = Math.max(numParams, featureHashModMax);
