@@ -3,6 +3,7 @@ package edu.jhu.pacaya.gm.data;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class LibDaiFgIo {
     private static final Pattern whitespace = Pattern.compile("\\s+");
     
     public static FactorGraph read(Path file) {
-        try (BufferedReader in = Files.newBufferedReader(file)) { 
+        try (BufferedReader in = Files.newBufferedReader(file, Charset.forName("UTF-8"))) { 
             return read(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -164,7 +165,7 @@ public class LibDaiFgIo {
     }
 
     public static void write(FactorGraph fg, Path file) {
-        try (BufferedWriter out = Files.newBufferedWriter(file)) {
+        try (BufferedWriter out = Files.newBufferedWriter(file, Charset.forName("UTF-8"))) {
             write(fg, out);    
         } catch (IOException e) {
             throw new RuntimeException(e);
