@@ -43,7 +43,7 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
     }
 
     /**
-     * Forward pass: y = \sum_{x_i} (b(x_i) - b*(x_i))^2 , where b*(x_i) are the marginals given by
+     * Forward pass: y = \sum_i \sum_{x_i} (b(x_i) - b*(x_i))^2 , where b*(x_i) are the marginals given by
      * taking the gold variable assignment as a point mass distribution. Note the sum is over all
      * variable assignments to the predicted variables.
      */
@@ -70,7 +70,7 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
     /** 
      * Backward pass: 
      * 
-     * Expanding the square, we get y = \sum_{x_i} b(x_i)^2 - 2b(x_i)b*(x_i) + b*(x_i)^2
+     * Expanding the square, we get y = \sum_i \sum_{x_i} b(x_i)^2 - 2b(x_i)b*(x_i) + b*(x_i)^2
      * 
      * dG/db(x_i) = dG/dy dy/db(x_i) = dG/dy 2(b(x_i) - b*(x_i)), \forall x_i. 
      */
