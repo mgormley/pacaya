@@ -8,6 +8,8 @@ public class ObsFeExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCa
     
     private static final long serialVersionUID = 1L;
     private ObsFeatureExtractor obsFe;
+    // Features cache.
+    private FeatureVector feats;
     
     public ObsFeExpFamFactor(VarSet vars, Object templateKey, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
         super(vars, templateKey, ofc);
@@ -16,7 +18,10 @@ public class ObsFeExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCa
     
     @Override
     public FeatureVector getObsFeatures() {
-        return this.obsFe.calcObsFeatureVector(this);
+        if (feats == null) {
+            feats = this.obsFe.calcObsFeatureVector(this);
+        }
+        return feats;
     }
     
 }

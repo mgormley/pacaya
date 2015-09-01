@@ -54,7 +54,7 @@ public class MarginalLogLikelihoodTest {
         
         // Create the training examples.         
         FgExampleMemoryStore exs = new FgExampleMemoryStore();
-        exs.add(new LabeledFgExample(fg, trainConfig, obsFe, fts));
+        exs.add(new LabeledFgExample(fg, trainConfig, fts));
         ofc.init(exs);
         
         // Create the Model.
@@ -180,7 +180,7 @@ public class MarginalLogLikelihoodTest {
             ObsFeatureConjoiner ofc, SimpleVCObsFeatureExtractor obsFe, double alpha, double beta) {
         // Create the training examples (only to initialize ofc).         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fgv.fg, fgv.goldConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, fgv.goldConfig, fts));
         ofc.init(data);
                 
         FgModel model = new FgModel(ofc.getNumParams());

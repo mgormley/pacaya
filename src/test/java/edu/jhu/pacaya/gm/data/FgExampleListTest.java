@@ -6,7 +6,6 @@ import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.VarConfig;
-import edu.jhu.pacaya.gm.train.SimpleVCObsFeatureExtractor;
 
 public class FgExampleListTest {
 
@@ -19,7 +18,7 @@ public class FgExampleListTest {
         }
         
         FactorTemplateList fts = new FactorTemplateList();
-        LFgExample ex = new LabeledFgExample(fg, vc, new SimpleVCObsFeatureExtractor(fts), fts);
+        LFgExample ex = new LabeledFgExample(fg, vc, fts);
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         data.add(ex);
         

@@ -143,7 +143,7 @@ public class CrfTrainerTest {
 
         // Create a set of examples, consisting of ONLY ONE example.
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
 
@@ -198,7 +198,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -258,7 +258,7 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[1][0], "A2");   
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});

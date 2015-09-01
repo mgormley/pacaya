@@ -13,15 +13,21 @@ public class FeExpFamFactor extends ExpFamFactor {
 
     private static final long serialVersionUID = 1L;
     private FeatureExtractor fe;
-    
+    // Feature cache.
+    private FeatureVector[] features;
+
     public FeExpFamFactor(VarSet vars, FeatureExtractor fe) {
         super(vars);
         this.fe = fe;
+        features = new FeatureVector[vars.calcNumConfigs()];
     }
 
     @Override
     public FeatureVector getFeatures(int configId) {
-        return fe.calcFeatureVector(this, configId);
+        if (features[configId] == null) {
+            features[configId] = fe.calcFeatureVector(this, configId);
+        }
+        return features[configId];
     }
     
 }

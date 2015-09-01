@@ -1,19 +1,10 @@
 package edu.jhu.pacaya.gm.feat;
 
-import edu.jhu.pacaya.gm.data.UFgExample;
 import edu.jhu.pacaya.gm.model.FeExpFamFactor;
 
 
 
 public interface FeatureExtractor {
-
-    /**
-     * Initializes the feature extractor. This method must be called exactly
-     * once before any calls to calcObsFeatureVector are made.
-     * 
-     * @param ex The factor graph example.
-     */
-    void init(UFgExample ex);
 
     /**
      * Creates the feature vector for the specified factor, given the
