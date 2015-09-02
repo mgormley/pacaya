@@ -89,6 +89,7 @@ public class ObsFeatureConjoiner implements Serializable {
     
     private ObsFeatureConjoinerPrm prm;
     
+    // HACK: This treats the OFC as a submodel for NLP factors needing embeddings.
     public Object embeddings; // TODO: Remove this hack.
     
     public ObsFeatureConjoiner(ObsFeatureConjoinerPrm prm, FactorTemplateList fts) {
