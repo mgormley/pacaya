@@ -360,6 +360,10 @@ public class ObsFeatureConjoiner implements Serializable {
     public int getReservedOffset() {
         return reservedOffset;
     }
+
+    public int getReservedMax() {
+        return reservedMax;
+    }
     
     public void takeNoteOfFeatureHashMod(int featureHashMod) {
         this.featureHashModMax = Math.max(featureHashModMax, featureHashMod);
