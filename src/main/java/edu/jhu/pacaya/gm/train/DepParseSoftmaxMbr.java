@@ -27,7 +27,7 @@ public class DepParseSoftmaxMbr extends TopoOrder<Tensor> implements Module<Tens
      * This factory defines the decoder / loss module as non-stationary: the softmax parameter on
      * the MBR decoder is annealed linearly from a starting temperature to a small epsilon.
      * 
-     * Optionally, this loss function can be annealed from MSE to softmax MBR with expected recall.
+     * Optionally, this loss function can be annealed from L2DIST to softmax MBR with expected recall.
      */
     public static class DepParseSoftmaxMbrFactory implements DlFactory {
         public double startTemp = 10;

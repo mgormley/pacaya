@@ -24,7 +24,7 @@ import edu.jhu.pacaya.util.collections.QLists;
 public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor> {
     
     /** Factory for L2 distance loss without a decoder. */
-    public static class MeanSquaredErrorFactory implements DlFactory {
+    public static class L2DistanceFactory implements DlFactory {
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             return new L2Distance(inf, goldConfig);
@@ -62,6 +62,9 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
                     l2dist = s.plus(l2dist, s.times(diff, diff));
                 }
             }
+        }
+        if (s.lt(l2dist, s.zero())) {
+            log.warn("L2 distance shouldn't be less than 0: " + l2dist);
         }
         y = Tensor.getScalarTensor(s, l2dist);
         return y;        
