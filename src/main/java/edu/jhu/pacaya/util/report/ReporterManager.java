@@ -16,6 +16,7 @@ public class ReporterManager {
     private static Map<Class<?>,Reporter> reps = new HashMap<>();
     private static StreamReporter wr;
     private static boolean useLog4j;
+    private static boolean initialized = false;
     
     private ReporterManager() { }
     
@@ -31,20 +32,28 @@ public class ReporterManager {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+        initialized = true;
+        // Update reporters that were created before initialization.
+        for (Class<?> clazz : reps.keySet()) {
+            InitReporter rl = (InitReporter) reps.get(clazz);
+            rl.set(getReporter(clazz));
+        }
+        reps = null;
     }
     
     public static Reporter getReporter(Class<?> clazz) {
-        Reporter r = reps.get(clazz);
-        if (r == null) {
-            if (useLog4j && wr != null) {
-                r = new ReporterList(new Log4jReporter(clazz), wr);
-            } else if (useLog4j && wr == null) {
-                r = new Log4jReporter(clazz);
-            } else if (!useLog4j && wr != null) {
-                r = wr;
-            } else {
-                r = new ReporterList();
-            }
+        Reporter r;
+        if (!initialized) {
+            r = new InitReporter();
+            reps.put(clazz, r);
+        } else if (useLog4j && wr != null) {
+            r = new ReporterList(new Log4jReporter(clazz), wr);
+        } else if (useLog4j && wr == null) {
+            r = new Log4jReporter(clazz);
+        } else if (!useLog4j && wr != null) {
+            r = wr;
+        } else {
+            r = new ReporterList();
         }
         return r;
     }
