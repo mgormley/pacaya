@@ -192,8 +192,8 @@ public class ParentsArray {
      * @param parent The parent for which the children should be  extracted.
      * @return The indices of the children.
      */
-    public static ArrayList<Integer> getChildrenOf(int[] parents, int parent) {
-        ArrayList<Integer> children = new ArrayList<Integer>();
+    public static IntArrayList getChildrenOf(int[] parents, int parent) {
+        IntArrayList children = new IntArrayList();
         for (int i=0; i<parents.length; i++) {
             if (parents[i] == parent) {
                 children.add(i);

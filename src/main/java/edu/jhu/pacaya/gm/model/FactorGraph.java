@@ -23,7 +23,6 @@ import edu.jhu.prim.list.IntArrayList;
  * @author mgormley
  * 
  */
-// TODO: implements BipartiteGraph<Factor,Var> 
 public class FactorGraph implements Serializable {
     
     private static final long serialVersionUID = 1L;
