@@ -66,7 +66,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         /** Minimum number of neighbors for a variable to compute messages by dividing out from a cached belief. */
         public int minVarNbsForCache = Integer.MAX_VALUE; // TODO: Use this.
         /** Minimum number of neighbors for a factor   to compute messages by dividing out from a cached belief. */
-        public int minFacNbsForCache = Integer.MAX_VALUE; // TODO: This might still be buggy.
+        public int minFacNbsForCache = Integer.MAX_VALUE; // TODO: This is currently disabled because it might still be buggy.
         
         public BeliefPropagationPrm() {
         }
@@ -93,11 +93,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         TREE_LIKE,
         /** Send messages in a random order. */
         RANDOM,
-        /**
-         * FOR TESTING ONLY: Schedule with only edges, so that no global factor dynamic programming
-         * algorithms are ever called.
-         */
-        NO_GLOBAL_FACTORS,
     }
     
     public enum BpUpdateOrder {
@@ -187,8 +182,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
                 sch = new BfsMpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
                 sch = new RandomMpSchedule(fg);
-            } else if (prm.schedule == BpScheduleType.NO_GLOBAL_FACTORS) {
-                sch = new NoGlobalFactorsMpSchedule(fg);
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }

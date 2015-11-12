@@ -37,6 +37,14 @@ public class TopoOrder<Y extends MVec> implements Module<Y> {
         this(inputsList, root, name, true);
     }
 
+    /**
+     * Detailed constructor.
+     * 
+     * @param inputsList Leaf modules that are excluded along with their descendents
+     * @param root Root module
+     * @param name Name of this module
+     * @param checkFullCut Whether to check that inputs form a full cut through the DAG below the root
+     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public TopoOrder(List<? extends Module<?>> inputsList, Module<Y> root, String name, boolean checkFullCut) {
         HashSet inputs = new HashSet(inputsList);

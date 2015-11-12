@@ -7,6 +7,8 @@ import edu.jhu.pacaya.gm.model.ExplicitFactor;
  * 
  * TODO: Implement AutodiffFactor.
  * 
+ * @see GlobalExplicitFactor
+ * 
  * @author mgormley
  */
 public class ExplicitGlobalFactor extends ExplicitFactor {
