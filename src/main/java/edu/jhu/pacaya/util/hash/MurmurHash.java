@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
  * Public domain.
  * 
  * @author Viliam Holub
+ * @author Matt Gormley (extended to a variety of other input types)
  * @version 1.0.2
  * 
  * FROM: https://github.com/tnm/murmurhash-java
@@ -35,7 +36,7 @@ public final class MurmurHash {
 
     /** My conversion of MurmurHash to take a long as input. */
     public static int hash32(final long data, int seed) {
-     // 'm' and 'r' are mixing constants generated offline.
+        // 'm' and 'r' are mixing constants generated offline.
         // They're not really 'magic', they just happen to work well.
         final int m = 0x5bd1e995;
         final int r = 24;
@@ -45,7 +46,7 @@ public final class MurmurHash {
         int h = seed^length;
 
         for (int i=0; i<2; i++) {
-            int k = (i==0) ? (int) (data & 0xffffffffl) : (int) ((data >>> 32) & 0xffffffffl);
+            int k = (i==0) ? (int) (data & 0xffffffffL) : (int) ((data >>> 32) & 0xffffffffL);
             k *= m;
             k ^= k >>> r;
             k *= m;
