@@ -62,12 +62,12 @@ public class ObsFeatureConjoiner implements Serializable {
      * The model parameters indices. Indexed by feature template index, variable
      * assignment config index, and observation function feature index.
      */
-    int[][][] indices;
+    private int[][][] indices;
     /**
      * Whether or not the correspondingly indexed model parameter is included in
      * this model.
      */
-    boolean[][][] included;
+    private boolean[][][] included;
     /** The number of feature templates. */
     private int numTemplates;
     /** The number of parameters in the model. */
@@ -80,8 +80,17 @@ public class ObsFeatureConjoiner implements Serializable {
     private FeatureNames feAlphabet;
     /** Maximum feature-hashing trick modulo value in use. */
     private int featureHashModMax = 0;
+    /** Maximum reserved parameters requested. */
+    private int reservedMax = 0;
+    /** Offset of the reserved parameters section. */
+    private int reservedOffset = -1;
+    /** FCM alphabet. Does not directly impact the parameter number. */
+    public FeatureNames fcmAlphabet = new FeatureNames();
     
     private ObsFeatureConjoinerPrm prm;
+    
+    // HACK: This treats the OFC as a submodel for NLP factors needing embeddings.
+    public Object embeddings; // TODO: Remove this hack.
     
     public ObsFeatureConjoiner(ObsFeatureConjoinerPrm prm, FactorTemplateList fts) {
         this.prm = prm;
@@ -105,7 +114,7 @@ public class ObsFeatureConjoiner implements Serializable {
             extractAllFeats(data, templates);
             templates.stopGrowth();
             feAlphabet.stopGrowth();
-        }        
+        }
         numTemplates = templates.size();
         
         // Apply a feature count cutoff.
@@ -126,7 +135,6 @@ public class ObsFeatureConjoiner implements Serializable {
             excludeByFeatCount(counts);
         }
         
-      
         // Always include the bias features.
         for (int t=0; t<included.length; t++) {
             FactorTemplate template = templates.get(t);
@@ -156,6 +164,16 @@ public class ObsFeatureConjoiner implements Serializable {
                 }
             }
         }
+        reservedOffset = numParams;
+        numParams += reservedMax;
+        if (reservedMax > 0) {
+            log.debug("Reserved {} parameters starting at {}", reservedMax, reservedOffset);
+        }
+        if (fcmAlphabet.size() > 0) { 
+            log.debug("FCM is using {} features", fcmAlphabet.size());
+        }
+        fcmAlphabet.stopGrowth();
+        
         // If we are using the feature hashing trick, we may want to further increase
         // the number of model parameters.
         numParams = Math.max(numParams, featureHashModMax);
@@ -163,7 +181,7 @@ public class ObsFeatureConjoiner implements Serializable {
         initialized = true;
     }
 
-    private static class NoOpInferencer implements FgInferencer {
+    public static class NoOpInferencer implements FgInferencer {
 
         private FactorGraph fg;
         
@@ -309,30 +327,44 @@ public class ObsFeatureConjoiner implements Serializable {
         }
     }
         
+    // TODO: Remove these unused methods.
+//
+//    public int getNumTemplates() {
+//        return indices.length;
+//    }
+//
+//    public int getNumConfigs(int ft) {
+//        return indices[ft].length;
+//    }
+//
+//    public int getNumFeats(int ft, int c) {
+//        return indices[ft][c].length;
+//    }
+//    
+//    public int getFeatureHashModMax() {
+//        return featureHashModMax;
+//    }
+    
     public int getNumParams() {
         return numParams;
-    }
-
-    public int getNumTemplates() {
-        return indices.length;
-    }
-
-    public int getNumConfigs(int ft) {
-        return indices[ft].length;
-    }
-
-    public int getNumFeats(int ft, int c) {
-        return indices[ft][c].length;
     }
     
     public FeatureNames getFeAlphabet() {
         return feAlphabet;
     }
+
+    public void requestReserved(int reserved) {
+        this.reservedMax = Math.max(this.reservedMax, reserved);
+    }
     
-    public int getFeatureHashModMax() {
-        return featureHashModMax;
+    public int getReservedOffset() {
+        return reservedOffset;
     }
 
+    public int getReservedMax() {
+        return reservedMax;
+    }
+    
     public void takeNoteOfFeatureHashMod(int featureHashMod) {
         this.featureHashModMax = Math.max(featureHashModMax, featureHashMod);
     }
@@ -418,7 +450,7 @@ public class ObsFeatureConjoiner implements Serializable {
         }
 
         private void skipNonIncluded() {
-            while (!included[iter.i][iter.j][iter.k]) {
+            while (hasNext && !included[iter.i][iter.j][iter.k]) {
                 hasNext = iter.next();
             }
         }
@@ -440,6 +472,10 @@ public class ObsFeatureConjoiner implements Serializable {
 
     public int getFeatIndex(int t, int c, int feat) {
         return indices[t][c][feat];
+    }
+    
+    public boolean isIncluded(int t, int c, int feat) {
+        return included[t][c][feat];
     }
     
 }

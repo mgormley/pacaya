@@ -18,18 +18,18 @@ import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactorTest.FgAndLinks;
-import edu.jhu.pacaya.gm.train.DepParseDecodeLoss.DepParseDecodeLossFactory;
+import edu.jhu.pacaya.gm.train.DepParseSoftmaxMbr.DepParseSoftmaxMbrFactory;
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
-public class DepParseDecodeLossTest {
+public class DepParseSoftmaxMbrTest {
 
     private Algebra s = RealAlgebra.getInstance();
 
     @Test
     public void testTemperatureLinearScale() {
         // Linear scaling.
-        DepParseDecodeLossFactory fac = new DepParseDecodeLossFactory();
+        DepParseSoftmaxMbrFactory fac = new DepParseSoftmaxMbrFactory();
         fac.annealMse = false;
         fac.startTemp = 100;
         fac.endTemp = 0.1;
@@ -46,7 +46,7 @@ public class DepParseDecodeLossTest {
     @Test
     public void testTemperatureLogScale() {
         // Linear scaling.
-        DepParseDecodeLossFactory fac = new DepParseDecodeLossFactory();
+        DepParseSoftmaxMbrFactory fac = new DepParseSoftmaxMbrFactory();
         fac.annealMse = false;
         fac.startTemp = 100;
         fac.endTemp = 0.1;
@@ -90,14 +90,14 @@ public class DepParseDecodeLossTest {
         
         Identity<Beliefs> id1 = new Identity<Beliefs>(b);
         Identity<Tensor> temp = new Identity<Tensor>(Tensor.getScalarTensor(s, 3));
-        DepParseDecodeLoss dl = new DepParseDecodeLoss(id1, goldConfig, temp);
+        DepParseSoftmaxMbr dl = new DepParseSoftmaxMbr(id1, goldConfig, temp);
         
         ModuleTestUtils.assertGradientCorrectByFd(dl, 1e-8, 1e-5);      
         
         // testGradByFiniteDiffsAllSemirings
         TwoToOneFactory<Beliefs,Tensor,Tensor> fact = new TwoToOneFactory<Beliefs,Tensor,Tensor>() {
             public Module<Tensor> getModule(Module<Beliefs> m1, Module<Tensor> m2) {
-                return new DepParseDecodeLoss(m1, goldConfig, m2);
+                return new DepParseSoftmaxMbr(m1, goldConfig, m2);
             }
         };        
         AbstractModuleTest.evalTwoToOneByFiniteDiffsAbs(fact, id1, temp);

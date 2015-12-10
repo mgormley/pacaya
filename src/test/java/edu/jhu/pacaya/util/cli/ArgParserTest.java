@@ -250,4 +250,23 @@ public class ArgParserTest {
         Assert.assertEquals("1", io.strValI);
     }
     
+
+    public static class InstanceOpts1 {
+        @Opt(hasArg = true, description = "my intVal")
+        public int collidingName = 1;
+    }
+    public static class InstanceOpts2 {
+        @Opt(hasArg = true, description = "my intVal")
+        public int collidingName = 1;
+    }
+    
+    @Test(expected=RuntimeException.class)
+    public void testSameNameForArgs() throws ParseException {
+        ArgParser parser = new ArgParser(InstanceOpts.class, true);
+        parser.registerClass(InstanceOpts1.class);
+        parser.registerClass(InstanceOpts2.class); // This should throw the exception.
+        //String[] args = "--collidingName=1".split(" ");
+        //parser.parseArgs(args);
+    }
+    
 }

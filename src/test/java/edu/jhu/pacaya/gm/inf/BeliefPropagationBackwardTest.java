@@ -14,9 +14,9 @@ import edu.jhu.pacaya.autodiff.AbstractModuleTest.OneToOneFactory;
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.ModuleTestUtils;
 import edu.jhu.pacaya.autodiff.StochasticGradientApproximation;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.model.ExplicitFactor;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
@@ -175,7 +175,7 @@ public class BeliefPropagationBackwardTest {
             }
         };
         
-        AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm);
+        AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm, effm);
     }
     
     // TODO: This test is really slow: ~20 seconds.
@@ -259,44 +259,63 @@ public class BeliefPropagationBackwardTest {
     }
 
     // Tests that the adjoints for ErmaBp are equal when the global factor does and does NOT use its
-    // dynamic programming approach..
+    // dynamic programming approach.
+    // 
+    // Ignored because we don't have a way of cleanly comparing against
+    //
+    // TODO: This should also test a global factor which is an AutoDiffGlobalFactor.
+    @Ignore("Ignored because we don't have a way of cleanly comparing differently sized gradients")
     @Test
     public void testErmaGradient2WordGlobalFactorVsExplicit() {
-        boolean useExplicit = false;
-        FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(useExplicit, false, false);
-        final FactorGraph fg = fgl.fg;
-        
         // Inputs        
         FgModelIdentity modIn = new FgModelIdentity(new FgModel(0));
-        // The sampled values will be in the real semiring.
-        FactorsModule effm = new FactorsModule(modIn, fg, RealAlgebra.getInstance());
-        effm.forward();
         
-        // SEQUENTIAL TREE_LIKE
-        OneToOneFactory<Factors,Beliefs> fact1 = new OneToOneFactory<Factors,Beliefs>() {
-            public Module<Beliefs> getModule(Module<Factors> m1) {
-                BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
-                prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-                prm.schedule = BpScheduleType.TREE_LIKE;
-                prm.maxIterations = 100;
-                return new BeliefPropagation(fg, prm, m1);
-            }
-        };
+        OneToOneFactory<Factors,Beliefs> fact1, fact2;
+        FactorsModule effm1, effm2;
         
-        // SEQUENTIAL NO_GLOBAL_FACTORS
-        OneToOneFactory<Factors,Beliefs> fact2 = new OneToOneFactory<Factors,Beliefs>() {
-            public Module<Beliefs> getModule(Module<Factors> m1) {
-                BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
-                prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-                prm.schedule = BpScheduleType.NO_GLOBAL_FACTORS;
-                prm.maxIterations = 100;
-                return new BeliefPropagation(fg, prm, m1);
-            }
-        };
+        // With global factor.
+        {
+            boolean useExplicit = false;
+            FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(useExplicit, false, false);
+            final FactorGraph fg = fgl.fg;
+            // The sampled values will be in the real semiring.
+            effm1 = new FactorsModule(modIn, fg, RealAlgebra.getInstance());
+            effm1.forward();
+            
+            fact1 = new OneToOneFactory<Factors,Beliefs>() {
+                public Module<Beliefs> getModule(Module<Factors> m1) {
+                    BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
+                    prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+                    prm.schedule = BpScheduleType.TREE_LIKE;
+                    prm.maxIterations = 100;
+                    return new BeliefPropagation(fg, prm, m1);
+                }
+            };
+        }
         
-        AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm);
+        // With explicit factor.
+        {
+            boolean useExplicit = true;
+            FgAndLinks fgl = ProjDepTreeFactorTest.get2WordSentFgAndLinks(useExplicit, false, false);
+            final FactorGraph fg = fgl.fg;
+            // The sampled values will be in the real semiring.
+            effm2 = new FactorsModule(modIn, fg, RealAlgebra.getInstance());
+            effm2.forward();     
+            
+            fact2 = new OneToOneFactory<Factors,Beliefs>() {
+                public Module<Beliefs> getModule(Module<Factors> m1) {
+                    BeliefPropagationPrm prm = ExpectedRecallFn.getDefaultErmaBpPrm();
+                    prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+                    prm.schedule = BpScheduleType.TREE_LIKE;
+                    prm.maxIterations = 100;
+                    return new BeliefPropagation(fg, prm, m1);
+                }
+            };
+        }
+        
+        AbstractModuleTest.checkOneToOneEqualAdjointsAbs(fact1, fact2, effm1, effm2);
     }
-    
+        
     @Ignore("This test fails at the first assertion because the number of dimensions is different for the expilicit and dynamic programming functions.")
     @Test
     public void testErmaGradient2WordExplicitTreeFactor() {

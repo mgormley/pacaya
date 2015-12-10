@@ -64,29 +64,34 @@ public class Toposort {
      * @param inputs The input set which is excluded from the graph.
      * @param root The root of the graph.
      * @param deps Functional description of the graph's dependencies.
+     * @param isFullCut Whether the input set is a full cut of the graph.
      * @return The topological sort.
      */
     public static <T> List<T> toposort(List<T> inputs,
-            T root, final Deps<T> deps) {
+            T root, final Deps<T> deps, boolean isFullCut) {
         // Get inputs as a set.
         final HashSet<T> inputSet = new HashSet<T>(inputs);
         if (inputSet.size() != inputs.size()) {
             throw new IllegalStateException("Multiple copies of module in inputs list: " + inputs);
         }
-        return toposort(inputSet, root, deps);
+        return toposort(inputSet, root, deps, isFullCut);
     }
 
     /**
      * Gets a topological sort for the graph, where the depth-first search is cutoff by an input set.
      * 
-     * @param inputs The input set which is excluded from the graph.
+     * @param inputSet The input set which is excluded from the graph.
      * @param root The root of the graph.
      * @param deps Functional description of the graph's dependencies.
+     * @param isFullCut Whether the input set is a full cut of the graph.
      * @return The topological sort.
      */
-    public static <T> List<T> toposort(final Set<T> inputSet, T root, final Deps<T> deps) {
+    public static <T> List<T> toposort(final Set<T> inputSet, T root, final Deps<T> deps, boolean isFullCut) {
         // Check that inputs set is a valid set of leaves for the given output module.
-        checkIsValidLeafSet(inputSet, root, deps);        
+        checkAreDescendentsOf(inputSet, root, deps);
+        if (isFullCut) {
+            checkIsFullCut(inputSet, root, deps);
+        }
         Deps<T> cutoffDeps = getCutoffDeps(inputSet, deps);
         return Toposort.toposort(root, cutoffDeps);
     }
@@ -105,29 +110,30 @@ public class Toposort {
     }
 
     /**
-     * Checks that the given inputSet defines a valid leaf set for outMod. A valid leaf set must
-     * consist of only descendents of the output, and must define a full cut through the graph with
-     * outMod as root.
+     * Checks that the given inputSet consists of only descendents of the root.
      */
-    public static <T> void checkIsValidLeafSet(Set<T> inputSet, T root, Deps<T> deps) {
-        {
-            // Check that all modules in the input set are descendents of the output module.
-            HashSet<T> visited = new HashSet<T>();
-            dfs(root, visited, deps);
-            if (!visited.containsAll(inputSet)) {
-                throw new IllegalStateException("Input set contains modules which are not descendents of the output module: " + inputSet);
-            }
+    public static <T> void checkAreDescendentsOf(Set<T> inputSet, T root, Deps<T> deps) {
+        // Check that all modules in the input set are descendents of the output module.
+        HashSet<T> visited = new HashSet<T>();
+        dfs(root, visited, deps);
+        if (!visited.containsAll(inputSet)) {
+            throw new IllegalStateException("Input set contains modules which are not descendents of the output module: " + inputSet);
         }
-        {
-            // Check that the input set defines a full cut through the graph with outMod as root.
-            HashSet<T> visited = new HashSet<T>();        
-            // Mark the inputSet as visited. If it is a valid leaf set, then leaves will be empty upon
-            // completion of the DFS.
-            visited.addAll(inputSet);
-            HashSet<T> leaves = dfs(root, visited, deps);
-            if (leaves.size() != 0) {
-                throw new IllegalStateException("Input set is not a valid leaf set for the given output module. Extra leaves: " + leaves);
-            }
+    }
+
+
+    /**
+     * Checks that the given inputSet defines a full cut through the graph rooted at the given root.
+     */
+    public static <T> void checkIsFullCut(Set<T> inputSet, T root, Deps<T> deps) {
+        // Check that the input set defines a full cut through the graph with outMod as root.
+        HashSet<T> visited = new HashSet<T>();        
+        // Mark the inputSet as visited. If it is a valid leaf set, then leaves will be empty upon
+        // completion of the DFS.
+        visited.addAll(inputSet);
+        HashSet<T> leaves = dfs(root, visited, deps);
+        if (leaves.size() != 0) {
+            throw new IllegalStateException("Input set is not a valid leaf set for the given output module. Extra leaves: " + leaves);
         }
     }
 

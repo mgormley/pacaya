@@ -6,6 +6,7 @@ import edu.jhu.pacaya.gm.model.VarTensor;
 import edu.jhu.pacaya.util.semiring.Algebra;
 
 /** Struct for beliefs (i.e. approximate marginals) of a factor graph. */
+// TODO: Include partition function.
 public class Beliefs implements MVec {
     
     public VarTensor[] varBeliefs;

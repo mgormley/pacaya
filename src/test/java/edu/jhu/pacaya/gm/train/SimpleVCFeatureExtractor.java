@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 
+import edu.jhu.pacaya.gm.feat.FeatureExtractor;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.feat.SlowFeatureExtractor;
 import edu.jhu.pacaya.gm.model.FeExpFamFactor;
@@ -19,7 +20,7 @@ import edu.jhu.pacaya.util.FeatureNames;
  * 
  * @author mgormley
  */
-public class SimpleVCFeatureExtractor extends SlowFeatureExtractor {
+public class SimpleVCFeatureExtractor extends SlowFeatureExtractor implements FeatureExtractor {
 
     protected FeatureNames alphabet;
 

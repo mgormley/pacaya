@@ -1,5 +1,7 @@
 package edu.jhu.pacaya.util.hash;
 
+import java.nio.ByteBuffer;
+
 //package ie.ucd.murmur;
 
 /** 
@@ -15,6 +17,7 @@ package edu.jhu.pacaya.util.hash;
  * Public domain.
  * 
  * @author Viliam Holub
+ * @author Matt Gormley (extended to a variety of other input types)
  * @version 1.0.2
  * 
  * FROM: https://github.com/tnm/murmurhash-java
@@ -22,17 +25,18 @@ package edu.jhu.pacaya.util.hash;
  */
 public final class MurmurHash {
     
+    private static final int DEFAULT_SEED = 0x9747b28c;
+
     // all methods static; private constructor. 
     private MurmurHash() {}
 
-
     public static int hash32(final long data) {
-        return hash32(data, 0x9747b28c); 
+        return hash32(data, DEFAULT_SEED); 
     }
 
     /** My conversion of MurmurHash to take a long as input. */
     public static int hash32(final long data, int seed) {
-     // 'm' and 'r' are mixing constants generated offline.
+        // 'm' and 'r' are mixing constants generated offline.
         // They're not really 'magic', they just happen to work well.
         final int m = 0x5bd1e995;
         final int r = 24;
@@ -42,7 +46,7 @@ public final class MurmurHash {
         int h = seed^length;
 
         for (int i=0; i<2; i++) {
-            int k = (i==0) ? (int) (data & 0xffffffffl) : (int) ((data >>> 32) & 0xffffffffl);
+            int k = (i==0) ? (int) (data & 0xffffffffL) : (int) ((data >>> 32) & 0xffffffffL);
             k *= m;
             k ^= k >>> r;
             k *= m;
@@ -55,6 +59,60 @@ public final class MurmurHash {
         h ^= h >>> 15;
 
         return h;
+    }
+
+    public static int hash32(final long[] data, int length) {
+        return hash32(data, length, DEFAULT_SEED);
+    }
+    
+    public static int hash32(final long[] data, int length, int seed) {
+        byte[] bytes = toByteArray(data, length);
+        return hash32(bytes, bytes.length, seed);
+    }
+
+    public static byte[] toByteArray(final long[] data, int length) {
+        final int byteLength = length * 8;
+        ByteBuffer b = ByteBuffer.allocate(byteLength);
+        for (int i=0; i<length; i++) {
+            b.putLong(data[i]);
+        }
+        return b.array();
+    }
+
+    public static int hash32(final int[] data, int length) {
+        return hash32(data, length, DEFAULT_SEED);
+    }
+    
+    public static int hash32(final int[] data, int length, int seed) {
+        byte[] bytes = toByteArray(data, length);
+        return hash32(bytes, bytes.length, seed);
+    }
+
+    public static byte[] toByteArray(final int[] data, int length) {
+        final int byteLength = length * 4;
+        ByteBuffer b = ByteBuffer.allocate(byteLength);
+        for (int i=0; i<length; i++) {
+            b.putInt(data[i]);
+        }
+        return b.array();
+    }
+
+    public static int hash32(final short[] data, int length) {
+        return hash32(data, length, DEFAULT_SEED);
+    }
+    
+    public static int hash32(final short[] data, int length, int seed) {
+        byte[] bytes = toByteArray(data, length);
+        return hash32(bytes, bytes.length, seed);
+    }
+
+    public static byte[] toByteArray(final short[] data, int length) {
+        final int byteLength = length * 2;
+        ByteBuffer b = ByteBuffer.allocate(byteLength);
+        for (int i=0; i<length; i++) {
+            b.putShort(data[i]);
+        }
+        return b.array();
     }
     
     /** 

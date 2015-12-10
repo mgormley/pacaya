@@ -1,6 +1,7 @@
 package edu.jhu.pacaya.gm.train;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,11 +115,16 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
             // Note: this can occur if the graph is loopy because the
             // Bethe free energy has miss-estimated -log(Z) or because BP
             // has not yet converged.
-            log.warn("Log-likelihood for example should be <= 0: " + ll);
+            if (warnCount.incrementAndGet() <= 100) {
+                // This overprints when doing surrogate log-likelihood.
+                log.warn("Log-likelihood for example should be <= 0: {}", ll);
+            }
         }
         
         return y = Scalar.getInstance(s, ll);
     }
+    
+    private static AtomicInteger warnCount = new AtomicInteger(0);
 
     @Override
     public void backward() {
@@ -135,7 +141,7 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
                 ((GlobalFactor) f).addExpectedPartials(gradient, -1.0, inf, a);
             } else {
                 // Compute 1.0 minus the marginal distrubtion.
-                VarTensor marg = inf.getLogMarginalsForFactorId(a);
+                VarTensor marg = inf.getMarginalsForFactorId(a);
                 Tensor addend = marg.copyAndConvertAlgebra(tmpS);
                 addend.multiply(tmpS.fromReal(-1.0));
                 int facConfig = goldConfig.getConfigIndexOfSubset(marg.getVars());

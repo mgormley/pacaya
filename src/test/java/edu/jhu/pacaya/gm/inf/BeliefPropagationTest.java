@@ -118,7 +118,8 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
+        BeliefPropagation bp = getDefaultBpForAcyclic(s, fg);
+        bp.run();
 
         assertEqualMarginals(fg, bf, bp);
     }
@@ -173,10 +174,7 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 10;
-        prm.s = s;
-        prm.normalizeMessages = true;
+        BeliefPropagationPrm prm = getDefaultBpPrmLoopy(s);
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
@@ -186,6 +184,14 @@ public class BeliefPropagationTest {
         // and does not converge to the correct marginals. Hence we use a (very
         // high) tolerance of 2 to catch the partition function's value.
         assertEqualMarginals(fg, bf, bp, 2);
+    }
+
+    protected BeliefPropagationPrm getDefaultBpPrmLoopy(Algebra s) {
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 10;
+        prm.s = s;
+        prm.normalizeMessages = true;
+        return prm;
     }
     
     @Test
@@ -235,14 +241,21 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
 
-        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
+        BeliefPropagation bp = getDefaultBpForAcyclic(s, fg);
+        bp.run();
 
         BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);
                     
         assertEqualMarginals(fg, bf, bp);
     }
 
-    protected BeliefPropagation runDefaultBpForAcyclic(Algebra s, FactorGraph fg) {
+    protected BeliefPropagation getDefaultBpForAcyclic(Algebra s, FactorGraph fg) {
+        BeliefPropagationPrm prm = getDefaultBpPrmForAcyclic(s);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        return bp;
+    }
+
+    protected BeliefPropagationPrm getDefaultBpPrmForAcyclic(Algebra s) {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.s = s;
@@ -251,9 +264,7 @@ public class BeliefPropagationTest {
         // Don't normalize the messages, so that the partition function is the
         // same as in the brute force approach.
         prm.normalizeMessages = false;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
-        return bp;
+        return prm;
     }
     
     @Test
@@ -305,27 +316,28 @@ public class BeliefPropagationTest {
     
     @Test
     public void testCanHandleProbHardFactors() {
-        testCanHandleHardFactorsHelper(false, RealAlgebra.getInstance());
-        testCanHandleHardFactorsHelper(true, RealAlgebra.getInstance());
+        testCanHandleHardFactorsHelper(false, false, RealAlgebra.getInstance());
+        testCanHandleHardFactorsHelper(true, false, RealAlgebra.getInstance());
+        testCanHandleHardFactorsHelper(false, true, RealAlgebra.getInstance());
+        testCanHandleHardFactorsHelper(true, true, RealAlgebra.getInstance());
     }
     
     @Test
     public void testCanHandleLogHardFactors() {
-        testCanHandleHardFactorsHelper(false, LogSemiring.getInstance());
-        testCanHandleHardFactorsHelper(true, LogSemiring.getInstance());
+        testCanHandleHardFactorsHelper(false, false, LogSemiring.getInstance());
+        testCanHandleHardFactorsHelper(true, false, LogSemiring.getInstance());
+        testCanHandleHardFactorsHelper(false, true, LogSemiring.getInstance());
+        testCanHandleHardFactorsHelper(true, true, LogSemiring.getInstance());
     }    
     
-    public void testCanHandleHardFactorsHelper(boolean cacheFactorBeliefs, Algebra s) {     
+    public void testCanHandleHardFactorsHelper(boolean cacheVarBeliefs, boolean cacheFacBeliefs, Algebra s) {     
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         prm.s = s;
-        if (cacheFactorBeliefs) {
-            prm.minFacNbsForCache = 0;
-        } else {
-            prm.minFacNbsForCache = Integer.MAX_VALUE;
-        }
+        prm.minVarNbsForCache = cacheVarBeliefs ? 0 : Integer.MAX_VALUE;
+        prm.minFacNbsForCache = cacheFacBeliefs ? 0 : Integer.MAX_VALUE;
         
         Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
         Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
@@ -391,6 +403,46 @@ public class BeliefPropagationTest {
             assertEqualMarginals(fg, bf, bp);
         }
     }    
+
+    @Test
+    public void testDividingOutTrick() throws Exception {
+        helpDividingOutTrickLinearChain(LogSemiring.getInstance(), Integer.MAX_VALUE, Integer.MAX_VALUE); // no dividing out
+        helpDividingOutTrickLinearChain(LogSemiring.getInstance(), 0, Integer.MAX_VALUE); // var only
+        helpDividingOutTrickLinearChain(LogSemiring.getInstance(), Integer.MAX_VALUE, 0); // fac only
+        helpDividingOutTrickLinearChain(LogSemiring.getInstance(), 0, 0); // both
+        helpDividingOutTrickSimple(LogSemiring.getInstance(), Integer.MAX_VALUE, Integer.MAX_VALUE); // no dividing out
+        helpDividingOutTrickSimple(LogSemiring.getInstance(), 0, Integer.MAX_VALUE); // var only
+        helpDividingOutTrickSimple(LogSemiring.getInstance(), Integer.MAX_VALUE, 0); // fac only
+        helpDividingOutTrickSimple(LogSemiring.getInstance(), 0, 0); // both
+    }
+
+    private void helpDividingOutTrickLinearChain(Algebra s, int minVarNbsForCache, int minFacNbsForCache) {
+        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph();
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+        bf.run();
+        BeliefPropagationPrm prm = getDefaultBpPrmForAcyclic(s);
+        prm.minVarNbsForCache = minVarNbsForCache;
+        prm.minFacNbsForCache = minFacNbsForCache;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);        
+        bp.run();
+        BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp);                    
+        assertEqualMarginals(fg, bf, bp);
+    }
+
+    private void helpDividingOutTrickSimple(Algebra s, int minVarNbsForCache, int minFacNbsForCache) throws IOException {
+        FactorGraph fg = BruteForceInferencerTest.readSimpleFg();
+        BruteForceInferencer bf = new BruteForceInferencer(fg, s);
+        bf.run();
+        BeliefPropagationPrm prm1 = getDefaultBpPrmLoopy(s);
+        BeliefPropagation bp1 = new BeliefPropagation(fg, prm1);        
+        bp1.run();
+        BeliefPropagationPrm prm2 = getDefaultBpPrmLoopy(s);
+        prm2.minVarNbsForCache = minVarNbsForCache;
+        prm2.minFacNbsForCache = minFacNbsForCache;
+        BeliefPropagation bp2 = new BeliefPropagation(fg, prm2);        
+        bp2.run();
+        assertEqualMarginals(fg, bp1, bp2);
+    }
     
     @Test
     public void testGlobalExplicitFactor() throws IOException {
@@ -413,13 +465,15 @@ public class BeliefPropagationTest {
         Algebra s = LogSemiring.getInstance();
         BruteForceInferencer bf = new BruteForceInferencer(fg, s);
         bf.run();
-        BeliefPropagation bp = runDefaultBpForAcyclic(s, fg);
+        BeliefPropagation bp = getDefaultBpForAcyclic(s, fg);
+        bp.run();
+
         System.out.println(bp.isConverged());
         assertEqualMarginals(fg, bf, bp, 1e-12);
     }
 
-    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
-            BeliefPropagation bp) {
+    public static void assertEqualMarginals(FactorGraph fg, FgInferencer bf,
+            FgInferencer bp) {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 

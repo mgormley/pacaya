@@ -7,6 +7,7 @@ import org.junit.Test;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
+import edu.jhu.pacaya.gm.data.UFgExample;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
@@ -78,12 +79,14 @@ public class ObsFeatureConjoinerTest {
         assertEquals(expectedNumParams, ofc.getNumParams());
     }
     
-    public static class MockFeatureExtractor extends SlowObsFeatureExtractor {
+    public static class MockFeatureExtractor implements ObsFeatureExtractor {
 
-        public MockFeatureExtractor() {
-            super();
+        protected FactorTemplateList fts;
+
+        public MockFeatureExtractor(FactorTemplateList fts) {
+            this.fts = fts;
         }
-        
+
         @Override
         public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
             FeatureVector fv = new FeatureVector();
@@ -103,14 +106,14 @@ public class ObsFeatureConjoinerTest {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", QLists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", QLists.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();
-        MockFeatureExtractor obsFe = new MockFeatureExtractor();
+        MockFeatureExtractor obsFe = new MockFeatureExtractor(fts);
         fg.addFactor(new ObsFeExpFamFactor(new VarSet(v1, v2), "key2", ofc, obsFe));
         
         VarConfig vc = new VarConfig();
         vc.put(v1, state1);
         vc.put(v2, state2);
         
-        return new LabeledFgExample(fg, vc, obsFe, fts);
+        return new LabeledFgExample(fg, vc, fts);
     }
 
     public static FactorTemplateList getFtl() {

@@ -24,7 +24,7 @@ import edu.jhu.pacaya.util.collections.QLists;
 public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor> {
     
     /** Factory for L2 distance loss without a decoder. */
-    public static class MeanSquaredErrorFactory implements DlFactory {
+    public static class L2DistanceFactory implements DlFactory {
         @Override
         public Module<Tensor> getDl(VarConfig goldConfig, FactorsModule effm, Module<Beliefs> inf, int curIter, int maxIter) {
             return new L2Distance(inf, goldConfig);
@@ -43,7 +43,7 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
     }
 
     /**
-     * Forward pass: y = \sum_{x_i} (b(x_i) - b*(x_i))^2 , where b*(x_i) are the marginals given by
+     * Forward pass: y = \sum_i \sum_{x_i} (b(x_i) - b*(x_i))^2 , where b*(x_i) are the marginals given by
      * taking the gold variable assignment as a point mass distribution. Note the sum is over all
      * variable assignments to the predicted variables.
      */
@@ -63,6 +63,9 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
                 }
             }
         }
+        if (s.lt(l2dist, s.zero())) {
+            log.warn("L2 distance shouldn't be less than 0: " + l2dist);
+        }
         y = Tensor.getScalarTensor(s, l2dist);
         return y;        
     }
@@ -70,7 +73,7 @@ public class L2Distance extends AbstractModule<Tensor> implements Module<Tensor>
     /** 
      * Backward pass: 
      * 
-     * Expanding the square, we get y = \sum_{x_i} b(x_i)^2 - 2b(x_i)b*(x_i) + b*(x_i)^2
+     * Expanding the square, we get y = \sum_i \sum_{x_i} b(x_i)^2 - 2b(x_i)b*(x_i) + b*(x_i)^2
      * 
      * dG/db(x_i) = dG/dy dy/db(x_i) = dG/dy 2(b(x_i) - b*(x_i)), \forall x_i. 
      */

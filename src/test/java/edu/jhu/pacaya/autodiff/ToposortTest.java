@@ -77,7 +77,7 @@ public class ToposortTest {
         });
         
         Deps<String> deps = new DiamondGraph();
-        List<String> sort = Toposort.toposort(QLists.getList("4"), "ROOT", deps);
+        List<String> sort = Toposort.toposort(QLists.getList("4"), "ROOT", deps, true);
         System.out.println(sort);
         assertTrue(valid.contains(sort.toString()));
     }
@@ -97,7 +97,7 @@ public class ToposortTest {
         for (int i : QLists.getList(0, 1, 2)) {
             // Note: in current implementation all orders are equivalent.
             Deps<String> deps = new ShuffledSimpleGraph(i*3);
-            List<String> sort = Toposort.toposort(QLists.getList("7", "5", "3"), "ROOT", deps);            
+            List<String> sort = Toposort.toposort(QLists.getList("7", "5", "3"), "ROOT", deps, true);            
             if(valid.contains(sort.toString())) {
                 System.out.println("i:" + i);
             }
@@ -111,14 +111,73 @@ public class ToposortTest {
         SimpleGraph deps = new SimpleGraph();
         // Invalid leaf set.
         try {
-            Toposort.toposort(QLists.getList("11", "8"), "ROOT", deps);         
+            Toposort.toposort(QLists.getList("11", "8"), "ROOT", deps, true);         
             fail();
         } catch (IllegalStateException e) {
             //pass
         }
         // Multiple copies.
         try {
-            Toposort.toposort(QLists.getList("11", "8", "11"), "ROOT", deps);         
+            Toposort.toposort(QLists.getList("11", "8", "11"), "ROOT", deps, true);         
+            fail();
+        } catch (IllegalStateException e) {
+            //pass
+        }
+    }
+    
+
+    @Test
+    public void testTopoSortWithPartialCut() {
+        {
+            // Diamond Graph w/partial cut.
+            Deps<String> deps = new DiamondGraph();
+            List<String> valid = Arrays.asList(new String[] { 
+                    "[4, 3, 1, ROOT]",
+            });        
+            List<String> sort = Toposort.toposort(QLists.getList("2"), "ROOT", deps, false);
+            System.out.println(sort);
+            assertTrue(valid.contains(sort.toString()));
+        }{        
+            // Simple Graph w/partial cut.
+            SimpleGraph deps = new SimpleGraph();
+            List<String> valid = Arrays.asList(new String[] { 
+                    "[3, 10, 9, 2, ROOT]",
+            });
+            List<String> sort = Toposort.toposort(QLists.getList("11", "8"), "ROOT", deps, false);        
+            System.out.println(sort);
+            assertTrue(valid.contains(sort.toString()));
+        }
+    }
+    
+    @Test
+    public void testCheckIsFullCut() {
+        SimpleGraph deps = new SimpleGraph();
+        // root = ROOT
+        Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("11", "8", "3")), "ROOT", deps);
+        Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("7", "5", "3")), "ROOT", deps);
+        Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("11", "9", "10")), "ROOT", deps);
+        Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("ROOT")), "ROOT", deps);
+        
+        // root = 9
+        Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("7", "5", "3")), "9", deps);
+        Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("11", "8")), "9", deps);
+        
+        try {
+            Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("11", "8")), "ROOT", deps);
+            fail();
+        } catch (IllegalStateException e) {
+            //pass
+        }
+
+        try {
+            Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("5", "3")), "ROOT", deps);
+            fail();
+        } catch (IllegalStateException e) {
+            //pass
+        }
+
+        try {
+            Toposort.checkIsFullCut(new HashSet<String>(QLists.getList("2", "8", "5")), "ROOT", deps);
             fail();
         } catch (IllegalStateException e) {
             //pass
@@ -126,42 +185,11 @@ public class ToposortTest {
     }
     
     @Test
-    public void testCheckIsValidLeafSet() {
+    public void testCheckAreDescendentsOf() {
         SimpleGraph deps = new SimpleGraph();
-        // root = ROOT
-        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8", "3")), "ROOT", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("7", "5", "3")), "ROOT", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "9", "10")), "ROOT", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("ROOT")), "ROOT", deps);
-        
-        // root = 9
-        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("7", "5", "3")), "9", deps);
-        Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8")), "9", deps);
-        
-        try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8")), "ROOT", deps);
-            fail();
-        } catch (IllegalStateException e) {
-            //pass
-        }
-
-        try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("5", "3")), "ROOT", deps);
-            fail();
-        } catch (IllegalStateException e) {
-            //pass
-        }
-
-        try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("2", "8", "5")), "ROOT", deps);
-            fail();
-        } catch (IllegalStateException e) {
-            //pass
-        }
-        
         // ROOT is not a descendent of 9.
         try {
-            Toposort.checkIsValidLeafSet(new HashSet<String>(QLists.getList("11", "8", "ROOT")), "9", deps);
+            Toposort.checkAreDescendentsOf(new HashSet<String>(QLists.getList("11", "8", "ROOT")), "9", deps);
             fail();
         } catch (IllegalStateException e) {
             //pass

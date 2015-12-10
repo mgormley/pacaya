@@ -249,33 +249,36 @@ public class AbstractModuleTest {
     
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
     public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjoints(OneToOneFactory<X, Y> fact1,
-            OneToOneFactory<X, Y> fact2, Module<X> in1) {
-        checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, new StandardNormalVectorFactory());
+            OneToOneFactory<X, Y> fact2, Module<X> in1,  Module<X> in2) {
+        checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, in2, new StandardNormalVectorFactory());
     }
 
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
     public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
-            OneToOneFactory<X, Y> fact2, Module<X> in1) {
-        checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, new AbsStandardNormalVectorFactory());
+            OneToOneFactory<X, Y> fact2, Module<X> in1, Module<X> in2) {
+        checkOneToOneEqualAdjointsAbs(fact1, fact2, in1, in2, new AbsStandardNormalVectorFactory());
     }
     
     /** Tests that two modules (instantiated by factories) yield equal adjoints. */
     public static <X extends MVec, Y extends MVec> void checkOneToOneEqualAdjointsAbs(OneToOneFactory<X, Y> fact1,
-            OneToOneFactory<X, Y> fact2, Module<X> in1, VectorFactory vec) {
+            OneToOneFactory<X, Y> fact2, Module<X> in1, Module<X> in2, VectorFactory vec) {
         assert in1.getAlgebra().equals(RealAlgebra.getInstance());
                 
         for (Algebra s : test3Algebras) {
             System.out.println("Testing on Algebra: " + s);
             @SuppressWarnings("unchecked")
             Module<Y>[] topos = new Module[2];
-            int i=0;
-            for (OneToOneFactory<X,Y> fact : QLists.getList(fact1, fact2)) {
-                Module<X> in1Co = new ConvertAlgebra<X>(in1, s);
-                Module<Y> main = fact.getModule(in1Co);
+            List<OneToOneFactory<X,Y>> facts = QLists.getList(fact1, fact2);
+            List<Module<X>> ins = QLists.getList(in1, in2);
+            for (int i=0; i<2; i++) {
+                OneToOneFactory<X,Y> fact = facts.get(i);
+                Module<X> in = ins.get(i);
+                Module<X> inCo = new ConvertAlgebra<X>(in, s);
+                Module<Y> main = fact.getModule(inCo);
                 Module<Y> mainCo = new ConvertAlgebra<Y>(main, RealAlgebra.getInstance());
                 
-                TopoOrder<Y> topo = new TopoOrder<Y>(QLists.getList(in1), mainCo);
-                topos[i++] = topo;
+                TopoOrder<Y> topo = new TopoOrder<Y>(QLists.getList(in), mainCo);
+                topos[i] = topo;
             }
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topos[0].getInputs()));
             double delta = s.equals(SplitAlgebra.getInstance()) ? 1e-2 : 1e-8;

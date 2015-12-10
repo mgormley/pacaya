@@ -1,9 +1,10 @@
 package edu.jhu.pacaya.gm.train;
 
+import edu.jhu.pacaya.gm.data.UFgExample;
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
-import edu.jhu.pacaya.gm.feat.SlowObsFeatureExtractor;
+import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
 import edu.jhu.pacaya.util.FeatureNames;
 
 /**
@@ -14,12 +15,11 @@ import edu.jhu.pacaya.util.FeatureNames;
  * 
  * @author mgormley
  */
-public class SimpleVCObsFeatureExtractor extends SlowObsFeatureExtractor {
+public class SimpleVCObsFeatureExtractor implements ObsFeatureExtractor {
 
     protected FactorTemplateList fts;
 
     public SimpleVCObsFeatureExtractor(FactorTemplateList fts) {
-        super();
         this.fts = fts;
     }
     

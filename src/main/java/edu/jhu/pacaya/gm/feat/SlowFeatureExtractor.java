@@ -18,9 +18,6 @@ public abstract class SlowFeatureExtractor implements FeatureExtractor {
     }
 
     @Override
-    public void init(UFgExample ex) { }
-    
-    @Override
     public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
         VarSet vars = factor.getVars();
         VarConfig varConfig = vars.getVarConfig(configId);

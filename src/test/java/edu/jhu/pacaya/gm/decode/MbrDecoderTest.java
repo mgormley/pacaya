@@ -52,7 +52,7 @@ public class MbrDecoderTest {
         }
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
 

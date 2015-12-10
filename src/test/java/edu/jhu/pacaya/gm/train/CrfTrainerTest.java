@@ -39,7 +39,7 @@ import edu.jhu.pacaya.gm.model.globalfac.LinkVar;
 import edu.jhu.pacaya.gm.model.globalfac.ProjDepTreeFactor;
 import edu.jhu.pacaya.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
-import edu.jhu.pacaya.gm.train.L2Distance.MeanSquaredErrorFactory;
+import edu.jhu.pacaya.gm.train.L2Distance.L2DistanceFactory;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
@@ -108,7 +108,7 @@ public class CrfTrainerTest {
         
         JUnitUtils.assertArrayEquals(new double[]{0.166, -0.166, -0.166, 0.166}, params1, 1e-3);
         JUnitUtils.assertArrayEquals(new double[]{0.253, -0.253, -0.253, 0.253}, params2, 1e-3);
-        //MSE: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
+        //L2DIST: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
     }
 
     @Test
@@ -143,7 +143,7 @@ public class CrfTrainerTest {
 
         // Create a set of examples, consisting of ONLY ONE example.
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
 
@@ -198,7 +198,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -258,7 +258,7 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[1][0], "A2");   
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new LabeledFgExample(fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fg, trainConfig, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -315,7 +315,7 @@ public class CrfTrainerTest {
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
         prm.bFactory = bpPrm;
-        prm.dlFactory = new MeanSquaredErrorFactory();
+        prm.dlFactory = new L2DistanceFactory();
         //prm.dlFactory = new ExpectedRecallFactory();
         prm.trainer = Trainer.ERMA;
              

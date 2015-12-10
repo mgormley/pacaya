@@ -5,42 +5,57 @@ import java.util.Arrays;
 
 import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.Algebras;
-import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
+import edu.jhu.prim.vector.IntDoubleDenseVector;
+import edu.jhu.prim.vector.IntDoubleVector;
 
 /**
- * Tensor of doubles (i.e. a multi-dimensional array).
+ * Tensor of doubles (i.e. a multi-dimensional array). In contrast to a {@link Tensor}, this class
+ * is backed by an IntDoubleVector.
  * 
  * @author mgormley
  */
-public class Tensor implements MVec, Serializable {
+public class VTensor implements MVec, Serializable {
 
     private static final long serialVersionUID = 1L;
     protected int[] dims;
     protected int[] strides;
-    protected double[] values;
+    protected IntDoubleVector values;
+    protected final int offset;
+    protected final int size;
     protected final Algebra s;
     
     /**
      * Standard constructor of multi-dimensional array.
      * @param dimensions The dimensions of this tensor.
      */
-    public Tensor(Algebra s, int... dimensions) {
-        int numConfigs = IntArrays.prod(dimensions);
-        this.dims = dimensions;
-        this.strides = getStrides(dims);
-        this.values = new double[numConfigs];
-        this.s = s;
-        Arrays.fill(values, s.zero());
+    public VTensor(Algebra s, int... dimensions) {
+        this(s, 0, new IntDoubleDenseVector(IntArrays.prod(dimensions)), dimensions);
+        fill(s.zero());
     }
 
     /** Copy constructor. */
-    public Tensor(Tensor other) {
+    public VTensor(VTensor other) {
         this.dims = IntArrays.copyOf(other.dims);
         this.strides = IntArrays.copyOf(other.strides);
-        this.values = DoubleArrays.copyOf(other.values);
+        this.offset = other.offset;
+        this.values = other.values.copy();
         this.s = other.s;
+        this.size = other.size;
+    }
+
+    /** Constructor which will be backed by the given values starting at offset. */
+    public VTensor(Algebra s, int offset, IntDoubleVector values, int... dimensions) {
+        // For now, we only support the reals because IntDoubleVector uses zero for missing entries.
+        if (!RealAlgebra.getInstance().equals(s)) { throw new IllegalArgumentException("Unsupported Algebra: " + s); }
+        this.size = IntArrays.prod(dimensions);
+        this.dims = dimensions;
+        this.strides = getStrides(dims);
+        this.offset = offset;
+        this.values = values;
+        this.s = s;
     }
     
     /* --------------------- Multi-Dimensional View --------------------- */
@@ -53,7 +68,7 @@ public class Tensor implements MVec, Serializable {
     public double get(int... indices) {
         checkIndices(indices);
         int c = getConfigIdx(indices);
-        return values[c];
+        return values.get(c);
     }
 
     /** 
@@ -65,9 +80,7 @@ public class Tensor implements MVec, Serializable {
     public double set(int[] indices, double val) {
         checkIndices(indices);
         int c = getConfigIdx(indices);
-        double prev = values[c];
-        values[c] = val;
-        return prev;
+        return values.set(c, val);
     }
 
     /** 
@@ -79,9 +92,7 @@ public class Tensor implements MVec, Serializable {
     public double add(int[] indices, double val) {
         checkIndices(indices);
         int c = getConfigIdx(indices);
-        double prev = values[c];
-        values[c] = s.plus(values[c], val);
-        return prev;
+        return values.set(c, s.plus(values.get(c), val));
     }
     
     /** 
@@ -93,11 +104,9 @@ public class Tensor implements MVec, Serializable {
     public double subtract(int[] indices, double val) {
         checkIndices(indices);
         int c = getConfigIdx(indices);
-        double prev = values[c];
-        values[c] = s.minus(values[c], val);
-        return prev;
+        return values.set(c, s.minus(values.get(c), val));
     }
-
+    
     /** Convenience method for setting a value with a variable number of indices. */
     public double set(double val, int... indices) {
         return set(indices, val);
@@ -115,13 +124,17 @@ public class Tensor implements MVec, Serializable {
     
     /** Gets the index into the values array that corresponds to the indices. */
     public int getConfigIdx(int... indices) {
-        int c = 0;
+        int c = offset;
         for (int i=0; i<indices.length; i++) {
             c += strides[i] * indices[i];
         }
         return c;
     }
 
+    private int get1dConfigIdx(int idx) {
+        return offset + idx;
+    }
+    
     /**
      * Gets the strides for the given dimensions. The stride for dimension i
      * (stride[i]) denotes the step forward in values array necessary to
@@ -147,7 +160,7 @@ public class Tensor implements MVec, Serializable {
                     indices.length, dims.length));
         }
         for (int i=0; i<indices.length; i++) {
-            if (indices[i] >= dims[i]) {
+            if (indices[i] < 0 || dims[i] <= indices[i]) {
                 throw new IllegalArgumentException(String.format(
                         "Indices array contains an index that is out of bounds: i=%d index=%d", 
                         i, indices[i]));
@@ -161,78 +174,82 @@ public class Tensor implements MVec, Serializable {
      * Gets the value of the idx'th entry.
      */
     public double getValue(int idx) {
-        return values[idx];
+        return values.get(get1dConfigIdx(idx));
     }
 
     /** 
      * Sets the value of the idx'th entry.
      */
     public double setValue(int idx, double val) {
-        double prev = values[idx];
-        values[idx] = val;
-        return prev;
+        return values.set(get1dConfigIdx(idx), val);
     }
 
     /** 
      * Adds the value to the idx'th entry.
      */
     public void addValue(int idx, double val) {
-        values[idx] = s.plus(values[idx], val); 
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.plus(values.get(c), val)); 
     }
 
     /** 
      * Subtracts the value from the idx'th entry.
      */
     public void subtractValue(int idx, double val) {
-        values[idx] = s.minus(values[idx], val); 
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.minus(values.get(c), val));
     }
 
     /** 
      * Multiplies the value with the idx'th entry.
      */
     public void multiplyValue(int idx, double val) {
-        values[idx] = s.times(values[idx], val); 
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.times(values.get(c), val));
     }
 
     /** 
      * Divides the value from the idx'th entry.
      */
     public void divideValue(int idx, double val) {
-        values[idx] = s.divide(values[idx], val); 
+        int c = get1dConfigIdx(idx);
+        values.set(c, s.divide(values.get(c), val));
     }
     
     /* --------------------- Scalar Operations --------------------- */
     
     /** Add the addend to each value. */    
     public void add(double addend) {  
-        for (int c = 0; c < this.values.length; c++) {
+        for (int c = 0; c < this.size(); c++) {
             addValue(c, addend);
         }
     }
 
     public void subtract(double val) {
-        for (int c = 0; c < this.values.length; c++) {
+        for (int c = 0; c < this.size(); c++) {
             subtractValue(c, val);
         }
     }
     
     /** Scale each value by lambda. */
     public void multiply(double val) {
-        for (int c = 0; c < this.values.length; c++) {
+        for (int c = 0; c < this.size(); c++) {
             multiplyValue(c, val);
         }
     }
 
     /** Divide each value by lambda. */
     public void divide(double val) {
-        for (int c = 0; c < this.values.length; c++) {
+        for (int c = 0; c < this.size(); c++) {
             divideValue(c, val);
         }
     }
 
     /** Set all the values to the given value. */
     public void fill(double val) {
-        Arrays.fill(values, val);
+        for (int c=0; c<this.size(); c++) {
+            this.setValue(c, val);
+        }
     }
 
     /* --------------------- Element-wise Operations --------------------- */
@@ -242,18 +259,18 @@ public class Tensor implements MVec, Serializable {
      * @param other The addend.
      * @throws IllegalArgumentException If the two tensors have different sizes.
      */
-    public void elemAdd(Tensor other) {
+    public void elemAdd(VTensor other) {
         checkEqualSize(this, other);
-        for (int c = 0; c < this.values.length; c++) {
-            addValue(c, other.values[c]);
+        for (int c = 0; c < this.size(); c++) {
+            addValue(c, other.getValue(c));
         }
     }
 
     /** Implements {@link MVec#elemAdd(MVec)}. */
     @Override
     public void elemAdd(MVec addend) {
-        if (addend instanceof Tensor) {
-            elemAdd((Tensor)addend);
+        if (addend instanceof VTensor) {
+            elemAdd((VTensor)addend);
         } else {
             throw new IllegalArgumentException("Addend must be of type " + this.getClass());
         }
@@ -265,10 +282,10 @@ public class Tensor implements MVec, Serializable {
      * @param other The subtrahend.
      * @throws IllegalArgumentException If the two tensors have different sizes.
      */
-    public void elemSubtract(Tensor other) {
+    public void elemSubtract(VTensor other) {
         checkEqualSize(this, other);
-        for (int c = 0; c < this.values.length; c++) {
-            subtractValue(c, other.values[c]);
+        for (int c = 0; c < this.size(); c++) {
+            subtractValue(c, other.getValue(c));
         }
     }
 
@@ -277,11 +294,11 @@ public class Tensor implements MVec, Serializable {
      * @param other The multiplier.
      * @throws IllegalArgumentException If the two tensors have different sizes.
      */
-    public void elemMultiply(Tensor other) {
+    public void elemMultiply(VTensor other) {
         checkEqualSize(this, other);
-        for (int c = 0; c < this.values.length; c++) {
-            multiplyValue(c, other.values[c]);
-        }     
+        for (int c = 0; c < this.size(); c++) {
+            multiplyValue(c, other.getValue(c));
+        }
     }
 
     /**
@@ -289,10 +306,10 @@ public class Tensor implements MVec, Serializable {
      * @param other The divisor.
      * @throws IllegalArgumentException If the two tensors have different sizes.
      */
-    public void elemDivide(Tensor other) {
+    public void elemDivide(VTensor other) {
         checkEqualSize(this, other);
-        for (int c = 0; c < this.values.length; c++) {
-            divideValue(c, other.values[c]);
+        for (int c = 0; c < this.size(); c++) {
+            divideValue(c, other.getValue(c));
         }
     }
     
@@ -302,29 +319,29 @@ public class Tensor implements MVec, Serializable {
      * @throws IllegalArgumentException If the two tensors have different sizes.
      */
     public void elemApply(Lambda.FnIntDoubleToDouble fn) {
-        for (int c=0; c<this.values.length; c++) {
-            this.values[c] = fn.call(c, this.values[c]);
+        for (int c=0; c<this.size; c++) {
+            this.setValue(c, fn.call(c, this.getValue(c)));
         }
     }
 
-    public void elemOp(Tensor other, Lambda.LambdaBinOpDouble fn) {
+    public void elemOp(VTensor other, Lambda.LambdaBinOpDouble fn) {
         checkEqualSize(this, other);
-        for (int c=0; c<this.values.length; c++) {
-            this.values[c] = fn.call(this.values[c], other.values[c]);
+        for (int c=0; c<this.size(); c++) {
+            this.setValue(c, fn.call(this.getValue(c), other.getValue(c)));
         }
     }
 
     /** Take the exp of each entry. */
     public void exp() {
-        for (int c=0; c<this.values.length; c++) {
-            this.values[c] = s.exp(this.values[c]);
+        for (int c=0; c<this.size(); c++) {
+            this.setValue(c, s.exp(this.getValue(c)));
         }
     }
 
     /** Take the log of each entry. */
     public void log() {
-        for (int c=0; c<this.values.length; c++) {
-            this.values[c] = s.log(this.values[c]);
+        for (int c=0; c<this.size(); c++) {
+            this.setValue(c, s.log(this.getValue(c)));
         }
     }
 
@@ -332,18 +349,18 @@ public class Tensor implements MVec, Serializable {
     public double normalize() {
         double propSum = this.getSum();
         if (propSum == s.zero()) {
-            this.fill(s.divide(s.one(), s.fromReal(values.length)));
+            this.fill(s.divide(s.one(), s.fromReal(this.size())));
         } else if (propSum == s.posInf()) {
-            int count = DoubleArrays.count(values, s.posInf());
+            int count = count(s.posInf());
             if (count == 0) {
-                throw new RuntimeException("Unable to normalize since sum is infinite but contains no infinities: " + Arrays.toString(values));
+                throw new RuntimeException("Unable to normalize since sum is infinite but contains no infinities: " + this.toString());
             }
             double constant = s.divide(s.one(), s.fromReal(count));
-            for (int d=0; d<values.length; d++) {
-                if (values[d] == s.posInf()) {
-                    values[d] = constant;
+            for (int d=0; d<this.size(); d++) {
+                if (this.getValue(d) == s.posInf()) {
+                    this.setValue(d, constant);
                 } else {
-                    values[d] = s.zero();
+                    this.setValue(d, s.zero());
                 }
             }
         } else {
@@ -357,14 +374,14 @@ public class Tensor implements MVec, Serializable {
 
     /** Gets the number of entries in the Tensor. */
     public int size() {
-        return values.length;
+        return size;
     }
     
     /** Gets the sum of all the entries in this tensor. */
     public double getSum() {
         double sum = s.zero();
-        for (int c = 0; c < this.values.length; c++) {
-            sum = s.plus(sum, values[c]);
+        for (int c = 0; c < this.size(); c++) {
+            sum = s.plus(sum, getValue(c));
         }
         return sum;
     }
@@ -372,8 +389,8 @@ public class Tensor implements MVec, Serializable {
     /** Gets the product of all the entries in this tensor. */
     public double getProd() {
         double prod = s.one();
-        for (int c = 0; c < this.values.length; c++) {
-            prod = s.times(prod, values[c]);
+        for (int c = 0; c < this.size(); c++) {
+            prod = s.times(prod, getValue(c));
         }
         return prod;
     }
@@ -381,9 +398,10 @@ public class Tensor implements MVec, Serializable {
     /** Gets the max value in the tensor. */
     public double getMax() {
         double max = s.minValue();
-        for (int c = 0; c < this.values.length; c++) {
-            if (s.gte(values[c], max)) {
-                max = values[c];
+        for (int c = 0; c < this.size(); c++) {
+            double val = getValue(c);
+            if (s.gte(val, max)) {
+                max = val;
             }
         }
         return max;
@@ -393,9 +411,10 @@ public class Tensor implements MVec, Serializable {
     public int getArgmaxConfigId() {
         int argmax = -1;
         double max = s.minValue();
-        for (int c = 0; c < this.values.length; c++) {
-            if (s.gte(values[c], max)) {
-                max = values[c];
+        for (int c = 0; c < this.size(); c++) {
+            double val = getValue(c);
+            if (s.gte(val, max)) {
+                max = val;
                 argmax = c;
             }
         }
@@ -408,21 +427,32 @@ public class Tensor implements MVec, Serializable {
      */
     public double getInfNorm() {
         double max = s.negInf();
-        for (int c = 0; c < this.values.length; c++) {
-            double abs = s.abs(values[c]);
+        for (int c = 0; c < this.size(); c++) {
+            double abs = s.abs(getValue(c));
             if (s.gte(abs, max)) {
                 max = abs;
             }
         }
         return max;
     }
-
+    
+    /** Gets the number of times a given value occurs in the Tensor (exact match). */
+    public int count(double val) {
+        int count = 0;
+        for (int i=0; i<this.size(); i++) {
+            if (this.getValue(i) == val) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
     /** Computes the sum of the entries of the pointwise product of two tensors with identical domains. */
-    public double getDotProduct(Tensor other) {
+    public double getDotProduct(VTensor other) {
         checkEqualSize(this, other);
         double dot = s.zero();
-        for (int c = 0; c < this.values.length; c++) {
-            dot = s.plus(dot, s.times(this.values[c], other.values[c]));
+        for (int c = 0; c < this.size(); c++) {
+            dot = s.plus(dot, s.times(this.getValue(c), other.getValue(c)));
         }
         return dot;
     }
@@ -433,15 +463,19 @@ public class Tensor implements MVec, Serializable {
      * Sets the dimensions and values to be the same as the given tensor.
      * Assumes that the size of the two vectors are equal.
      */
-    public void set(Tensor other) {
+    public void set(VTensor other) {
         checkEqualSize(this, other);
         this.dims = IntArrays.copyOf(other.dims);
-        DoubleArrays.copy(other.values, this.values);
+        for (int c = 0; c < this.size(); c++) {
+            this.setValue(c, other.getValue(c));
+        }
     }
 
-    public void setValuesOnly(Tensor other) {
+    public void setValuesOnly(VTensor other) {
         checkEqualSize(this, other);
-        DoubleArrays.copy(other.values, this.values);
+        for (int c = 0; c < this.size(); c++) {
+            this.setValue(c, other.getValue(c));
+        }
     }
 
     /**
@@ -452,9 +486,9 @@ public class Tensor implements MVec, Serializable {
      * @param idx The index of that dimension to fix.
      * @return The sub-tensor selected.
      */
-    public Tensor select(int dim, int idx) {
+    public VTensor select(int dim, int idx) {
         int[] yDims = IntArrays.removeEntry(this.getDims(), dim);
-        Tensor y = new Tensor(s, yDims);
+        VTensor y = new VTensor(s, yDims);
         DimIter yIter = new DimIter(y.getDims());
         while (yIter.hasNext()) {
             int[] yIdx = yIter.next();
@@ -475,7 +509,7 @@ public class Tensor implements MVec, Serializable {
      * @param dim The dimension which will be treated as fixed on the larger tensor.
      * @param idx The index at which that dimension will be fixed.
      */
-    public void addTensor(Tensor addend, int dim, int idx) {
+    public void addTensor(VTensor addend, int dim, int idx) {
         checkSameAlgebra(this, addend);
         DimIter yIter = new DimIter(addend.getDims());
         while (yIter.hasNext()) {
@@ -485,14 +519,14 @@ public class Tensor implements MVec, Serializable {
         }
     }
 
-    public static void checkEqualSize(Tensor t1, Tensor t2) {
+    public static void checkEqualSize(VTensor t1, VTensor t2) {
         if (t1.size() != t2.size()) {
             throw new IllegalArgumentException("Input tensors are not the same size");
         }
         checkSameAlgebra(t1, t2);
     }
 
-    public static void checkSameAlgebra(Tensor t1, Tensor t2) {
+    public static void checkSameAlgebra(VTensor t1, VTensor t2) {
         if (! t1.s.equals(t2.s)) {
             throw new IllegalArgumentException("Input tensors must have the same abstract algebra: " + t1.s + " " + t2.s);
         }
@@ -501,12 +535,12 @@ public class Tensor implements MVec, Serializable {
     /* --------------------- Inspection --------------------- */
 
     /** Special equals with a tolerance. */
-    public boolean equals(Tensor other, double delta) {
+    public boolean equals(VTensor other, double delta) {
         return equals(this, other, delta);
     }
 
     /** Special equals with a tolerance. */
-    public static boolean equals(Tensor t1, Tensor t2, double delta) {
+    public static boolean equals(VTensor t1, VTensor t2, double delta) {
         if (t1 == t2)
             return true;
         if (t2 == null)
@@ -515,10 +549,10 @@ public class Tensor implements MVec, Serializable {
             return false;
         if (!t1.s.equals(t2.s))
             return false;
-        if (t1.values.length != t2.values.length)
+        if (t1.size() != t2.size())
             return false;
-        for (int i=0; i<t1.values.length; i++) {
-            if (!t1.s.eq(t1.values[i], t2.values[i], delta))
+        for (int i=0; i<t1.size(); i++) {
+            if (!t1.s.eq(t1.getValue(i), t2.getValue(i), delta))
                 return false;
         }
         return true;
@@ -533,20 +567,29 @@ public class Tensor implements MVec, Serializable {
         }
         sb.append(String.format("  |  %s\n", "value"));
         DimIter iter = new DimIter(dims);
-        for (int c=0; c<values.length; c++) {
+        for (int c=0; c<this.size(); c++) {
             int[] states = iter.next();
             for (int state : states) {
                 sb.append(String.format("%5d", state));
             }
-            sb.append(String.format("  |  %g\n", values[c]));
+            sb.append(String.format("  |  %g\n", this.getValue(c)));
         }
         sb.append("]");
         return sb.toString();
     }
     
     /** Gets the internal values array. For testing only. */
-    public double[] getValues() {
+    public IntDoubleVector getValues() {
         return values;
+    }
+    
+    /** Gets a copy of the internal values as a native array. */
+    public double[] getValuesAsNativeArray() {
+        double[] vs = new double[this.size()];
+        for (int c = 0; c < vs.length; c++) {
+            vs[c] = getValue(c);
+        }
+        return vs;
     }
 
     /** Gets the internal dimensions array. */
@@ -566,8 +609,8 @@ public class Tensor implements MVec, Serializable {
 
     /** Returns true if this tensor contains any NaNs. */
     public boolean containsNaN() {
-        for (int i = 0; i < values.length; i++) {
-            if (s.isNaN(values[i])) {
+        for (int c = 0; c < this.size(); c++) {
+            if (s.isNaN(this.getValue(c))) {
                 return true;
             }
         }
@@ -582,52 +625,52 @@ public class Tensor implements MVec, Serializable {
      * @param t2 The second tensor to add.
      * @return The combined tensor.
      */
-    public static Tensor combine(Tensor t1, Tensor t2) {
+    public static VTensor combine(VTensor t1, VTensor t2) {
         checkSameDims(t1, t2);
         checkSameAlgebra(t1, t2);
         
         int[] dims3 = IntArrays.insertEntry(t1.getDims(), 0, 2);
-        Tensor y = new Tensor(t1.s, dims3);
+        VTensor y = new VTensor(t1.s, dims3);
         y.addTensor(t1, 0, 0);
         y.addTensor(t2, 0, 1);
         return y;
     }
 
-    private static void checkSameDims(Tensor t1, Tensor t2) {
+    private static void checkSameDims(VTensor t1, VTensor t2) {
         if (!Arrays.equals(t1.getDims(), t2.getDims())) {
             throw new IllegalStateException("Input tensors are not the same dimension.");
         }
     }
 
-    public static Tensor getScalarTensor(Algebra s, double val) {
-        Tensor er = new Tensor(s, 1);
+    public static VTensor getScalarTensor(Algebra s, double val) {
+        VTensor er = new VTensor(s, 1);
         er.setValue(0, val);
         return er;
     }
     
-    public Tensor copy() {
-        return new Tensor(this);
+    public VTensor copy() {
+        return new VTensor(this);
     }
 
-    public Tensor zeroedCopy() {
+    public VTensor zeroedCopy() {
         return copyAndFill(0);
     }
 
-    public Tensor copyAndFill(double val) {
-        Tensor other = this.copy();
+    public VTensor copyAndFill(double val) {
+        VTensor other = this.copy();
         other.fill(val);
         return other;
     }
 
-    public Tensor copyAndConvertAlgebra(Algebra newS) {
-        Tensor t = new Tensor(newS, this.getDims());
+    public VTensor copyAndConvertAlgebra(Algebra newS) {
+        VTensor t = new VTensor(newS, this.getDims());
         t.setFromDiffAlgebra(this);
         return t;
     }
 
-    protected void setFromDiffAlgebra(Tensor other) {       
-        for (int c=0; c<this.values.length; c++) {
-            this.values[c] = Algebras.convertAlgebra(other.values[c], other.s, this.s);
+    protected void setFromDiffAlgebra(VTensor other) {       
+        for (int c=0; c<this.size(); c++) {
+            this.setValue(c, Algebras.convertAlgebra(other.getValue(c), other.s, this.s));
         }
     }
     

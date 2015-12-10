@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
 import edu.jhu.pacaya.gm.feat.FeatureExtractor;
-import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -28,20 +27,13 @@ public class UnlabeledFgExample implements UFgExample, LFgExample, Serializable 
     /** Whether the original factor graph contains latent variables. */
     protected boolean hasLatentVars;
     
-    // TODO: Figure out how to remove these "initializing" constructors.
+    // TODO: Figure out how to remove this "initializing" constructor.
     // TODO: Maybe convert to factory methods.
-    public UnlabeledFgExample(FactorGraph fg, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
-        this(fg);        
-        // Initialize the observation function.
-        obsFe.init(this, fts);
+    public UnlabeledFgExample(FactorGraph fg, FactorTemplateList fts) {
+        this(fg);
         // Update the factor templates.
         fts.lookupTemplateIds(this.getFactorGraph());
         fts.getTemplateIds(this.getFactorGraph());
-    }
-    public UnlabeledFgExample(FactorGraph fg, FeatureExtractor fe) {
-        this(fg);        
-        // Initialize the feature extractor.
-        fe.init(this);        
     }
     
     public UnlabeledFgExample(FactorGraph fg) {

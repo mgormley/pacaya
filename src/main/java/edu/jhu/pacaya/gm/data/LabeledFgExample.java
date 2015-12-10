@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.jhu.pacaya.gm.feat.FactorTemplateList;
 import edu.jhu.pacaya.gm.feat.FeatureExtractor;
-import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
@@ -32,22 +31,15 @@ public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, 
     /** The weight of this example for use in training. */
     private double weight = 1.0;
         
-    // TODO: Figure out how to remove these "initializing" constructors.
+    // TODO: Figure out how to remove this "initializing" constructor.
     // TODO: Maybe convert to factory methods.
-    public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
-        this(fg, goldConfig);        
-        // Initialize the observation function.
-        obsFe.init(this, fts);
+    public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, FactorTemplateList fts) {
+        this(fg, goldConfig);
         // Update the factor templates.
         fts.lookupTemplateIds(this.getFactorGraph());
         fts.getTemplateIds(this.getFactorGraph());
     }
-    public LabeledFgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
-        this(fg, goldConfig);        
-        // Initialize the feature extractor.
-        fe.init(this);        
-    }
-    
+
     /**
      * Constructs a train or test example for a Factor Graph.
      * 

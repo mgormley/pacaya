@@ -914,6 +914,8 @@ public class ProjDepTreeFactorTest {
         for (int v=0; v<outMsgs2.length; v++) {
             assertEqualMessages(outMsgs2[v], outMsgs1[v], ""+vars.get(v));
         }
+        
+        assertEquals(ef.getExpectedLogBelief(inMsgs), ptree.getExpectedLogBelief(inMsgs), 1e-13);
     }
     
 }

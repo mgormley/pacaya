@@ -84,7 +84,7 @@ public class EmpiricalRisk extends TopoOrder<Tensor> implements Module<Tensor> {
                 // Decoding and Loss.
                 dl = dlFactory.getDl(goldConfig, effm, inf, curIter, maxIter);
                 // Define topo order.
-                shallowCopy(new TopoOrder<Tensor>(QLists.getList(mid), dl, "EmpiricalRisk"));
+                shallowCopy(new TopoOrder<Tensor>(QLists.getList(mid), dl, "EmpiricalRisk", false));
             }
         }
     }

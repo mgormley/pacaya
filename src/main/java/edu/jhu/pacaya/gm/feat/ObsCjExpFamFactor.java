@@ -21,7 +21,7 @@ import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
 
     private static final long serialVersionUID = 1L;
-    private ObsFeatureConjoiner ofc;
+    protected ObsFeatureConjoiner ofc;
 
     // The unique key identifying the template for this factor.
     protected Object templateKey;
@@ -59,8 +59,8 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         obsFv.iterate(new FnIntDoubleToVoid() {            
             @Override
             public void call(int feat, double val) {
-                if (ofc.included[ft][config][feat]) {
-                    fv.add(ofc.indices[ft][config][feat], val);
+                if (ofc.isIncluded(ft, config, feat)) {
+                    fv.add(ofc.getFeatIndex(ft, config, feat), val);
                 }
             }
         });

@@ -66,7 +66,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         /** Minimum number of neighbors for a variable to compute messages by dividing out from a cached belief. */
         public int minVarNbsForCache = Integer.MAX_VALUE; // TODO: Use this.
         /** Minimum number of neighbors for a factor   to compute messages by dividing out from a cached belief. */
-        public int minFacNbsForCache = Integer.MAX_VALUE; // TODO: This might still be buggy.
+        public int minFacNbsForCache = Integer.MAX_VALUE; // TODO: This is currently disabled because it might still be buggy.
         
         public BeliefPropagationPrm() {
         }
@@ -93,11 +93,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         TREE_LIKE,
         /** Send messages in a random order. */
         RANDOM,
-        /**
-         * FOR TESTING ONLY: Schedule with only edges, so that no global factor dynamic programming
-         * algorithms are ever called.
-         */
-        NO_GLOBAL_FACTORS,
     }
     
     public enum BpUpdateOrder {
@@ -166,15 +161,9 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
     private static AtomicInteger sendCount = new AtomicInteger(0);
     
     public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
-        this(fg, prm, getFactorsModule(fg, prm));
+        this(fg, prm, ForwardOnlyFactorsModule.getFactorsModule(fg, prm.getAlgebra()));
     }
 
-    private static Module<Factors> getFactorsModule(FactorGraph fg, BeliefPropagationPrm prm) {
-        ForwardOnlyFactorsModule fm = new ForwardOnlyFactorsModule(null, fg, prm.getAlgebra());
-        fm.forward();
-        return fm;
-    }
-    
     public BeliefPropagation(final FactorGraph fg, BeliefPropagationPrm prm, Module<Factors> fm) {
         if (prm.getAlgebra() != null && !prm.getAlgebra().equals(fm.getAlgebra())) {
             // TODO: We shouldn't even specify the algebra in prm.
@@ -193,8 +182,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
                 sch = new BfsMpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
                 sch = new RandomMpSchedule(fg);
-            } else if (prm.schedule == BpScheduleType.NO_GLOBAL_FACTORS) {
-                sch = new NoGlobalFactorsMpSchedule(fg);
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
@@ -344,7 +331,6 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
 
     private void forwardFactorToVar(int edge) {
         Var var = bg.t1E(edge);
-        Factor factor = bg.t2E(edge);
         // Since this is not a global factor, we send messages in the normal way, which
         // in the case of a factor to variable message requires enumerating all possible
         // variable configurations.
@@ -352,11 +338,11 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         // Message from factor f* to variable v*.
         //
         // Set the initial values of the product to those of the sending factor.
-        VarTensor prod = safeNewVarTensor(factor);
+        VarTensor prod = new VarTensor(s, new VarSet());
         // Compute the product of all messages received by f* (each
         // of which will have a different domain) with the factor f* itself.
         // Exclude the message going out to the variable, v*.
-        getCavityProductAtFactor(bg.parentE(edge), prod, bg.iterE(edge));
+        getCavityProductWithFactor(bg.parentE(edge), prod, bg.iterE(edge));
         
         // Marginalize over all the assignments to variables for f*, except
         // for v*.
@@ -458,12 +444,14 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         int child = bg.childE(edge);
         if (!bg.isT1T2(edge) && bg.numNbsT1(child) >= prm.minVarNbsForCache) {
             varBeliefs[child].elemDivBP(msgs[edge]);
-            varBeliefs[child].elemMultiply(newMsgs[edge]);            
+            varBeliefs[child].elemMultiply(newMsgs[edge]); 
+            assert !varBeliefs[child].containsBadValues() : "varBeliefs[child] = " + varBeliefs[child];
         } else if (bg.isT1T2(edge) && bg.numNbsT2(child) >= prm.minFacNbsForCache){
             Factor f = bg.t2E(edge);
             if (! (f instanceof GlobalFactor)) {
                 facBeliefs[child].divBP(msgs[edge]);
                 facBeliefs[child].prod(newMsgs[edge]);
+                assert !facBeliefs[child].containsBadValues() : "facBeliefs[child] = " + facBeliefs[child];
             }
         }
         
@@ -528,7 +516,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
                 unnormalizeAdjInPlace(facBeliefs[a], facBeliefsAdj[a], facBeliefsUnSum[a]);
             }
         }
-    
+        
         // Initialize the message and potential adjoints by running the variable / factor belief computation in reverse.
         backwardVarFacBeliefs(varBeliefsAdj, facBeliefsAdj);
         
@@ -635,8 +623,8 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
         // Increment the adjoint for each variable to factor message.
         for (int jNb = 0; jNb < bg.numNbsT2(a); jNb++) {
             if (jNb != iNb) {
-                VarTensor prod = safeNewVarTensor(factor);
-                getCavityProductAtFactor(a, prod, iNb, jNb);
+                VarTensor prod = new VarTensor(s, new VarSet());
+                getCavityProductWithFactor(a, prod, iNb, jNb);
                 prod.prod(newMsgsAdj[edgeAI]);
                 int edgeJA = bg.opposingT2(a, jNb);
                 VarSet varJ = msgsAdj[edgeJA].getVars();
@@ -801,7 +789,7 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
     }
     
     private void getCavityProductAtFactor(int f, VarTensor prod, int excl1, int excl2) {
-        if (bg.numNbsT2(f) >= prm.minFacNbsForCache) {
+        if (false && bg.numNbsT2(f) >= prm.minFacNbsForCache) {
             // Compute message by dividing out from cached belief.
             prod.prod(facBeliefs[f]);
             // TODO: Change the usage of this method so that it returns the product of the messages
@@ -817,6 +805,29 @@ public class BeliefPropagation extends AbstractFgInferencer implements Module<Be
             }
         } else {
             // Standard message computation.
+            calcProductAtFactor(f, prod, excl1, excl2);
+        }
+    }
+
+    private void getCavityProductWithFactor(int f, VarTensor prod, int excl1) {
+        getCavityProductWithFactor(f, prod, excl1, -1);
+    }
+    
+    private void getCavityProductWithFactor(int f, VarTensor prod, int excl1, int excl2) {
+        if (bg.numNbsT2(f) >= prm.minFacNbsForCache) {
+            // Compute message by dividing out from cached belief.
+            prod.prod(facBeliefs[f]);
+            if (excl1 != -1) {
+                int e_v1_f = bg.opposingT2(f, excl1);
+                prod.divBP(msgs[e_v1_f]);
+            }
+            if (excl2 != -1) {
+                int e_v2_f = bg.opposingT2(f, excl2);
+                prod.divBP(msgs[e_v2_f]);
+            }
+        } else {
+            // Standard message computation.
+            prod.prod(fm.getOutput().get(f));
             calcProductAtFactor(f, prod, excl1, excl2);
         }
     }

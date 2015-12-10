@@ -21,6 +21,8 @@ import edu.jhu.pacaya.util.semiring.Algebra;
 /**
  * FOR TESTING ONLY. Treats an ExplicitFactor as a GlobalFactor.
  * 
+ * @see GlobalExplicitFactor
+ * 
  * @author mgormley
  */
 public class GlobalExplicitFactor extends ExplicitFactor implements AutodiffGlobalFactor {

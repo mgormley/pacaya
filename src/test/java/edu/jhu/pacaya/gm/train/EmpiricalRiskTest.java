@@ -17,7 +17,7 @@ import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.pacaya.gm.train.CrfTrainer.Trainer;
 import edu.jhu.pacaya.gm.train.EmpiricalRisk.EmpiricalRiskFactory;
 import edu.jhu.pacaya.gm.train.ExpectedRecall.ExpectedRecallFactory;
-import edu.jhu.pacaya.gm.train.L2Distance.MeanSquaredErrorFactory;
+import edu.jhu.pacaya.gm.train.L2Distance.L2DistanceFactory;
 import edu.jhu.pacaya.util.JUnitUtils;
 import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.util.semiring.Algebra;
@@ -38,7 +38,7 @@ public class EmpiricalRiskTest {
  
         helpSimpleGradient(params, new ExpectedRecallFactory(), Trainer.ERMA, 
                 new double[]{-0.125, 0.125, 0.125, -0.125}, s);  
-        helpSimpleGradient(params, new MeanSquaredErrorFactory(), Trainer.ERMA, 
+        helpSimpleGradient(params, new L2DistanceFactory(), Trainer.ERMA, 
                 new double[]{-0.25, 0.25, 0.25, -0.25}, s); 
         helpSimpleGradient(params, null, Trainer.CLL, 
                 new double[]{0.25, -0.25, -0.25, 0.25}, s);
@@ -46,7 +46,7 @@ public class EmpiricalRiskTest {
         params = new double[] {1.0, 2.0, 3.0, 4.0 };
         helpSimpleGradient(params, new ExpectedRecallFactory(), Trainer.ERMA, 
                 new double[]{-0.0983, 0.0983, 0.0983, -0.0983}, s); 
-        helpSimpleGradient(params, new MeanSquaredErrorFactory(), Trainer.ERMA, 
+        helpSimpleGradient(params, new L2DistanceFactory(), Trainer.ERMA, 
                 new double[]{-0.2875, 0.2875, 0.1058, -0.1058}, s); 
         helpSimpleGradient(params, null, Trainer.CLL, 
                 new double[]{0.3655, -0.3655, -0.1345, 0.1345}, s);
