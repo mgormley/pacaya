@@ -73,7 +73,7 @@ public class EmpiricalRiskTest {
         }
         //TODO: mtFactory = new ScaleByWeightFactory(mtFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
-        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model);
         
         double[] grad = obj.getGradient(model.getParams()).toNativeArray();
         System.out.println(xyData.getFeatAlphabet());

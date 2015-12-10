@@ -146,7 +146,7 @@ public class LogLikelihoodFactoryTest {
     public static AvgBatchObjective getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
         MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
-        return new AvgBatchObjective(exObj, model, 1);
+        return new AvgBatchObjective(exObj, model);
     }
 
     public static FgInferencerFactory getInfFactory(Algebra s) {

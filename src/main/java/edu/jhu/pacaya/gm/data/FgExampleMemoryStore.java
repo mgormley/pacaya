@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * @author mgormley
  * 
  */
-public class FgExampleMemoryStore extends AbstractFgExampleList implements FgExampleStore {
+public class FgExampleMemoryStore implements FgExampleStore {
 
     // Note: ArrayList is not synchronized, so we must synchronize access to
     // this class.

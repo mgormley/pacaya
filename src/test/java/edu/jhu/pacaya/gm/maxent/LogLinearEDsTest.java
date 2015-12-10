@@ -86,7 +86,7 @@ public class LogLinearEDsTest {
         MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
         mtFactory = new ScaleByWeightFactory(mtFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
-        SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
+        SumBatchObjective obj = new SumBatchObjective(exObj, model);
         
         // Test average log-likelihood.
         double ll = obj.getValue(model.getParams());
@@ -122,7 +122,7 @@ public class LogLinearEDsTest {
         FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
         MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
-        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1); // Note: this test uses Avg not Sum.
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model); // Note: this test uses Avg not Sum.
         
         assertEquals(2, exs.getAlphabet().size());
 
@@ -161,7 +161,7 @@ public class LogLinearEDsTest {
         FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
         MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
-        SumBatchObjective obj = new SumBatchObjective(exObj, model, 1);
+        SumBatchObjective obj = new SumBatchObjective(exObj, model);
         
         assertEquals(2, exs.getAlphabet().size());
 

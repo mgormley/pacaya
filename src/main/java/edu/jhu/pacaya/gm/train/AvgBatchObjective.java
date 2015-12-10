@@ -48,7 +48,6 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     
     private static final Logger log = LoggerFactory.getLogger(AvgBatchObjective.class);
     
-    private int numThreads = 1;
     private int numParams;
     private int numExamples;
     private FgModel model;
@@ -58,9 +57,8 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     private int curIter;
     private int maxIter;
     
-    public AvgBatchObjective(ExampleObjective exObj, FgModel model, int numThreads) {
+    public AvgBatchObjective(ExampleObjective exObj, FgModel model) {
         this.exObj = exObj;
-        this.numThreads = numThreads;
         this.numExamples = exObj.getNumExamples();
         this.numParams = model.getNumParams();
         this.model = model;
@@ -117,7 +115,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         
         model.setParams(params);        
-        if (numThreads == 1) {
+        if (Threads.numThreads == 1) {
             // Run serially.
             for (int i=0; i<batch.length; i++) {
                 log.trace("Computing value/gradient for example " + i);
