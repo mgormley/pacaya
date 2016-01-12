@@ -55,6 +55,9 @@ public class Var implements Comparable<Var>, Serializable {
         if (stateNames != null && numStates != stateNames.size()) {
             throw new IllegalStateException(String.format("numStates %d doesn't match length of stateNames list %d", numStates, stateNames.size()));
         }
+        if (type == null) {
+            throw new IllegalArgumentException("type must be non-null");
+        }
         this.type = type;
         this.numStates = numStates;
         this.name = name;
