@@ -173,6 +173,7 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
      * @return The clamped factor graph.
      */
     public static FactorGraph getFgLat(FactorGraph fgLatPred, VarConfig goldConfig) {
+        // TODO: instead, have this just look at whether or not the var is in the gold config
         List<Var> predictedVars = VarSet.getVarsOfType(fgLatPred.getVars(), VarType.PREDICTED);
         VarConfig predConfig = goldConfig.getIntersection(predictedVars);
         FactorGraph fgLat = fgLatPred.getClamped(predConfig);
