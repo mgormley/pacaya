@@ -2,6 +2,7 @@ package edu.jhu.pacaya.parse.cky.data;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -117,6 +118,14 @@ public class NaryTree {
         START, LEXICAL, NONTERMINAL, CHILDREN, DONE,
     }
 
+    /**
+     * Gets a full tree from a string in Penn Treebank format. Such a tree should include an outer
+     * set of parentheses. The returned tree will have initialized the start/end fields.
+     */
+    public static NaryTree fromTreeInPtbFormat(String input) throws IOException {
+        return readTreeInPtbFormat(new StringReader(input)); 
+    }
+    
     /**
      * Reads a full tree in Penn Treebank format. Such a tree should include an
      * outer set of parentheses. The returned tree will have initialized the
