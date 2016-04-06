@@ -1,12 +1,18 @@
 package edu.jhu.pacaya.util.cli;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 
 import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 /**
  * Tests/example usage of ArgParser and Opt.
@@ -267,6 +273,32 @@ public class ArgParserTest {
         parser.registerClass(InstanceOpts2.class); // This should throw the exception.
         //String[] args = "--collidingName=1".split(" ");
         //parser.parseArgs(args);
+    }
+ 
+    @Test()
+    public void testFlagFile() throws ParseException, IOException {
+        // Create a temporary file.
+        Path ff = Files.createTempFile(Paths.get("."), "flagfile", ".txt");
+        try {
+            Files.write(ff, Lists.newArrayList(
+                    "# My flag file", 
+                    "   ",
+                    "# My double",
+                    "--doubleVal=3",
+                    "# My int",
+                    " --intVal=3",
+                    "  "));
+            
+            String[] args = ("--intVal=2 --flagfile="+ff.toString()).split(" ");
+            ArgParser parser = new ArgParser(ArgParserTest.class, true);
+            parser.registerClass(ArgParserTest.class);
+            parser.parseArgs(args);
+    
+            Assert.assertEquals(2, intVal); // The command line value overrides the flagfile.
+            Assert.assertEquals(3, doubleVal, 1e-13);
+        } finally {
+            Files.delete(ff);
+        }
     }
     
 }

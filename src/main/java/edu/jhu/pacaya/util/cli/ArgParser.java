@@ -1,8 +1,12 @@
 package edu.jhu.pacaya.util.cli;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -43,6 +47,8 @@ public class ArgParser {
     private Set<String> names;
     private Set<String> shortNames;
     private boolean createShortNames;
+    // Special flags:
+    private Option flagfileOpt;
     
     public ArgParser() {
         this(null);
@@ -60,6 +66,23 @@ public class ArgParser {
         shortNames = new HashSet<String>();
         this.createShortNames = createShortNames;
         this.registeredClasses = new HashSet<>();
+        addFlagFileOption();
+    }
+
+    /**
+     * Adds a special option --flagfile (akin to gflags' flagfile option
+     * http://gflags.github.io/gflags/#special) that specifies a file from which to read additional
+     * flags.
+     */
+    private void addFlagFileOption() {
+        String name = "flagfile";
+        String shortName = getAndAddUniqueShortName(name);
+        String description = "Special flag: file from which to read additional flags"
+                + " (lines starting with # are ignored as comments,"
+                + " and these flags are always processed before those on the command line).";
+        flagfileOpt = new Option(shortName, name, true, description);
+        flagfileOpt.setRequired(false);
+        options.addOption(flagfileOpt);
     }
 
     /** Registers all the @Opt annotations on a class with this ArgParser. */
@@ -149,6 +172,14 @@ public class ArgParser {
         CommandLineParser parser = new PosixParser();
         cmd = parser.parse(options, args);
 
+        // Special handling of --flagfile.
+        if (cmd.hasOption(flagfileOpt.getLongOpt())) {
+            String value = cmd.getOptionValue(flagfileOpt.getLongOpt());
+            String[] ffArgs = readFlagFile(value);
+            parseArgs(ffArgs);
+        }
+        
+        // Process each flag mapped to a field.
         fieldValueMap = new HashMap<>();
         try {
             for (Option apacheOpt : optionFieldMap.keySet()) {
@@ -169,6 +200,24 @@ public class ArgParser {
         }
     }
 
+    /** Reads a flag file: skips lines beginning with # as comments and splits on whitespace. */
+    private static String[] readFlagFile(String path) throws ParseException {
+        Path p = Paths.get(path);
+        if (!Files.isRegularFile(p)) {
+            throw new ParseException("--flagfile specified a file that does not exist: " + path);
+        }
+        StringBuilder sb = new StringBuilder();
+        try {
+            for (String line : Files.readAllLines(p)) {
+                if (line.startsWith("#")) { continue; }
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            throw new ParseException("Error while reading flagfile: " + e.getMessage());
+        }
+        return sb.toString().split("\\s+");
+    }
+    
     /**
      * Gets an instance of the given class by using the no-argument constructor (which must exist)
      * and then setting all fields annotated with @Opt with values cached by {@link #parseArgs(String[])}.
