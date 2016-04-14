@@ -43,6 +43,7 @@ public class LogLinearXY {
     private static final Logger log = LoggerFactory.getLogger(LogLinearXY.class);
 
     public static class LogLinearXYPrm {
+        public boolean cacheExamples = true;
         public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
         public LogLinearXYPrm() {
             crfPrm.infFactory = new BruteForceInferencerPrm(LogSemiring.getInstance());
@@ -111,15 +112,25 @@ public class LogLinearXY {
             this.stateNames = getStateNames(exList, data.getYAlphabet());
         }
         
-        // Because we don't directly support weights in the CrfObjective, 
-        // we instead just add multiple examples.
-        FgExampleMemoryStore store = new FgExampleMemoryStore();
-        for (final LogLinearExample desc : exList) {
-            LFgExample ex = getFgExample(desc);
-            store.add(ex);
+        if (prm.cacheExamples) {
+            FgExampleMemoryStore store = new FgExampleMemoryStore();
+            for (final LogLinearExample desc : exList) {
+                LFgExample ex = getFgExample(desc);
+                store.add(ex);
+            }
+            return store;
+        } else {
+            return new FgExampleList() {
+                @Override
+                public LFgExample get(int i) {
+                    return getFgExample(exList.get(i));
+                }
+                @Override
+                public int size() {
+                    return exList.size();
+                }                
+            };
         }
-        
-        return store;
     }
 
     private LFgExample getFgExample(final LogLinearExample desc) {
