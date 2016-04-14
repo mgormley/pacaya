@@ -57,6 +57,9 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     private int curIter;
     private int maxIter;
     
+    // TODO: Setting this to true is untested.
+    private boolean hogwild = false;
+    
     public AvgBatchObjective(ExampleObjective exObj, FgModel model) {
         this.exObj = exObj;
         this.numExamples = exObj.getNumExamples();
@@ -106,7 +109,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
             ac.accumWeight = true;
         }
         if (ac.accumGradient) {
-            if (isFullDataset) {
+            if (isFullDataset || hogwild) {
                 this.gradient.zero();
                 ac.gradient = this.gradient;
             } else {
@@ -162,24 +165,28 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
 
         @Override
         public Object call() {
-            Accumulator sparseAc = new Accumulator();
-            sparseAc.setFlagsFromOther(ac);
-            synchronized (ac) {
-                if (ac.accumValue) {
-                    log.trace("Computing value for example " + i);
+            if (hogwild) {
+                // Just accumulate the per-example gradients without any syncronization.
+                exObj.accum(model, i, ac);
+                return null;
+            } else {
+                Accumulator sparseAc = new Accumulator();
+                sparseAc.setFlagsFromOther(ac);
+                synchronized (ac) {
+                    if (ac.accumValue) {
+                        log.trace("Computing value for example " + i);
+                    }
+                    if (ac.accumGradient) {
+                        log.trace("Computing gradient for example " + i);
+                        sparseAc.setGradient(ac.gradient.getSparseZeroedCopy());
+                    }
                 }
-                if (ac.accumGradient) {
-                    log.trace("Computing gradient for example " + i);
-                    sparseAc.setGradient(ac.gradient.getSparseZeroedCopy());
+                exObj.accum(model, i, sparseAc);            
+                synchronized (ac) {   
+                    ac.addAll(sparseAc);
                 }
+                return null;
             }
-            
-            exObj.accum(model, i, sparseAc);
-            
-            synchronized (ac) {   
-                ac.addAll(sparseAc);
-            }
-            return null;
         }
         
     }
