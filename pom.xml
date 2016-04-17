@@ -111,7 +111,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- This plugin allows us to update to the latest versions of prim, optimize, and optimize-wrappers. -->
+      <!-- This plugin allows us to update to the latest versions of prim and optimize. -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
@@ -348,12 +348,6 @@
       <version>2.0.2</version>
     </dependency>
      -->
-    <dependency>
-      <groupId>edu.jhu.hlt.optimize-wrappers</groupId>
-      <artifactId>optimize-wrappers</artifactId>
-      <version>${pacaya.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
 </project>
