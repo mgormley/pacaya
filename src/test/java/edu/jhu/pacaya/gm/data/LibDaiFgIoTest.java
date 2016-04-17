@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -15,16 +16,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.jhu.pacaya.gm.inf.Beliefs;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.pacaya.gm.inf.Beliefs;
 import edu.jhu.pacaya.gm.model.Factor;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FactorGraphsForTests;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 import edu.jhu.prim.util.Timer;
-import edu.stanford.nlp.io.StringOutputStream;
 
 
 public class LibDaiFgIoTest {
@@ -125,10 +125,10 @@ public class LibDaiFgIoTest {
     }
 
     private static String writeToString(FactorGraph fg) {
-        StringOutputStream sos = new StringOutputStream();
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(sos));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(bos));
         LibDaiFgIo.write(fg, out);
-        String fgfile = sos.toString();
+        String fgfile = bos.toString();
         System.out.println(fgfile);
         return fgfile;
     }
