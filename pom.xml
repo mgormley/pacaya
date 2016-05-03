@@ -171,6 +171,7 @@
             <artifactId>maven-javadoc-plugin</artifactId>
             <configuration>
               <quiet />
+              <additionalparam>-Xdoclint:none</additionalparam>
             </configuration>
             <executions>
               <execution>
