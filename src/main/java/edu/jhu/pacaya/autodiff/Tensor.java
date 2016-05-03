@@ -53,7 +53,7 @@ public class Tensor implements MVec, Serializable {
      */
     public static int[] unravelIndex(int configIx, int... dims) {
         int numConfigs = IntArrays.prod(dims);
-        org.junit.Assert.assertTrue(configIx < numConfigs);
+        assert configIx < numConfigs;
         int[] strides = getStrides(dims);
         return unravelIndexFromStrides(configIx, strides);
     }
