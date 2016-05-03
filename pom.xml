@@ -4,7 +4,7 @@
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.1.1</version>
+  <version>3.1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -13,7 +13,7 @@
 
   <properties>
     <!-- The version for the Pacaya dependencies. -->
-    <pacaya.version>3.1.1</pacaya.version>
+    <pacaya.version>3.1.2-SNAPSHOT</pacaya.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
@@ -44,7 +44,7 @@
 
   <licenses>
     <license>
-      <name>Apache License, Version 2.0</name>
+      <name>The Apache Software License, Version 2.0</name>
       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
     </license>
   </licenses>
@@ -111,7 +111,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- This plugin allows us to update to the latest versions of prim, optimize, and optimize-wrappers. -->
+      <!-- This plugin allows us to update to the latest versions of prim and optimize. -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
@@ -171,6 +171,7 @@
             <artifactId>maven-javadoc-plugin</artifactId>
             <configuration>
               <quiet />
+              <additionalparam>-Xdoclint:none</additionalparam>
             </configuration>
             <executions>
               <execution>
@@ -348,12 +349,6 @@
       <version>2.0.2</version>
     </dependency>
      -->
-    <dependency>
-      <groupId>edu.jhu.hlt.optimize-wrappers</groupId>
-      <artifactId>optimize-wrappers</artifactId>
-      <version>${pacaya.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
 </project>

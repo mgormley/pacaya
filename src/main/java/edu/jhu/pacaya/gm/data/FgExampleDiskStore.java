@@ -11,7 +11,7 @@ import edu.jhu.pacaya.util.cache.CachedFastDiskStore;
  * @author mgormley
  * 
  */
-public class FgExampleDiskStore extends AbstractFgExampleList implements FgExampleStore {
+public class FgExampleDiskStore implements FgExampleStore {
 
     private CachedFastDiskStore<Integer, LFgExample> examples;
 

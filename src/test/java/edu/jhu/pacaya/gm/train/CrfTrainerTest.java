@@ -5,8 +5,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hlt.optimize.MalletLBFGS;
-import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.LBFGS;
+import edu.jhu.hlt.optimize.LBFGS_port.LBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.function.Regularizer;
@@ -18,9 +18,9 @@ import edu.jhu.pacaya.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.pacaya.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.pacaya.gm.feat.ObsFeatureExtractor;
+import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.maxent.LogLinearEDs;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
@@ -296,7 +296,7 @@ public class CrfTrainerTest {
             prm.optimizer = null;
         } else {
             prm.batchOptimizer = null;
-            prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
+            prm.optimizer = new LBFGS(new LBFGSPrm());
         }
         prm.regularizer = r;
         
@@ -330,7 +330,7 @@ public class CrfTrainerTest {
             prm.optimizer = null;
         } else {
             prm.batchOptimizer = null;
-            prm.optimizer = new MalletLBFGS(new MalletLBFGSPrm());
+            prm.optimizer = new LBFGS(new LBFGSPrm());
         }
         prm.regularizer = r;
         

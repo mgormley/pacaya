@@ -34,10 +34,9 @@ public class AvgBatchObjectiveTest {
     
     @Test
     public void testNonstationaryFunction() {        
-        int numThreads = 1;
         FgModel model = new FgModel(10);
         MockExObj exObj = new MockExObj();
-        AvgBatchObjective avg = new AvgBatchObjective(exObj, model, numThreads);
+        AvgBatchObjective avg = new AvgBatchObjective(exObj, model);
         
         avg.updatateIterAndMax(77, 88);
         avg.getValue(model.getParams());

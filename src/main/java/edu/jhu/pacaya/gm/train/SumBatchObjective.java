@@ -19,8 +19,8 @@ import edu.jhu.pacaya.gm.model.FgModel;
  */
 public class SumBatchObjective extends AvgBatchObjective {
     
-    public SumBatchObjective(ExampleObjective exObj, FgModel model, int numThreads) {
-        super(exObj, model, numThreads);
+    public SumBatchObjective(ExampleObjective exObj, FgModel model) {
+        super(exObj, model);
     }
 
     protected double getDivisorForAveraging(int[] batch, Accumulator ac) {

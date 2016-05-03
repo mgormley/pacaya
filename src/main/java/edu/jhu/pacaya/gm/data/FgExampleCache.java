@@ -17,7 +17,7 @@ import edu.jhu.pacaya.util.cache.GzipMap;
  * @author mgormley
  * 
  */
-public class FgExampleCache extends AbstractFgExampleList implements FgExampleList {
+public class FgExampleCache implements FgExampleList {
 
     private FgExampleList exampleFactory;
     private Map<Integer, LFgExample> cache;

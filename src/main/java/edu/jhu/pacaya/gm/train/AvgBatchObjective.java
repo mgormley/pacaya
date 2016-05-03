@@ -48,7 +48,6 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     
     private static final Logger log = LoggerFactory.getLogger(AvgBatchObjective.class);
     
-    private int numThreads = 1;
     private int numParams;
     private int numExamples;
     private FgModel model;
@@ -58,9 +57,11 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     private int curIter;
     private int maxIter;
     
-    public AvgBatchObjective(ExampleObjective exObj, FgModel model, int numThreads) {
+    // TODO: Setting this to true is untested.
+    private boolean hogwild = false;
+    
+    public AvgBatchObjective(ExampleObjective exObj, FgModel model) {
         this.exObj = exObj;
-        this.numThreads = numThreads;
         this.numExamples = exObj.getNumExamples();
         this.numParams = model.getNumParams();
         this.model = model;
@@ -108,7 +109,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
             ac.accumWeight = true;
         }
         if (ac.accumGradient) {
-            if (isFullDataset) {
+            if (isFullDataset || hogwild) {
                 this.gradient.zero();
                 ac.gradient = this.gradient;
             } else {
@@ -117,7 +118,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         
         model.setParams(params);        
-        if (numThreads == 1) {
+        if (Threads.numThreads == 1) {
             // Run serially.
             for (int i=0; i<batch.length; i++) {
                 log.trace("Computing value/gradient for example " + i);
@@ -164,24 +165,28 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
 
         @Override
         public Object call() {
-            Accumulator sparseAc = new Accumulator();
-            sparseAc.setFlagsFromOther(ac);
-            synchronized (ac) {
-                if (ac.accumValue) {
-                    log.trace("Computing value for example " + i);
+            if (hogwild) {
+                // Just accumulate the per-example gradients without any syncronization.
+                exObj.accum(model, i, ac);
+                return null;
+            } else {
+                Accumulator sparseAc = new Accumulator();
+                sparseAc.setFlagsFromOther(ac);
+                synchronized (ac) {
+                    if (ac.accumValue) {
+                        log.trace("Computing value for example " + i);
+                    }
+                    if (ac.accumGradient) {
+                        log.trace("Computing gradient for example " + i);
+                        sparseAc.setGradient(ac.gradient.getSparseZeroedCopy());
+                    }
                 }
-                if (ac.accumGradient) {
-                    log.trace("Computing gradient for example " + i);
-                    sparseAc.setGradient(ac.gradient.getSparseZeroedCopy());
+                exObj.accum(model, i, sparseAc);            
+                synchronized (ac) {   
+                    ac.addAll(sparseAc);
                 }
+                return null;
             }
-            
-            exObj.accum(model, i, sparseAc);
-            
-            synchronized (ac) {   
-                ac.addAll(sparseAc);
-            }
-            return null;
         }
         
     }

@@ -41,7 +41,6 @@ public class CrfTrainer {
         public Optimizer<DifferentiableFunction> optimizer = null;
         public Optimizer<DifferentiableBatchFunction> batchOptimizer = new AdaGradComidL2(new AdaGradComidL2Prm());
         public Regularizer regularizer = null;
-        public int numThreads = 1;
         /** The type of trainer. */
         public Trainer trainer = Trainer.CLL;
         /** The decoder and loss function used by ERMA training. */
@@ -77,7 +76,7 @@ public class CrfTrainer {
         }
         mtFactory = new ScaleByWeightFactory(mtFactory);
         exObj = new ModuleObjective(data, mtFactory);
-        AvgBatchObjective objective = new AvgBatchObjective(exObj, model, prm.numThreads);
+        AvgBatchObjective objective = new AvgBatchObjective(exObj, model);
         
         Regularizer reg = prm.regularizer;
         if (prm.optimizer != null) {
