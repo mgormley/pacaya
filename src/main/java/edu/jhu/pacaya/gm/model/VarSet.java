@@ -148,6 +148,17 @@ public class VarSet extends SmallSet<Var> {
         }
     }
 
+    /**
+     * Returns an array holding the number of values the corresponding variables can take on
+     */
+    public int[] getDims() {
+        int[] dims = new int[size()];
+        for (int i = 0; i < size(); i++) {
+            dims[i] = get(i).getNumStates();
+        }
+        return dims;
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

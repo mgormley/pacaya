@@ -1,12 +1,16 @@
 package edu.jhu.pacaya.gm.run;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.pacaya.gm.data.LFgExample;
 import edu.jhu.pacaya.gm.data.LibDaiFgIo;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.pacaya.gm.inf.BeliefPropagation.BpScheduleType;
@@ -74,6 +78,8 @@ public class LibDaiFgRunner {
     public static File bpDumpDir = null;
     @Opt(hasArg = true, description = "Whether a tape of BP actions should be maintained (for ERMA training).")
     public static boolean keepTape = false;
+    @Opt(hasArg=true, description="Prefix path to where to print libda formated factor graphs for read data")
+    public static String exportGraphsPath = null;
 
     private static final Logger log = LoggerFactory.getLogger(LibDaiFgRunner.class);
     private static final Reporter rep = Reporter.getReporter(LibDaiFgRunner.class);
@@ -91,6 +97,7 @@ public class LibDaiFgRunner {
             Threads.initDefaultPool(threads);
             // read in the model
             FactorGraph fg = LibDaiFgIo.read(Paths.get(input));
+            maybeWriteGraph(fg);
             // do inference
             FgInferencerFactory infFactory = getInfFactory();
             FgInferencer inf = infFactory.getInferencer(fg);
@@ -136,5 +143,24 @@ public class LibDaiFgRunner {
             throw new ParseException("Unsupported inference method: " + inference);
         }
     }
+    
+    private static void maybeWriteGraph(FactorGraph fg) {
+        if (exportGraphsPath != null) {
+            Path outDir = Paths.get(exportGraphsPath);
+            // create directory if doesn't already exist
+            if (!Files.exists(outDir)) {
+                try {
+                    Files.createDirectories(outDir);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
+                }
+            }
+            // write out each fg
+            log.info(String.format("Writing libdai formatted factor graph files to: %s",  outDir.toAbsolutePath().toString()));
+            LibDaiFgIo.write(fg, Paths.get(outDir.toString(), String.format("%d.fg", 0)));
+        }
+    }
+    
 
 }
