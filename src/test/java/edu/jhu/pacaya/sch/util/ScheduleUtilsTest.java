@@ -22,7 +22,7 @@ public class ScheduleUtilsTest {
         
         IntDiGraph g = simpleGraphWithStart();
         IntDiGraph triggers = ScheduleUtils.buildTriggers(g, new Schedule(
-                -1, 0, 1, 3, 0, 1, 3, 2, 3));
+                4, 0, 1, 3, 0, 1, 3, 2, 3));
         assertArrayEquals(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9).toArray(), triggers.getNodes().stream().sorted().toArray());
         assertEquals(Arrays.asList(
                 edge(0, 1),

@@ -19,6 +19,11 @@ import edu.jhu.pacaya.sch.util.OrderedSet;
 public class IntDiGraph {
 
     /**
+     * maintains the node with the highest key
+     */
+    private int maxNode;
+    
+    /**
      * The nodes of the graph
      */
     private OrderedSet<Integer> nodes;
@@ -43,6 +48,7 @@ public class IntDiGraph {
         edges = new OrderedSet<>();
         predecessors = new DefaultDict<>(defaultNeighbors);
         successors = new DefaultDict<>(defaultNeighbors);
+        maxNode = -1;
     }
     
     public List<Integer> getSuccessors(int i) {
@@ -68,7 +74,7 @@ public class IntDiGraph {
         if (!edges.contains(newEdge)) {
             addNode(s);
             addNode(t);
-            edges.add(new DiEdge(s, t));
+            edges.add(newEdge);
             predecessors.get(t).add(s);
             successors.get(s).add(t);
         }
@@ -91,6 +97,12 @@ public class IntDiGraph {
     }
 
     public void addNode(int i) {
+        if (i < 0) {
+            throw new IndexOutOfBoundsException("node ids must be positive");
+        }
+        if (i > maxNode) {
+            maxNode = i;
+        }
         nodes.add(i);
     }
 
@@ -114,16 +126,26 @@ public class IntDiGraph {
 
     public static IntDiGraph simpleGraphWithStart() {
         IntDiGraph g = simpleGraph();
-        g.addNode(-1);
         g.addEdgesFrom(Arrays.asList(
-            edge(-1, 0),
-            edge(-1, 3)));
+            edge(4, 0),
+            edge(4, 3)));
         return g;
     }
 
+    public int max() {
+        return maxNode;
+    }
+    
     public OrderedSet<DiEdge> getEdges() {
         return edges;
     }
-    
+
+    /**
+     * @return true if the edge from s to t is in the edgeset
+     */
+//    public boolean containsEdge(int s, int t) {
+//        return edges.contains(new DiEdge(s, t));
+//    }
+
     
 }
