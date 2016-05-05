@@ -277,7 +277,6 @@
       </distributionManagement>
     </profile>
   </profiles>
-
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
