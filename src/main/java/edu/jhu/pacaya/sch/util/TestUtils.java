@@ -3,6 +3,8 @@ package edu.jhu.pacaya.sch.util;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 public class TestUtils {
 
     /**
@@ -44,5 +46,12 @@ public class TestUtils {
         } catch (Throwable e) {
             return exceptionToCatch.isInstance(e);
         }
+    }
+    
+    /**
+     * Convert a list of Double into equivalent array of double
+     */
+    public static double[] toArray(List<? extends Number> list) {
+        return list.stream().mapToDouble(Number::doubleValue).toArray();
     }
 }

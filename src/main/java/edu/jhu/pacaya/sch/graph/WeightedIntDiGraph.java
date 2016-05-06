@@ -14,6 +14,7 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.OpenMapRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrixPreservingVisitor;
 import org.apache.commons.math3.linear.RealVector;
 
 public class WeightedIntDiGraph extends IntDiGraph {
@@ -38,7 +39,7 @@ public class WeightedIntDiGraph extends IntDiGraph {
     /**
      * Adds the edge with the given weight
      */
-    void addEdge(int s, int t, double w) {
+    public void addEdge(int s, int t, double w) {
         addEdge(edge(s, t), w);
     }
 
@@ -57,7 +58,7 @@ public class WeightedIntDiGraph extends IntDiGraph {
     /**
      * Adds the edge with the given weight
      */
-    void addEdge(DiEdge e, double w) {
+    public void addEdge(DiEdge e, double w) {
         if (!getEdges().contains(e)) { 
             super.addEdge(e);
             weights.put(e, w);
@@ -95,17 +96,20 @@ public class WeightedIntDiGraph extends IntDiGraph {
      * returns the weight along the given edge or throws and exception if edge
      * not present
      */
-    double getWeight(int s, int t) {
-        DiEdge e = edge(s, t);
+    public double getWeight(int s, int t) {
+        return getWeight(edge(s, t));
+    }
+
+    public double getWeight(DiEdge e) {
         assertEdge(e);
         return weights.get(e);
     }
-
+    
     /**
      * Sets the weight of the edge s->t to be w if the edge is present,
      * otherwise, an IndexOutOfBoundsException is thrown
      */
-    void setWeight(int s, int t, double w) {
+    public void setWeight(int s, int t, double w) {
         DiEdge e = edge(s, t);
         assertEdge(e);
         weights.put(e, w);
@@ -122,6 +126,29 @@ public class WeightedIntDiGraph extends IntDiGraph {
         return m;
     }
 
+    public static WeightedIntDiGraph fromMatrix(RealMatrix m) {
+        WeightedIntDiGraph g = new WeightedIntDiGraph();
+        m.walkInOptimizedOrder(new RealMatrixPreservingVisitor() {
+            
+            @Override
+            public void visit(int row, int column, double value) {
+                g.addEdge(row, column, value);
+            }
+            
+            @Override
+            public void start(int rows, int columns, int startRow, int endRow, int startColumn, int endColumn) {
+                // do nothing
+            }
+            
+            @Override
+            public double end() {
+                // do nothing
+                return 0;
+            }
+        });
+        return g;
+    }
+    
     /**
      * @return a new array of length d filled with ones
      */

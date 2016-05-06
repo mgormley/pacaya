@@ -2,9 +2,15 @@ package edu.jhu.pacaya.sch.util;
 
 import static edu.jhu.pacaya.sch.util.Indexed.enumerate;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang3.mutable.MutableBoolean;
+
+import com.google.common.collect.Lists;
 
 import edu.jhu.pacaya.sch.Schedule;
 import edu.jhu.pacaya.sch.graph.IntDiGraph;
@@ -54,5 +60,58 @@ public class ScheduleUtils {
         }
         return d;
     }
+    
+    /**
+     * Returns an iterator cycles over the elements in items repeat times;
+     * if repeat < 0, then this cycles indefinitely
+     * if repeat == 0, then the iterator is an empty iterator
+     */
+    public static <T> Iterator<T> cycle(Iterator<T> itr, int times) {
+        // if we repeat 0, then it is as if the itr were empty, so don't take the items
+        final List<T> items = (times != 0) ? Lists.newLinkedList(iterable(itr)) : Collections.emptyList();
+        
+        return new Iterator<T>() {
+            
+            private Iterator<T> currentItr = Collections.emptyIterator();
+            private int ncalls = 0;
+            
+            private Iterator<T> getItr() {
+                // if this is the first call or we've gotten to the end of a round
+                if (!currentItr.hasNext() && ncalls < times) {
+                    currentItr = items.iterator();
+                    ncalls++;
+                }
+                return currentItr;
+            }
+            
+            @Override
+            public boolean hasNext() {
+                return getItr().hasNext();
+            }
+
+            @Override
+            public T next() {
+                return getItr().next();
+            }
+            
+        };
+    }
+
+    public static <T> Iterable<T> iterable(Iterator<T> seq) {
+        final MutableBoolean used = new MutableBoolean(false);
+        return new Iterable<T>() {
+
+            @Override
+            public Iterator<T> iterator() {
+                if (!used.booleanValue()) {
+                    used.setValue(true);;
+                    return seq;
+                } else {
+                    throw new IllegalStateException("only allowed to iterate this iterable once");
+                }
+            }
+        };
+    }
+
     
 }

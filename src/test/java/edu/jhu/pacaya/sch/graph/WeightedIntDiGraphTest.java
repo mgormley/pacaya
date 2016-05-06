@@ -175,6 +175,7 @@ public class WeightedIntDiGraphTest {
         assertEquals(127.49999999999903, WeightedIntDiGraph.sumWalks(m, null, null), tol);
         assertEquals(127.49999999999903, WeightedIntDiGraph.sumWalks(m, null, ones), tol);
         assertEquals(127.49999999999903, WeightedIntDiGraph.sumWalks(m, ones, null), tol);
+
         assertTrue(TestUtils.checkThrows(() -> {
             WeightedIntDiGraph.sumWalks(
                 new Array2DRowRealMatrix(
