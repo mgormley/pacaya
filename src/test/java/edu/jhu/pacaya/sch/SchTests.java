@@ -4,6 +4,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import edu.jhu.pacaya.sch.graph.IntDiGraphTest;
+import edu.jhu.pacaya.sch.graph.WeightedIntDiGraphTest;
 import edu.jhu.pacaya.sch.util.DefaultDictTest;
 import edu.jhu.pacaya.sch.util.IndexedTest;
 import edu.jhu.pacaya.sch.util.OrderedSetTest;
@@ -16,6 +17,7 @@ import edu.jhu.pacaya.sch.util.TestUtilsTest;
     ScheduleUtilsTest.class,
     TestUtilsTest.class,
     IntDiGraphTest.class,
+    WeightedIntDiGraphTest.class,
     DefaultDictTest.class,
     IndexedTest.class })
 public class SchTests { }

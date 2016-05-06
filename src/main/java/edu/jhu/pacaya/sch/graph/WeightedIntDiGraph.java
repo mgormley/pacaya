@@ -4,43 +4,87 @@ import static edu.jhu.pacaya.sch.graph.DiEdge.edge;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.OpenMapRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.util.MathArrays;
 
 public class WeightedIntDiGraph extends IntDiGraph {
-    private HashMap<DiEdge, Double> weights;
+    // The default function for generating an edge weight as a function of the edge
+    private final static Function<DiEdge, Double> defaultMakeDefaultWeight = Void -> 0.0; 
+
+    // The function for this graph for generating an edge weight as a function of the edge
     private Function<DiEdge, Double> makeDefaultWeight;
 
+    private HashMap<DiEdge, Double> weights;
+
     public WeightedIntDiGraph() {
-        this(Void -> 0.0);
+        this(defaultMakeDefaultWeight);
     }
 
     public WeightedIntDiGraph(Function<DiEdge, Double> makeDefaultWeight) {
         super();
         weights = new HashMap<>();
-    }
-
-    @Override
-    public void addEdge(int s, int t) {
-        addEdge(s, t, makeDefaultWeight.apply(edge(s, t)));
+        this.makeDefaultWeight = makeDefaultWeight;
     }
 
     /**
      * Adds the edge with the given weight
      */
     void addEdge(int s, int t, double w) {
-        super.addEdge(s, t);
-        weights.put(edge(s, t), w);
+        addEdge(edge(s, t), w);
     }
 
+    /**
+     * Attempts to adds the edge to the graph with default weight if not already present;
+     * If the edge is already present, does nothing.
+     */
+    @Override
+    public void addEdge(DiEdge e) {
+        if (!getEdges().contains(e)) { 
+            super.addEdge(e);
+            weights.put(e, makeDefaultWeight.apply(e));
+        }
+    }
+
+    /**
+     * Adds the edge with the given weight
+     */
+    void addEdge(DiEdge e, double w) {
+        if (!getEdges().contains(e)) { 
+            super.addEdge(e);
+            weights.put(e, w);
+        }
+    }
+
+    /**
+     * Constructs a weighted directed graph with the same nodes and edges as
+     * the given unweighted graph
+     */
+    public static WeightedIntDiGraph fromUnweighted(IntDiGraph g) {
+       
+        WeightedIntDiGraph wg = new WeightedIntDiGraph();
+        wg.addAll(g);
+        return wg;
+    }
+
+    /**
+     * Constructs a weighted directed graph with the same nodes and edges as
+     * the given unweighted graph
+     */
+    public static WeightedIntDiGraph fromUnweighted(IntDiGraph g, Function<DiEdge, Double> makeDefaultWeight) {
+        WeightedIntDiGraph wg = new WeightedIntDiGraph(makeDefaultWeight);
+        wg.addAll(g);
+        return wg;
+    }
+    
     private void assertEdge(DiEdge e) {
         if (!getEdges().contains(e)) {
             throw new IndexOutOfBoundsException(String.format("missing edge: %s", e.toString()));
@@ -68,7 +112,7 @@ public class WeightedIntDiGraph extends IntDiGraph {
     }
 
     public RealMatrix toMatrix() {
-        int n = max();
+        int n = max() + 1;
         RealMatrix m = new OpenMapRealMatrix(n, n);
         for (Entry<DiEdge, Double> entry : weights.entrySet()) {
             DiEdge e = entry.getKey();
@@ -88,11 +132,15 @@ public class WeightedIntDiGraph extends IntDiGraph {
     }
     
     public static double sumWalks(RealMatrix m, RealVector s, RealVector t) {
-        LUDecomposition d = new LUDecomposition(m);
-        RealMatrix invM = d.getSolver().getInverse();
-        if (s == null) s = new ArrayRealVector(m.getColumnDimension(), 1.0);
-        if (t == null) t = new ArrayRealVector(m.getRowDimension(), 1.0);
-        return invM.preMultiply(s).dotProduct(t);
+        int n = m.getColumnDimension();
+        if (n != m.getRowDimension()) {
+            throw new InputMismatchException("sum walks can only be computed on square matrices");
+        }
+        LUDecomposition d = new LUDecomposition(MatrixUtils.createRealIdentityMatrix(n).subtract(m));
+        RealMatrix sum = d.getSolver().getInverse();
+        if (s == null) s = new ArrayRealVector(n, 1.0);
+        if (t == null) t = new ArrayRealVector(n, 1.0);
+        return sum.preMultiply(s).dotProduct(t);
     }
 
     public static double computeSpectralNorm(RealMatrix m) {

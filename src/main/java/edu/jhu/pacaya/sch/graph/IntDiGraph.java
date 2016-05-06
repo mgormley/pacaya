@@ -65,19 +65,39 @@ public class IntDiGraph {
     public static Function<Integer, List<Integer>> defaultNeighbors = i -> new LinkedList<>();
     
     /**
+     * Add the nodes and edges in g to the 
+     * @param g
+     */
+    public void addAll(IntDiGraph g) {
+        // add nodes first to preserve order
+        addNodesFrom(g.getNodes());
+        // then edges
+        addEdgesFrom(g.getEdges());
+    }
+    
+    /**
+     * Add the edge (and the nodes) to the graph if they aren't already there
+     * @param s
+     * @param t
+     */
+    public void addEdge(DiEdge e) {
+        if (edges.add(e)) {
+            int s = e.get1();
+            int t = e.get2();
+            addNode(s);
+            addNode(t);
+            predecessors.get(t).add(s);
+            successors.get(s).add(t);
+        }
+    }
+    
+    /**
      * Add the edge (and the nodes) to the graph if they aren't already there
      * @param s
      * @param t
      */
     public void addEdge(int s, int t) {
-        DiEdge newEdge = new DiEdge(s, t);
-        if (!edges.contains(newEdge)) {
-            addNode(s);
-            addNode(t);
-            edges.add(newEdge);
-            predecessors.get(t).add(s);
-            successors.get(s).add(t);
-        }
+        addEdge(new DiEdge(s, t));
     }
 
     public int index(Integer node) {

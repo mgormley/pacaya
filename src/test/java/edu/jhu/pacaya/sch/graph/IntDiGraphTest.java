@@ -3,20 +3,26 @@ package edu.jhu.pacaya.sch.graph;
 import static edu.jhu.pacaya.sch.graph.DiEdge.edge;
 import static edu.jhu.pacaya.sch.util.TestUtils.testEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import edu.jhu.pacaya.sch.util.TestUtils;
 import edu.jhu.prim.tuple.Pair; 
 
 public class IntDiGraphTest {
 
     @Test
     public void testSimpleGraphWithStart() {
+        IntDiGraph g0 = new IntDiGraph();
+        assertEquals(-1, g0.max());
         IntDiGraph g = IntDiGraph.simpleGraphWithStart();
-
+        assertEquals(4, g.max());
+        assertTrue(TestUtils.checkThrows(() -> g.addNode(-1), IndexOutOfBoundsException.class));
+        
         // adding duplicate edges shouldn't change anything
         g.addEdge(2, 3);
         g.addEdge(4, 0);
@@ -42,6 +48,7 @@ public class IntDiGraphTest {
         assertEquals(Arrays.asList(0),       g.getPredecessors(1));
         assertEquals(Arrays.asList(0),       g.getPredecessors(2));
         assertEquals(Arrays.asList(1, 2, 4), g.getPredecessors(3));
+        assertEquals(4, g.max());
     }
 
     @Test
