@@ -31,10 +31,12 @@ public class TruncatedNormalTest {
             for (double x : Arrays.asList(0.1, 0.5, 2.3, 0.0, -2.8, -10.0, -50.0, 50.0)) {
                 assertEquals(sn.density(x), tr.density(x), tol);
                 assertEquals(sn.cumulativeProbability(x), tr.cumulativeProbability(x), tol);
+                assertEquals(sn.density(x), TruncatedNormal.densityNonTrunc(x, mu, sigma), tol);
+                assertEquals(sn.cumulativeProbability(x), TruncatedNormal.cumulativeNonTrunc(x, mu, sigma), tol);
                 for (double y : Arrays.asList(x - 1.5, x - 0.5, x, x + 0.5, x + 1.5)) {
                     if (y < x) continue;
                     assertEquals(sn.probability(x, y), tr.probability(x, y), tol);
-                    assertEquals(sn.probability(x, y), TruncatedNormal.probabilityStatic(x, y, mu, sigma), tol);
+                    assertEquals(sn.probability(x, y), TruncatedNormal.probabilityNonTrunc(x, y, mu, sigma), tol);
                 }
             }
         }
@@ -101,10 +103,11 @@ public class TruncatedNormalTest {
                     for (double x : Arrays.asList(0.1, 0.5, 2.3, 0.0, -2.8, -10.0, -50.0, 50.0)) {
                         assertEquals(sn.density(x), tr.density(x), tol);
                         assertEquals(sn.cumulativeProbability(x), tr.cumulativeProbability(x), tol);
+                        assertEquals(new TruncatedNormal(null, mu, sigma, x, Double.POSITIVE_INFINITY).getNumericalMean(), TruncatedNormal.meanTruncLower(mu, sigma, x), 1E-5);
                         for (double y : Arrays.asList(x - 1.5, x - 0.5, x, x + 0.5, x + 1.5)) {
                             if (y < x) continue;
                             assertEquals(sn.probability(x, y), tr.probability(x, y), tol);
-                            assertEquals(sn.probability(x, y), TruncatedNormal.probabilityStatic(x, y, mu, sigma), tol);
+                            assertEquals(sn.probability(x, y), TruncatedNormal.probabilityNonTrunc(x, y, mu, sigma), tol);
                             assertEquals(trZeroTrunc.probability(x, y),
                                     TruncatedNormal.probabilityTruncZero(x, y, mu, sigma), tol);
                         }

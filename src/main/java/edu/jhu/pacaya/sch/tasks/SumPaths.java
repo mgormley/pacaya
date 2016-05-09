@@ -31,7 +31,7 @@ public class SumPaths implements SchedulingTask {
     private double lambda;
     private double sigma;
     private Double goldWeight;
-    private int haltAction;
+//    private int haltAction;
 
     public SumPaths(WeightedIntDiGraph wg, RealVector s, RealVector t, double lambda, double sigma) {
         this.lambda = lambda;
@@ -41,9 +41,9 @@ public class SumPaths implements SchedulingTask {
         this.wg = wg;
         Pair<IntDiGraph, IntObjectBimap<DiEdge>> p = wg.edgeGraph(false);
         edgeGraph = p.get1();
-        haltAction = edgeGraph.max() + 1;
+//        haltAction = edgeGraph.max() + 1;
         // TODO: hook the halt action in
-        edgeGraph.addNode(haltAction);
+//        edgeGraph.addNode(haltAction);
         this.edgesToNodes = p.get2();
         this.goldWeight = WeightedIntDiGraph.sumWalks(wg.toMatrix(), s, t);
     }
@@ -97,8 +97,9 @@ public class SumPaths implements SchedulingTask {
      * which is a TruncatedNormal random variable with the mean of the underlying Normal
      * being the anticipated haltTime and the standard deviation of the underlying Normal
      * being a parameter. The reward given a halt time is the negative absolute difference of the
-     * current result from gold minus lambda times the number of time steps taken.
-     *
+     * current result from gold minus lambda times the number of time steps taken. Reward
+     * changes only at dicrete points in time; specifically, for 0 <= t < 1, the result is the initialization, for 1 <= t < 2, the
+     * state is the result after one action, etc.
      */
     private class EvaluatingDoubleConsumer implements DoubleConsumer {
         // the max probability halt time
@@ -115,17 +116,18 @@ public class SumPaths implements SchedulingTask {
         // actual stop time (the actual distribution that we model is a truncated version)
         private double sigma;
         // the most recent reward observed
-        private double lastReward;
+        private double lastAccuracy;
         // the current timestep (starts at 0)
         private int i;
         
         public EvaluatingDoubleConsumer(double gold, double lambda, int haltTime, double sigma) {
+            this.sigma = sigma;
             this.haltTime = haltTime;
             this.lambda = lambda;
             this.gold = gold;
             usedProbMass = 0.0;
             reward = 0;
-            lastReward = 0;
+            lastAccuracy = Double.NEGATIVE_INFINITY;
             i = 0;
         }
 
@@ -139,9 +141,10 @@ public class SumPaths implements SchedulingTask {
          */
         @Override
         public void accept(double value) {
-            double accuracy = -Math.abs(value - gold);
-            double currentReward = accuracy - lambda * i;
-            double pHalt = TruncatedNormal.probabilityTruncZero(i, i+1, haltTime, sigma);
+            lastAccuracy = -Math.abs(value - gold);
+            double currentReward = lastAccuracy - lambda * i;
+            // have the mode be halfway between the action right after the halt time and the following
+            double pHalt = TruncatedNormal.probabilityTruncZero(i, i+1, haltTime + 0.5, sigma);
             pHalt = Math.min(probRemaining(), pHalt);
             usedProbMass += pHalt;
             reward += pHalt * currentReward;
@@ -150,7 +153,10 @@ public class SumPaths implements SchedulingTask {
         }
 
         public double getScore() {
-            return reward + lastReward * probRemaining();
+            // we assume that the lastReward will be constant for the rest of time
+            // we can calculate the mean halt time and penalize by that times lambda
+            double remainingMeanHalt = TruncatedNormal.meanTruncLower(haltTime + 0.5, sigma, i); 
+            return reward + probRemaining() * (lastAccuracy - lambda * remainingMeanHalt);
         }
     }
     
@@ -206,6 +212,7 @@ public class SumPaths implements SchedulingTask {
         return currentTotal;
     }
 
+    /*
     // TODO: probably better to just have halt be explicit as an int rather than an action
     private Pair<Iterator<DiEdge>, Integer> filterOutStopTime(Schedule s) {
         int haltTime = -1;
@@ -225,19 +232,38 @@ public class SumPaths implements SchedulingTask {
         }
         return new Pair<>(nonStopActions.iterator(), haltTime);
     }
+   */
+    
+    private Iterator<DiEdge> edges(Schedule s) {
+        Iterator<Integer> ixIter = s.iterator();
+        return new Iterator<DiEdge>() {
+            
+            @Override
+            public DiEdge next() {
+                return edgesToNodes.lookupObject(ixIter.next());
+            }
+            
+            @Override
+            public boolean hasNext() {
+                return ixIter.hasNext();
+            }
+        };
+    }
     
     @Override
     public double score(Schedule s) {
-        // get the sequence of edges and the halt time
-        Pair<Iterator<DiEdge>, Integer> p = filterOutStopTime(s);
         // compute the expected reward
-        EvaluatingDoubleConsumer eval = new EvaluatingDoubleConsumer(goldWeight, lambda, p.get2(), sigma);
-        approxSumPaths(wg, startWeight, endWeight, p.get1(), eval);
+        EvaluatingDoubleConsumer eval = new EvaluatingDoubleConsumer(goldWeight, lambda, s.getHaltTime(), sigma);
+        approxSumPaths(wg, startWeight, endWeight, edges(s), eval);
         return eval.getScore();
     }
 
-    public int haltAction() {
-        return haltAction;
+//    public int haltAction() {
+//        return haltAction;
+//    }
+
+    public double getGold() {
+        return goldWeight;
     }
 
 }

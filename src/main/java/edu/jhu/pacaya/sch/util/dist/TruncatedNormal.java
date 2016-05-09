@@ -18,6 +18,7 @@ import org.apache.commons.math3.util.FastMath;
  * related:
  * https://github.com/mizzao/libmao/blob/master/src/main/java/net/andrewmao/
  * probability/TruncatedNormal.java
+ * also see: https://commons.apache.org/proper/commons-math/jacoco/org.apache.commons.math3.distribution/NormalDistribution.java.html
  *
  */
 public class TruncatedNormal extends AbstractRealDistribution {
@@ -100,11 +101,22 @@ public class TruncatedNormal extends AbstractRealDistribution {
         return probNormTimes2 / reZTimes2; 
     }
 
-    public static double probabilityStatic(double a, double b, double mu, double sigma) {
+    public static double probabilityNonTrunc(double a, double b, double mu, double sigma) {
         final double denom = sigma * SQRT2;
         final double scaledSDA = (a - mu) / denom; 
         final double scaledSDB = (b - mu) / denom; 
         return 0.5 * Erf.erf(scaledSDA, scaledSDB);
+    }
+
+    public static double densityNonTrunc(double x, double mu, double sigma) {
+        final double x1 = (x - mu) / sigma;
+        final double logStandardDeviationPlusHalfLog2Pi = FastMath.log(sigma) + 0.5 * FastMath.log(2 * FastMath.PI);
+        return FastMath.exp(-0.5 * x1 * x1 - logStandardDeviationPlusHalfLog2Pi);
+    }
+
+    public static double cumulativeNonTrunc(double x, double mu, double sigma) {
+        final double denom = sigma * SQRT2;
+        return 0.5 * Erf.erfc((mu - x) / denom);
     }
     
     @Override
@@ -169,6 +181,16 @@ public class TruncatedNormal extends AbstractRealDistribution {
 
     public double getNormalSigma() {
         return sigma;
+    }
+
+    /**
+     * Returns the mean of the normal distribution truncated to 0 for values of x < lowerBound 
+     */
+    public static double meanTruncLower(double mu, double sigma, double lowerBound) {
+        double alpha = (lowerBound - mu) / sigma;
+        double phiAlpha = densityNonTrunc(alpha, 0, 1.0);
+        double cPhiAlpha = cumulativeNonTrunc(alpha, 0, 1.0);
+        return mu + sigma * phiAlpha / (1.0 - cPhiAlpha);
     }
 
 }
