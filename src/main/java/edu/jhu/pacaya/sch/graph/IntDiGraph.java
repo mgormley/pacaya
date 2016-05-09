@@ -173,13 +173,15 @@ public class IntDiGraph {
             g.addNode(edgeToNodeMap.lookupIndex(e));
         }
         edgeToNodeMap.stopGrowth();
+        // loop over edges
         for (Indexed<DiEdge> e : enumerate(edges)) {
             int newS = e.index();
             int oldS = e.get().get1();
             int oldT = e.get().get2();
-            assert oldS == edgeToNodeMap.lookupIndex(e.get());
-            for (int oldV : predecessors.get(oldT)) {
-                if (selfAvoiding && oldV == oldS) {
+            // loop over successors
+            for (int oldV : successors.get(oldT)) {
+                // skip if self avoiding and s == v
+                if (selfAvoiding && oldS == oldV) {
                     continue;
                 }
                 int newT = edgeToNodeMap.lookupIndex(edge(oldT, oldV));

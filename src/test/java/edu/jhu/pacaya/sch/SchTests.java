@@ -11,9 +11,11 @@ import edu.jhu.pacaya.sch.util.IndexedTest;
 import edu.jhu.pacaya.sch.util.OrderedSetTest;
 import edu.jhu.pacaya.sch.util.ScheduleUtilsTest;
 import edu.jhu.pacaya.sch.util.TestUtilsTest;
+import edu.jhu.pacaya.sch.util.dist.TruncatedNormalTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    TruncatedNormalTest.class,
     OrderedSetTest.class,
     ScheduleUtilsTest.class,
     SumPathTest.class,

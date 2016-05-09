@@ -49,9 +49,17 @@ public class TestUtils {
     }
     
     /**
+     * Convert a list of numbers into equivalent array of ints
+     */
+    public static int[] toIntArray(List<? extends Number> list) {
+        return list.stream().mapToInt(Number::intValue).toArray();
+    }
+
+    /**
      * Convert a list of Double into equivalent array of double
      */
     public static double[] toArray(List<? extends Number> list) {
         return list.stream().mapToDouble(Number::doubleValue).toArray();
     }
+
 }

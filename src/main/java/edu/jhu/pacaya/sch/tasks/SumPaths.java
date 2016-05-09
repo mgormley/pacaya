@@ -17,6 +17,7 @@ import edu.jhu.pacaya.sch.graph.WeightedIntDiGraph;
 import edu.jhu.pacaya.sch.util.DefaultDict;
 import edu.jhu.pacaya.sch.util.Indexed;
 import edu.jhu.pacaya.sch.util.ScheduleUtils;
+import edu.jhu.pacaya.sch.util.dist.TruncatedNormal;
 import edu.jhu.prim.bimap.IntObjectBimap;
 import edu.jhu.prim.tuple.Pair;
 
@@ -28,13 +29,13 @@ public class SumPaths implements SchedulingTask {
     private IntDiGraph edgeGraph;
     private IntObjectBimap<DiEdge> edgesToNodes;
     private double lambda;
-    private double regStrength;
+    private double sigma;
     private Double goldWeight;
     private int haltAction;
 
-    public SumPaths(WeightedIntDiGraph wg, RealVector s, RealVector t, double lambda, double regStrength) {
+    public SumPaths(WeightedIntDiGraph wg, RealVector s, RealVector t, double lambda, double sigma) {
         this.lambda = lambda;
-        this.regStrength = regStrength;
+        this.sigma = sigma;
         startWeight = s;
         endWeight = t;
         this.wg = wg;
@@ -90,37 +91,58 @@ public class SumPaths implements SchedulingTask {
         }
     }
 
+    /**
+     * A consumer that computes an expected reward of a sequence of 
+     * observed values;  the expectation is take with respect to the actual haltTime
+     * which is a TruncatedNormal random variable with the mean of the underlying Normal
+     * being the anticipated haltTime and the standard deviation of the underlying Normal
+     * being a parameter. The reward given a halt time is the negative absolute difference of the
+     * current result from gold minus lambda times the number of time steps taken.
+     *
+     */
     private class EvaluatingDoubleConsumer implements DoubleConsumer {
+        // the max probability halt time
         private int haltTime;
+        // reward = -diff - lambda timestep
         private double lambda;
+        // the target sum
         private double gold;
+        // the total accumulated reward
         private double reward;
+        // the amount of probabilty mass accounted for for the halt time
         private double usedProbMass;
-        private double regStrength;
+        // the standard deviation of the underlying normal distribution over
+        // actual stop time (the actual distribution that we model is a truncated version)
+        private double sigma;
+        // the most recent reward observed
         private double lastReward;
+        // the current timestep (starts at 0)
         private int i;
         
-        
-        public EvaluatingDoubleConsumer(double gold, double lambda, int haltTime, double regStrength) {
+        public EvaluatingDoubleConsumer(double gold, double lambda, int haltTime, double sigma) {
             this.haltTime = haltTime;
             this.lambda = lambda;
             this.gold = gold;
-            this.regStrength = regStrength;
             usedProbMass = 0.0;
             reward = 0;
             lastReward = 0;
             i = 0;
         }
 
+        public double probRemaining() {
+            return 1.0 - usedProbMass;
+        }
+        
+        /**
+         * accept the value that will be available from the current time step (starting at 0)
+         * and the next time step
+         */
         @Override
         public void accept(double value) {
-            // at each step, we compute the reward of stopping at that time step
-            // with the current value given the known target value;
-            //
             double accuracy = -Math.abs(value - gold);
             double currentReward = accuracy - lambda * i;
-            // TODO: compute probability of halt under a distribution parameterized by the haltTime and the regStrength (something like a discrete truncated gaussian with mean at haltTime
-            double pHalt = (i == haltTime) ? 1.0 : 0.0;
+            double pHalt = TruncatedNormal.probabilityTruncZero(i, i+1, haltTime, sigma);
+            pHalt = Math.min(probRemaining(), pHalt);
             usedProbMass += pHalt;
             reward += pHalt * currentReward;
             i++;
@@ -128,7 +150,7 @@ public class SumPaths implements SchedulingTask {
         }
 
         public double getScore() {
-            return reward + lastReward * (1.0 - usedProbMass);
+            return reward + lastReward * probRemaining();
         }
     }
     
@@ -184,12 +206,15 @@ public class SumPaths implements SchedulingTask {
         return currentTotal;
     }
 
+    // TODO: probably better to just have halt be explicit as an int rather than an action
     private Pair<Iterator<DiEdge>, Integer> filterOutStopTime(Schedule s) {
         int haltTime = -1;
         List<DiEdge> nonStopActions = new LinkedList<>();
         for (Indexed<Integer> a : enumerate(s)) {
             if (a.get() == haltAction) {
-                assert haltTime < 0;
+                if (haltTime > -1) {
+                    throw new IllegalStateException("cannot have more than one halt action in schedule");
+                }
                 haltTime = a.index();
             } else {
                 nonStopActions.add(edgesToNodes.lookupObject(a.get()));
@@ -203,14 +228,16 @@ public class SumPaths implements SchedulingTask {
     
     @Override
     public double score(Schedule s) {
-        if (goldWeight == null) {
-            goldWeight = 0.0; 
-        }
+        // get the sequence of edges and the halt time
         Pair<Iterator<DiEdge>, Integer> p = filterOutStopTime(s);
-        // record the diffs
-        EvaluatingDoubleConsumer eval = new EvaluatingDoubleConsumer(goldWeight, lambda, p.get2(), regStrength);
+        // compute the expected reward
+        EvaluatingDoubleConsumer eval = new EvaluatingDoubleConsumer(goldWeight, lambda, p.get2(), sigma);
         approxSumPaths(wg, startWeight, endWeight, p.get1(), eval);
         return eval.getScore();
+    }
+
+    public int haltAction() {
+        return haltAction;
     }
 
 }

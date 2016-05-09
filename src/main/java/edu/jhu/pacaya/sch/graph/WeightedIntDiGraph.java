@@ -132,7 +132,9 @@ public class WeightedIntDiGraph extends IntDiGraph {
             
             @Override
             public void visit(int row, int column, double value) {
-                g.addEdge(row, column, value);
+                if (value != 0.0) {
+                    g.addEdge(row, column, value);
+                }
             }
             
             @Override

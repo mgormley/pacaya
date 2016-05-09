@@ -104,7 +104,7 @@ public class ScheduleUtils {
             @Override
             public Iterator<T> iterator() {
                 if (!used.booleanValue()) {
-                    used.setValue(true);;
+                    used.setValue(true);
                     return seq;
                 } else {
                     throw new IllegalStateException("only allowed to iterate this iterable once");
