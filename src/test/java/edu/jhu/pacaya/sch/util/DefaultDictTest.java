@@ -86,7 +86,58 @@ public class DefaultDictTest {
         assertEquals(Arrays.asList(1, 2, 3), d.get(7)                              );
         assertEquals(Arrays.asList()       , d.getOrDefault(4,  new LinkedList<>()));
         assertEquals(Arrays.asList()       , d.get(10)                             );
-    }
 
+        // test copy constructor
+        DefaultDict<Integer, List<Integer>> d2 = new DefaultDict<>(d, a -> new LinkedList<>(a));
+        assertEquals(4                     , d2.size()                              );
+        assertEquals(Arrays.asList(8, 10)  , d2.get(5)                              );
+        assertEquals(Arrays.asList()       , d2.get(6)                              );
+        assertEquals(Arrays.asList(1, 2, 3), d2.get(7)                              );
+        assertEquals(Arrays.asList()       , d2.getOrDefault(4,  new LinkedList<>()));
+        assertEquals(Arrays.asList()       , d2.get(10)                             );
+
+        // add to d2 and shouldn't change d
+        d2.get(10).add(11);
+        assertEquals(4                     , d2.size()                              );
+        assertEquals(Arrays.asList(8, 10)  , d2.get(5)                              );
+        assertEquals(Arrays.asList()       , d2.get(6)                              );
+        assertEquals(Arrays.asList(1, 2, 3), d2.get(7)                              );
+        assertEquals(Arrays.asList()       , d2.getOrDefault(4,  new LinkedList<>()));
+        assertEquals(Arrays.asList(11)     , d2.get(10)                             );
+
+        // test default copy constructor
+        DefaultDict<Integer, List<Integer>> d3 = new DefaultDict<>(d);
+        assertEquals(4                     , d3.size()                              );
+        assertEquals(Arrays.asList(8, 10)  , d3.get(5)                              );
+        assertEquals(Arrays.asList()       , d3.get(6)                              );
+        assertEquals(Arrays.asList(1, 2, 3), d3.get(7)                              );
+        assertEquals(Arrays.asList()       , d3.getOrDefault(4,  new LinkedList<>()));
+        assertEquals(Arrays.asList()       , d3.get(10)                             );
+
+        // add to existing element of d3 and will also change d
+        d3.get(10).add(12);
+        // but the new element will only show up in d3
+        d3.add(15);
+        assertEquals(4                     , d2.size()                              );
+        assertEquals(Arrays.asList(8, 10)  , d2.get(5)                              );
+        assertEquals(Arrays.asList()       , d2.get(6)                              );
+        assertEquals(Arrays.asList(1, 2, 3), d2.get(7)                              );
+        assertEquals(Arrays.asList()       , d2.getOrDefault(4,  new LinkedList<>()));
+        assertEquals(Arrays.asList(11)     , d2.get(10)                             );
+        assertEquals(5                     , d3.size()                              );
+        assertEquals(Arrays.asList(8, 10)  , d3.get(5)                              );
+        assertEquals(Arrays.asList()       , d3.get(6)                              );
+        assertEquals(Arrays.asList(1, 2, 3), d3.get(7)                              );
+        assertEquals(Arrays.asList()       , d3.getOrDefault(4,  new LinkedList<>()));
+        assertEquals(Arrays.asList(12)     , d3.get(10)                             );
+        assertEquals(Arrays.asList()       , d3.get(15)                            );
+        assertEquals(4                     , d.size()                              );
+        assertEquals(Arrays.asList(8, 10)  , d.get(5)                              );
+        assertEquals(Arrays.asList()       , d.get(6)                              );
+        assertEquals(Arrays.asList(1, 2, 3), d.get(7)                              );
+        assertEquals(Arrays.asList()       , d.getOrDefault(4,  new LinkedList<>()));
+        assertEquals(Arrays.asList(12)     , d.get(10)                             );
+
+    }
 
 }
