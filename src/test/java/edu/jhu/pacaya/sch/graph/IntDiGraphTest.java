@@ -1,7 +1,7 @@
 package edu.jhu.pacaya.sch.graph;
 
 import static edu.jhu.pacaya.sch.graph.DiEdge.edge;
-import static edu.jhu.pacaya.sch.util.TestUtils.testEquals;
+import static edu.jhu.pacaya.sch.util.TestUtils.checkEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -180,13 +180,13 @@ public class IntDiGraphTest {
     
     @Test
     public void testEdgeEquals() {
-        testEquals(new DiEdge[][] { 
+        assertTrue(checkEquals(new DiEdge[][] { 
             { edge(1, 2), edge(1, 2) },
             { edge(1, 3), edge(1, 3) },
             { edge(4, 3), edge(4, 3) },
             { edge(4, 2), edge(4, 2) },
             { null }
-        });
+        }));
     }
 
     @Test

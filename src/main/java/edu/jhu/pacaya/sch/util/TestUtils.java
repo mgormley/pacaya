@@ -1,8 +1,5 @@
 package edu.jhu.pacaya.sch.util;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
 public class TestUtils {
@@ -18,22 +15,27 @@ public class TestUtils {
      *            should be different;
      * 
      */
-    public static <T> void testEquals(T[][] equivClasses) {
+    public static <T> boolean checkEquals(T[][] equivClasses) {
         for (T[] c1 : equivClasses) {
             for (T[] c2 : equivClasses) {
                 for (T e1 : c1) {
                     if (e1 != null) {
                         for (T e2 : c2) {
                             if (c1 == c2) {
-                                assertTrue(e1.equals(e2));
+                                if (!e1.equals(e2)) {
+                                    return false;
+                                }
                             } else {
-                                assertFalse(e1.equals(e2));
+                                if (e1.equals(e2)) {
+                                    return false;
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        return true;
     }
 
     /**

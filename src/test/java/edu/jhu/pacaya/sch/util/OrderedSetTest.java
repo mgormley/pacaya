@@ -90,17 +90,17 @@ public class OrderedSetTest {
 
         OrderedSet<Integer> s4 = new OrderedSet<Integer>(s3);
         s4.clear();
-        TestUtils.testEquals(
+        assertTrue(TestUtils.checkEquals(
                 new Object[][] { { s, new OrderedSet<Integer>(s), new OrderedSet<Integer>(expected1), expected1 },
                         { s2, new OrderedSet<Integer>(expected2), expected2 },
                         { s3, new OrderedSet<Integer>(expected3), expected3 },
 
-        });
+        }));
         s.clear();
         assertEquals(0, s.size());
         assertTrue(s.isEmpty());
-        TestUtils.testEquals(new Object[][] {
-                { s, new OrderedSet<Integer>(s), new OrderedSet<Integer>(Arrays.asList()), Arrays.asList() } });
+        assertTrue(TestUtils.checkEquals(new Object[][] {
+                { s, new OrderedSet<Integer>(s), new OrderedSet<Integer>(Arrays.asList()), Arrays.asList() } }));
     }
 
 }

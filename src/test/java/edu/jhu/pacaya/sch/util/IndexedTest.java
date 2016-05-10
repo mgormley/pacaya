@@ -47,7 +47,7 @@ public class IndexedTest {
         String s2 = "is";
         List<String> strings = Arrays.asList(s1, s2, "a", "test");
         List<Indexed<String>> collected = new ArrayList<>(collect(enumerate(strings)));
-        TestUtils.testEquals(new Object[][] {
+        assertTrue(TestUtils.checkEquals(new Object[][] {
             { collected, new ArrayList<>(collect(enumerate(strings))) },
             { null },
             { collected.get(0), new Indexed<String>("this", 0), new Indexed<String>("this", 0), new Indexed<String>(s1, 0), new Indexed<String>(s1, 0) },
@@ -56,7 +56,7 @@ public class IndexedTest {
             { collected.get(2) },
             { collected.get(3) },
             { new Pair<String, Integer>(s1, 0) },
-        });
+        }));
     }
 
     @Test
