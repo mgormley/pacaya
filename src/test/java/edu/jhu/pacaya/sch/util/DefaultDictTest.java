@@ -1,6 +1,8 @@
 package edu.jhu.pacaya.sch.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -80,6 +82,12 @@ public class DefaultDictTest {
 
         // try it again
         d.add(10);
+        // try contains
+        assertTrue(d.containsKey(5));
+        assertFalse(d.containsKey(21));
+        assertTrue(d.containsValue(Arrays.asList(8, 10)));
+        assertFalse(d.containsValue(Arrays.asList(9, 10)));
+        // make sure we didn't change anything
         assertEquals(4                     , d.size()                              );
         assertEquals(Arrays.asList(8, 10)  , d.get(5)                              );
         assertEquals(Arrays.asList()       , d.get(6)                              );
