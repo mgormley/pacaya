@@ -6,8 +6,12 @@ factors allow us to encode structural constraints such as for
 dependency parsing, constituency parsing, etc. Neural factors are 
 just factors where the scores are computed by a neural network. 
 
-A software tutorial is in the works and we'll make it available online with the official release of this library. 
-Check back soon for an update!
+This library has been used extensively for NLP. Check out 
+[Pacaya NLP](https://github.com/mgormley/pacaya-nlp) for applications of 
+this library to dependency parsing, relation extraction, semantic role labeling, 
+and more.
+
+A software tutorial is in the works. Check back soon for an update!
 
 Contributions to this library come from Matt Gormley, Meg Mitchell, and Travis Wolfe.
 
