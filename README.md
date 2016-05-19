@@ -29,10 +29,9 @@ The latest version is deployed on Maven Central:
 
 This project has several dependencies all of which are available on Maven Central.
 Among others we make extensive use:
-* Prim: a Java primitives library
-  https://github.com/mgormley/prim
-* Optimize: a Java optimization library
-  https://github.com/minyans/optimize
+
+* [Prim](https://github.com/mgormley/prim): a Java primitives library
+* [Optimize](https://github.com/minyans/optimize): a numerical optimization library
 
 ## Build:
 
