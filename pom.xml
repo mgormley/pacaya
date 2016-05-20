@@ -1,16 +1,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>2.0.1</version>
+  <version>3.1.3</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
   <description>Graphical Models and NLP Library.</description>
   <url>https://github.com/mgormley/pacaya</url>
 
+  <properties>
+    <!-- The version for the Pacaya dependencies. -->
+    <pacaya.version>3.1.3</pacaya.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
   <developers>
     <developer>
       <email>mrg@cs.jhu.edu</email>
@@ -38,41 +44,35 @@
 
   <licenses>
     <license>
-      <name>Apache License, Version 2.0</name>
+      <name>The Apache Software License, Version 2.0</name>
       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
     </license>
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:mgormley/prim.git</connection>
-    <url>scm:git:git@github.com:mgormley/prim.git</url>
-    <developerConnection>scm:git:git@github.com:mgormley/prim.git</developerConnection>
+    <connection>scm:git:git@github.com:mgormley/pacaya.git</connection>
+    <url>scm:git:git@github.com:mgormley/pacaya.git</url>
+    <developerConnection>scm:git:git@github.com:mgormley/pacaya.git</developerConnection>
   </scm>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
 
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>       
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <useIncrementalCompilation>true</useIncrementalCompilation>
           <fork>true</fork>
           <!-- <compilerArgument>-verbose</compilerArgument> -->
-          <includes>
-                  <include>**/*.java</include>
-          </includes>
         </configuration>
-        <version>3.0</version>
       </plugin>
       <!-- For use with: mvn clean compile assembly:single -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>        
         <configuration>
           <archive>
             <manifest>
@@ -83,76 +83,195 @@
           </descriptorRefs>
         </configuration>
       </plugin>
-      <!-- Nexus Staging Maven plugin for deploying to Maven Central -->
       <plugin>
-	<groupId>org.sonatype.plugins</groupId>
-	<artifactId>nexus-staging-maven-plugin</artifactId>
-	<version>1.6.1</version>
-	<extensions>true</extensions>
-	<configuration>
-          <serverId>ossrh</serverId>
-          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-          <autoReleaseAfterClose>true</autoReleaseAfterClose>
-	</configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version>
+        <configuration>
+          <testFailureIgnore>true</testFailureIgnore>
+        </configuration>
+      </plugin>
+      <!-- The following plugin includes alternate source directories in the compilation -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>add-test-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/src/perf/java</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- This plugin allows us to update to the latest versions of prim and optimize. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <properties>
+            <property>
+              <name>manchu.version</name>
+              <dependencies>
+                <dependency>
+                  <groupId>com.foo.bar</groupId>
+                  <artifactId>manchu-wibble</artifactId>
+                </dependency>
+              </dependencies>
+            </property>
+          </properties>
+        </configuration>
+      </plugin>
+      <!-- This plugin creates a separate jar for the test classes. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
 
-
   <profiles>
-    <profile> 
+    <profile>
       <id>release</id>
       <build>
-	<plugins>
-	  <!-- These plugins will only run at release time -->
-	  <plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-	    <artifactId>maven-source-plugin</artifactId>
-	    <executions>
-	      <execution>
-		<id>attach-sources</id>
-		<phase>verify</phase>
-		<goals>
-		  <goal>jar-no-fork</goal>
-		</goals>
-	      </execution>
-	    </executions>
-	    <version>2.2.1</version>
-	  </plugin>
-	  <plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-	    <artifactId>maven-javadoc-plugin</artifactId>
-	    <configuration>
-	      <quiet />
-	    </configuration>
-	    <executions>
-	      <execution>
-		<id>attach-javadoc</id>
-		<phase>verify</phase>
-		<goals>
-		  <goal>jar</goal>
-		</goals>
-	      </execution>
-	    </executions>
-	    <version>2.9.1</version>
-	  </plugin>
-	  <!-- GPG signing plugin for deploying to Maven Central -->
-	  <plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-	    <artifactId>maven-gpg-plugin</artifactId>
-	    <version>1.5</version>
-	    <executions>
+        <plugins>
+          <!-- These plugins will only run at release time -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
               <execution>
-		<id>sign-artifacts</id>
-		<phase>verify</phase>
-		<goals>
-		  <goal>sign</goal>
-		</goals>
+                <id>attach-sources</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
               </execution>
-	    </executions>
-	  </plugin>
-	</plugins>
+            </executions>
+            <version>2.2.1</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <quiet />
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadoc</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <version>2.9.1</version>
+          </plugin>
+          <!-- GPG signing plugin for deploying to Maven Central -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- Nexus Staging Maven plugin for deploying to Maven Central -->
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.1</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>ossrh</serverId>
+              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
+        </plugins>
       </build>
+      <!-- For deploying to Maven Central -->
+      <distributionManagement>
+        <snapshotRepository>
+          <id>ossrh</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+          <id>ossrh</id>
+          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+      </distributionManagement>
+    </profile>
+    <profile>
+      <id>clsp</id>
+      <!-- For deploying to CLSP when you have an SSH tunnel setup on your machine. -->
+      <distributionManagement>
+        <repository>
+          <id>checker</id>
+          <name>checker-releases</name>
+          <url>http://localhost:8081/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+          <id>checker</id>
+          <name>checker-snapshots</name>
+          <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+    <profile>
+      <id>coe</id>
+      <!-- For deploying to COE when you have an SSH tunnel setup on your machine. -->
+      <distributionManagement>
+        <repository>
+          <id>coe-mvn</id>
+          <name>coe-mvn-releases</name>
+          <url>http://localhost:8081/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+          <id>coe-mvn-snapshots</id>
+          <name>coe-mvn-snapshots</name>
+          <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+    <profile>
+      <id>coe-local</id>
+      <!-- For deploying to COE when you're on the COE network. -->
+      <distributionManagement>
+        <repository>
+          <id>coe-mvn</id>
+          <name>coe-mvn-releases</name>
+		  <url>http://10.162.95.47:8081/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+          <id>coe-mvn-snapshots</id>
+          <name>coe-mvn-snapshots</name>
+		  <url>http://10.162.95.47:8081/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+      </distributionManagement>
     </profile>
   </profiles>
 
@@ -161,22 +280,17 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8</version>
-      <!-- <scope>test</scope> -->
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>edu.jhu.prim</groupId>
       <artifactId>prim</artifactId>
-      <version>2.0.5</version>
+      <version>${pacaya.version}</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.optimize</groupId>
       <artifactId>optimize</artifactId>
-      <version>2.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
+      <version>${pacaya.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
@@ -184,14 +298,14 @@
       <version>3.2.1</version>
     </dependency>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
-      <version>3.2</version>
+      <version>3.4.1</version>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -216,8 +330,25 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>16.0.1</version>
+      <version>18.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.7</version>
+    </dependency>
+    <!--  
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+     -->
   </dependencies>
 
 </project>

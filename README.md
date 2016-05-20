@@ -1,24 +1,17 @@
-
 # Summary
 
-This is the pre-release of Pacaya: a general graphical models package, with support for structured factors (Smith & Eisner, 2008).
-Structured factors allow us to encode structural constraints such as for dependency parsing, constituency parsing, etc.
+Pacaya is a library for joint modeling with graphical models,
+structured factors, neural networks, and hypergraphs. Structured
+factors allow us to encode structural constraints such as for
+dependency parsing, constituency parsing, etc. Neural factors are 
+just factors where the scores are computed by a neural network. 
 
-This release includes code for (Gormley, Mitchell, Van Durme, and Dredze, ACL 2014). 
-Please cite our paper if you use this library.
+This library has been used extensively for NLP. Check out 
+[Pacaya NLP](https://github.com/mgormley/pacaya-nlp) for applications of 
+this library to dependency parsing, relation extraction, semantic role labeling, 
+and more.
 
-```
-@InProceedings{gormley-etal:2014:SRL,
-  author    = {Gormley, Matthew R. and Mitchell, Margaret and {Van Durme}, Benjamin and Dredze, Mark},
-  title     = {Low-Resource Semantic Role Labeling},
-  booktitle = {Proceedings of {ACL}},
-  month     = {June},
-  year      = {2014},
-}
-```
-
-A software tutorial is in the works and we'll make it available online with the official release of this library. 
-Check back soon for an update!
+A software tutorial is in the works. Check back soon for an update!
 
 Contributions to this library come from Matt Gormley, Meg Mitchell, and Travis Wolfe.
 
@@ -26,11 +19,13 @@ Contributions to this library come from Matt Gormley, Meg Mitchell, and Travis W
 
 The latest version is deployed on Maven Central:
 
-    <dependency>
-      <groupId>edu.jhu.pacaya</groupId>
-      <artifactId>pacaya</artifactId>
-      <version>2.0.1</version>
-    </dependency>
+```xml
+<dependency>
+    <groupId>edu.jhu.pacaya</groupId>
+    <artifactId>pacaya</artifactId>
+    <version>3.1.3</version>
+</dependency>
+```
 
 # Setup
 
@@ -38,32 +33,30 @@ The latest version is deployed on Maven Central:
 
 This project has several dependencies all of which are available on Maven Central.
 Among others we make extensive use:
-* Prim: a Java primitives library
-  https://github.com/mgormley/prim
-* Optimize: a Java optimization library
-  https://github.com/minyans/optimize
+
+* [Prim](https://github.com/mgormley/prim): a Java primitives library
+* [Optimize](https://github.com/minyans/optimize): a numerical optimization library
 
 ## Build:
 
 * Compile the code from the command line:
 
-    mvn compile
+        mvn compile
 
 * To build a single jar with all the dependencies included:
 
-    mvn compile assembly:single
+        mvn compile assembly:single
 
 ## Eclipse setup:
 
 * Create local versions of the .project and .classpath files for Eclipse:
 
-    mvn eclipse:eclipse
+        mvn eclipse:eclipse
 
-* Add M2_REPO environment variable to
+* Add M2\_REPO environment variable to
   Eclipse. http://maven.apache.org/guides/mini/guide-ide-eclipse.html
   Open the Preferences and navigate to 'Java --> Build Path -->
-  Classpath Variables'. Add a new classpath variable M2_REPO with the
+  Classpath Variables'. Add a new classpath variable M2\_REPO with the
   path to your local repository (e.g. ~/.m2/repository).
 
 * To make the project Git aware, right click on the project and select Team -> Git... 
-
