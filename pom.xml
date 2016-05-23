@@ -89,6 +89,9 @@
         <version>2.18.1</version>
         <configuration>
           <testFailureIgnore>true</testFailureIgnore>
+          <excludes>
+            <exclude>**/*SpeedTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <!-- The following plugin includes alternate source directories in the compilation -->
