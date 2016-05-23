@@ -1,4 +1,6 @@
-# Summary
+# Pacaya [![Build Status](https://travis-ci.org/mgormley/pacaya.svg?branch=master)](https://travis-ci.org/mgormley/pacaya)
+
+## Summary
 
 Pacaya is a library for joint modeling with graphical models,
 structured factors, neural networks, and hypergraphs. Structured
@@ -15,7 +17,7 @@ A software tutorial is in the works. Check back soon for an update!
 
 Contributions to this library come from Matt Gormley, Meg Mitchell, and Travis Wolfe.
 
-# Using the Library
+## Using the Library
 
 The latest version is deployed on Maven Central:
 
@@ -27,9 +29,9 @@ The latest version is deployed on Maven Central:
 </dependency>
 ```
 
-# Setup
+## Setup
 
-## Dependencies
+### Dependencies
 
 This project has several dependencies all of which are available on Maven Central.
 Among others we make extensive use:
@@ -37,7 +39,7 @@ Among others we make extensive use:
 * [Prim](https://github.com/mgormley/prim): a Java primitives library
 * [Optimize](https://github.com/minyans/optimize): a numerical optimization library
 
-## Build:
+### Build:
 
 * Compile the code from the command line:
 
@@ -47,7 +49,7 @@ Among others we make extensive use:
 
         mvn compile assembly:single
 
-## Eclipse setup:
+### Eclipse setup:
 
 * Create local versions of the .project and .classpath files for Eclipse:
 
@@ -59,4 +61,4 @@ Among others we make extensive use:
   Classpath Variables'. Add a new classpath variable M2\_REPO with the
   path to your local repository (e.g. ~/.m2/repository).
 
-* To make the project Git aware, right click on the project and select Team -> Git... 
+* To make the project Git aware, right click on the project and select Team -> Git...
