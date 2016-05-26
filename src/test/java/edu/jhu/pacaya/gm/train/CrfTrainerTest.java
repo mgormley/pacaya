@@ -92,15 +92,13 @@ public class CrfTrainerTest {
         
         FgModel model = new FgModel(params.length);
         
-        Regularizer r = null; //new L2(100);
-
         model.updateModelFromDoubles(params);
-        model = train(model, data, r, true);        
+        model = train(model, data, true);        
         double[] params1 = FgModelTest.getParams(model);
         
         // ERMA should get the same answer as the CLL training in this case.
         model.updateModelFromDoubles(params);
-        model = trainErma(model, data, r, true);  
+        model = trainErma(model, data, true);  
         double[] params2 = FgModelTest.getParams(model);
         
         System.out.println(DoubleArrays.toString( params1, "%.3f"));
@@ -148,7 +146,7 @@ public class CrfTrainerTest {
         FgModel model = new FgModel(ofc.getNumParams());
 
         // Train the model.
-        model = train(model, data, null, sgd);
+        model = train(model, data, sgd);
         
         // Assertions:
         System.out.println(model);
@@ -272,10 +270,10 @@ public class CrfTrainerTest {
     }
     
     public static FgModel train(FgModel model, FgExampleList data) {
-        return train(model, data, null, false);
+        return train(model, data, false);
     }
     
-    public static FgModel train(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
+    public static FgModel train(FgModel model, FgExampleList data, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.s = LogSemiring.getInstance();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
@@ -298,14 +296,13 @@ public class CrfTrainerTest {
             prm.batchOptimizer = null;
             prm.optimizer = new LBFGS(new LBFGSPrm());
         }
-        prm.regularizer = r;
-        
+
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
         return model;
     }
     
-    public static FgModel trainErma(FgModel model, FgExampleList data, Regularizer r, boolean sgd) {
+    public static FgModel trainErma(FgModel model, FgExampleList data, boolean sgd) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
@@ -332,7 +329,6 @@ public class CrfTrainerTest {
             prm.batchOptimizer = null;
             prm.optimizer = new LBFGS(new LBFGSPrm());
         }
-        prm.regularizer = r;
         
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
