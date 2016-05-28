@@ -77,7 +77,6 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
     @Override
     public Tensor forward() {        
         // Compute the potential tables.
-        // TODO: Use these cached factors.
         fm = new FactorsModule(mid, fg, tmpS);
         Factors facs = fm.forward();
         
@@ -99,7 +98,6 @@ public class LogLikelihood extends AbstractModule<Tensor> implements Module<Tens
         }
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        //fgLatPred = factors.getOutput().getFactorGraph();
         inf = infFactory.getInferencer(fg);
         inf.run();
         

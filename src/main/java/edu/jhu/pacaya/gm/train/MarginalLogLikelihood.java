@@ -89,7 +89,6 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
         fmLat.forward();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        //fgLatPred = factors.getOutput().getFactorGraph();
         infLatPred = infFactory.getInferencer(fgLatPred);
         infLatPred.run();
         
@@ -97,14 +96,11 @@ public class MarginalLogLikelihood extends AbstractModule<Tensor> implements Mod
         infLat = infFactory.getInferencer(fgLat);
         infLat.run();
         
-        // Compute the conditional log-likelihood for this example.
-        
         // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = tmpS.fromLogProb(infLat.getLogPartition());
         
         // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
         double denominator = tmpS.fromLogProb(infLatPred.getLogPartition());
-
 
         // Compute the conditional log-likelihood for this example.
         double likelihood = tmpS.divide(numerator, denominator);
