@@ -72,6 +72,31 @@ public class VTensor implements MVec, Serializable {
     }
 
     /** 
+     * Gets the value of the entry corresponding to the given indices.
+     * @param indices The indices of the multi-dimensional array.
+     * @return The current value.
+     */
+    public double getFast(int i0, int i1) {
+        int c = offset;
+        c += strides[0] * i0;
+        c += strides[1] * i1;
+        return values.get(c);
+    }
+    
+    /** 
+     * Gets the value of the entry corresponding to the given indices.
+     * @param indices The indices of the multi-dimensional array.
+     * @return The current value.
+     */
+    public double getFast(int i0, int i1, int i2) {
+        int c = offset;
+        c += strides[0] * i0;
+        c += strides[1] * i1;
+        c += strides[2] * i2;
+        return values.get(c);
+    }
+    
+    /** 
      * Sets the value of the entry corresponding to the given indices.
      * @param indices The indices of the multi-dimensional array.
      * @param val The value to set.
@@ -92,6 +117,21 @@ public class VTensor implements MVec, Serializable {
     public double add(int[] indices, double val) {
         checkIndices(indices);
         int c = getConfigIdx(indices);
+        return values.set(c, s.plus(values.get(c), val));
+    }
+
+    public double addFast(int i0, int i1, double val) {
+        int c = offset;
+        c += strides[0] * i0;
+        c += strides[1] * i1;
+        return values.set(c, s.plus(values.get(c), val));
+    }
+    
+    public double addFast(int i0, int i1, int i2, double val) {
+        int c = offset;
+        c += strides[0] * i0;
+        c += strides[1] * i1;
+        c += strides[2] * i2;
         return values.set(c, s.plus(values.get(c), val));
     }
     
