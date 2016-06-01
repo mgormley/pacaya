@@ -55,7 +55,7 @@ public class Tensor implements MVec, Serializable {
         int c = getConfigIdx(indices);
         return values[c];
     }
-
+    
     /** 
      * Sets the value of the entry corresponding to the given indices.
      * @param indices The indices of the multi-dimensional array.
@@ -147,7 +147,7 @@ public class Tensor implements MVec, Serializable {
                     indices.length, dims.length));
         }
         for (int i=0; i<indices.length; i++) {
-            if (indices[i] >= dims[i]) {
+            if (indices[i] < 0 || dims[i] <= indices[i]) {
                 throw new IllegalArgumentException(String.format(
                         "Indices array contains an index that is out of bounds: i=%d index=%d", 
                         i, indices[i]));
