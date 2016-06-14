@@ -20,12 +20,15 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
     private Module<Tensor> modInW;
     // The index in w, by which each x entry should be divided.
     private int k;
+    private final List<Module<Tensor>> inputs;
 
     public ScalarDivide(Module<Tensor> modInX, double value) {
         super(modInX.getAlgebra());
         this.modInX = modInX;
         this.modInW = new Identity<Tensor>(Scalar.getInstance(s, value));
         this.k = 0;
+        // Include only modInX in the inputs, since modInW is a constant.
+        this.inputs = QLists.getList(modInX);
     }
     
     public ScalarDivide(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
@@ -34,6 +37,8 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
         this.modInX = modInX;
         this.modInW = modInW;
         this.k = k;
+        // Include both modInX and modInW in the inputs, since modInW is not constant.
+        this.inputs = QLists.getList(modInX, modInW);
     }
     
     /** Foward pass: y_i = x_i / w_k */
@@ -70,7 +75,7 @@ public class ScalarDivide extends AbstractModule<Tensor> implements Module<Tenso
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return QLists.getList(modInX, modInW);
+        return inputs;
     }
 
 }
