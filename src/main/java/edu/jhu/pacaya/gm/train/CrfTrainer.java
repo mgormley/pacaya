@@ -7,6 +7,7 @@ import edu.jhu.hlt.optimize.AdaGradComidL2;
 import edu.jhu.hlt.optimize.AdaGradComidL2.AdaGradComidL2Prm;
 import edu.jhu.hlt.optimize.Optimizer;
 import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.Function;
@@ -60,14 +61,11 @@ public class CrfTrainer {
     
     public FgModel train(FgModel model, FgExampleList data, Function validation) {        
         ExampleObjective exObj;
-        boolean isMinimize;
         MtFactory mtFactory;
         if (prm.trainer == Trainer.ERMA) {
             mtFactory = new EmpiricalRiskFactory(prm.bFactory, prm.dlFactory);
-            isMinimize = true;
         } else {
-            mtFactory = new LogLikelihoodFactory(prm.infFactory);
-            isMinimize = false;
+            mtFactory = new NegLogLikelihoodFactory(prm.infFactory);
         }
         mtFactory = new ScaleByWeightFactory(mtFactory);
         exObj = new ModuleObjective(data, mtFactory);
@@ -75,23 +73,15 @@ public class CrfTrainer {
         
         if (prm.optimizer != null) {
             DifferentiableFunction fn = objective;
-            if (isMinimize == true) {
-                prm.optimizer.minimize(fn, model.getParams());
-            } else {
-                prm.optimizer.maximize(fn, model.getParams());
-            }
+            prm.optimizer.minimize(fn, model.getParams());
             log.info("Final objective value: " + fn.getValue(model.getParams()));
         } else {
             DifferentiableBatchFunction fn = objective;
             if (prm.batchOptimizer instanceof SGD && validation != null) {
                 SGD sgd = (SGD) prm.batchOptimizer;
-                sgd.optimize(fn, model.getParams(), !isMinimize, validation);
+                sgd.minimize(fn, model.getParams(), validation);
             } else {
-                if (isMinimize == true) {
-                    prm.batchOptimizer.minimize(fn, model.getParams());   
-                } else {
-                    prm.batchOptimizer.maximize(fn, model.getParams());   
-                }
+                prm.batchOptimizer.minimize(fn, model.getParams());
             }
         }
         return model;

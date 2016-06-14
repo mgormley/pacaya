@@ -9,7 +9,8 @@ import edu.jhu.hlt.optimize.LBFGS;
 import edu.jhu.hlt.optimize.LBFGS_port.LBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
 import edu.jhu.hlt.optimize.SGD.SGDPrm;
-import edu.jhu.hlt.optimize.function.Regularizer;
+import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
+import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.pacaya.gm.data.FgExampleList;
 import edu.jhu.pacaya.gm.data.FgExampleMemoryStore;
 import edu.jhu.pacaya.gm.data.LabeledFgExample;
@@ -72,7 +73,7 @@ public class CrfTrainerTest {
         model = train(model, maxent.getData(data));
         
         // Note: this used to be 1.093.
-        JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, FgModelTest.getParams(model), 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{0.823, 0.536}, FgModelTest.getParams(model), 1e-3);
     }
     
     @Test 
@@ -85,7 +86,6 @@ public class CrfTrainerTest {
         xyData.addExStrFeats(1.0, "x=B", "y=B", fvs);        
         LogLinearXY xy = new LogLinearXY(new LogLinearXYPrm());
         FgExampleList data = xy.getData(xyData);
-          
         
         //double[] params = new double[]{-3., -2., -1.0};
         double[] params = new double[]{0, 0, 0, 0};
@@ -93,20 +93,19 @@ public class CrfTrainerTest {
         FgModel model = new FgModel(params.length);
         
         model.updateModelFromDoubles(params);
-        model = train(model, data, true);        
+        model = train(model, data, false);        
         double[] params1 = FgModelTest.getParams(model);
         
         // ERMA should get the same answer as the CLL training in this case.
         model.updateModelFromDoubles(params);
-        model = trainErma(model, data, true);  
+        model = trainErma(model, data, false);  
         double[] params2 = FgModelTest.getParams(model);
         
         System.out.println(DoubleArrays.toString( params1, "%.3f"));
         System.out.println(DoubleArrays.toString( params2, "%.3f"));
         
-        JUnitUtils.assertArrayEquals(new double[]{0.166, -0.166, -0.166, 0.166}, params1, 1e-3);
-        JUnitUtils.assertArrayEquals(new double[]{0.253, -0.253, -0.253, 0.253}, params2, 1e-3);
-        //L2DIST: JUnitUtils.assertArrayEquals(new double[]{0.145, -0.145, -0.145, 0.145}, params2, 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{0.201, -0.201, -0.201, 0.201}, params1, 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{0.195, -0.195, -0.195, 0.195}, params2, 1e-3);
     }
 
     @Test
@@ -152,16 +151,7 @@ public class CrfTrainerTest {
         System.out.println(model);
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        double[] expected;
-        if (sgd) {
-            expected = new double[]{0.19, 0.11, -0.40, 0.11, -0.26, 0.34, -0.32, 0.25};
-        } else {
-            expected = new double[]{2.85, 0.99, -4.82, 0.98, -6.33, 9.25, -6.55, 3.63};
-            // Due to floating point precision, we used to run an extra iteration of LBFGS
-            // and got the following answer:
-            //
-            //expected = new double[]{3.32, 1.05, -5.43, 1.05, -7.09, 10.45, -7.26, 3.89};
-        }
+        double[] expected = new double[]{0.23, 0.08, -0.40, 0.08, -0.27, 0.42, -0.38, 0.24};
         JUnitUtils.assertArrayEquals(expected, FgModelTest.getParams(model), 1e-2);
 
         // OLD WAY:
@@ -204,8 +194,10 @@ public class CrfTrainerTest {
         
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{0.35, 0.35, -0.35, -0.35, 0.14, -0.14, 0.14, -0.14, -6.26, 11.09, -7.31, 2.48}, FgModelTest.getParams(model), 1e-2);
+        double[] expected = new double[]{0.14, 0.14, -0.14, -0.14, -0.07, 0.07, -0.07, 0.07, -0.27, 0.42, -0.38, 0.23};
+        JUnitUtils.assertArrayEquals(expected, FgModelTest.getParams(model), 1e-2);
     }
+
     
     public enum MockTemplate {
         UNARY, ROLE_UNARY
@@ -265,7 +257,8 @@ public class CrfTrainerTest {
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
         // [FALSE, TRUE, A1, A2, A3]
-        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 2.60, 1.90, -4.51}, FgModelTest.getParams(model), 1e-2);
+        double[] expected = new double[]{0.00, 0.00, 0.67, 0.10, -0.77};
+        JUnitUtils.assertArrayEquals(expected, FgModelTest.getParams(model), 1e-2);
 
     }
     
@@ -283,20 +276,22 @@ public class CrfTrainerTest {
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
         
+        double l1Lambda = 0;
+        double l2Lambda = 1;
         if (sgd) {
             // Run with SGD
             SGDPrm optPrm = new SGDPrm();
-            optPrm.numPasses = 10;
+            optPrm.numPasses = 100;
             optPrm.batchSize = 2;
             optPrm.autoSelectLr = false;
-            optPrm.sched.setEta0(0.1);
-            prm.batchOptimizer = new SGD(optPrm);
+            optPrm.sched.setEta0(1);
+            prm.batchOptimizer = BatchFunctionOpts.getRegularizedOptimizer(new SGD(optPrm), l1Lambda, l2Lambda);
             prm.optimizer = null;
         } else {
             prm.batchOptimizer = null;
-            prm.optimizer = new LBFGS(new LBFGSPrm());
+            prm.optimizer = DifferentiableFunctionOpts.getRegularizedOptimizer(new LBFGS(), l1Lambda, l2Lambda);
         }
-
+        
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
         return model;
@@ -315,19 +310,21 @@ public class CrfTrainerTest {
         prm.dlFactory = new L2DistanceFactory();
         //prm.dlFactory = new ExpectedRecallFactory();
         prm.trainer = Trainer.ERMA;
-             
+
+        double l1Lambda = 0;
+        double l2Lambda = 1;
         if (sgd) {
             // Run with SGD
             SGDPrm optPrm = new SGDPrm();
-            optPrm.numPasses = 10;
+            optPrm.numPasses = 100;
             optPrm.batchSize = 2;
             optPrm.autoSelectLr = false;
-            optPrm.sched.setEta0(0.2);
-            prm.batchOptimizer = new SGD(optPrm);
+            optPrm.sched.setEta0(1);
+            prm.optimizer = DifferentiableFunctionOpts.getRegularizedOptimizer(new LBFGS(), l1Lambda, l2Lambda);
             prm.optimizer = null;
         } else {
             prm.batchOptimizer = null;
-            prm.optimizer = new LBFGS(new LBFGSPrm());
+            prm.optimizer = DifferentiableFunctionOpts.getRegularizedOptimizer(new LBFGS(), l1Lambda, l2Lambda);
         }
         
         CrfTrainer trainer = new CrfTrainer(prm);

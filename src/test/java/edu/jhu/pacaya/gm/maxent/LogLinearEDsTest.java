@@ -15,8 +15,8 @@ import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
 import edu.jhu.pacaya.gm.model.FgModel;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective;
 import edu.jhu.pacaya.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.pacaya.gm.train.LogLikelihoodFactory;
-import edu.jhu.pacaya.gm.train.LogLikelihoodFactoryTest;
+import edu.jhu.pacaya.gm.train.NegLogLikelihoodFactory;
+import edu.jhu.pacaya.gm.train.NegLogLikelihoodFactoryTest;
 import edu.jhu.pacaya.gm.train.MarginalLogLikelihood;
 import edu.jhu.pacaya.gm.train.ModuleObjective;
 import edu.jhu.pacaya.gm.train.MtFactory;
@@ -83,8 +83,8 @@ public class LogLinearEDsTest {
 
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
         FgExampleList data = maxent.getData(exs.getData());
-        FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
-        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        FgInferencerFactory infFactory = NegLogLikelihoodFactoryTest.getInfFactory(s);
+        MtFactory mtFactory = new NegLogLikelihoodFactory(infFactory);
         mtFactory = new ScaleByWeightFactory(mtFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         SumBatchObjective obj = new SumBatchObjective(exObj, model);
@@ -92,7 +92,7 @@ public class LogLinearEDsTest {
         // Test average log-likelihood.
         double ll = obj.getValue(model.getParams());
         System.out.println(ll);
-        assertEquals(-95.531, ll, 1e-3);
+        assertEquals(95.531, ll, 1e-3);
         
         // Test observed feature counts.
         FeatureVector obsFeats = MarginalLogLikelihood.getObservedFeatureCounts(data, infFactory, model, params);
@@ -106,7 +106,7 @@ public class LogLinearEDsTest {
         
         // Test gradient.        
         double[] gradient = obj.getGradient(model.getParams()).toNativeArray();       
-        double[] expectedGradient = new double[]{-12.154447609345993, -12.847824678672943};
+        double[] expectedGradient = new double[]{12.154447609345993, 12.847824678672943};
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
 
@@ -120,8 +120,8 @@ public class LogLinearEDsTest {
         
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
         FgExampleList data = maxent.getData(exs.getData());
-        FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
-        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        FgInferencerFactory infFactory = NegLogLikelihoodFactoryTest.getInfFactory(s);
+        MtFactory mtFactory = new NegLogLikelihoodFactory(infFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model); // Note: this test uses Avg not Sum.
         
@@ -130,7 +130,7 @@ public class LogLinearEDsTest {
         // Test average log-likelihood.
         double ll = obj.getValue(model.getParams());        
         System.out.println(ll + " " + Math.exp(ll));
-        assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
+        assertEquals(- ((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
         // Test observed feature counts.
         FeatureVector obsFeats = MarginalLogLikelihood.getObservedFeatureCounts(data, infFactory, model, params);
@@ -144,7 +144,7 @@ public class LogLinearEDsTest {
         
         // Test gradient.         
         double[] gradient = obj.getGradient(model.getParams()).toNativeArray();          
-        double[] expectedGradient = new double[]{1.0 - 1.4621, 1.0 - 0.5378};
+        double[] expectedGradient = new double[]{- (1.0 - 1.4621), -(1.0 - 0.5378)};
         DoubleArrays.scale(expectedGradient, 1.0/2.0);
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
@@ -159,8 +159,8 @@ public class LogLinearEDsTest {
 
         LogLinearXY maxent = new LogLinearXY(getDefaultLogLinearXYPrm());
         FgExampleList data = maxent.getData(exs.getData());
-        FgInferencerFactory infFactory = LogLikelihoodFactoryTest.getInfFactory(s);
-        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        FgInferencerFactory infFactory = NegLogLikelihoodFactoryTest.getInfFactory(s);
+        MtFactory mtFactory = new NegLogLikelihoodFactory(infFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         SumBatchObjective obj = new SumBatchObjective(exObj, model);
         
@@ -169,7 +169,7 @@ public class LogLinearEDsTest {
         // Test log-likelihood.
         double ll = obj.getValue(model.getParams());
         System.out.println(ll);
-        assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
+        assertEquals(- (3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1))), ll, 1e-2);
         
         // Test observed feature counts.
         FeatureVector obsFeats = MarginalLogLikelihood.getObservedFeatureCounts(data, infFactory, model, params);
@@ -183,7 +183,7 @@ public class LogLinearEDsTest {
         
         // Test gradient.         
         double[] gradient = obj.getGradient(model.getParams()).toNativeArray();       
-        JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{-0.2689, 0.2689}, gradient, 1e-3);
     }
     
     public static LogLinearXYPrm getDefaultLogLinearXYPrm() {
