@@ -58,6 +58,10 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
     private int maxIter;
     
     // TODO: Setting this to true is untested.
+    // 
+    // If true, this will permit threads to concurrently modify a dense vector representation of the gradient
+    // without any locking. This is NOT the same as the true Hogwild! algorithm from Niu et al. (2011), which 
+    // permits lock-free updates directly to the model parameters.
     private boolean hogwild = false;
     
     public AvgBatchObjective(ExampleObjective exObj, FgModel model) {
