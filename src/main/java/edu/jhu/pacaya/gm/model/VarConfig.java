@@ -86,6 +86,10 @@ public class VarConfig implements Serializable {
         config.put(var, state);
         vars.add(var);
     }
+    
+    public boolean contains(Var var) {
+        return config.containsKey(var);
+    }
 
     /** Gets the state name (in this config) for a given variable. */
     public String getStateName(Var var) {
