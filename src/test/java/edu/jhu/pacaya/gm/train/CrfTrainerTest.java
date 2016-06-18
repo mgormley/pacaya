@@ -123,7 +123,7 @@ public class CrfTrainerTest {
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
-        prm.includeUnsupportedFeatures = true;
+        prm.featCountCutoff = 0;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
 
         // Create the factor graph.
@@ -172,7 +172,7 @@ public class CrfTrainerTest {
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
-        prm.includeUnsupportedFeatures = true;
+        prm.featCountCutoff = 0;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
         FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVarsLatent(ofc, obsFe);
