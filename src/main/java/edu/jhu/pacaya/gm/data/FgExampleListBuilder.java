@@ -9,13 +9,7 @@ import edu.jhu.pacaya.util.Prm;
 import edu.jhu.prim.util.Timer;
 
 /**
- * Factory for FgExamples.
- * 
- * This neatly packages up several important features: (1) feature count cutoffs
- * and (2) caching of examples.
- * 
- * These two are intertwined in that both features affect the growth of the
- * feature template alphabets.
+ * Factory for FgExampleLists based on cache type.
  * 
  * @author mgormley
  * @author mmitchell
