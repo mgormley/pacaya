@@ -78,6 +78,7 @@ public class ReporterManager {
     
     public static void close() {
         if (wr != null) {
+            log.debug("Closing ReporterManager");
             wr.close();
             wr = null;
         }

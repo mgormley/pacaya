@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -39,13 +40,40 @@ public class Threads {
     
     private Threads() { }
     
+    /**
+     * Initializes the default thread pool to consist of daemon threads. If the end of a main()
+     * method is reached without a call to System.exit(), the JVM will not wait for these daemon
+     * threads.
+     * 
+     * @param numThreads The number of threads.
+     */
     public static void initDefaultPool(int numThreads) {
+        initDefaultPool(numThreads, true);
+    }
+    
+    /**
+     * Initializes the default thread pool and adds a shutdown hook which will attempt to shutdown
+     * the thread pool on a call to System.exit().
+     * 
+     * If numThreads > 1 and isDaemon = true, then System.exit() or Threads.shutdownDefaultPool()
+     * must be explicitly called. Otherwise, the JVM may hang.
+     * 
+     * @param numThreads The number of threads.
+     * @param isDaemon Whether the thread pool should consist of daemon threads.
+     */
+    public static void initDefaultPool(int numThreads, boolean isDaemon) {
         if (numThreads == 1) {
             Threads.defaultPool = MoreExecutors.newDirectExecutorService();
             Threads.numThreads = 1;
         } else {
             log.info("Initialized default thread pool to {} threads. (This must be closed by Threads.shutdownDefaultPool)", numThreads);
-            Threads.defaultPool = Executors.newFixedThreadPool(numThreads);
+            Threads.defaultPool = Executors.newFixedThreadPool(numThreads, new ThreadFactory() {
+                public Thread newThread(Runnable r) {
+                    Thread t = Executors.defaultThreadFactory().newThread(r);
+                    t.setDaemon(isDaemon);
+                    return t;
+                }
+            });
             Threads.numThreads = numThreads;
             // Shutdown the thread pool on System.exit().
             Runtime.getRuntime().addShutdownHook(new Thread(){
@@ -57,6 +85,9 @@ public class Threads {
         }
     }
     
+    /** 
+     * Attempts to shutdown the default thread pool.
+     */
     public static void shutdownDefaultPool() {
         if (defaultPool != null) {
             shutdownSafelyOrDie(defaultPool);
