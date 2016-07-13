@@ -33,6 +33,7 @@ public class ReporterManager {
         if (initialized) {
             log.warn("ReporterManager.init() is being called twice.");
         }
+        log.info("Reporter manager initialized with reportOut={} and useLogger={}", reportOut, useLogger);
         ReporterManager.useLogger = useLogger;
         if (reportOut != null) {
             try {            
@@ -78,6 +79,7 @@ public class ReporterManager {
     
     public static void close() {
         if (wr != null) {
+            // Note that if this is called during a shutdown hook, the log might never be printed.
             log.debug("Closing ReporterManager");
             wr.close();
             wr = null;

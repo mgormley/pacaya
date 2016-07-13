@@ -240,6 +240,7 @@ public class Threads {
     }
 
     public static void shutdownSafelyOrDie(ExecutorService pool) {
+        // Note that if this is called during a shutdown hook, the log might never be printed.
         log.info("Attempting shutdown of ExecutorService.");
         List<Runnable> tasks = pool.shutdownNow();
         if (tasks.size() != 0) {
