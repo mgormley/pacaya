@@ -47,12 +47,20 @@ public class Threads {
             log.info("Initialized default thread pool to {} threads. (This must be closed by Threads.shutdownDefaultPool)", numThreads);
             Threads.defaultPool = Executors.newFixedThreadPool(numThreads);
             Threads.numThreads = numThreads;
+            // Shutdown the thread pool on System.exit().
+            Runtime.getRuntime().addShutdownHook(new Thread(){
+                @Override
+                public void run() {
+                    Threads.shutdownDefaultPool();
+                }
+            });
         }
     }
     
     public static void shutdownDefaultPool() {
         if (defaultPool != null) {
             shutdownSafelyOrDie(defaultPool);
+            defaultPool = null;
         }
     }
     

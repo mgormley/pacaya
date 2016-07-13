@@ -9,6 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.jhu.pacaya.util.Threads;
 import edu.jhu.pacaya.util.cli.Opt;
 
 public class ReporterManager {
@@ -26,19 +27,26 @@ public class ReporterManager {
     private ReporterManager() { }
     
     public static void init(File reportOut, boolean useLogger) {
+        if (wr != null) {
+            throw new RuntimeException("The report file may only be initialized once");
+        }
         if (initialized) {
             log.warn("ReporterManager.init() is being called twice.");
         }
         ReporterManager.useLogger = useLogger;
-        if (wr != null) {
-            throw new RuntimeException("setReportFile() may only be called once");
-        }
-        try {            
-            if (reportOut != null) {
+        if (reportOut != null) {
+            try {            
                 wr = new StreamReporter(new FileOutputStream(reportOut));
+                // Close the stream reporter on System.exit().
+                Runtime.getRuntime().addShutdownHook(new Thread(){
+                    @Override
+                    public void run() {
+                        ReporterManager.close();
+                    }
+                });
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         }
         initialized = true;
         if (reps != null) {
@@ -71,6 +79,7 @@ public class ReporterManager {
     public static void close() {
         if (wr != null) {
             wr.close();
+            wr = null;
         }
     }
     
