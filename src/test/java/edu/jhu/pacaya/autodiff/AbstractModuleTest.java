@@ -242,7 +242,7 @@ public class AbstractModuleTest {
             
             TopoOrder<Y> topo = new TopoOrder<Y>(QLists.getList(in1, in2), mainCo);
             IntDoubleVector x = vec.getVector(ModuleFn.getOutputSize(topo.getInputs()));
-            double delta = s.equals(SplitAlgebra.getInstance()) ? 1e-2 : 1e-8;
+            double delta = s.equals(SplitAlgebra.getInstance()) ? 1e-2 : 1e-7;
             ModuleTestUtils.assertGradientCorrectByFd(topo, x, 1e-5, delta);
         }
     }
