@@ -104,14 +104,16 @@ public class LibDaiFgIo {
                     String[] pair = whitespace.split(readNextLineTrimmed(in, buffer));
                     int libdaiIx = Integer.valueOf(pair[0]);
                     int cix = libDaiIxToConfigId(libdaiIx, dims, varArray, vs);
-                    System.out.println("here");
-                    System.out.println(ArrayUtils.toString(varIds));
-                    System.out.println(ArrayUtils.toString(Tensor.unravelIndexMatlab(libdaiIx, dims)));
-                    System.out.println("---");
-                    System.out.println(ArrayUtils.toString(vs.stream().map(v -> v.getName()).toArray()));
-                    System.out.println(ArrayUtils.toString(Tensor.unravelIndex(cix, vs.getDims())));
                     double val = Math.log(Double.valueOf(pair[1]));
-                    System.out.println(String.format("cix: %s, val: %s", cix, val));
+                    if (log.isTraceEnabled()) {
+                        log.trace("here");
+                        log.trace(ArrayUtils.toString(varIds));
+                        log.trace(ArrayUtils.toString(Tensor.unravelIndexMatlab(libdaiIx, dims)));
+                        log.trace("---");
+                        log.trace(ArrayUtils.toString(vs.stream().map(v -> v.getName()).toArray()));
+                        log.trace(ArrayUtils.toString(Tensor.unravelIndex(cix, vs.getDims())));
+                        log.trace(String.format("cix: %s, val: %s", cix, val));
+                    }
                     dstFac.setValue(cix, val);
                 }
                 factors.add(dstFac);

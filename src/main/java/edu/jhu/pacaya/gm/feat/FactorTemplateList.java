@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.lang.model.element.UnknownAnnotationValueException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +118,6 @@ public class FactorTemplateList implements Serializable {
             fts.add(new FactorTemplate(f.getVars(), alphabet, f.getTemplateKey()));
         } else if (index == -1) {
             log.warn(String.format("Tried to look up unknown feature template %s", f.getTemplateKey()));
-           //            throw new RuntimeException("Unable to update factor template list for factor: " + f.getTemplateKey());
         } else {
             FactorTemplate ft = fts.get(index);
             if (ft.getNumConfigs() != f.getVars().calcNumConfigs()) {
