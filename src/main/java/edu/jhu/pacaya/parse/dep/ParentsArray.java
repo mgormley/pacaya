@@ -2,7 +2,12 @@ package edu.jhu.pacaya.parse.dep;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.list.IntStack;
@@ -17,7 +22,7 @@ public class ParentsArray {
 
     public static final int EMPTY_POSITION = -2;
     public static final int WALL_POSITION = -1;
-    
+
     /**
      * Returns whether this is a valid depedency tree: a directed acyclic graph
      * with a single root which covers all the tokens.
@@ -36,12 +41,12 @@ public class ParentsArray {
         } else if (wallCount < 1) {
             return false;
         }
-        
+
         // Check that there are no cyles
         if (!ParentsArray.isConnectedAndAcyclic(parents)) {
             return false;
         }
-        
+
         // Check for projectivity if necessary
         if (isProjective) {
             if (!ParentsArray.isProjective(parents)) {
@@ -61,7 +66,7 @@ public class ParentsArray {
         // 1-indexed array indicating whether each node (including the wall at position 0) has been visited.
         boolean[] visited = new boolean[parents.length+1];
         Arrays.fill(visited, false);
-        // Visit the nodes reachable from the wall in a pre-order traversal. 
+        // Visit the nodes reachable from the wall in a pre-order traversal.
         IntStack stack = new IntStack();
         stack.push(-1);
         while (stack.size() > 0) {
@@ -107,7 +112,7 @@ public class ParentsArray {
 
     /**
      * Checks if a dependency tree represented as a parents array contains a cycle.
-     * 
+     *
      * @param parents
      *            A parents array where parents[i] contains the index of the
      *            parent of the word at position i, with parents[i] = -1
@@ -132,7 +137,7 @@ public class ParentsArray {
 
     /**
      * Checks that a dependency tree represented as a parents array is projective.
-     * 
+     *
      * @param parents
      *            A parents array where parents[i] contains the index of the
      *            parent of the word at position i, with parents[i] = -1
@@ -167,7 +172,7 @@ public class ParentsArray {
     /**
      * Counts of the number of children in a dependency tree for the given
      * parent index.
-     * 
+     *
      * @param parents
      *            A parents array where parents[i] contains the index of the
      *            parent of the word at position i, with parents[i] = -1
@@ -205,7 +210,7 @@ public class ParentsArray {
     /**
      * Checks whether idx1 is the ancestor of idx2. If idx1 is the parent of
      * idx2 this will return true, but if idx1 == idx2, it will return false.
-     * 
+     *
      * @param idx1 The ancestor position.
      * @param idx2 The descendent position.
      * @param parents The parents array.
@@ -224,12 +229,12 @@ public class ParentsArray {
 
     /**
      * Gets the shortest dependency path between two tokens.
-     * 
+     *
      * <p>
      * For the tree: x0 <-- x1 --> x2, represented by parents=[1, -1, 1] the
      * dependency path from x0 to x2 would be a list [(0, UP), (1, DOWN), (2, NONE)]
      * </p>
-     * 
+     *
      * @param start The position of the start token.
      * @param end The position of the end token.
      * @param parents The parents array.
@@ -242,7 +247,7 @@ public class ParentsArray {
         if (start < -1 || start >= n || end < -1 || end >= n) {
             throw new IllegalArgumentException(String.format("Invalid start/end: %d/%d", start, end));
         }
-        
+
         // Build a hash set of the ancestors of end, including end and the
         // wall node.
         IntHashSet endAncSet = new IntHashSet();
@@ -259,10 +264,10 @@ public class ParentsArray {
         }
         endAncSet.add(curPos); // Don't forget the wall node.
         endAncList.add(curPos);
-        
+
         // Create the dependency path.
         List<Pair<Integer,Dir>> path = new ArrayList<Pair<Integer,Dir>>();
-        
+
         // Add all the "edges" from the start up to the one pointing at the LCA.
         IntHashSet startAncSet = new IntHashSet();
         curPos = start;
@@ -275,21 +280,56 @@ public class ParentsArray {
             // No path to any nodes in endAncSet or a cycle.
             return null;
         }
-    
+
         // Least common ancestor.
         int lca = curPos;
-        
+
         // Add all the edges from the LCA to the end position.
         int lcaIndex = endAncList.lookupIndex(lca);
         for (int i = lcaIndex; i > 0; i--) {
             path.add(new Pair<Integer,Dir>(endAncList.get(i), Dir.DOWN));
         }
-        
+
         // TODO: Update unit tests to reflect this change.
         path.add(new Pair<Integer,Dir>(end, Dir.NONE));
-        
+
         return path;
     }
 
+    /**
+     * Return a sorted list of the indexes that are descended from the provided head index
+     */
+    /* TODO: implement this method without having to rely on Pacaya-NLP's AnnoSentence data structure.
+     * public static List<Integer> getDescendents(int head) {
+        Map<Integer, Set<Integer>> parentToChildren = new HashMap<>();
+        // initialize empty child list for each node
+        for (int i = 0; i < sent.size(); i++) {
+            parentToChildren.put(i, new HashSet<>());
+        }
+        // append child to the end of parents list of children
+        for (int i = 0; i < sent.size(); i++) {
+            int parent = sent.getParents[i];
+            if (parent >= 0) {
+                parentToChildren.get(parent).add(i);
+            }
+        }
+        // start the descendents and fringe with just the root
+        // then loop over things on the fringe, adding any new descendents until we visit all children
+        Set<Integer> descendents = new TreeSet<>();
+        descendents.add(head);
+        Set<Integer> fringe = new HashSet<>();
+        fringe.add(head);
+        while (!fringe.isEmpty()) {
+            int node = fringe.iterator().next();
+            fringe.remove(node);
+            for (int d : parentToChildren.get(node)) {
+                if (!descendents.contains(d)) {
+                    fringe.add(d);
+                    descendents.add(d);
+                }
+            }
+        }
+        return new ArrayList<>(descendents);
+    }*/
 }
 
