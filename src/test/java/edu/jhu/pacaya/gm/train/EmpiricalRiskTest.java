@@ -41,7 +41,7 @@ public class EmpiricalRiskTest {
         helpSimpleGradient(params, new L2DistanceFactory(), Trainer.ERMA, 
                 new double[]{-0.25, 0.25, 0.25, -0.25}, s); 
         helpSimpleGradient(params, null, Trainer.CLL, 
-                new double[]{0.25, -0.25, -0.25, 0.25}, s);
+                new double[]{-0.25, 0.25, 0.25, -0.25}, s);
         
         params = new double[] {1.0, 2.0, 3.0, 4.0 };
         helpSimpleGradient(params, new ExpectedRecallFactory(), Trainer.ERMA, 
@@ -49,7 +49,7 @@ public class EmpiricalRiskTest {
         helpSimpleGradient(params, new L2DistanceFactory(), Trainer.ERMA, 
                 new double[]{-0.2875, 0.2875, 0.1058, -0.1058}, s); 
         helpSimpleGradient(params, null, Trainer.CLL, 
-                new double[]{0.3655, -0.3655, -0.1345, 0.1345}, s);
+                new double[]{-0.3655, 0.3655, 0.1345, -0.1345}, s);
     }
 
     private void helpSimpleGradient(double[] params, DlFactory dl, Trainer trainer, double[] expected, Algebra s) {
@@ -69,7 +69,7 @@ public class EmpiricalRiskTest {
         if (trainer == Trainer.ERMA) {
             mtFactory = new EmpiricalRiskFactory(getErmaBpPrm(s), dl);
         } else {
-            mtFactory = new LogLikelihoodFactory(getErmaBpPrm(s));
+            mtFactory = new NegLogLikelihoodFactory(getErmaBpPrm(s));
         }
         //TODO: mtFactory = new ScaleByWeightFactory(mtFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);

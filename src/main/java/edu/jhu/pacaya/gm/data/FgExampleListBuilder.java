@@ -9,13 +9,7 @@ import edu.jhu.pacaya.util.Prm;
 import edu.jhu.prim.util.Timer;
 
 /**
- * Factory for FgExamples.
- * 
- * This neatly packages up several important features: (1) feature count cutoffs
- * and (2) caching of examples.
- * 
- * These two are intertwined in that both features affect the growth of the
- * feature template alphabets.
+ * Factory for FgExampleLists based on cache type.
  * 
  * @author mgormley
  * @author mmitchell
@@ -32,7 +26,7 @@ public class FgExampleListBuilder {
         private static final long serialVersionUID = 1L;
 
         /** The type of FgExamples object to wrap the factory in. */
-        public CacheType cacheType = CacheType.MEMORY_STORE;
+        public CacheType cacheType = CacheType.NONE;
 
         /**
          * The maximum number of entries to keep in a memory-cache, or -1 to use
@@ -41,7 +35,7 @@ public class FgExampleListBuilder {
         public int maxEntriesInMemory = -1;
 
         /** Whether to GZip the disk cache. */
-        public boolean gzipped = true;
+        public boolean gzipped = false;
 
         /** The directory in which the disk store file should be created. */
         public File cacheDir = new File(".");

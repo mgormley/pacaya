@@ -24,6 +24,15 @@ public class VarConfig implements Serializable {
         vars = new VarSet();
     }
 
+    /** Constructs a configuration from an array of variables and corresponding integer assignments */
+    public VarConfig(Var[] vars, int... assignments) {
+        this();
+        assert vars.length == assignments.length;
+        for (int i = 0; i < vars.length; i++) {
+            put(vars[i], assignments[i]);
+        }
+    }
+    
     /** Constructs a variable configuration by adding each of the configs in order. */
     public VarConfig(VarConfig... configs) {
         this();
@@ -85,6 +94,10 @@ public class VarConfig implements Serializable {
         }
         config.put(var, state);
         vars.add(var);
+    }
+    
+    public boolean contains(Var var) {
+        return config.containsKey(var);
     }
 
     /** Gets the state name (in this config) for a given variable. */

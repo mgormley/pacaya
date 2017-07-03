@@ -2,8 +2,6 @@ package edu.jhu.pacaya.util;
 
 import java.util.ArrayList;
 
-import org.apache.commons.cli.ParseException;
-
 import edu.jhu.pacaya.util.cli.ArgParser;
 import edu.jhu.pacaya.util.cli.Opt;
 
@@ -24,16 +22,8 @@ public class GobbleMemoryTest {
         try {
             ArgParser parser = new ArgParser(GobbleMemoryTest.class);
             parser.registerClass(GobbleMemoryTest.class);
-            try {
-                parser.parseArgs(args);
-            } catch (ParseException e) {
-                System.err.println(e.getMessage());
-                parser.printUsage();
-                System.exit(1);
-            }
-
+            parser.parseArgs(args);
             gobble();
-            
         } catch (Throwable t) {
             t.printStackTrace();
             System.exit(1);

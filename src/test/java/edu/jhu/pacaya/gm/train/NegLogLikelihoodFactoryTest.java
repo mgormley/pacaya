@@ -39,32 +39,37 @@ import edu.jhu.pacaya.util.semiring.Algebra;
 import edu.jhu.pacaya.util.semiring.LogSemiring;
 import edu.jhu.pacaya.util.semiring.RealAlgebra;
 
-public class LogLikelihoodFactoryTest {
+public class NegLogLikelihoodFactoryTest {
 
     @Test
     public void testHasLatentVars() {
-        assertFalse(LogLikelihoodFactory.hasLatentVars(FactorGraphsForTests.getLinearChainFgWithVars().fg));
-        assertTrue(LogLikelihoodFactory.hasLatentVars(FactorGraphsForTests.getLinearChainFgWithVarsLatent().fg));
+        assertFalse(NegLogLikelihoodFactory.hasLatentVars(FactorGraphsForTests.getLinearChainFgWithVars().fg));
+        assertTrue(NegLogLikelihoodFactory.hasLatentVars(FactorGraphsForTests.getLinearChainFgWithVarsLatent().fg));
     }
     
     @Test
     public void testGetMt() {
-        LogLikelihoodFactory mtf = new LogLikelihoodFactory(new BruteForceInferencerPrm(RealAlgebra.getInstance()));
+        NegLogLikelihoodFactory mtf = new NegLogLikelihoodFactory(new BruteForceInferencerPrm(RealAlgebra.getInstance()));
         
-        // Useless variables that wee need for the constructor.
+        // Useless variables that we need for the constructor.
         int curIter = 1;
         int maxIter = 10;
         double weight = 1.0;
-        FgModelIdentity mid = new FgModelIdentity(new FgModel(10));        
+        FgModel model = new FgModel(10);
+        model.setRandomStandardNormal();
+        FgModelIdentity mid = new FgModelIdentity(model);
+        mid.forward();
         {
             FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVars();
             Module<Tensor> mt = mtf.getInstance(mid, fgv.fg, fgv.goldConfig, weight, curIter, maxIter);
-            assertEquals(LogLikelihood.class, mt.getClass());
+            Tensor ll = mt.forward();
+            assertEquals(3.341, ll.getValue(0), 1e-3);
         }
         {
             FgAndVars fgv = FactorGraphsForTests.getLinearChainFgWithVarsLatent();
             Module<Tensor> mt = mtf.getInstance(mid, fgv.fg, fgv.goldConfig, weight, curIter, maxIter);
-            assertEquals(MarginalLogLikelihood.class, mt.getClass());
+            Tensor ll = mt.forward();
+            assertEquals(1.865, ll.getValue(0), 1e-3);
         }
     }
     
@@ -139,12 +144,12 @@ public class LogLikelihoodFactoryTest {
 		Function objective = getCrfObj(model, exs, infFactory);
 		double objVal = objective.getValue(model.getParams());
 		System.out.println("objVal = " + objVal);
-		assertTrue(objVal < 0d);
+		assertTrue(objVal > 0d); // Since it's the negative log-likelihood.
 		System.out.println("[logLikelihoodBelowZero] done");
 	}
 	
     public static AvgBatchObjective getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
-        MtFactory mtFactory = new LogLikelihoodFactory(infFactory);
+        MtFactory mtFactory = new NegLogLikelihoodFactory(infFactory);
         ExampleObjective exObj = new ModuleObjective(data, mtFactory);
         return new AvgBatchObjective(exObj, model);
     }

@@ -9,6 +9,8 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.util.Lambda;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 /**
  * Tensor of doubles (i.e. a multi-dimensional array).
  * 
@@ -45,6 +47,46 @@ public class Tensor implements MVec, Serializable {
     
     /* --------------------- Multi-Dimensional View --------------------- */
 
+    /**
+     * Returns an integer array of the same length as dims that matches the configIx'th configuration
+     * if enumerated configurations in order such that the leftmost dimension changes slowest
+     */
+    public static int[] unravelIndex(int configIx, int... dims) {
+        int numConfigs = IntArrays.prod(dims);
+        assert configIx < numConfigs;
+        int[] strides = getStrides(dims);
+        return unravelIndexFromStrides(configIx, strides);
+    }
+
+    /**
+     * Returns an integer array of the same length as dims that matches the configIx'th configuration
+     * if enumerated configurations in order such that the rightmost dimension is fastest
+     */
+    public static int[] unravelIndexMatlab(int configIx, int... dims) {
+        dims = dims.clone();
+        ArrayUtils.reverse(dims);
+        int[] config = unravelIndex(configIx, dims);
+        ArrayUtils.reverse(config);
+        return config;
+    }
+
+    /**
+     * strides are given in order from left to right, slowest to fastest
+     */
+    public static int[] unravelIndexFromStrides(int configIx, int... strides) {
+        int offset = 0;
+        int[] config = new int[strides.length];
+        // fill things out from slowest to fastest
+        for (int i = 0; i < strides.length; i++) {
+            // how many strides are we passed the offset
+            int ix = (configIx - offset) / strides[i];
+            config[i] = ix;
+            // move the offset
+            offset += ix * strides[i];
+        }
+        return config;
+    }
+    
     /** 
      * Gets the value of the entry corresponding to the given indices.
      * @param indices The indices of the multi-dimensional array.
@@ -55,7 +97,7 @@ public class Tensor implements MVec, Serializable {
         int c = getConfigIdx(indices);
         return values[c];
     }
-
+    
     /** 
      * Sets the value of the entry corresponding to the given indices.
      * @param indices The indices of the multi-dimensional array.
@@ -122,6 +164,25 @@ public class Tensor implements MVec, Serializable {
         return c;
     }
 
+    /** Gets the index into the values array that corresponds to the indices. */
+    public static int ravelIndex(int[] indices, int[] dims) {
+        int c = 0;
+        int[] strides = getStrides(dims);
+        for (int i=0; i<indices.length; i++) {
+            c += strides[i] * indices[i];
+        }
+        return c;
+    }
+
+    /** Gets the index into the values array that corresponds to the indices. */
+    public static int ravelIndexMatlab(int[] indices, int[] dims) {
+        indices = indices.clone();
+        ArrayUtils.reverse(indices);
+        dims = dims.clone();
+        ArrayUtils.reverse(dims);
+        return ravelIndex(indices, dims);
+    }
+    
     /**
      * Gets the strides for the given dimensions. The stride for dimension i
      * (stride[i]) denotes the step forward in values array necessary to
@@ -147,7 +208,7 @@ public class Tensor implements MVec, Serializable {
                     indices.length, dims.length));
         }
         for (int i=0; i<indices.length; i++) {
-            if (indices[i] >= dims[i]) {
+            if (indices[i] < 0 || dims[i] <= indices[i]) {
                 throw new IllegalArgumentException(String.format(
                         "Indices array contains an index that is out of bounds: i=%d index=%d", 
                         i, indices[i]));

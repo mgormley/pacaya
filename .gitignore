@@ -22,3 +22,4 @@ warn.log
 tmp
 .Rhistory
 .DS_Store
+/bin/

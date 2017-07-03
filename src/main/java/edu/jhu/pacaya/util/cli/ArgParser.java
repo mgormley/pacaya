@@ -165,8 +165,29 @@ public class ArgParser {
     /**
      * Parses the command line arguments and sets any of public static fields annotated with @Opt
      * that have been registered with this {@link ArgParser} via {@link #registerClass(Class)}.
+     * 
+     * If a parser error occurs, the error is logged, the usage is printed, and System.exit(1) is called.
+     * 
+     * See also {@link #parseArgsNoExit(String[])}. 
      */
-    public void parseArgs(String[] args) throws ParseException {
+    public void parseArgs(String[] args) {
+        try {
+            parseArgsNoExit(args);
+        } catch (ParseException e1) {
+            log.error(e1.getMessage() + " (See usage below)");
+            this.printUsage();
+            log.error(e1.getMessage() + " (See usage above)");
+            System.exit(1);
+        }
+    }
+    
+    /**
+     * Parses the command line arguments and sets any of public static fields annotated with @Opt
+     * that have been registered with this {@link ArgParser} via {@link #registerClass(Class)}.
+     * 
+     * @throws ParseException if a parser error occurs. 
+     */
+    public void parseArgsNoExit(String[] args) throws ParseException {
         // Parse command line.
         CommandLine cmd = null;
         CommandLineParser parser = new PosixParser();

@@ -45,14 +45,12 @@ public class ObsFeatureConjoiner implements Serializable {
 
     public static class ObsFeatureConjoinerPrm extends Prm {
         private static final long serialVersionUID = 1L;
-        /** Whether to include unsupported features. */
-        public boolean includeUnsupportedFeatures = false;
         /**
          * Minimum number of times (inclusive) a feature must occur in training
          * to be included in the model. Ignored if non-positive. (Using this
          * cutoff implies that unsupported features will not be included.)
          */
-        public int featCountCutoff = -1;
+        public int featCountCutoff = 1;
     }
     
     private static final Logger log = LoggerFactory.getLogger(ObsFeatureConjoiner.class);
@@ -101,9 +99,6 @@ public class ObsFeatureConjoiner implements Serializable {
     
     /** The case of data == null should only be allowed in testing. */
     public void init(FgExampleList data) {
-        if (data == null && !prm.includeUnsupportedFeatures) {
-            throw new IllegalArgumentException("Data can only be null if unsupported features are not included.");
-        }
         if (data == null && prm.featCountCutoff > 0) {
             throw new IllegalArgumentException("Data can only be null if there is no feature count cutoff.");
         }
@@ -125,10 +120,7 @@ public class ObsFeatureConjoiner implements Serializable {
             int numFeats = template.getAlphabet().size();
             included[t] = new boolean[numConfigs][numFeats];
         }
-        BoolArrays.fill(included, true);        
-        if (!prm.includeUnsupportedFeatures) {
-            prm.featCountCutoff = Math.max(prm.featCountCutoff, 1);
-        }
+        BoolArrays.fill(included, true);
         if (prm.featCountCutoff >= 1) {
             log.info("Applying feature count cutoff: " + prm.featCountCutoff);
             IntIntDenseVector[][] counts = countFeatures(data, templates);

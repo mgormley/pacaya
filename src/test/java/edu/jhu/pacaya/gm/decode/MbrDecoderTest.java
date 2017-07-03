@@ -39,7 +39,7 @@ public class MbrDecoderTest {
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCObsFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
-        prm.includeUnsupportedFeatures = true;
+        prm.featCountCutoff = 0;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
         FactorGraph fg = getThreeConnectedComponentsFactorGraph(ofc, obsFe);

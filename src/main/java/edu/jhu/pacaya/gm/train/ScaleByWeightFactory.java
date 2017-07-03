@@ -24,7 +24,7 @@ public class ScaleByWeightFactory implements MtFactory {
         Module<Tensor> mt = mtFac.getInstance(mid, fg, goldConfig, 1.0, curIter, maxIter);
         Algebra s = mt.getAlgebra();
         ScalarMultiply scale = new ScalarMultiply(mt, s.fromReal(weight));
-        return new TopoOrder<Tensor>(QLists.getList(mid, scale.getInputs().get(1)), scale, "ScaledByWeight");
+        return new TopoOrder<Tensor>(QLists.getList(mid), scale, "ScaledByWeight");
     }
 
 }

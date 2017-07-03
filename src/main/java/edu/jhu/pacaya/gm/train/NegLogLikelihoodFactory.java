@@ -2,18 +2,21 @@ package edu.jhu.pacaya.gm.train;
 
 import edu.jhu.pacaya.autodiff.Module;
 import edu.jhu.pacaya.autodiff.Tensor;
+import edu.jhu.pacaya.autodiff.TopoOrder;
+import edu.jhu.pacaya.autodiff.tensor.ScalarMultiply;
 import edu.jhu.pacaya.gm.inf.FgInferencerFactory;
 import edu.jhu.pacaya.gm.model.FactorGraph;
 import edu.jhu.pacaya.gm.model.FgModelIdentity;
 import edu.jhu.pacaya.gm.model.Var;
 import edu.jhu.pacaya.gm.model.Var.VarType;
+import edu.jhu.pacaya.util.collections.QLists;
 import edu.jhu.pacaya.gm.model.VarConfig;
 
-public class LogLikelihoodFactory implements MtFactory {
+public class NegLogLikelihoodFactory implements MtFactory {
 
     private FgInferencerFactory infFactory;
     
-    public LogLikelihoodFactory(FgInferencerFactory infFactory) {
+    public NegLogLikelihoodFactory(FgInferencerFactory infFactory) {
         this.infFactory = infFactory;
     }
     
@@ -23,11 +26,15 @@ public class LogLikelihoodFactory implements MtFactory {
         if (weight != 1.0) {
             throw new IllegalArgumentException("Weight not supported by CLL.");
         }
+        // Get the NEGATIVE log-likelihood.
+        Module<Tensor> obj;
         if (hasLatentVars(fg)) {
-            return new MarginalLogLikelihood(mid, fg, infFactory, goldConfig);
+            obj = new MarginalLogLikelihood(mid, fg, infFactory, goldConfig);
         } else {
-            return new LogLikelihood(mid, fg, infFactory, goldConfig);
+            obj = new LogLikelihood(mid, fg, infFactory, goldConfig);
         }
+        Module<Tensor> negObj = new ScalarMultiply(obj, -1.0);
+        return new TopoOrder<>(obj.getInputs(), negObj, "negative log-likelihood");
     }
     
     public static boolean hasLatentVars(FactorGraph fg) {

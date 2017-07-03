@@ -20,12 +20,15 @@ public class ScalarMultiply extends AbstractModule<Tensor> implements Module<Ten
     private Module<Tensor> modInW;
     // The index in w, which should be multiplied each x entry.
     private int k;
+    private final List<Module<Tensor>> inputs;
     
     public ScalarMultiply(Module<Tensor> modInX, double value) {
         super(modInX.getAlgebra());
         this.modInX = modInX;
         this.modInW = new Identity<Tensor>(Scalar.getInstance(s, value));
         this.k = 0;
+        // Include only modInX in the inputs, since modInW is a constant.
+        this.inputs = QLists.getList(modInX);
     }
     
     public ScalarMultiply(Module<Tensor> modInX, Module<Tensor> modInW, int k) {
@@ -34,6 +37,8 @@ public class ScalarMultiply extends AbstractModule<Tensor> implements Module<Ten
         this.modInX = modInX;
         this.modInW = modInW;
         this.k = k;
+        // Include both modInX and modInW in the inputs, since modInW is not constant.
+        this.inputs = QLists.getList(modInX, modInW);
     }
     
     /** Foward pass: y_i = x_i * w_k */
@@ -69,7 +74,7 @@ public class ScalarMultiply extends AbstractModule<Tensor> implements Module<Ten
 
     @Override
     public List<Module<Tensor>> getInputs() {
-        return QLists.getList(modInX, modInW);
+        return inputs;
     }
     
 }

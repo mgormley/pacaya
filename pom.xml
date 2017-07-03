@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.jhu.pacaya</groupId>
   <artifactId>pacaya</artifactId>
-  <version>3.1.3</version>
+  <version>3.1.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -13,13 +13,13 @@
 
   <properties>
     <!-- The version for the Pacaya dependencies. -->
-    <pacaya.version>3.1.3</pacaya.version>
+    <pacaya.version>3.1.4-SNAPSHOT</pacaya.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  
+
   <developers>
     <developer>
-      <email>mrg@cs.jhu.edu</email>
+      <email>mgormley@cs.cmu.edu</email>
       <name>Matt Gormley</name>
       <url>https://github.com/mgormley</url>
       <id>mgormley</id>
@@ -60,7 +60,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>       
+        <version>3.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -72,7 +72,7 @@
       <!-- For use with: mvn clean compile assembly:single -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.5.3</version>        
+        <version>2.5.3</version>
         <configuration>
           <archive>
             <manifest>
@@ -94,7 +94,8 @@
           </excludes>
         </configuration>
       </plugin>
-      <!-- The following plugin includes alternate source directories in the compilation -->
+      <!-- The following plugin includes alternate source directories in 
+        the compilation -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -114,7 +115,8 @@
           </execution>
         </executions>
       </plugin>
-      <!-- This plugin allows us to update to the latest versions of prim and optimize. -->
+      <!-- This plugin allows us to update to the latest versions of prim 
+        and optimize. -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
@@ -230,7 +232,8 @@
     </profile>
     <profile>
       <id>clsp</id>
-      <!-- For deploying to CLSP when you have an SSH tunnel setup on your machine. -->
+      <!-- For deploying to CLSP when you have an SSH tunnel setup on your 
+        machine. -->
       <distributionManagement>
         <repository>
           <id>checker</id>
@@ -246,7 +249,8 @@
     </profile>
     <profile>
       <id>coe</id>
-      <!-- For deploying to COE when you have an SSH tunnel setup on your machine. -->
+      <!-- For deploying to COE when you have an SSH tunnel setup on your 
+        machine. -->
       <distributionManagement>
         <repository>
           <id>coe-mvn</id>
@@ -267,12 +271,12 @@
         <repository>
           <id>coe-mvn</id>
           <name>coe-mvn-releases</name>
-		  <url>http://10.162.95.47:8081/artifactory/libs-release-local</url>
+          <url>http://10.162.95.47:8081/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
           <id>coe-mvn-snapshots</id>
           <name>coe-mvn-snapshots</name>
-		  <url>http://10.162.95.47:8081/artifactory/libs-snapshot-local</url>
+          <url>http://10.162.95.47:8081/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
@@ -328,7 +332,7 @@
           <groupId>jfree</groupId>
           <artifactId>jfreechart</artifactId>
         </exclusion>
-      </exclusions> 
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -340,18 +344,6 @@
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.7.7</version>
     </dependency>
-    <!--  
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.7</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.0.2</version>
-    </dependency>
-     -->
   </dependencies>
 
 </project>

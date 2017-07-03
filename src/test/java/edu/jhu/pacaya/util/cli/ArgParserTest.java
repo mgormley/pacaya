@@ -60,7 +60,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals(2, intVal);
             Assert.assertEquals(1e10, doubleVal, 1e-13);
@@ -70,7 +70,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals(3, intVal);
             Assert.assertEquals(3e10, doubleVal, 1e-13);
@@ -80,7 +80,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals(3000000, intVal);
             Assert.assertEquals(1e6, doubleVal, 1e-13);
@@ -90,7 +90,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals("4", strVal);
             Assert.assertEquals(new File("4/4"), fileVal);
@@ -100,7 +100,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals(MockEnum.OPT2, enumVal);
         }
@@ -113,7 +113,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals("Fri Jan 10 18:00:00 EST 2014", stopBy.toString());
         }
@@ -122,7 +122,7 @@ public class ArgParserTest {
 
             ArgParser parser = new ArgParser();
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
 
             Assert.assertEquals("Fri Jan 10 06:22:00 EST 2014", stopBy.toString());
         }
@@ -134,7 +134,7 @@ public class ArgParserTest {
 
         ArgParser parser = new ArgParser();
         parser.registerClass(ArgParserTest.class);
-        parser.parseArgs(args);
+        parser.parseArgsNoExit(args);
 
         Assert.assertEquals(false, boolArg);
         Assert.assertEquals(true, boolNoArg);
@@ -155,7 +155,7 @@ public class ArgParserTest {
             ArgParser parser = new ArgParser();
             parser.registerClass(RequiredOpts.class);
             try {
-                parser.parseArgs(args);
+                parser.parseArgsNoExit(args);
             } catch (ParseException e) {
                 Assert.fail();
             }
@@ -168,7 +168,7 @@ public class ArgParserTest {
             ArgParser parser = new ArgParser();
             parser.registerClass(RequiredOpts.class);
             try {
-                parser.parseArgs(args);
+                parser.parseArgsNoExit(args);
                 Assert.fail();
             } catch (ParseException e) {
                 // success
@@ -189,7 +189,7 @@ public class ArgParserTest {
             ArgParser parser = new ArgParser();
             parser.registerClass(NamedOpts.class);
             try {
-                parser.parseArgs(args);
+                parser.parseArgsNoExit(args);
             } catch (ParseException e) {
                 Assert.fail();
             }
@@ -200,7 +200,7 @@ public class ArgParserTest {
             ArgParser parser = new ArgParser();
             parser.registerClass(RequiredOpts.class);
             try {
-                parser.parseArgs(args);
+                parser.parseArgsNoExit(args);
                 Assert.fail();
             } catch (ParseException e) {
                 // success
@@ -213,7 +213,7 @@ public class ArgParserTest {
         String[] args = "--intVal=2".split(" ");
         ArgParser parser = new ArgParser(ArgParserTest.class, true);
         parser.registerClass(ArgParserTest.class);
-        parser.parseArgs(args);
+        parser.parseArgsNoExit(args);
         // This test isn't very robust. It just prints the usage and doesn't check anything.       
         parser.printUsage();
     }
@@ -223,7 +223,7 @@ public class ArgParserTest {
         String[] args = "-sv 4 -fv 4/4".split(" ");
         ArgParser parser = new ArgParser(ArgParserTest.class, true);
         parser.registerClass(ArgParserTest.class);
-        parser.parseArgs(args);
+        parser.parseArgsNoExit(args);
         Assert.assertEquals("4", strVal);
         Assert.assertEquals(new File("4/4"), fileVal);
     }
@@ -246,7 +246,7 @@ public class ArgParserTest {
         String[] args = "--intValI=4 --doubleValI=0.3 --boolArgI=false --boolNoArgI".split(" ");
         ArgParser parser = new ArgParser(InstanceOpts.class, true);
         parser.registerClass(InstanceOpts.class);
-        parser.parseArgs(args);
+        parser.parseArgsNoExit(args);
         InstanceOpts io = parser.getInstanceFromParsedArgs(InstanceOpts.class);
         Assert.assertEquals(4, io.intValI);
         Assert.assertEquals(0.3, io.doubleValI, 1e-13);
@@ -272,7 +272,7 @@ public class ArgParserTest {
         parser.registerClass(InstanceOpts1.class);
         parser.registerClass(InstanceOpts2.class); // This should throw the exception.
         //String[] args = "--collidingName=1".split(" ");
-        //parser.parseArgs(args);
+        //parser.parseArgsNoExit(args);
     }
  
     @Test()
@@ -292,7 +292,7 @@ public class ArgParserTest {
             String[] args = ("--intVal=2 --flagfile="+ff.toString()).split(" ");
             ArgParser parser = new ArgParser(ArgParserTest.class, true);
             parser.registerClass(ArgParserTest.class);
-            parser.parseArgs(args);
+            parser.parseArgsNoExit(args);
     
             Assert.assertEquals(2, intVal); // The command line value overrides the flagfile.
             Assert.assertEquals(3, doubleVal, 1e-13);

@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.hlt.optimize.LBFGS;
 import edu.jhu.hlt.optimize.LBFGS_port.LBFGSPrm;
+import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.pacaya.gm.feat.FeatureVector;
 import edu.jhu.pacaya.gm.maxent.LogLinearXY.LogLinearXYPrm;
@@ -79,8 +80,7 @@ public class LogLinearXYTest {
     public static LogLinearXYPrm getDefaultLogLinearXYPrm() {
         LogLinearXYPrm prm = new LogLinearXYPrm();
         prm.crfPrm.batchOptimizer = null;
-        prm.crfPrm.optimizer = new LBFGS(new LBFGSPrm());
-        prm.crfPrm.regularizer = new L2(1.0);
+        prm.crfPrm.optimizer = DifferentiableFunctionOpts.getRegularizedOptimizer(new LBFGS(new LBFGSPrm()), 0, 1);
         return prm;
     }
     
