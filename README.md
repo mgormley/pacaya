@@ -19,13 +19,14 @@ Contributions to this library come from Matt Gormley, Meg Mitchell, and Travis W
 
 ## Using the Library
 
-The latest version is deployed on Maven Central:
+The latest version is deployed on 
+[Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22edu.jhu.pacaya%22%20AND%20a%3A%22pacaya%22):
 
 ```xml
 <dependency>
     <groupId>edu.jhu.pacaya</groupId>
     <artifactId>pacaya</artifactId>
-    <version>3.1.3</version>
+    <version>3.1.5</version>
 </dependency>
 ```
 
@@ -37,7 +38,7 @@ This project has several dependencies all of which are available on Maven Centra
 Among others we make extensive use:
 
 * [Prim](https://github.com/mgormley/prim): a Java primitives library
-* [Optimize](https://github.com/minyans/optimize): a numerical optimization library
+* [Optimize](https://github.com/mgormley/optimize): a numerical optimization library
 
 ### Build:
 
@@ -62,3 +63,18 @@ Among others we make extensive use:
   path to your local repository (e.g. ~/.m2/repository).
 
 * To make the project Git aware, right click on the project and select Team -> Git...
+
+## Citing
+
+If you use this library, please cite the thesis below:
+
+```bibtek
+@thesis{gormley_graphical_2015,
+        location = {Baltimore, {MD}},
+        title = {Graphical Models with Structured Factors, Neural Factors, and Approximation-Aware Training},
+        institution = {Johns Hopkins University},
+        type = {phdthesis},
+        author = {Gormley, Matthew R.},
+        date = {2015}
+}
+```
